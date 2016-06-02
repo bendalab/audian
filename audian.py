@@ -9,7 +9,7 @@ import matplotlib.colors as mc
 import matplotlib.widgets as widgets
 import scipy.signal as sig
 from collections import OrderedDict
-import pyaudio
+from audioio.playaudio import PlayAudio
 
 # check: import logging https://docs.python.org/2/howto/logging.html#logging-basic-tutorial
 
@@ -486,132 +486,6 @@ def psd_peaks( psd_freqs, psd, cfg ) :
     
     return all_freqs, threshold, center
 
-
-###############################################################################
-## audio output:
-
-def init_audio() :
-    """
-    Initializes audio output.
-
-    Returns:
-        audio: a handle for subsequent calls of play() and close_audio()
-    """
-    oldstderr = os.dup( 2 )
-    os.close( 2 )
-    tmpfile = 'tmpfile.tmp'
-    os.open( tmpfile, os.O_WRONLY | os.O_CREAT )
-    audio = pyaudio.PyAudio()
-    os.close( 2 )
-    os.dup( oldstderr )
-    os.close( oldstderr )
-    os.remove( tmpfile )
-    return audio
-
-def close_audio( audio ) :
-    """
-    Close audio output.
-
-    Args:
-        audio: the handle returned by init_audio()
-    """
-    audio.terminate()           
-
-def play_audio( audio, data, rate ) :
-    """
-    Play audio data.
-
-    Args:
-        audio: the handle returned by init_audio()
-        data (array): the data to be played
-        rate (float): the sampling rate in Hertz
-    """
-    # print 'play'
-    stream = audio.open( format=pyaudio.paInt16, channels=1, rate=rate, output=True )
-    rawdata = data - np.mean( data )
-    rawdata /= np.max( rawdata )*2.0
-    ## nr = int( np.round( 0.1*rate ) )
-    ## if len( rawdata ) > 2*nr :
-    ##     for k in xrange( nr ) :
-    ##         rawdata[k] *= float(k)/nr
-    ##         rawdata[len(rawdata)-k-1] *= float(k)/nr
-    # somehow more than twice as many data are needed:
-    rawdata = np.hstack( ( rawdata, np.zeros( 11*len( rawdata )/10 ) ) )
-    ad = np.array( np.round(2.0**15*rawdata) ).astype( 'i2' )
-    stream.write( ad )
-    stream.stop_stream()
-    stream.close()
-
-# class AudioOutput(object):
-#     def __init__(self, parent=None):
-#         """
-#         Initializes audio output.
-
-#         Returns:
-#             audio: a handle for subsequent calls of play() and close_audio()
-#         """
-#         oldstderr = os.dup( 2 )
-#         os.close( 2 )
-#         tmpfile = 'tmpfile.tmp'
-#         os.open( tmpfile, os.O_WRONLY | os.O_CREAT )
-#         audio = pyaudio.PyAudio()
-#         os.close( 2 )
-#         os.dup( oldstderr )
-#         os.close( oldstderr )
-#         os.remove( tmpfile )
-#         self.audio = audio
-#         self.i = 0
-
-#     def callback(self, in_data, frame_count, time_info, status):
-        
-#         if self.i >= self.data.size:
-#             data = self.data[i:i+frame_count]
-#             bitstream = data.astype(np.float32).ravel().tostring()
-#             return (bitstream, pyaudio.paContinue)
-#         else:
-#             return (None, pyaudio.paComplete)
-
-#     def run_audio(self, data, rate):
-
-#         # audio instance
-#         self.stream = self.audio.open(format=pyaudio.paInt16,
-#             channels=1, rate=rate, output=True, 
-#             stream_callback=self.callback)
-
-#         # play stream
-#         self.stream.start_stream()
-#         while stream.is_active():
-#             time.sleep(0.1)
-#         stream.stop_stream()
-#         self.stream.close()
-
-#     def close(self):
-#         self.audio.terminate()
-
-def play_tone( audio, frequency, duration, rate ) :
-    """
-    Play a tone of a given frequency and duration.
-
-    Args:
-        audio: the handle returned by init_audio()
-        frequency (float): the frequency of the tone in Hertz
-        duration (float): the duration of the tone in seconds
-        rate (float): the sampling rate in Hertz
-    """
-    stream = audio.open( format=pyaudio.paInt16, channels=1, rate=rate, output=True )
-    time = np.arange( 0.0, duration, 1.0/rate )
-    data = np.sin(2.0*np.pi*frequency*time)
-    nr = int( np.round( 0.1*rate ) )
-    for k in xrange( nr ) :
-        data[k] *= float(k)/float(nr)
-        data[len(data)-k-1] *= float(k)/float(nr)
-    ## somehow more than twice as many data are needed:
-    data = np.hstack( ( data, np.zeros( 11*len( data )/10 ) ) )
-    ad = np.array( np.round(2.0**14*data) ).astype( 'i2' )
-    stream.write( ad )
-    stream.stop_stream()
-    stream.close()
-
     
 ###############################################################################
 ## plotting etc.
@@ -658,8 +532,7 @@ class SignalPlot :
         self.analysis_file = None
 
         # audio output:
-        # self.audio = AudioOutput()
-        self.audio = init_audio()
+        self.audio = PlayAudio()
 
         # set key bindings:
         plt.rcParams['keymap.fullscreen'] = 'ctrl+f'
@@ -736,7 +609,7 @@ class SignalPlot :
     def __del( self ) :
         if self.analysis_file != None :
             self.analysis_file.close()
-        close_audio( self.audio )
+        self.audio.close()
 
     def compute_psd( self, t0, t1 ) :
         nfft = int( np.round( 2**(np.floor(np.log(self.rate/self.fresolution) / np.log(2.0)) + 1.0) ) )
@@ -1312,15 +1185,10 @@ class SignalPlot :
     def play_segment( self ) :
         t0 = int(np.round(self.toffset*self.rate))
         t1 = int(np.round((self.toffset+self.twindow)*self.rate))
-        play_audio( self.audio, self.data[t0:t1], self.rate )
+        self.audio.play(self.data[t0:t1], self.rate)
         
     def play_all( self ) :
-        play_audio( self.audio, self.data, self.rate )
-        pass
-        
-    def play_tone( self, frequency ) :
-        play_tone( self.audio, frequency, 1.0, self.rate )
-        pass
+        self.audio.play(self.data, self.rate)
                     
 
 def main():
