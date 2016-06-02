@@ -169,8 +169,8 @@ def envelope( rate, data ):
     # w = 1.0 * gaussian(rstd_window_size, std=rstd_window_size/7)
     w = 1.0 * np.ones(rstd_window_size)
     w /= np.sum(w)
-    rstd = (np.sqrt((np.correlate(data ** 2, w, mode='valid') -
-                     np.correlate(data, w, mode='valid') ** 2)).ravel()) * np.sqrt(2.)
+    rstd = (np.sqrt((np.correlate(data ** 2, w, mode='same') -
+                     np.correlate(data, w, mode='same') ** 2)).ravel()) * np.sqrt(2.)
     return rstd
 
 ###############################################################################
