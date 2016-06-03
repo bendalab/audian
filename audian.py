@@ -9,7 +9,7 @@ import matplotlib.colors as mc
 import matplotlib.widgets as widgets
 import scipy.signal as sig
 from collections import OrderedDict
-from audioio.playaudio import PlayAudio
+from audioio import PlayAudio
 
 # check: import logging https://docs.python.org/2/howto/logging.html#logging-basic-tutorial
 
