@@ -9,7 +9,7 @@ import matplotlib.colors as mc
 import matplotlib.widgets as widgets
 import scipy.signal as sig
 from collections import OrderedDict
-from audioio import PlayAudio
+from audioio import PlayAudio, fade
 
 # check: import logging https://docs.python.org/2/howto/logging.html#logging-basic-tutorial
 
@@ -1185,10 +1185,12 @@ class SignalPlot :
     def play_segment( self ) :
         t0 = int(np.round(self.toffset*self.rate))
         t1 = int(np.round((self.toffset+self.twindow)*self.rate))
-        self.audio.play(self.data[t0:t1], self.rate)
+        playdata = 1.0*self.data[t0:t1]
+        fade(playdata, self.rate, 0.1)
+        self.audio.play(playdata, self.rate, blocking=False)
         
     def play_all( self ) :
-        self.audio.play(self.data, self.rate)
+        self.audio.play(self.data, self.rate, blocking=False)
                     
 
 def main():
