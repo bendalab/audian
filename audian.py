@@ -53,13 +53,13 @@ def load_wavfile( filename, trace=0 ) :
     freq, data = wavfile.read( filename )
     if len( data.shape ) == 1 :
         if trace >= 1 :
-            print 'number of traces in file is', 1
+            print('number of traces in file is', 1)
             quit()
         return freq, data/2.0**15, ''
     else :
         tracen = data.shape[1]
         if trace >= tracen :
-            print 'number of traces in file is', tracen
+            print('number of traces in file is', tracen)
             quit()
         return freq, data[:,trace]/2.0**15, 'a.u.'
 
@@ -70,7 +70,7 @@ def load_wave( filename, trace=0 ) :
     try:
         import wave
     except ImportError:
-        print 'python module "wave" is not installed.'
+        print('python module "wave" is not installed.')
         return load_wavfile( filename, trace )
 
     wf = wave.open( filename, 'r' )
@@ -82,13 +82,13 @@ def load_wave( filename, trace=0 ) :
     wf.close()
     if len( data.shape ) == 1 :
         if trace >= 1 :
-            print 'number of traces in file is', 1
+            print('number of traces in file is', 1)
             quit()
         return freq, data/2.0**(sampwidth*8-1), ''
     else :
         tracen = data.shape[1]
         if trace >= tracen :
-            print 'number of traces in file is', tracen
+            print('number of traces in file is', tracen)
             quit()
         return freq, data[:,trace]/2.0**(sampwidth*8-1), 'a.u.'
 
@@ -101,14 +101,14 @@ def load_audio( filename, trace=0 ) :
     try:
         import audioread
     except ImportError:
-        print 'python module "audioread" is not installed.'
+        print('python module "audioread" is not installed.')
         return load_wave( filename, trace )
     
     data = np.array( [] )
     with audioread.audio_open( filename ) as af :
         tracen = af.channels
         if trace >= tracen :
-            print 'number of traces in file is', tracen
+            print('number of traces in file is', tracen)
             quit()
         data = np.zeros( np.ceil( af.samplerate*af.duration ), dtype="<i2" )
         index = 0
@@ -148,6 +148,19 @@ def highpass_filter( rate, data, cutoff ) :
     ## plt.show()
     fdata = sig.lfilter( b, a, data )
     return fdata
+
+
+def bandpass_filter(data, rate, lowf=5500.0, highf=7500.0):
+    """
+    Bandpass filter the signal.
+    """
+    nyq = 0.5*rate
+    low = lowf/nyq
+    high = highf/nyq
+    b, a = sig.butter(4, [low, high], btype='bandpass')
+    fdata = sig.lfilter(b, a, data)
+    return fdata
+
 
 # def envelope( rate, data ):
 #     cutoff = 100.0
@@ -282,7 +295,7 @@ def load_config( filename, cfg ) :
                 if len( vals ) > 1 :
                     unit = vals[1]
                 if unit != cv[1] :
-                    print 'unit for', key, 'is', unit, 'but should be', cv[1]
+                    print('unit for', key, 'is', unit, 'but should be', cv[1])
                 cv[0] = type(cv[0])(vals[0])
             else :
                 cfg[key] = type(cv)(vals[0])
@@ -427,11 +440,11 @@ def accept_psd_peaks( freqs, data, peak_inx, index, trough_inx, min_inx, thresho
     size = data[peak_inx] - data[trough_inx]
     wthresh = data[trough_inx] + 0.75*size
     width = 0.0
-    for k in xrange( peak_inx, trough_inx, -1 ) :
+    for k in range( peak_inx, trough_inx, -1 ) :
         if data[k] < wthresh :
             width = freqs[peak_inx] - freqs[k]
             break
-    for k in xrange( peak_inx, index ) :
+    for k in range( peak_inx, index ) :
         if data[k] < wthresh :
             width += freqs[k] - freqs[peak_inx]
             break
@@ -458,9 +471,9 @@ def psd_peaks( psd_freqs, psd, cfg ) :
     verbose = cfg['verboseLevel'][0]
 
     if verbose > 0 :
-        print
-        print 70*'#'
-        print '##### psd_peaks', 48*'#'
+        print()
+        print(70*'#')
+        print('##### psd_peaks', 48*'#')
     
     # decibel power spectrum:
     log_psd = 10.0*np.log10( psd )
@@ -473,9 +486,9 @@ def psd_peaks( psd_freqs, psd, cfg ) :
         threshold, center = threshold_estimate( log_psd[2*n/3:n*9/10],
                                                 cfg['noiseFactor'][0] )
         if verbose > 1 :
-            print
-            print 'threshold=', threshold, center+threshold
-            print 'center=', center
+            print()
+            print('threshold=', threshold, center+threshold)
+            print('center=', center)
     
     # detect peaks in decibel power spectrum:
     all_freqs = detect_peaks( psd_freqs, log_psd, threshold, accept_psd_peaks )
@@ -744,7 +757,7 @@ class SignalPlot :
             tws = '%.3gs' % ( tw )
         a = 2*w/nfft-1 # number of ffts
         if self.power_frequency_label == None :
-            self.power_frequency_label = self.axp.set_xlabel( r'Frequency [Hz] (nfft={:d}, $\Delta f$={:s}: T={:s}/{:d})'.format( nfft, dfs, tws, a ) )
+            self.power_frequency_label = self.axp.set_xlabel( r'Frequency [Hz] (nfft={:d}, $\Delta f$={:s}: T={:s}/{:.0f})'.format( nfft, dfs, tws, a ) )
         else :
             self.power_frequency_label.set_text( r'Frequency [Hz] (nfft={:d}, $\Delta f$={:s}: T={:s}/{:d})'.format( nfft, dfs, tws, a ) )
         self.axp.set_xlim( self.fmin, self.fmax )
@@ -1051,7 +1064,7 @@ class SignalPlot :
                     self.fig.canvas.draw()
 
     def onpick( self, event ) :
-        print 'pick'
+        print('pick')
 
     def analyse_envelopepeaks( self, tmin, tmax ) :
         t0 = int(tmin*self.rate)
@@ -1070,8 +1083,8 @@ class SignalPlot :
         t0 = int(tmin*self.rate)
         t1 = int(tmax*self.rate)
         npeaks, pinterval, prate = self.analyse_envelopepeaks( tmin, tmax )
-        print '\t'.join( [ '{:10s}'.format( x ) for x in [ "# width [s]", "trace mean", "trace std", "env mean", "env std", "env peaks", "env T [s]", "env rate [Hz]" ] ] )
-        print '\t'.join( '{:10.4f}'.format( x ) for x in [ tmax-tmin, np.mean( self.data[t0:t1] ), np.std( self.data[t0:t1] ), np.mean( self.envelope[t0:t1] ), np.std( self.envelope[t0:t1] ), npeaks, pinterval, prate ] )
+        print('\t'.join( [ '{:10s}'.format( x ) for x in [ "# width [s]", "trace mean", "trace std", "env mean", "env std", "env peaks", "env T [s]", "env rate [Hz]" ] ] ) )
+        print('\t'.join( '{:10.4f}'.format( x ) for x in [ tmax-tmin, np.mean( self.data[t0:t1] ), np.std( self.data[t0:t1] ), np.mean( self.envelope[t0:t1] ), np.std( self.envelope[t0:t1] ), npeaks, pinterval, prate ] ))
         if self.analysis_file == None :
             name = self.filename.split( '.' )[0]
             if self.channel > 0 :
@@ -1081,7 +1094,7 @@ class SignalPlot :
                 datafile = '{name}-data.txt'.format( name=name )
             self.analysis_file = open( os.path.join( self.filepath, datafile ), 'w' )
             self.analysis_file.write( '\t'.join( [ '{:10s}'.format( x ) for x in [ "# width [s]", "trace mean", "trace std", "env mean", "env std", "env peaks", "env T [s]", "env rate [Hz]" ] ] ) + '\n' )
-            print 'save selected data to', datafile
+            print('save selected data to', datafile)
         self.analysis_file.write( '\t'.join( '{:10.4f}'.format( x ) for x in [ tmax-tmin, np.mean( self.data[t0:t1] ), np.std( self.data[t0:t1] ), np.mean( self.envelope[t0:t1] ), np.std( self.envelope[t0:t1] ), npeaks, pinterval, prate ] ) + '\n' )
             
 
@@ -1140,7 +1153,7 @@ class SignalPlot :
         fig.savefig( os.path.join( self.filepath, figfile ) )
         fig.clear()
         plt.close( fig )
-        print 'saved waveform figure to', figfile
+        print('saved waveform figure to', figfile)
 
     def plot_powerspec( self ) :
         fig = plt.figure()
@@ -1167,7 +1180,7 @@ class SignalPlot :
         fig.savefig( os.path.join( self.filepath, figfile ) )
         fig.clear()
         plt.close( fig )
-        print 'saved power spectrum figure to', figfile
+        print('saved power spectrum figure to', figfile)
 
     def write_powerspec( self ) :
         name = self.filename.split( '.' )[0]
@@ -1180,7 +1193,7 @@ class SignalPlot :
         with open( os.path.join( self.filepath, datafile ), 'w' ) as df :
             for f, p in zip( self.freqs, self.power ) :
                 df.write( '{:9.2f}\t{:g}\n'.format( f, p ) )
-        print 'saved power spectrum data to', datafile
+        print('saved power spectrum data to', datafile)
 
     def play_segment( self ) :
         t0 = int(np.round(self.toffset*self.rate))
@@ -1209,7 +1222,7 @@ def main():
 
     # load configuration from the current directory:
     if os.path.isfile( cfgfile ) :
-        print 'load configuration', cfgfile
+        print('load configuration', cfgfile)
         load_config( cfgfile, cfg )
 
     # set configuration from command line:
@@ -1220,9 +1233,9 @@ def main():
     if len( args.save_config ) > 0 :
         ext = args.save_config.split( '.' )[-1]
         if ext != 'cfg' :
-            print 'configuration file name must have .cfg as extension!'
+            print('configuration file name must have .cfg as extension!')
         else :
-            print 'write configuration to', args.save_config, '...'
+            print('write configuration to', args.save_config, '...')
             dump_config( args.save_config, cfg, cfgsec )
         quit()
 
@@ -1239,6 +1252,7 @@ def main():
         #freq, data, unit = load_audio( filepath, channel )
     highpass_cutoff = 400.0
     data = highpass_filter( freq, data, highpass_cutoff )
+    #data = bandpass_filter(data, freq)
 
     # plot:
     sp = SignalPlot( freq, data, unit, filename, channel, os.path.dirname( filepath ) )
