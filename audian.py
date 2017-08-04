@@ -9,7 +9,12 @@ import matplotlib.colors as mc
 import matplotlib.widgets as widgets
 import scipy.signal as sig
 from collections import OrderedDict
-from audioio import PlayAudio, fade
+try:
+    from audioio import PlayAudio, fade
+    have_audioio = True
+except ImportError:
+    have_audioio = False
+
 
 # check: import logging https://docs.python.org/2/howto/logging.html#logging-basic-tutorial
 
@@ -545,7 +550,10 @@ class SignalPlot :
         self.analysis_file = None
 
         # audio output:
-        self.audio = PlayAudio()
+        if have_audioio :
+            self.audio = PlayAudio()
+        else :
+            self.audio = None
 
         # set key bindings:
         plt.rcParams['keymap.fullscreen'] = 'ctrl+f'
@@ -622,7 +630,8 @@ class SignalPlot :
     def __del( self ) :
         if self.analysis_file != None :
             self.analysis_file.close()
-        self.audio.close()
+        if self.audio is not None:
+            self.audio.close()
 
     def compute_psd( self, t0, t1 ) :
         nfft = int( np.round( 2**(np.floor(np.log(self.rate/self.fresolution) / np.log(2.0)) + 1.0) ) )
@@ -1196,6 +1205,8 @@ class SignalPlot :
         print('saved power spectrum data to', datafile)
 
     def play_segment( self ) :
+        if not have_audioio :
+            return
         t0 = int(np.round(self.toffset*self.rate))
         t1 = int(np.round((self.toffset+self.twindow)*self.rate))
         playdata = 1.0*self.data[t0:t1]
@@ -1203,6 +1214,8 @@ class SignalPlot :
         self.audio.play(playdata, self.rate, blocking=False)
         
     def play_all( self ) :
+        if not have_audioio :
+            return
         self.audio.play(self.data, self.rate, blocking=False)
                     
 
