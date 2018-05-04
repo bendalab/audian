@@ -10,7 +10,7 @@ import matplotlib.widgets as widgets
 import scipy.signal as sig
 from collections import OrderedDict
 try:
-    from audioio import PlayAudio, fade
+    from audioio import load_audio, PlayAudio, fade
     have_audioio = True
 except ImportError:
     have_audioio = False
@@ -50,6 +50,24 @@ cfg['verboseLevel'] = [ 0, '', '0=off upto 4 very detailed' ]
 ###############################################################################
 ## load data:
     
+def load_audioio( filename, trace=0 ) :
+    """
+    load audio file using audioio
+    """
+    data, freq = load_audio( filename )
+    if len( data.shape ) == 1 :
+        if trace >= 1 :
+            print('number of traces in file is', 1)
+            quit()
+        return freq, data, 'a.u.'
+    else :
+        tracen = data.shape[1]
+        if trace >= tracen :
+            print('number of traces in file is', tracen)
+            quit()
+        return freq, data[:,trace], 'a.u.'
+
+    
 def load_wavfile( filename, trace=0 ) :
     """
     load wav file using scipy io.wavfile
@@ -60,7 +78,7 @@ def load_wavfile( filename, trace=0 ) :
         if trace >= 1 :
             print('number of traces in file is', 1)
             quit()
-        return freq, data/2.0**15, ''
+        return freq, data/2.0**15, 'a.u.'
     else :
         tracen = data.shape[1]
         if trace >= tracen :
@@ -89,7 +107,7 @@ def load_wave( filename, trace=0 ) :
         if trace >= 1 :
             print('number of traces in file is', 1)
             quit()
-        return freq, data/2.0**(sampwidth*8-1), ''
+        return freq, data/2.0**(sampwidth*8-1), 'a.u.'
     else :
         tracen = data.shape[1]
         if trace >= tracen :
@@ -98,7 +116,7 @@ def load_wave( filename, trace=0 ) :
         return freq, data[:,trace]/2.0**(sampwidth*8-1), 'a.u.'
 
     
-def load_audio( filename, trace=0 ) :
+def load_audioread( filename, trace=0 ) :
     """
     load wav file using audioread.
     This is not available in python x,y.
@@ -1260,11 +1278,14 @@ def main():
     if ext == 'raw' :
         freq, data, unit = load_rawfile( filepath, channel )
     else :
-        freq, data, unit = load_wavfile( filepath, channel )
-        #freq, data, unit = load_wave( filepath, channel )
-        #freq, data, unit = load_audio( filepath, channel )
-    highpass_cutoff = 400.0
-    data = highpass_filter( freq, data, highpass_cutoff )
+        if have_audioio :
+            freq, data, unit = load_audioio( filepath, channel )
+        else :
+            freq, data, unit = load_wavfile( filepath, channel )
+            #freq, data, unit = load_wave( filepath, channel )
+            #freq, data, unit = load_audioread( filepath, channel )
+    #highpass_cutoff = 400.0
+    #data = highpass_filter( freq, data, highpass_cutoff )
     #data = bandpass_filter(data, freq)
 
     # plot:
