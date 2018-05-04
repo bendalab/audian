@@ -23,7 +23,7 @@ cfg = OrderedDict()
 cfgsec = dict()
 
 cfgsec['maxpixel'] = 'Plotting:'
-cfg['maxpixel'] = [ 4000, '', 'Either maximum number of data points to be plotted or zero for plotting all data points.' ]
+cfg['maxpixel'] = [ 10000, '', 'Either maximum number of data points to be plotted or zero for plotting all data points.' ]
 
 cfgsec['envthreshfac'] = 'Envelope:'
 cfg['envthreshfac'] = [ 2.0, '', 'Threshold for peak detection in envelope is this factor time the standard deviation of the envelope.' ]
@@ -768,7 +768,7 @@ class SignalPlot :
         if self.power_frequency_label == None :
             self.power_frequency_label = self.axp.set_xlabel( r'Frequency [Hz] (nfft={:d}, $\Delta f$={:s}: T={:s}/{:.0f})'.format( nfft, dfs, tws, a ) )
         else :
-            self.power_frequency_label.set_text( r'Frequency [Hz] (nfft={:d}, $\Delta f$={:s}: T={:s}/{:d})'.format( nfft, dfs, tws, a ) )
+            self.power_frequency_label.set_text( r'Frequency [Hz] (nfft={:d}, $\Delta f$={:s}: T={:s}/{:.0f})'.format( nfft, dfs, tws, a ) )
         self.axp.set_xlim( self.fmin, self.fmax )
         if self.power_label == None :
             self.power_label = self.axp.set_ylabel( 'Signal power' )
@@ -1260,8 +1260,8 @@ def main():
     if ext == 'raw' :
         freq, data, unit = load_rawfile( filepath, channel )
     else :
-        #freq, data, unit = load_wavfile( filepath, channel )
-        freq, data, unit = load_wave( filepath, channel )
+        freq, data, unit = load_wavfile( filepath, channel )
+        #freq, data, unit = load_wave( filepath, channel )
         #freq, data, unit = load_audio( filepath, channel )
     highpass_cutoff = 400.0
     data = highpass_filter( freq, data, highpass_cutoff )
