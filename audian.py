@@ -60,13 +60,13 @@ def load_audioio( filename, trace=0 ) :
     data, freq = load_audio( filename )
     if len( data.shape ) == 1 :
         if trace >= 1 :
-            print('number of traces in file is', 1)
+            print('number of traces in file is %d' % 1)
             quit()
         return freq, data, 'a.u.'
     else :
         tracen = data.shape[1]
         if trace >= tracen :
-            print('number of traces in file is', tracen)
+            print('number of traces in file is %d' % tracen)
             quit()
         return freq, data[:,trace], 'a.u.'
 
@@ -79,13 +79,13 @@ def load_wavfile( filename, trace=0 ) :
     freq, data = wavfile.read( filename )
     if len( data.shape ) == 1 :
         if trace >= 1 :
-            print('number of traces in file is', 1)
+            print('number of traces in file is %d' % 1)
             quit()
         return freq, data/2.0**15, 'a.u.'
     else :
         tracen = data.shape[1]
         if trace >= tracen :
-            print('number of traces in file is', tracen)
+            print('number of traces in file is %d' % tracen)
             quit()
         return freq, data[:,trace]/2.0**15, 'a.u.'
 
@@ -108,13 +108,13 @@ def load_wave( filename, trace=0 ) :
     wf.close()
     if len( data.shape ) == 1 :
         if trace >= 1 :
-            print('number of traces in file is', 1)
+            print('number of traces in file is %d' % 1)
             quit()
         return freq, data/2.0**(sampwidth*8-1), 'a.u.'
     else :
         tracen = data.shape[1]
         if trace >= tracen :
-            print('number of traces in file is', tracen)
+            print('number of traces in file is %d' % tracen)
             quit()
         return freq, data[:,trace]/2.0**(sampwidth*8-1), 'a.u.'
 
@@ -134,7 +134,7 @@ def load_audioread( filename, trace=0 ) :
     with audioread.audio_open( filename ) as af :
         tracen = af.channels
         if trace >= tracen :
-            print('number of traces in file is', tracen)
+            print('number of traces in file is %d' % tracen)
             quit()
         data = np.zeros( np.ceil( af.samplerate*af.duration ), dtype="<i2" )
         index = 0
@@ -320,7 +320,7 @@ def load_config( filename, cfg ) :
                 if len( vals ) > 1 :
                     unit = vals[1]
                 if unit != cv[1] :
-                    print('unit for', key, 'is', unit, 'but should be', cv[1])
+                    print('unit for %s is %s but should be %s' % (key, unit, cv[1]))
                 cv[0] = type(cv[0])(vals[0])
             else :
                 cfg[key] = type(cv)(vals[0])
@@ -537,7 +537,9 @@ class SignalPlot :
         self.channel = channel
         self.rate = samplingrate
         self.data = data
-        self.envelope = envelope( self.rate, self.data, cfg['envcutofffreq'][0] )
+        self.envcutofffreq = cfg['envcutofffreq'][0]
+        self.envthreshfac = cfg['envthreshfac'][0]
+        self.envelope = envelope( self.rate, self.data, self.envcutofffreq )
         self.unit = unit
         self.time = np.arange( 0.0, len( self.data ) )/self.rate
         self.toffset = 0.0
@@ -641,6 +643,10 @@ class SignalPlot :
         self.helptext.append( ht )
         # power spectrum of envelope:
         self.axpe = self.fig.add_axes( [ 0.6, 0.1, 0.4, 0.25 ] )
+        ht = self.axpe.text( 0.98, 0.9, 'c, C: envelope cutoff frequency', ha='right', transform=self.axpe.transAxes )
+        self.helptext.append( ht )
+        ht = self.axpe.text( 0.98, 0.8, 't, T: threshold for envelope peak detection', ha='right', transform=self.axpe.transAxes )
+        self.helptext.append( ht )
         # plot:
         for ht in self.helptext :
             ht.set_visible( self.help )
@@ -996,6 +1002,18 @@ class SignalPlot :
             self.show_envelope = not self.show_envelope
             self.envelope_artist.set_visible( self.show_envelope )
             self.fig.canvas.draw()
+        elif event.key in 'C' :
+            self.envcutofffreq *= 1.2
+            self.envelope = envelope( self.rate, self.data, self.envcutofffreq )
+            self.update_plots()
+        elif event.key in 'c' :
+            self.envcutofffreq /= 1.2
+            self.envelope = envelope( self.rate, self.data, self.envcutofffreq )
+            self.update_plots()
+        elif event.key in 'T' :
+            self.envthreshfac *= 1.2
+        elif event.key in 't' :
+            self.envthreshfac /= 1.2
         elif event.key in 'f' :
             if self.fmax < 0.5*self.rate or self.fmin > 0.0 :
                 fwidth = self.fmax-self.fmin
@@ -1098,7 +1116,7 @@ class SignalPlot :
     def analyse_envelopepeaks( self, tmin, tmax ) :
         t0 = int(tmin*self.rate)
         t1 = int(tmax*self.rate)
-        threshold = cfg['envthreshfac'][0]*np.std( self.envelope[t0:t1] )
+        threshold = self.envthreshfac*np.std( self.envelope[t0:t1] )
         peaktimes = detect_peaks( self.time[t0:t1], self.envelope[t0:t1], threshold )
         npeaks = len( peaktimes )
         rate = 0.0
@@ -1123,7 +1141,7 @@ class SignalPlot :
                 datafile = '{name}-data.txt'.format( name=name )
             self.analysis_file = open( os.path.join( self.filepath, datafile ), 'w' )
             self.analysis_file.write( '\t'.join( [ '{:10s}'.format( x ) for x in [ "# width [s]", "trace mean", "trace std", "env mean", "env std", "env peaks", "env T [s]", "env rate [Hz]" ] ] ) + '\n' )
-            print('save selected data to', datafile)
+            print('saved selected data to %s' % datafile)
         self.analysis_file.write( '\t'.join( '{:10.4f}'.format( x ) for x in [ tmax-tmin, np.mean( self.data[t0:t1] ), np.std( self.data[t0:t1] ), np.mean( self.envelope[t0:t1] ), np.std( self.envelope[t0:t1] ), npeaks, pinterval, prate ] ) + '\n' )
             
 
@@ -1182,7 +1200,7 @@ class SignalPlot :
         fig.savefig( os.path.join( self.filepath, figfile ) )
         fig.clear()
         plt.close( fig )
-        print('saved waveform figure to', figfile)
+        print('saved waveform figure to %s' % figfile)
 
     def plot_powerspec( self ) :
         fig = plt.figure()
@@ -1209,7 +1227,7 @@ class SignalPlot :
         fig.savefig( os.path.join( self.filepath, figfile ) )
         fig.clear()
         plt.close( fig )
-        print('saved power spectrum figure to', figfile)
+        print('saved power spectrum figure to %s' % figfile)
 
     def write_powerspec( self ) :
         name = self.filename.split( '.' )[0]
@@ -1219,10 +1237,15 @@ class SignalPlot :
         else :
             datafile = '{name}-{time:.4g}s-powerspec.txt'.format(
                 name=name, time=self.toffset )
+        punit = 'x^2/Hz'
+        if self.decibel :
+            punit = 'dB'
         with open( os.path.join( self.filepath, datafile ), 'w' ) as df :
+            df.write( '# {:<7s}\t{:s}\n'.format( 'freq', 'power' ) )
+            df.write( '# {:<7s}\t{:s}\n'.format( 'Hz', punit ) )
             for f, p in zip( self.freqs, self.power ) :
                 df.write( '{:9.2f}\t{:g}\n'.format( f, p ) )
-        print('saved power spectrum data to', datafile)
+        print('saved power spectrum data to %s' % datafile)
 
     def play_segment( self ) :
         if not have_audioio :
@@ -1255,7 +1278,7 @@ def main():
 
     # load configuration from the current directory:
     if os.path.isfile( cfgfile ) :
-        print('load configuration', cfgfile)
+        print('load configuration file %s' % cfgfile)
         load_config( cfgfile, cfg )
 
     # set configuration from command line:
@@ -1268,7 +1291,7 @@ def main():
         if ext != 'cfg' :
             print('configuration file name must have .cfg as extension!')
         else :
-            print('write configuration to', args.save_config, '...')
+            print('write configuration to %s ...' % args.save_config)
             dump_config( args.save_config, cfg, cfgsec )
         quit()
 
