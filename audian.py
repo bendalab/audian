@@ -23,7 +23,7 @@ cfg = OrderedDict()
 cfgsec = dict()
 
 cfgsec['maxpixel'] = 'Plotting:'
-cfg['maxpixel'] = [ 10000, '', 'Either maximum number of data points to be plotted or zero for plotting all data points.' ]
+cfg['maxpixel'] = [ 0, '', 'Either maximum number of data points to be plotted or zero for plotting all data points.' ]
 
 cfgsec['envthreshfac'] = 'Envelope:'
 cfg['envthreshfac'] = [ 2.0, '', 'Threshold for peak detection in envelope is this factor time the standard deviation of the envelope.' ]
@@ -851,15 +851,15 @@ class SignalPlot :
             self.envpower_label = self.axpe.set_ylabel( 'Envelope power' )
         if self.decibel :
             envpower = 10.0*np.log10( envpower )
-            pmin = np.min( envpower[freqs<self.fmax] )
+            pmin = np.min( envpower[envfreqs<self.fmax] )
             pmin = np.floor(pmin/10.0)*10.0
-            pmax = np.max( envpower[freqs<self.fmax] )
+            pmax = np.max( envpower[envfreqs<self.fmax] )
             pmax = np.ceil(pmax/10.0)*10.0
             doty = pmax-5.0
             self.envpower_label.set_text( 'Envelope power [dB]' )
             self.axpe.set_ylim( pmin, pmax )
         else :
-            pmax = np.max( envpower[freqs<self.fmax] )
+            pmax = np.max( envpower[envfreqs<self.fmax] )
             doty = pmax
             pmax *= 1.1
             self.envpower_label.set_text( 'Envelope power' )
