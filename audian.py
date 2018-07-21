@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import sys
 import os
 import platform
@@ -26,6 +28,7 @@ cfgsec['maxpixel'] = 'Plotting:'
 cfg['maxpixel'] = [ 0, '', 'Either maximum number of data points to be plotted or zero for plotting all data points.' ]
 
 cfgsec['envthreshfac'] = 'Envelope:'
+cfg['envcutofffreq'] = [ 100.0, 'Hz', 'Cutoff frequency of the low-pass filter used for computing the envelope from the squared signal.' ]
 cfg['envthreshfac'] = [ 2.0, '', 'Threshold for peak detection in envelope is this factor time the standard deviation of the envelope.' ]
 
 cfgsec['minPSDAverages'] = 'Power spectrum estimation:'
@@ -185,10 +188,9 @@ def bandpass_filter(data, rate, lowf=5500.0, highf=7500.0):
     return fdata
 
 
-# def envelope( rate, data ):
-#     cutoff = 100.0
+# def envelope( rate, data, freq=100.0 ):
 #     nyq = 0.5*rate
-#     low = cutoff/nyq
+#     low = freq/nyq
 #     b, a = sig.butter( 2, low, btype='lowpass' )
 #     edata = 2.0*sig.lfilter( b, a, data*data )
 #     edata[edata<0.0] = 0.0
@@ -196,11 +198,11 @@ def bandpass_filter(data, rate, lowf=5500.0, highf=7500.0):
 #     return envelope
 
 # def running_std( rate, data ):
-def envelope( rate, data ):
-    # width
-    from scipy.signal import gaussian
+def envelope( rate, data, freq=100.0 ):
+    #from scipy.signal import gaussian
 
-    rstd_window_size_time = 0.001  # s
+    # width
+    rstd_window_size_time = 1.0/freq  # s
     rstd_window_size = int(rstd_window_size_time * rate)
     # w = 1.0 * gaussian(rstd_window_size, std=rstd_window_size/7)
     w = 1.0 * np.ones(rstd_window_size)
@@ -535,7 +537,7 @@ class SignalPlot :
         self.channel = channel
         self.rate = samplingrate
         self.data = data
-        self.envelope = envelope( self.rate, self.data )
+        self.envelope = envelope( self.rate, self.data, cfg['envcutofffreq'][0] )
         self.unit = unit
         self.time = np.arange( 0.0, len( self.data ) )/self.rate
         self.toffset = 0.0
@@ -707,7 +709,7 @@ class SignalPlot :
         t1 = int(np.round((self.toffset+self.twindow)*self.rate))
         tstep = 1
         if cfg['maxpixel'][0] > 0 :
-            tstep = (t1-t0)/cfg['maxpixel'][0]
+            tstep = (t1-t0)//cfg['maxpixel'][0]
             if tstep < 1 :
                 tstep = 1
         if self.trace_artist == None :
@@ -728,7 +730,7 @@ class SignalPlot :
         t00 = t0
         t11 = t1
         w = t11-t00
-        minw = nfft*(cfg['minPSDAverages'][0]+1)/2
+        minw = nfft*(cfg['minPSDAverages'][0]+1)//2
         if t11-t00 < minw :
             w = minw
             t11 = t00 + w
@@ -750,7 +752,7 @@ class SignalPlot :
         specpower[specpower<=0.0] = np.min(specpower[specpower>0.0]) # remove zeros
         z = 10.*np.log10(specpower)
         z = np.flipud( z )
-        sstep = z.shape[1]/2000
+        sstep = z.shape[1]//2000
         if sstep < 1 :
             sstep = 1
         extent = self.toffset, self.toffset+np.amax( bins ), freqs[0], freqs[-1]
