@@ -715,7 +715,7 @@ class SignalPlot :
         t1 = int(np.round((self.toffset+self.twindow)*self.rate))
         tstep = 1
         if cfg['maxpixel'][0] > 0 :
-            tstep = (t1-t0)//cfg['maxpixel'][0]
+            tstep = int((t1-t0)//cfg['maxpixel'][0])
             if tstep < 1 :
                 tstep = 1
         if self.trace_artist == None :
@@ -736,7 +736,7 @@ class SignalPlot :
         t00 = t0
         t11 = t1
         w = t11-t00
-        minw = nfft*(cfg['minPSDAverages'][0]+1)//2
+        minw = int(nfft*(cfg['minPSDAverages'][0]+1)//2)
         if t11-t00 < minw :
             w = minw
             t11 = t00 + w
