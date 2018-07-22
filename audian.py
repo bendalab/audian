@@ -842,7 +842,7 @@ class SignalPlot :
         t00 = t0
         t11 = t1
         w = t11-t00
-        minw = nfft*(cfg['minPSDAverages'][0]+1)/2
+        minw = int(nfft*(cfg['minPSDAverages'][0]+1)//2)
         if t11-t00 < minw :
             w = minw
             t11 = t00 + w
