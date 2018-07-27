@@ -1143,6 +1143,7 @@ class SignalPlot :
             self.analysis_file.write( '\t'.join( [ '{:10s}'.format( x ) for x in [ "# width [s]", "trace mean", "trace std", "env mean", "env std", "env peaks", "env T [s]", "env rate [Hz]" ] ] ) + '\n' )
             print('saved selected data to %s' % datafile)
         self.analysis_file.write( '\t'.join( '{:10.4f}'.format( x ) for x in [ tmax-tmin, np.mean( self.data[t0:t1] ), np.std( self.data[t0:t1] ), np.mean( self.envelope[t0:t1] ), np.std( self.envelope[t0:t1] ), npeaks, pinterval, prate ] ) + '\n' )
+        self.analysis_file.flush()
             
 
     def resize( self, event ) :
