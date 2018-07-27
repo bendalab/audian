@@ -1133,7 +1133,7 @@ class SignalPlot :
         print('\t'.join( [ '{:10s}'.format( x ) for x in [ "# width [s]", "trace mean", "trace std", "env mean", "env std", "env peaks", "env T [s]", "env rate [Hz]" ] ] ) )
         print('\t'.join( '{:10.4f}'.format( x ) for x in [ tmax-tmin, np.mean( self.data[t0:t1] ), np.std( self.data[t0:t1] ), np.mean( self.envelope[t0:t1] ), np.std( self.envelope[t0:t1] ), npeaks, pinterval, prate ] ))
         if self.analysis_file == None :
-            name = self.filename.split( '.' )[0]
+            name = os.path.splitext( self.filename )[0]
             if self.channel > 0 :
                 datafile = '{name}-{channel:d}-data.txt'.format(
                     name=name, channel=self.channel )
@@ -1169,7 +1169,7 @@ class SignalPlot :
     def plot_waveform( self ) :
         fig = plt.figure()
         ax = fig.add_subplot( 1, 1, 1 )
-        name = self.filename.split( '.' )[0]
+        name = os.path.splitext( self.filename )[0]
         if self.channel > 0 :
             ax.set_title( '{filename} channel={channel:d}'.format(
                 filename=self.filename, channel=self.channel ) )
@@ -1205,7 +1205,7 @@ class SignalPlot :
     def plot_powerspec( self ) :
         fig = plt.figure()
         ax = fig.add_subplot( 1, 1, 1 )
-        name = self.filename.split( '.' )[0]
+        name = os.path.splitext( self.filename )[0]
         if self.channel > 0 :
             ax.set_title( '{filename} channel={channel:d}'.format(
                 filename=self.filename, channel=self.channel ) )
@@ -1230,7 +1230,7 @@ class SignalPlot :
         print('saved power spectrum figure to %s' % figfile)
 
     def write_powerspec( self ) :
-        name = self.filename.split( '.' )[0]
+        name = os.path.splitext( self.filename )[0]
         if self.channel > 0 :
             datafile = '{name}-{channel:d}-{time:.4g}s-powerspec.txt'.format(
                 name=name, channel=self.channel, time=self.toffset )
@@ -1287,7 +1287,7 @@ def main():
     
     # save configuration:
     if len( args.save_config ) > 0 :
-        ext = args.save_config.split( '.' )[-1]
+        ext = os.path.splitext( args.save_config )[1]
         if ext != 'cfg' :
             print('configuration file name must have .cfg as extension!')
         else :
@@ -1299,7 +1299,7 @@ def main():
     filepath = args.file
     channel = args.channel
     filename = os.path.basename( filepath )
-    ext = filename.split( '.' )[-1]
+    ext = os.path.splitext( filename )[1]
     if ext == 'raw' :
         freq, data, unit = load_rawfile( filepath, channel )
     else :
