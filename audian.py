@@ -1264,8 +1264,8 @@ class SignalPlot :
 
 def main():
     # config file name:
-    progs = sys.argv[0].split( '.' )
-    cfgfile = progs[0] + '.cfg'
+    prog, ext = os.path.splitext( sys.argv[0] )
+    cfgfile = prog + '.cfg'
 
     # command line arguments:
     parser = argparse.ArgumentParser(description='Display waveform, spectrogram, and power spectrum of time series data.', epilog='by Jan Benda (2015)')
