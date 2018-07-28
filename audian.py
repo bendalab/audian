@@ -1273,7 +1273,7 @@ def main():
     parser.add_argument('--version', action='version', version='1.0')
     parser.add_argument('-v', action='count', dest='verbose', help='print debug information' )
     parser.add_argument('-c', '--save-config', nargs='?', default='', const=cfgfile, type=str, metavar='cfgfile', help='save configuration to file cfgfile (defaults to {0})'.format( cfgfile ))
-    parser.add_argument('file', nargs='?', default='', type=str, help='name of the file wih the time series data')
+    parser.add_argument('file', nargs='?', default='', type=str, help='name of the file with the time series data')
     parser.add_argument('channel', nargs='?', default=0, type=int, help='channel to be displayed')
     args = parser.parse_args()
 
