@@ -1289,7 +1289,7 @@ def main():
     # save configuration:
     if len( args.save_config ) > 0 :
         ext = os.path.splitext( args.save_config )[1]
-        if ext != 'cfg' :
+        if ext != '.cfg' :
             print('configuration file name must have .cfg as extension!')
         else :
             print('write configuration to %s ...' % args.save_config)
@@ -1301,7 +1301,7 @@ def main():
     channel = args.channel
     filename = os.path.basename( filepath )
     ext = os.path.splitext( filename )[1]
-    if ext == 'raw' :
+    if ext == '.raw' :
         freq, data, unit = load_rawfile( filepath, channel )
     else :
         if have_audioio :
