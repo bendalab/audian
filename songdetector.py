@@ -20,13 +20,22 @@ cfgsec = dict()
 cfgsec['maxpixel'] = 'Plotting:'
 cfg['maxpixel'] = [ 0, '', 'Either maximum number of data points to be plotted or zero for plotting all data points.' ]
 
-cfgsec['envthreshfac'] = 'Envelope:'
-cfg['envcutofffreq'] = [ 100.0, 'Hz', 'Cutoff frequency of the low-pass filter used for computing the envelope from the squared signal.' ]
+cfgsec['highpassfreq'] = 'Filter:'
+cfg['highpassfreq'] = [ 1000.0, 'Hz', 'Cutoff frequency of the high-pass filter applied to the signal.' ]
+cfg['lowpassfreq'] = [ 10000.0, 'Hz', 'Cutoff frequency of the low-pass filter applied to the signal.' ]
+
+cfgsec['envfastcutofffreq'] = 'Envelope:'
+cfg['envfastcutofffreq'] = [ 100.0, 'Hz', 'Cutoff frequency of the low-pass filter used for computing the fast envelope from the squared signal.' ]
+cfg['envslowcutofffreq'] = [ 5.0, 'Hz', 'Cutoff frequency of the low-pass filter used for computing the slow envelope from the squared signal.' ]
 
 cfgsec['verboseLevel'] = 'Debugging:'
 cfg['verboseLevel'] = [ 0, '', '0=off upto 4 very detailed' ]
 
 cfgsec['displayHelp'] = 'Items to display:'
+cfg['displayTraces'] = [ False, '', 'Display the raw data traces' ] 
+cfg['displayFilteredTraces'] = [ True, '', 'Display the filtered data traces' ] 
+cfg['displayFastEnvelope'] = [ True, '', 'Display the fast envelope' ] 
+cfg['displaySlowEnvelope'] = [ True, '', 'Display the slow envelope' ] 
 cfg['displayHelp'] = [ False, '', 'Display help on key bindings' ] 
 
 
@@ -51,33 +60,34 @@ def bandpass_filter(data, rate, lowf=5500.0, highf=7500.0):
     nyq = 0.5*rate
     low = lowf/nyq
     high = highf/nyq
-    b, a = sig.butter(4, [low, high], btype='bandpass')
-    fdata = sig.lfilter(b, a, data)
+    b, a = sig.butter(2, [low, high], btype='bandpass')
+    #fdata = sig.lfilter(b, a, data, axis=0)
+    fdata = sig.filtfilt(b, a, data, axis=0)
     return fdata
 
 
-# def envelope( rate, data, freq=100.0 ):
-#     nyq = 0.5*rate
-#     low = freq/nyq
-#     b, a = sig.butter( 2, low, btype='lowpass' )
-#     edata = 2.0*sig.lfilter( b, a, data*data )
-#     edata[edata<0.0] = 0.0
-#     envelope = np.sqrt( edata )
-#     return envelope
+def envelope( data, rate, freq=100.0 ):
+    nyq = 0.5*rate
+    low = freq/nyq
+    b, a = sig.butter( 2, low, btype='lowpass' )
+    edata = 2.0*sig.filtfilt( b, a, data*data, axis=0 )
+    edata[edata<0.0] = 0.0
+    envelope = np.sqrt( edata )*np.sqrt(2.0)
+    return envelope
 
 # def running_std( rate, data ):
-def envelope( rate, data, freq=100.0 ):
-    #from scipy.signal import gaussian
-
-    # width
-    rstd_window_size_time = 1.0/freq  # s
-    rstd_window_size = int(rstd_window_size_time * rate)
-    # w = 1.0 * gaussian(rstd_window_size, std=rstd_window_size/7)
-    w = 1.0 * np.ones(rstd_window_size)
-    w /= np.sum(w)
-    rstd = (np.sqrt((np.correlate(data ** 2, w, mode='same') -
-                     np.correlate(data, w, mode='same') ** 2)).ravel()) * np.sqrt(2.)
-    return rstd
+#def envelope( rate, data, freq=100.0 ):
+#    #from scipy.signal import gaussian
+#
+#    # width
+#    rstd_window_size_time = 1.0/freq  # s
+#    rstd_window_size = int(rstd_window_size_time * rate)
+#    # w = 1.0 * gaussian(rstd_window_size, std=rstd_window_size/7)
+#    w = 1.0 * np.ones(rstd_window_size)
+#    w /= np.sum(w)
+#    rstd = (np.sqrt((np.correlate(data ** 2, w, mode='same') -
+#                     np.correlate(data, w, mode='same') ** 2)).ravel()) * np.sqrt(2.)
+#    return rstd
 
 ###############################################################################
 ## configuration file writing and loading:
@@ -404,9 +414,14 @@ class SignalPlot :
         self.filename = filename
         self.rate = samplingrate
         self.data = data
+        self.lowpassfreq = cfg['lowpassfreq'][0]
+        self.highpassfreq = cfg['highpassfreq'][0]
+        self.fdata = bandpass_filter(self.data, self.rate, self.highpassfreq, self.lowpassfreq)
         self.channels = data.shape[1]
-        self.envcutofffreq = cfg['envcutofffreq'][0]
-        #self.envelope = envelope( self.rate, self.data, self.envcutofffreq )
+        self.envslowcutofffreq = cfg['envslowcutofffreq'][0]
+        self.envfastcutofffreq = cfg['envfastcutofffreq'][0]
+        self.slowenvelope = envelope(self.fdata, self.rate, self.envslowcutofffreq )
+        self.fastenvelope = envelope(self.fdata, self.rate, self.envfastcutofffreq )
         self.unit = unit
         self.time = np.arange( 0.0, self.data.shape[0] )/self.rate
         self.toffset = 0.0
@@ -414,9 +429,17 @@ class SignalPlot :
         if self.twindow > self.time[-1] :
             self.twindow = np.round( 2**(np.floor(np.log(self.time[-1]) / np.log(2.0)) + 1.0) )
         self.trace_artists = []
-        self.envelope_artist = None
-        self.show_envelope = True
-        self.fresolution = 300.0
+        self.filtered_trace_artists = []
+        self.slowenvelope_artists = []
+        self.fastenvelope_artists = []
+        self.highpass_artist = None
+        self.lowpass_artist = None
+        self.fastenvelope_artist = None
+        self.slowenvelope_artist = None
+        self.show_traces = cfg['displayTraces'][0]
+        self.show_filtered_traces = cfg['displayFilteredTraces'][0]
+        self.show_fastenvelope = cfg['displayFastEnvelope'][0]
+        self.show_slowenvelope = cfg['displaySlowEnvelope'][0]
         self.help = cfg['displayHelp'][0]
         self.helptext = []
         self.analysis_file = None
@@ -425,9 +448,11 @@ class SignalPlot :
         self.audio = PlayAudio()
 
         # set key bindings:
-        plt.rcParams['keymap.fullscreen'] = 'ctrl+f'
+        #plt.rcParams['keymap.fullscreen'] = 'ctrl+f'
+        plt.rcParams['keymap.fullscreen'] = ''
         plt.rcParams['keymap.pan'] = 'ctrl+m'
         plt.rcParams['keymap.quit'] = 'ctrl+w, alt+q, q'
+        plt.rcParams['keymap.save'] = 'alt+s'
         plt.rcParams['keymap.yscale'] = ''
         plt.rcParams['keymap.xscale'] = ''
         plt.rcParams['keymap.grid'] = ''
@@ -439,7 +464,7 @@ class SignalPlot :
         self.fig.canvas.mpl_connect( 'key_press_event', self.keypress )
         
         # trace plots:
-        ph = 0.88/self.channels
+        ph = 0.9/self.channels
         self.axt = []
         self.ymin = []
         self.ymax = []
@@ -450,7 +475,12 @@ class SignalPlot :
                 self.ymin[c] = -10.0
                 self.ymax[c] = +10.0
             if c == 0 :
-                self.axt.append( self.fig.add_axes( [ 0.08, 0.08+(self.channels-c-1)*ph, 0.89, ph ] ) )
+                self.axt.append( self.fig.add_axes( [ 0.08, 0.06+(self.channels-c-1)*ph, 0.89, ph ] ) )
+                self.highpass_artist = self.axt[0].text( 0.05, 0.9, 'highpass=%.2fkHz' % (0.001*self.highpassfreq), transform=self.axt[0].transAxes )
+                self.lowpass_artist = self.axt[0].text( 0.2, 0.9, 'lowpass=%.2fkHz' % (0.001*self.lowpassfreq), transform=self.axt[0].transAxes )
+                self.fastenvelope_artist = self.axt[0].text( 0.35, 0.9, 'fast envelope=%.2fkHz' % (0.001*self.envfastcutofffreq), transform=self.axt[0].transAxes )
+                self.slowenvelope_artist = self.axt[0].text( 0.5, 0.9, 'slow envelope=%.2fkHz' % (0.001*self.envslowcutofffreq), transform=self.axt[0].transAxes )
+
             else:
                 self.axt.append( self.fig.add_axes( [ 0.08, 0.08+(self.channels-c-1)*ph, 0.89, ph ], sharex=self.axt[0] ) )
             self.axt[-1].set_ylabel( 'Amplitude [{:s}]'.format( self.unit ) )
@@ -494,21 +524,62 @@ class SignalPlot :
             tstep = int((t1-t0)//cfg['maxpixel'][0])
             if tstep < 1 :
                 tstep = 1
-        append = len(self.trace_artists) == 0
         for c in range(self.channels) :
             self.axt[c].set_xlim( self.toffset, self.toffset+self.twindow )
-            if append :
-                ta, = self.axt[c].plot( self.time[t0:t1:tstep], self.data[t0:t1:tstep, c] )
-                self.trace_artists.append( ta )
-            else :
-                self.trace_artists[c].set_data( self.time[t0:t1:tstep], self.data[t0:t1:tstep, c] )
             self.axt[c].set_ylim( self.ymin[c], self.ymax[c] )
+        if self.show_traces :
+            append = len(self.trace_artists) == 0
+            for c in range(self.channels) :
+                if append :
+                    ta, = self.axt[c].plot( self.time[t0:t1:tstep], self.data[t0:t1:tstep, c], 'b' )
+                    self.trace_artists.append( ta )
+                else :
+                    self.trace_artists[c].set_data( self.time[t0:t1:tstep], self.data[t0:t1:tstep, c] )
+                self.trace_artists[c].set_visible(True)
+        else :
+            for c in range(len(self.trace_artists)) :
+                self.trace_artists[c].set_visible(False)
+        if self.show_filtered_traces :
+            append = len(self.filtered_trace_artists) == 0
+            for c in range(self.channels) :
+                if append :
+                    ta, = self.axt[c].plot( self.time[t0:t1:tstep], self.fdata[t0:t1:tstep, c], 'g' )
+                    self.filtered_trace_artists.append( ta )
+                else :
+                    self.filtered_trace_artists[c].set_data( self.time[t0:t1:tstep], self.fdata[t0:t1:tstep, c] )
+                self.filtered_trace_artists[c].set_visible(True)
+        else :
+            for c in range(len(self.filtered_trace_artists)) :
+                self.filtered_trace_artists[c].set_visible(False)
+        if self.show_fastenvelope :
+            append = len(self.fastenvelope_artists) == 0
+            for c in range(self.channels) :
+                if append :
+                    ta, = self.axt[c].plot( self.time[t0:t1:tstep], self.fastenvelope[t0:t1:tstep, c], 'r', lw=2 )
+                    self.fastenvelope_artists.append( ta )
+                else :
+                    self.fastenvelope_artists[c].set_data( self.time[t0:t1:tstep], self.fastenvelope[t0:t1:tstep, c] )
+                self.fastenvelope_artists[c].set_visible(True)
+        else :
+            for c in range(len(self.fastenvelope_artists)) :
+                self.fastenvelope_artists[c].set_visible(False)
+        if self.show_slowenvelope :
+            append = len(self.slowenvelope_artists) == 0
+            for c in range(self.channels) :
+                if append :
+                    ta, = self.axt[c].plot( self.time[t0:t1:tstep], self.slowenvelope[t0:t1:tstep, c], 'c', lw=2 )
+                    self.slowenvelope_artists.append( ta )
+                else :
+                    self.slowenvelope_artists[c].set_data( self.time[t0:t1:tstep], self.slowenvelope[t0:t1:tstep, c] )
+                self.slowenvelope_artists[c].set_visible(True)
+        else :
+            for c in range(len(self.slowenvelope_artists)) :
+                self.slowenvelope_artists[c].set_visible(False)
         
         if draw :
             self.fig.canvas.draw()
                  
     def keypress( self, event ) :
-        # print 'pressed', event.key
         if event.key in '+=X' :
             if self.twindow*self.rate > 20 :
                 self.twindow *= 0.5
@@ -574,8 +645,8 @@ class SignalPlot :
             self.fig.canvas.draw()
         elif event.key == 'v':
             for c in range(self.channels):
-                min = np.min( self.data[:, c] )
-                max = np.max( self.data[:, c] )
+                min = np.min( self.fdata[:, c] )
+                max = np.max( self.fdata[:, c] )
                 h = 0.5*(max - min)
                 v = 0.5*(max + min)
                 self.ymin[c] = v-h
@@ -588,19 +659,83 @@ class SignalPlot :
                 self.ymax[c] = +1.0
                 self.axt[c].set_ylim( self.ymin[c], self.ymax[c] )
             self.fig.canvas.draw()
-        elif event.key in 'C' :
-            self.envcutofffreq *= 1.2
-            self.envelope = envelope( self.rate, self.data, self.envcutofffreq )
+        elif event.key == 'ctrl+t' :
+            self.show_traces = not self.show_traces
+            if len(self.trace_artists) > 0 :
+                for c in range(self.channels) :
+                    self.trace_artists[c].set_visible( self.show_traces )
+                self.fig.canvas.draw()
+            else:
+                self.update_plots()
+        elif event.key == 'ctrl+f' :
+            self.show_filtered_traces = not self.show_filtered_traces
+            if len(self.trace_artists) > 0 :
+                for c in range(self.channels) :
+                    self.filtered_trace_artists[c].set_visible( self.show_filtered_traces )
+                self.fig.canvas.draw()
+            else:
+                self.update_plots()
+        elif event.key == 'ctrl+e' :
+            self.show_fastenvelope = not self.show_fastenvelope
+            if len(self.trace_artists) > 0 :
+                for c in range(self.channels) :
+                    self.fastenelvope_artists[c].set_visible( self.show_fastenvelope )
+                self.fig.canvas.draw()
+            else:
+                self.update_plots()
+        elif event.key == 'ctrl+s' :
+            self.show_slowenvelope = not self.show_slowenvelope
+            if len(self.trace_artists) > 0 :
+                for c in range(self.channels) :
+                    self.slowenelvope_artists[c].set_visible( self.show_slowenvelope )
+                self.fig.canvas.draw()
+            else:
+                self.update_plots()
+        elif event.key == 'h' :
+            self.highpassfreq /= 1.5
+            self.highpass_artist.set_text('highpass=%.2fkHz' % (0.001*self.highpassfreq))
+            self.fdata = bandpass_filter(self.data, self.rate, self.highpassfreq, self.lowpassfreq)
             self.update_plots()
-        elif event.key in 'c' :
-            self.envcutofffreq /= 1.2
-            self.envelope = envelope( self.rate, self.data, self.envcutofffreq )
+        elif event.key == 'H' :
+            self.highpassfreq * 1.5
+            self.highpass_artist.set_text('highpass=%.2fkHz' % (0.001*self.highpassfreq))
+            self.fdata = bandpass_filter(self.data, self.rate, self.highpassfreq, self.lowpassfreq)
             self.update_plots()
-        elif event.key in 'h' :
-            self.help = not self.help
-            for ht in self.helptext :
-                ht.set_visible( self.help )
-            self.fig.canvas.draw()
+        elif event.key == 'l' :
+            self.lowpassfreq /= 1.5
+            self.lowpass_artist.set_text('lowpass=%.2fkHz' % (0.001*self.lowpassfreq))
+            self.fdata = bandpass_filter(self.data, self.rate, self.highpassfreq, self.lowpassfreq)
+            self.update_plots()
+        elif event.key == 'L' :
+            self.lowpassfreq * 1.5
+            self.lowpass_artist.set_text('lowpass=%.2fkHz' % (0.001*self.lowpassfreq))
+            self.fdata = bandpass_filter(self.data, self.rate, self.highpassfreq, self.lowpassfreq)
+            self.update_plots()
+        elif event.key == 's' :
+            self.envslowcutofffreq /= 1.5
+            self.slowenvelope_artist.set_text('slow envelope=%.2fkHz' % (0.001*self.envslowcutofffreq))
+            self.slowenvelope = envelope(self.fdata, self.rate, self.envslowcutofffreq )
+            self.update_plots()
+        elif event.key == 'S' :
+            self.envslowcutofffreq *= 1.5
+            self.slowenvelope_artist.set_text('slow envelope=%.2fkHz' % (0.001*self.envslowcutofffreq))
+            self.slowenvelope = envelope(self.fdata, self.rate, self.envslowcutofffreq )
+            self.update_plots()
+        elif event.key == 'f' :
+            self.envfastcutofffreq /= 1.5
+            self.fastenvelope_artist.set_text('fast envelope=%.2fkHz' % (0.001*self.envfastcutofffreq))
+            self.fastenvelope = envelope(self.fdata, self.rate, self.envfastcutofffreq )
+            self.update_plots()
+        elif event.key == 'F' :
+            self.envfastcutofffreq *= 1.5
+            self.fastenvelope_artist.set_text('fast envelope=%.2fkHz' % (0.001*self.envfastcutofffreq))
+            self.fastenvelope = envelope(self.fdata, self.rate, self.envfastcutofffreq )
+            self.update_plots()
+#        elif event.key in 'h' :
+#            self.help = not self.help
+#            for ht in self.helptext :
+#                ht.set_visible( self.help )
+#            self.fig.canvas.draw()
         elif event.key in 'w' :
             self.plot_waveform()
         elif event.key in 'p' :
