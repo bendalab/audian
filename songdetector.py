@@ -476,10 +476,10 @@ class SignalPlot :
                 self.ymax[c] = +10.0
             if c == 0 :
                 self.axt.append( self.fig.add_axes( [ 0.08, 0.06+(self.channels-c-1)*ph, 0.89, ph ] ) )
-                self.highpass_artist = self.axt[0].text( 0.05, 0.9, 'highpass=%.2fkHz' % (0.001*self.highpassfreq), transform=self.axt[0].transAxes )
-                self.lowpass_artist = self.axt[0].text( 0.2, 0.9, 'lowpass=%.2fkHz' % (0.001*self.lowpassfreq), transform=self.axt[0].transAxes )
-                self.fastenvelope_artist = self.axt[0].text( 0.35, 0.9, 'fast envelope=%.2fkHz' % (0.001*self.envfastcutofffreq), transform=self.axt[0].transAxes )
-                self.slowenvelope_artist = self.axt[0].text( 0.5, 0.9, 'slow envelope=%.2fkHz' % (0.001*self.envslowcutofffreq), transform=self.axt[0].transAxes )
+                self.highpass_artist = self.axt[0].text( 0.05, 0.9, 'highpass=%.1fkHz' % (0.001*self.highpassfreq), transform=self.axt[0].transAxes )
+                self.lowpass_artist = self.axt[0].text( 0.2, 0.9, 'lowpass=%.1fkHz' % (0.001*self.lowpassfreq), transform=self.axt[0].transAxes )
+                self.fastenvelope_artist = self.axt[0].text( 0.35, 0.9, 'fast envelope=%.0fHz' % self.envfastcutofffreq, transform=self.axt[0].transAxes )
+                self.slowenvelope_artist = self.axt[0].text( 0.5, 0.9, 'slow envelope=%.1fHz' % self.envslowcutofffreq, transform=self.axt[0].transAxes )
 
             else:
                 self.axt.append( self.fig.add_axes( [ 0.08, 0.08+(self.channels-c-1)*ph, 0.89, ph ], sharex=self.axt[0] ) )
@@ -693,42 +693,42 @@ class SignalPlot :
                 self.update_plots()
         elif event.key == 'h' :
             self.highpassfreq /= 1.5
-            self.highpass_artist.set_text('highpass=%.2fkHz' % (0.001*self.highpassfreq))
+            self.highpass_artist.set_text('highpass=%.1fkHz' % (0.001*self.highpassfreq))
             self.fdata = bandpass_filter(self.data, self.rate, self.highpassfreq, self.lowpassfreq)
             self.update_plots()
         elif event.key == 'H' :
             self.highpassfreq * 1.5
-            self.highpass_artist.set_text('highpass=%.2fkHz' % (0.001*self.highpassfreq))
+            self.highpass_artist.set_text('highpass=%.1fkHz' % (0.001*self.highpassfreq))
             self.fdata = bandpass_filter(self.data, self.rate, self.highpassfreq, self.lowpassfreq)
             self.update_plots()
         elif event.key == 'l' :
             self.lowpassfreq /= 1.5
-            self.lowpass_artist.set_text('lowpass=%.2fkHz' % (0.001*self.lowpassfreq))
+            self.lowpass_artist.set_text('lowpass=%.1fkHz' % (0.001*self.lowpassfreq))
             self.fdata = bandpass_filter(self.data, self.rate, self.highpassfreq, self.lowpassfreq)
             self.update_plots()
         elif event.key == 'L' :
             self.lowpassfreq * 1.5
-            self.lowpass_artist.set_text('lowpass=%.2fkHz' % (0.001*self.lowpassfreq))
+            self.lowpass_artist.set_text('lowpass=%.1fkHz' % (0.001*self.lowpassfreq))
             self.fdata = bandpass_filter(self.data, self.rate, self.highpassfreq, self.lowpassfreq)
             self.update_plots()
         elif event.key == 's' :
             self.envslowcutofffreq /= 1.5
-            self.slowenvelope_artist.set_text('slow envelope=%.2fkHz' % (0.001*self.envslowcutofffreq))
+            self.slowenvelope_artist.set_text('slow envelope=%.1fHz' % self.envslowcutofffreq)
             self.slowenvelope = envelope(self.fdata, self.rate, self.envslowcutofffreq )
             self.update_plots()
         elif event.key == 'S' :
             self.envslowcutofffreq *= 1.5
-            self.slowenvelope_artist.set_text('slow envelope=%.2fkHz' % (0.001*self.envslowcutofffreq))
+            self.slowenvelope_artist.set_text('slow envelope=%.1fHz' % self.envslowcutofffreq)
             self.slowenvelope = envelope(self.fdata, self.rate, self.envslowcutofffreq )
             self.update_plots()
         elif event.key == 'f' :
             self.envfastcutofffreq /= 1.5
-            self.fastenvelope_artist.set_text('fast envelope=%.2fkHz' % (0.001*self.envfastcutofffreq))
+            self.fastenvelope_artist.set_text('fast envelope=%.0fHz' % self.envfastcutofffreq)
             self.fastenvelope = envelope(self.fdata, self.rate, self.envfastcutofffreq )
             self.update_plots()
         elif event.key == 'F' :
             self.envfastcutofffreq *= 1.5
-            self.fastenvelope_artist.set_text('fast envelope=%.2fkHz' % (0.001*self.envfastcutofffreq))
+            self.fastenvelope_artist.set_text('fast envelope=%.0fHz' % self.envfastcutofffreq)
             self.fastenvelope = envelope(self.fdata, self.rate, self.envfastcutofffreq )
             self.update_plots()
 #        elif event.key in 'h' :
