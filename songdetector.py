@@ -89,6 +89,20 @@ def envelope( data, rate, freq=100.0 ):
 #                     np.correlate(data, w, mode='same') ** 2)).ravel()) * np.sqrt(2.)
 #    return rstd
 
+def threshold_estimates(envelopes, fac=6.0, min_ampl=0.0):
+    maxe = np.max(envelopes)
+    threshs = []
+    for c in range(envelopes.shape[1]):
+        h, b = np.histogram(envelopes[:,c], bins=np.linspace(0.0, maxe, 100))
+        maxi = 2*np.argmax(h)
+        if maxi >= len(b):
+            maxi = len(b)
+        mean = np.mean(envelopes[envelopes[:,c]<b[maxi],c])
+        std = np.std(envelopes[envelopes[:,c]<b[maxi],c])
+        threshs.append(mean + fac*std)
+    return threshs
+        
+
 ###############################################################################
 ## configuration file writing and loading:
 
@@ -414,6 +428,12 @@ class SignalPlot :
         self.filename = filename
         self.rate = samplingrate
         self.data = data
+        self.unit = unit
+        self.time = np.arange( 0.0, self.data.shape[0] )/self.rate
+        self.toffset = 0.0
+        self.twindow = 60.0
+        if self.twindow > self.time[-1] :
+            self.twindow = np.round( 2**(np.floor(np.log(self.time[-1]) / np.log(2.0)) + 1.0) )
         self.lowpassfreq = cfg['lowpassfreq'][0]
         self.highpassfreq = cfg['highpassfreq'][0]
         self.fdata = bandpass_filter(self.data, self.rate, self.highpassfreq, self.lowpassfreq)
@@ -422,16 +442,14 @@ class SignalPlot :
         self.envfastcutofffreq = cfg['envfastcutofffreq'][0]
         self.slowenvelope = envelope(self.fdata, self.rate, self.envslowcutofffreq )
         self.fastenvelope = envelope(self.fdata, self.rate, self.envfastcutofffreq )
-        self.unit = unit
-        self.time = np.arange( 0.0, self.data.shape[0] )/self.rate
-        self.toffset = 0.0
-        self.twindow = 60.0
-        if self.twindow > self.time[-1] :
-            self.twindow = np.round( 2**(np.floor(np.log(self.time[-1]) / np.log(2.0)) + 1.0) )
+        fac = 6.0
+        min_ampl = 0.01
+        self.thresholds = threshold_estimates(self.slowenvelope, fac, min_ampl)
         self.trace_artists = []
         self.filtered_trace_artists = []
         self.slowenvelope_artists = []
         self.fastenvelope_artists = []
+        self.threshold_artists = []
         self.highpass_artist = None
         self.lowpass_artist = None
         self.fastenvelope_artist = None
@@ -440,6 +458,7 @@ class SignalPlot :
         self.show_filtered_traces = cfg['displayFilteredTraces'][0]
         self.show_fastenvelope = cfg['displayFastEnvelope'][0]
         self.show_slowenvelope = cfg['displaySlowEnvelope'][0]
+        self.show_thresholds = True
         self.help = cfg['displayHelp'][0]
         self.helptext = []
         self.analysis_file = None
@@ -479,8 +498,7 @@ class SignalPlot :
                 self.highpass_artist = self.axt[0].text( 0.05, 0.9, 'highpass=%.1fkHz' % (0.001*self.highpassfreq), transform=self.axt[0].transAxes )
                 self.lowpass_artist = self.axt[0].text( 0.2, 0.9, 'lowpass=%.1fkHz' % (0.001*self.lowpassfreq), transform=self.axt[0].transAxes )
                 self.fastenvelope_artist = self.axt[0].text( 0.35, 0.9, 'fast envelope=%.0fHz' % self.envfastcutofffreq, transform=self.axt[0].transAxes )
-                self.slowenvelope_artist = self.axt[0].text( 0.5, 0.9, 'slow envelope=%.1fHz' % self.envslowcutofffreq, transform=self.axt[0].transAxes )
-
+                self.slowenvelope_artist = self.axt[0].text( 0.5, 0.9, 'slow envelope=%.1fHz' % self.envslowcutofffreq, transform=self.axt[0].transAxes )                
             else:
                 self.axt.append( self.fig.add_axes( [ 0.08, 0.08+(self.channels-c-1)*ph, 0.89, ph ], sharex=self.axt[0] ) )
             self.axt[-1].set_ylabel( 'Amplitude [{:s}]'.format( self.unit ) )
@@ -575,6 +593,18 @@ class SignalPlot :
         else :
             for c in range(len(self.slowenvelope_artists)) :
                 self.slowenvelope_artists[c].set_visible(False)
+        if self.show_thresholds :
+            append = len(self.threshold_artists) == 0
+            for c in range(self.channels) :
+                if append :
+                    ta, = self.axt[c].plot( [self.time[t0], self.time[t1-tstep]], [self.thresholds[c], self.thresholds[c]], 'k' )
+                    self.threshold_artists.append( ta )
+                else :
+                    self.threshold_artists[c].set_data( [self.time[t0], self.time[t1-tstep]], [self.thresholds[c], self.thresholds[c]] )
+                self.threshold_artists[c].set_visible(True)
+        else :
+            for c in range(len(self.threshold_artists)) :
+                self.threshold_artists[c].set_visible(False)
         
         if draw :
             self.fig.canvas.draw()
