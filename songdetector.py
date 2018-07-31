@@ -89,7 +89,7 @@ def envelope( data, rate, freq=100.0 ):
 #                     np.correlate(data, w, mode='same') ** 2)).ravel()) * np.sqrt(2.)
 #    return rstd
 
-def threshold_estimates(envelopes, fac=6.0, min_ampl=0.0):
+def threshold_estimates(envelopes, fac=6.0):
     maxe = np.max(envelopes)
     threshs = []
     for c in range(envelopes.shape[1]):
@@ -101,7 +101,30 @@ def threshold_estimates(envelopes, fac=6.0, min_ampl=0.0):
         std = np.std(envelopes[envelopes[:,c]<b[maxi],c])
         threshs.append(mean + fac*std)
     return threshs
-        
+
+def detect_songs(time, slowenvelopes, fastenvelopes, thresholds, min_duration=0.2):
+    songonsets = []
+    songoffsets = []
+    for c in range(slowenvelopes.shape[1]):
+        onsets = time[:-1][(slowenvelopes[1:,c]>thresholds[c]) & (slowenvelopes[:-1,c]<=thresholds[c])]
+        offsets = time[:-1][(slowenvelopes[1:,c]<=thresholds[c]) & (slowenvelopes[:-1,c]>thresholds[c])]
+        if offsets[0] < onsets[0] :
+            offsets = offsets[1:]
+        if len(onsets) != len(offsets):
+            minlen = min(len(onsets), len(offsets))
+            onsets = onsets[:minlen]
+            offsets = offsets[:minlen]
+        # merge songs:
+        diff = onsets[1:] - offsets[:-1]
+        indices = diff > min_duration
+        onsets = onsets[np.hstack([True, indices])]
+        offsets = offsets[np.hstack([indices, True])]
+        # skip songs that are too short:
+        diff = offsets - onsets
+        indices = diff > min_duration
+        songonsets.append(onsets[indices])
+        songoffsets.append(offsets[indices])
+    return songonsets, songoffsets
 
 ###############################################################################
 ## configuration file writing and loading:
@@ -443,13 +466,16 @@ class SignalPlot :
         self.slowenvelope = envelope(self.fdata, self.rate, self.envslowcutofffreq )
         self.fastenvelope = envelope(self.fdata, self.rate, self.envfastcutofffreq )
         fac = 6.0
-        min_ampl = 0.01
-        self.thresholds = threshold_estimates(self.slowenvelope, fac, min_ampl)
+        self.thresholds = threshold_estimates(self.slowenvelope, fac)
+        self.songonsets, self.songoffsets = detect_songs(self.time, self.slowenvelope,
+                                                         self.fastenvelope, self.thresholds)
         self.trace_artists = []
         self.filtered_trace_artists = []
         self.slowenvelope_artists = []
         self.fastenvelope_artists = []
         self.threshold_artists = []
+        self.songonset_artists = []
+        self.songoffset_artists = []
         self.highpass_artist = None
         self.lowpass_artist = None
         self.fastenvelope_artist = None
@@ -459,6 +485,8 @@ class SignalPlot :
         self.show_fastenvelope = cfg['displayFastEnvelope'][0]
         self.show_slowenvelope = cfg['displaySlowEnvelope'][0]
         self.show_thresholds = True
+        self.show_songonsets = True
+        self.show_songoffsets = True
         self.help = cfg['displayHelp'][0]
         self.helptext = []
         self.analysis_file = None
@@ -596,15 +624,42 @@ class SignalPlot :
         if self.show_thresholds :
             append = len(self.threshold_artists) == 0
             for c in range(self.channels) :
+                tm = t1
+                if tm >= len(self.time):
+                    tm = len(self.time)-1
                 if append :
-                    ta, = self.axt[c].plot( [self.time[t0], self.time[t1-tstep]], [self.thresholds[c], self.thresholds[c]], 'k' )
+                    ta, = self.axt[c].plot( [self.time[t0], self.time[tm]], [self.thresholds[c], self.thresholds[c]], 'k' )
                     self.threshold_artists.append( ta )
                 else :
-                    self.threshold_artists[c].set_data( [self.time[t0], self.time[t1-tstep]], [self.thresholds[c], self.thresholds[c]] )
+                    self.threshold_artists[c].set_data( [self.time[t0], self.time[tm]], [self.thresholds[c], self.thresholds[c]] )
                 self.threshold_artists[c].set_visible(True)
         else :
             for c in range(len(self.threshold_artists)) :
                 self.threshold_artists[c].set_visible(False)
+        if self.show_songonsets :
+            append = len(self.songonset_artists) == 0
+            for c in range(self.channels) :
+                if append :
+                    ta, = self.axt[c].plot( self.songonsets[c], self.thresholds[c]*np.ones(len(self.songonsets[c])), '.b', ms=10 )
+                    self.songonset_artists.append( ta )
+                else :
+                    self.songonset_artists[c].set_data( self.songonsets[c], self.thresholds[c]*np.ones(len(self.songonsets[c])) )
+                self.songonset_artists[c].set_visible(True)
+        else :
+            for c in range(len(self.songonset_artists)) :
+                self.songonset_artists[c].set_visible(False)
+        if self.show_songoffsets :
+            append = len(self.songoffset_artists) == 0
+            for c in range(self.channels) :
+                if append :
+                    ta, = self.axt[c].plot( self.songoffsets[c], self.thresholds[c]*np.ones(len(self.songoffsets[c])), '.b', ms=10 )
+                    self.songoffset_artists.append( ta )
+                else :
+                    self.songoffset_artists[c].set_data( self.songoffsets[c], self.thresholds[c]*np.ones(len(self.songoffsets[c])) )
+                self.songoffset_artists[c].set_visible(True)
+        else :
+            for c in range(len(self.songoffset_artists)) :
+                self.songoffset_artists[c].set_visible(False)
         
         if draw :
             self.fig.canvas.draw()
