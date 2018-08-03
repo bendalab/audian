@@ -24,9 +24,8 @@ cfgsec['highpassfreq'] = 'Filter:'
 cfg['highpassfreq'] = [ 1000.0, 'Hz', 'Cutoff frequency of the high-pass filter applied to the signal.' ]
 cfg['lowpassfreq'] = [ 10000.0, 'Hz', 'Cutoff frequency of the low-pass filter applied to the signal.' ]
 
-cfgsec['envfastcutofffreq'] = 'Envelope:'
-cfg['envfastcutofffreq'] = [ 100.0, 'Hz', 'Cutoff frequency of the low-pass filter used for computing the fast envelope from the squared signal.' ]
-cfg['envslowcutofffreq'] = [ 5.0, 'Hz', 'Cutoff frequency of the low-pass filter used for computing the slow envelope from the squared signal.' ]
+cfgsec['envelopecutofffreq'] = 'Envelope:'
+cfg['envelopecutofffreq'] = [ 50.0, 'Hz', 'Cutoff frequency of the low-pass filter used for computing the envelope from the squared signal.' ]
 
 cfgsec['verboseLevel'] = 'Debugging:'
 cfg['verboseLevel'] = [ 0, '', '0=off upto 4 very detailed' ]
@@ -34,8 +33,7 @@ cfg['verboseLevel'] = [ 0, '', '0=off upto 4 very detailed' ]
 cfgsec['displayHelp'] = 'Items to display:'
 cfg['displayTraces'] = [ False, '', 'Display the raw data traces' ] 
 cfg['displayFilteredTraces'] = [ True, '', 'Display the filtered data traces' ] 
-cfg['displayFastEnvelope'] = [ True, '', 'Display the fast envelope' ] 
-cfg['displaySlowEnvelope'] = [ True, '', 'Display the slow envelope' ] 
+cfg['displayEnvelope'] = [ True, '', 'Display the envelope' ] 
 cfg['displayHelp'] = [ False, '', 'Display help on key bindings' ] 
 
 
@@ -69,7 +67,7 @@ def bandpass_filter(data, rate, lowf=5500.0, highf=7500.0):
 def envelope( data, rate, freq=100.0 ):
     nyq = 0.5*rate
     low = freq/nyq
-    b, a = sig.butter( 2, low, btype='lowpass' )
+    b, a = sig.butter( 1, low, btype='lowpass' )
     edata = 2.0*sig.filtfilt( b, a, data*data, axis=0 )
     edata[edata<0.0] = 0.0
     envelope = np.sqrt( edata )*np.sqrt(2.0)
@@ -89,12 +87,15 @@ def envelope( data, rate, freq=100.0 ):
 #                     np.correlate(data, w, mode='same') ** 2)).ravel()) * np.sqrt(2.)
 #    return rstd
 
-def threshold_estimates(envelopes, fac=6.0):
+def threshold_estimates(envelopes, fac=10.0):
     maxe = np.max(envelopes)
     threshs = []
     for c in range(envelopes.shape[1]):
-        h, b = np.histogram(envelopes[:,c], bins=np.linspace(0.0, maxe, 100))
-        maxi = 2*np.argmax(h)
+        h, b = np.histogram(envelopes[:,c], bins=np.linspace(0.0, maxe, 1000))
+        ## if c == 0:
+        ##     plt.bar(b[:-1], h, width=np.diff(b))
+        ##     plt.show()
+        maxi = 2*(np.argmax(h)+1)
         if maxi >= len(b):
             maxi = len(b)
         mean = np.mean(envelopes[envelopes[:,c]<b[maxi],c])
@@ -102,28 +103,32 @@ def threshold_estimates(envelopes, fac=6.0):
         threshs.append(mean + fac*std)
     return threshs
 
-def detect_songs(time, slowenvelopes, fastenvelopes, thresholds, min_duration=0.2):
+def detect_songs(time, envelopes, thresholds, min_duration=0.2):
     songonsets = []
     songoffsets = []
-    for c in range(slowenvelopes.shape[1]):
-        onsets = time[:-1][(slowenvelopes[1:,c]>thresholds[c]) & (slowenvelopes[:-1,c]<=thresholds[c])]
-        offsets = time[:-1][(slowenvelopes[1:,c]<=thresholds[c]) & (slowenvelopes[:-1,c]>thresholds[c])]
-        if offsets[0] < onsets[0] :
-            offsets = offsets[1:]
-        if len(onsets) != len(offsets):
-            minlen = min(len(onsets), len(offsets))
-            onsets = onsets[:minlen]
-            offsets = offsets[:minlen]
-        # merge songs:
-        diff = onsets[1:] - offsets[:-1]
-        indices = diff > min_duration
-        onsets = onsets[np.hstack([True, indices])]
-        offsets = offsets[np.hstack([indices, True])]
-        # skip songs that are too short:
-        diff = offsets - onsets
-        indices = diff > min_duration
-        songonsets.append(onsets[indices])
-        songoffsets.append(offsets[indices])
+    for c in range(envelopes.shape[1]):
+        onsets = time[:-1][(envelopes[1:,c]>thresholds[c]) & (envelopes[:-1,c]<=thresholds[c])]
+        offsets = time[:-1][(envelopes[1:,c]<=thresholds[c]) & (envelopes[:-1,c]>thresholds[c])]
+        if len(onsets) == 0 or len(offsets) == 0:
+            songonsets.append([])
+            songoffsets.append([])
+        else:
+            if offsets[0] < onsets[0] :
+                offsets = offsets[1:]
+            if len(onsets) != len(offsets):
+                minlen = min(len(onsets), len(offsets))
+                onsets = onsets[:minlen]
+                offsets = offsets[:minlen]
+            # merge songs:
+            diff = onsets[1:] - offsets[:-1]
+            indices = diff > min_duration
+            onsets = onsets[np.hstack([True, indices])]
+            offsets = offsets[np.hstack([indices, True])]
+            # skip songs that are too short:
+            diff = offsets - onsets
+            indices = diff > min_duration
+            songonsets.append(onsets[indices])
+            songoffsets.append(offsets[indices])
     return songonsets, songoffsets
 
 ###############################################################################
@@ -461,29 +466,23 @@ class SignalPlot :
         self.highpassfreq = cfg['highpassfreq'][0]
         self.fdata = bandpass_filter(self.data, self.rate, self.highpassfreq, self.lowpassfreq)
         self.channels = data.shape[1]
-        self.envslowcutofffreq = cfg['envslowcutofffreq'][0]
-        self.envfastcutofffreq = cfg['envfastcutofffreq'][0]
-        self.slowenvelope = envelope(self.fdata, self.rate, self.envslowcutofffreq )
-        self.fastenvelope = envelope(self.fdata, self.rate, self.envfastcutofffreq )
-        fac = 6.0
-        self.thresholds = threshold_estimates(self.slowenvelope, fac)
-        self.songonsets, self.songoffsets = detect_songs(self.time, self.slowenvelope,
-                                                         self.fastenvelope, self.thresholds)
+        self.envelopecutofffreq = cfg['envelopecutofffreq'][0]
+        self.envelope = envelope(self.fdata, self.rate, self.envelopecutofffreq )
+        fac = 10.0
+        self.thresholds = threshold_estimates(self.envelope, fac)
+        self.songonsets, self.songoffsets = detect_songs(self.time, self.envelope, self.thresholds)
         self.trace_artists = []
         self.filtered_trace_artists = []
-        self.slowenvelope_artists = []
-        self.fastenvelope_artists = []
+        self.envelope_artists = []
         self.threshold_artists = []
         self.songonset_artists = []
         self.songoffset_artists = []
         self.highpass_artist = None
         self.lowpass_artist = None
-        self.fastenvelope_artist = None
-        self.slowenvelope_artist = None
+        self.envelope_artist = None
         self.show_traces = cfg['displayTraces'][0]
         self.show_filtered_traces = cfg['displayFilteredTraces'][0]
-        self.show_fastenvelope = cfg['displayFastEnvelope'][0]
-        self.show_slowenvelope = cfg['displaySlowEnvelope'][0]
+        self.show_envelope = cfg['displayEnvelope'][0]
         self.show_thresholds = True
         self.show_songonsets = True
         self.show_songoffsets = True
@@ -525,8 +524,7 @@ class SignalPlot :
                 self.axt.append( self.fig.add_axes( [ 0.08, 0.06+(self.channels-c-1)*ph, 0.89, ph ] ) )
                 self.highpass_artist = self.axt[0].text( 0.05, 0.9, 'highpass=%.1fkHz' % (0.001*self.highpassfreq), transform=self.axt[0].transAxes )
                 self.lowpass_artist = self.axt[0].text( 0.2, 0.9, 'lowpass=%.1fkHz' % (0.001*self.lowpassfreq), transform=self.axt[0].transAxes )
-                self.fastenvelope_artist = self.axt[0].text( 0.35, 0.9, 'fast envelope=%.0fHz' % self.envfastcutofffreq, transform=self.axt[0].transAxes )
-                self.slowenvelope_artist = self.axt[0].text( 0.5, 0.9, 'slow envelope=%.1fHz' % self.envslowcutofffreq, transform=self.axt[0].transAxes )                
+                self.envelope_artist = self.axt[0].text( 0.35, 0.9, 'envelope=%.0fHz' % self.envelopecutofffreq, transform=self.axt[0].transAxes )
             else:
                 self.axt.append( self.fig.add_axes( [ 0.08, 0.08+(self.channels-c-1)*ph, 0.89, ph ], sharex=self.axt[0] ) )
             self.axt[-1].set_ylabel( 'Amplitude [{:s}]'.format( self.unit ) )
@@ -597,30 +595,18 @@ class SignalPlot :
         else :
             for c in range(len(self.filtered_trace_artists)) :
                 self.filtered_trace_artists[c].set_visible(False)
-        if self.show_fastenvelope :
-            append = len(self.fastenvelope_artists) == 0
+        if self.show_envelope :
+            append = len(self.envelope_artists) == 0
             for c in range(self.channels) :
                 if append :
-                    ta, = self.axt[c].plot( self.time[t0:t1:tstep], self.fastenvelope[t0:t1:tstep, c], 'r', lw=2 )
-                    self.fastenvelope_artists.append( ta )
+                    ta, = self.axt[c].plot( self.time[t0:t1:tstep], self.envelope[t0:t1:tstep, c], 'r', lw=2 )
+                    self.envelope_artists.append( ta )
                 else :
-                    self.fastenvelope_artists[c].set_data( self.time[t0:t1:tstep], self.fastenvelope[t0:t1:tstep, c] )
-                self.fastenvelope_artists[c].set_visible(True)
+                    self.envelope_artists[c].set_data( self.time[t0:t1:tstep], self.envelope[t0:t1:tstep, c] )
+                self.envelope_artists[c].set_visible(True)
         else :
-            for c in range(len(self.fastenvelope_artists)) :
-                self.fastenvelope_artists[c].set_visible(False)
-        if self.show_slowenvelope :
-            append = len(self.slowenvelope_artists) == 0
-            for c in range(self.channels) :
-                if append :
-                    ta, = self.axt[c].plot( self.time[t0:t1:tstep], self.slowenvelope[t0:t1:tstep, c], 'c', lw=2 )
-                    self.slowenvelope_artists.append( ta )
-                else :
-                    self.slowenvelope_artists[c].set_data( self.time[t0:t1:tstep], self.slowenvelope[t0:t1:tstep, c] )
-                self.slowenvelope_artists[c].set_visible(True)
-        else :
-            for c in range(len(self.slowenvelope_artists)) :
-                self.slowenvelope_artists[c].set_visible(False)
+            for c in range(len(self.envelope_artists)) :
+                self.envelope_artists[c].set_visible(False)
         if self.show_thresholds :
             append = len(self.threshold_artists) == 0
             for c in range(self.channels) :
@@ -761,18 +747,10 @@ class SignalPlot :
             else:
                 self.update_plots()
         elif event.key == 'ctrl+e' :
-            self.show_fastenvelope = not self.show_fastenvelope
+            self.show_envelope = not self.show_envelope
             if len(self.trace_artists) > 0 :
                 for c in range(self.channels) :
-                    self.fastenelvope_artists[c].set_visible( self.show_fastenvelope )
-                self.fig.canvas.draw()
-            else:
-                self.update_plots()
-        elif event.key == 'ctrl+s' :
-            self.show_slowenvelope = not self.show_slowenvelope
-            if len(self.trace_artists) > 0 :
-                for c in range(self.channels) :
-                    self.slowenelvope_artists[c].set_visible( self.show_slowenvelope )
+                    self.enelvope_artists[c].set_visible( self.show_envelope )
                 self.fig.canvas.draw()
             else:
                 self.update_plots()
@@ -796,25 +774,17 @@ class SignalPlot :
             self.lowpass_artist.set_text('lowpass=%.1fkHz' % (0.001*self.lowpassfreq))
             self.fdata = bandpass_filter(self.data, self.rate, self.highpassfreq, self.lowpassfreq)
             self.update_plots()
-        elif event.key == 's' :
-            self.envslowcutofffreq /= 1.5
-            self.slowenvelope_artist.set_text('slow envelope=%.1fHz' % self.envslowcutofffreq)
-            self.slowenvelope = envelope(self.fdata, self.rate, self.envslowcutofffreq )
+        elif event.key == 'e' :
+            self.envelopecutofffreq /= 1.5
+            self.envelope_artist.set_text('envelope=%.0fHz' % self.envelopecutofffreq)
+            self.envelope = envelope(self.fdata, self.rate, self.envelopecutofffreq )
+            self.songonsets, self.songoffsets = detect_songs(self.time, self.envelope, self.thresholds)
             self.update_plots()
-        elif event.key == 'S' :
-            self.envslowcutofffreq *= 1.5
-            self.slowenvelope_artist.set_text('slow envelope=%.1fHz' % self.envslowcutofffreq)
-            self.slowenvelope = envelope(self.fdata, self.rate, self.envslowcutofffreq )
-            self.update_plots()
-        elif event.key == 'f' :
-            self.envfastcutofffreq /= 1.5
-            self.fastenvelope_artist.set_text('fast envelope=%.0fHz' % self.envfastcutofffreq)
-            self.fastenvelope = envelope(self.fdata, self.rate, self.envfastcutofffreq )
-            self.update_plots()
-        elif event.key == 'F' :
-            self.envfastcutofffreq *= 1.5
-            self.fastenvelope_artist.set_text('fast envelope=%.0fHz' % self.envfastcutofffreq)
-            self.fastenvelope = envelope(self.fdata, self.rate, self.envfastcutofffreq )
+        elif event.key == 'E' :
+            self.envelopecutofffreq *= 1.5
+            self.envelope_artist.set_text('envelope=%.0fHz' % self.envelopecutofffreq)
+            self.envelope = envelope(self.fdata, self.rate, self.envelopecutofffreq )
+            self.songonsets, self.songoffsets = detect_songs(self.time, self.envelope, self.thresholds)
             self.update_plots()
 #        elif event.key in 'h' :
 #            self.help = not self.help
@@ -912,6 +882,7 @@ def main():
     #data = bandpass_filter(data, freq)
 
     # plot:
+    #sp = SignalPlot( freq, data[:5000000,:], unit, filepath, os.path.dirname( filepath ) )
     sp = SignalPlot( freq, data, unit, filepath, os.path.dirname( filepath ) )
 
 if __name__ == '__main__':
