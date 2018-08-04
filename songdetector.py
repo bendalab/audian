@@ -18,14 +18,18 @@ cfg = OrderedDict()
 cfgsec = dict()
 
 cfgsec['maxpixel'] = 'Plotting:'
-cfg['maxpixel'] = [ 0, '', 'Either maximum number of data points to be plotted or zero for plotting all data points.' ]
+cfg['maxpixel'] = [ 50000, '', 'Either maximum number of data points to be plotted or zero for plotting all data points.' ]
 
 cfgsec['highpassfreq'] = 'Filter:'
 cfg['highpassfreq'] = [ 1000.0, 'Hz', 'Cutoff frequency of the high-pass filter applied to the signal.' ]
 cfg['lowpassfreq'] = [ 10000.0, 'Hz', 'Cutoff frequency of the low-pass filter applied to the signal.' ]
 
 cfgsec['envelopecutofffreq'] = 'Envelope:'
-cfg['envelopecutofffreq'] = [ 50.0, 'Hz', 'Cutoff frequency of the low-pass filter used for computing the envelope from the squared signal.' ]
+cfg['envelopecutofffreq'] = [ 200.0, 'Hz', 'Cutoff frequency of the low-pass filter used for computing the envelope from the squared signal.' ]
+
+cfgsec['minduration'] = 'Detection:'
+cfg['minduration'] = [ 0.2, 's', 'Minimum duration of an detected song.' ]
+cfg['minpause'] = [ 0.2, 's', 'Minimum duration of a pause between detected songs.' ]
 
 cfgsec['verboseLevel'] = 'Debugging:'
 cfg['verboseLevel'] = [ 0, '', '0=off upto 4 very detailed' ]
@@ -87,48 +91,109 @@ def envelope( data, rate, freq=100.0 ):
 #                     np.correlate(data, w, mode='same') ** 2)).ravel()) * np.sqrt(2.)
 #    return rstd
 
-def threshold_estimates(envelopes, fac=10.0):
-    maxe = np.max(envelopes)
-    threshs = []
-    for c in range(envelopes.shape[1]):
-        h, b = np.histogram(envelopes[:,c], bins=np.linspace(0.0, maxe, 1000))
-        ## if c == 0:
-        ##     plt.bar(b[:-1], h, width=np.diff(b))
-        ##     plt.show()
-        maxi = 2*(np.argmax(h)+1)
-        if maxi >= len(b):
-            maxi = len(b)
-        mean = np.mean(envelopes[envelopes[:,c]<b[maxi],c])
-        std = np.std(envelopes[envelopes[:,c]<b[maxi],c])
-        threshs.append(mean + fac*std)
-    return threshs
+## histogram based threshold:
+## def threshold_estimates(envelopes, fac=10.0):
+##     maxe = np.max(envelopes)
+##     threshs = []
+##     for c in range(envelopes.shape[1]):
+##         h, b = np.histogram(envelopes[:,c], bins=np.linspace(0.0, maxe, 1000))
+##         ## if c == 0:
+##         ##     plt.bar(b[:-1], h, width=np.diff(b))
+##         ##     plt.show()
+##         maxi = 2*(np.argmax(h)+1)
+##         if maxi >= len(b):
+##             maxi = len(b)
+##         mean = np.mean(envelopes[envelopes[:,c]<b[maxi],c])
+##         std = np.std(envelopes[envelopes[:,c]<b[maxi],c])
+##         threshs.append(mean + fac*std)
+##     return threshs
 
-def detect_songs(time, envelopes, thresholds, min_duration=0.2):
+# std based threshold:
+def threshold_estimates(envelopes, fac=1.0):
+    return np.mean(envelopes, axis=0) + fac*np.std(envelopes, axis=0)
+
+def detect_power(envelope, rate, threshold, min_pause, min_duration):
+    onsets = np.nonzero((envelope[1:]>threshold) & (envelope[:-1]<=threshold))[0]
+    offsets = np.nonzero((envelope[1:]<=threshold) & (envelope[:-1]>threshold))[0]
+    if len(onsets) == 0 or len(offsets) == 0:
+        return np.array([]), np.array([])
+    else:
+        if offsets[0] < onsets[0] :
+            offsets = offsets[1:]
+        if len(onsets) != len(offsets):
+            minlen = min(len(onsets), len(offsets))
+            onsets = onsets[:minlen]
+            offsets = offsets[:minlen]
+        if len(onsets) == 0 or len(offsets) == 0:
+            return np.array([]), np.array([])
+        # merge songs:
+        diff = (onsets[1:] - offsets[:-1])/rate
+        indices = diff > min_pause
+        onsets = onsets[np.hstack([True, indices])]
+        offsets = offsets[np.hstack([indices, True])]
+        # skip songs that are too short:
+        diff = (offsets - onsets)/rate
+        indices = diff > min_duration
+        onsets = onsets[indices]
+        offsets = offsets[indices]
+    return np.array(onsets), np.array(offsets)
+
+
+def detect_songs(envelopes, rate, thresholds, min_pause=0.1, min_duration=0.1):
     songonsets = []
     songoffsets = []
     for c in range(envelopes.shape[1]):
-        onsets = time[:-1][(envelopes[1:,c]>thresholds[c]) & (envelopes[:-1,c]<=thresholds[c])]
-        offsets = time[:-1][(envelopes[1:,c]<=thresholds[c]) & (envelopes[:-1,c]>thresholds[c])]
-        if len(onsets) == 0 or len(offsets) == 0:
-            songonsets.append([])
-            songoffsets.append([])
-        else:
-            if offsets[0] < onsets[0] :
-                offsets = offsets[1:]
-            if len(onsets) != len(offsets):
-                minlen = min(len(onsets), len(offsets))
-                onsets = onsets[:minlen]
-                offsets = offsets[:minlen]
-            # merge songs:
-            diff = onsets[1:] - offsets[:-1]
-            indices = diff > min_duration
-            onsets = onsets[np.hstack([True, indices])]
-            offsets = offsets[np.hstack([indices, True])]
-            # skip songs that are too short:
-            diff = offsets - onsets
-            indices = diff > min_duration
-            songonsets.append(onsets[indices])
-            songoffsets.append(offsets[indices])
+        # corse detection of songs:
+        onsets, offsets = detect_power(envelopes[:,c], rate, thresholds[c], min_pause, min_duration)
+        # refine detections:
+        new_onsets = []
+        new_offsets = []
+        for k in range(len(onsets)):
+            i0 = onsets[k]
+            i1 = offsets[k]
+            # enlarge song:
+            w = (i1 - i0)//2
+            ii0 = i0 - w if i0 >= w else 0
+            if k > 0 and ii0 <= offsets[k-1]:
+                ii0 = offsets[k-1]
+            ii1 = i1 + w if i1 + w < len(envelopes[:,c]) else len(envelopes[:,c])
+            if k < len(onsets)-1 and ii1 >= onsets[k+1]:
+                ii1 = onsets[k+1]
+            # estimate noise level before song:
+            n0 = ii0 - 2*w
+            n1 = ii0
+            if k > 0 and n0 < offsets[k-1] :
+                n0 = offsets[k-1]
+            if n0 < 0:
+                n0 = 0
+            if n1 - n0 < w:
+                n1 = i0
+            thresh0 = np.mean(envelopes[n0:n1,c]) + 10.0*np.std(envelopes[n0:n1,c])
+            # estimate noise level after song:
+            n0 = ii1
+            n1 = ii1 + 2*w
+            if k < len(onsets)-1 and n1 > onsets[k+1]:
+                n1 = onsets[k+1]
+            if n1 > len(envelopes[:,c]):
+                n1 = len(envelopes[:,c])
+            if n1 - n0 < w:
+                n0 = i1
+            thresh1 = np.mean(envelopes[n0:n1,c]) + 10.0*np.std(envelopes[n0:n1,c])
+            # set threshold:
+            thresh = max(thresh0, thresh1)
+            if thresh > thresholds[c]:
+                thresh = thresholds[c]
+            # detect song:
+            song_am = envelopes[ii0:ii1,c]
+            on, off = detect_power(song_am, rate, thresh, min_pause, min_duration)
+            if len(on[on<=i0-ii0]) == 0 or len(off[off>=i1-ii0]) == 0:
+                new_onsets.append(i0/rate)
+                new_offsets.append(i1/rate)
+            else:
+                new_onsets.append((ii0+on[on<=i0-ii0][-1])/rate)
+                new_offsets.append((ii0+off[off>=i1-ii0][0])/rate)
+        songonsets.append(np.array(new_onsets))
+        songoffsets.append(np.array(new_offsets))
     return songonsets, songoffsets
 
 ###############################################################################
@@ -468,9 +533,11 @@ class SignalPlot :
         self.channels = data.shape[1]
         self.envelopecutofffreq = cfg['envelopecutofffreq'][0]
         self.envelope = envelope(self.fdata, self.rate, self.envelopecutofffreq )
-        fac = 10.0
+        fac = 1.0
         self.thresholds = threshold_estimates(self.envelope, fac)
-        self.songonsets, self.songoffsets = detect_songs(self.time, self.envelope, self.thresholds)
+        self.min_duration = cfg['minduration'][0]
+        self.min_pause = cfg['minpause'][0]
+        self.songonsets, self.songoffsets = detect_songs(self.envelope, self.rate, self.thresholds, self.min_pause, self.min_duration)
         self.trace_artists = []
         self.filtered_trace_artists = []
         self.envelope_artists = []
@@ -778,13 +845,13 @@ class SignalPlot :
             self.envelopecutofffreq /= 1.5
             self.envelope_artist.set_text('envelope=%.0fHz' % self.envelopecutofffreq)
             self.envelope = envelope(self.fdata, self.rate, self.envelopecutofffreq )
-            self.songonsets, self.songoffsets = detect_songs(self.time, self.envelope, self.thresholds)
+            self.songonsets, self.songoffsets = detect_songs(self.envelope, self.rate, self.thresholds)
             self.update_plots()
         elif event.key == 'E' :
             self.envelopecutofffreq *= 1.5
             self.envelope_artist.set_text('envelope=%.0fHz' % self.envelopecutofffreq)
             self.envelope = envelope(self.fdata, self.rate, self.envelopecutofffreq )
-            self.songonsets, self.songoffsets = detect_songs(self.time, self.envelope, self.thresholds)
+            self.songonsets, self.songoffsets = detect_songs(self.envelope, self.rate, self.thresholds)
             self.update_plots()
 #        elif event.key in 'h' :
 #            self.help = not self.help
@@ -876,13 +943,8 @@ def main():
     # load data:
     filepath = args.file
     data, freq, unit = load_data( filepath )
-    
-    #highpass_cutoff = 400.0
-    #data = highpass_filter( freq, data, highpass_cutoff )
-    #data = bandpass_filter(data, freq)
 
     # plot:
-    #sp = SignalPlot( freq, data[:5000000,:], unit, filepath, os.path.dirname( filepath ) )
     sp = SignalPlot( freq, data, unit, filepath, os.path.dirname( filepath ) )
 
 if __name__ == '__main__':
