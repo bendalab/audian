@@ -28,8 +28,8 @@ cfgsec['envelopecutofffreq'] = 'Envelope:'
 cfg['envelopecutofffreq'] = [ 200.0, 'Hz', 'Cutoff frequency of the low-pass filter used for computing the envelope from the squared signal.' ]
 
 cfgsec['minduration'] = 'Detection:'
-cfg['minduration'] = [ 0.2, 's', 'Minimum duration of an detected song.' ]
-cfg['minpause'] = [ 0.2, 's', 'Minimum duration of a pause between detected songs.' ]
+cfg['minduration'] = [ 0.4, 's', 'Minimum duration of an detected song.' ]
+cfg['minpause'] = [ 0.4, 's', 'Minimum duration of a pause between detected songs.' ]
 
 cfgsec['verboseLevel'] = 'Debugging:'
 cfg['verboseLevel'] = [ 0, '', '0=off upto 4 very detailed' ]
@@ -110,7 +110,10 @@ def envelope( data, rate, freq=100.0 ):
 
 # std based threshold:
 def threshold_estimates(envelopes, fac=1.0):
-    return np.mean(envelopes, axis=0) + fac*np.std(envelopes, axis=0)
+    threshs = np.mean(envelopes, axis=0) + fac*np.std(envelopes, axis=0)
+    max_thresh = np.max(threshs)
+    threshs = np.ones(len(threshs))*max_thresh
+    return threshs
 
 def detect_power(envelope, rate, threshold, min_pause, min_duration):
     onsets = np.nonzero((envelope[1:]>threshold) & (envelope[:-1]<=threshold))[0]
