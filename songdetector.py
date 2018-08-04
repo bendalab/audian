@@ -522,7 +522,7 @@ def psd_peaks( psd_freqs, psd, cfg ) :
 ## plotting etc.
     
 class SignalPlot :
-    def __init__( self, samplingrate, data, unit, filename, path ) :
+    def __init__( self, samplingrate, data, fdata, env, threshs, onsets, offsets, unit, filename, path ) :
         self.filepath = ''
         if platform.system() == 'Windows' :
             self.filepath = path
@@ -537,16 +537,17 @@ class SignalPlot :
             self.twindow = np.round( 2**(np.floor(np.log(self.time[-1]) / np.log(2.0)) + 1.0) )
         self.lowpassfreq = cfg['lowpassfreq'][0]
         self.highpassfreq = cfg['highpassfreq'][0]
-        self.fdata = bandpass_filter(self.data, self.rate, self.highpassfreq, self.lowpassfreq)
+        self.fdata = fdata
         self.channels = data.shape[1]
         self.envelopecutofffreq = cfg['envelopecutofffreq'][0]
-        self.envelope = envelope(self.fdata, self.rate, self.envelopecutofffreq )
+        self.envelope = env
         self.thresholdfac = cfg['thresholdfactor'][0]
-        self.thresholds = threshold_estimates(self.envelope, self.thresholdfac)
+        self.thresholds = threshs
         self.min_duration = cfg['minduration'][0]
         self.min_pause = cfg['minpause'][0]
         self.noisethresholdfac = cfg['noisethresholdfactor'][0]
-        self.songonsets, self.songoffsets = detect_songs(self.envelope, self.rate, self.thresholds, self.min_pause, self.min_duration, self.noisethresholdfac)
+        self.songonsets = onsets
+        self.songoffsets = offsets
         self.trace_artists = []
         self.filtered_trace_artists = []
         self.envelope_artists = []
@@ -951,10 +952,24 @@ def main():
 
     # load data:
     filepath = args.file
-    data, freq, unit = load_data( filepath )
+    data, rate, unit = load_data(filepath)
 
+    # process data:
+    fdata = bandpass_filter(data, rate, cfg['highpassfreq'][0], cfg['lowpassfreq'][0])
+    env = envelope(fdata, rate, cfg['envelopecutofffreq'][0])
+    threshs = threshold_estimates(env, cfg['thresholdfactor'][0])
+    onsets, offsets = detect_songs(env, rate, threshs, cfg['minpause'][0], cfg['minduration'][0], cfg['noisethresholdfactor'][0])
+
+    ##
+    # - go through the songs
+    # - compute envelope spectrum
+    # - find position of maximimum
+    # - find largest frequency 10 dB below maximum
+    # - use twice this frequency as cutoff
+    # - detect syllables and song duration
+    
     # plot:
-    sp = SignalPlot( freq, data, unit, filepath, os.path.dirname( filepath ) )
+    sp = SignalPlot(rate, data, fdata, env, threshs, onsets, offsets, unit, filepath, os.path.dirname(filepath))
 
 if __name__ == '__main__':
     main()

@@ -859,15 +859,15 @@ class SignalPlot :
             self.envpower_label = self.axpe.set_ylabel( 'Envelope power' )
         if self.decibel :
             envpower = 10.0*np.log10( envpower )
-            pmin = np.min( envpower[envfreqs<self.fmax] )
+            pmin = np.min( envpower[envfreqs<100.0] )
             pmin = np.floor(pmin/10.0)*10.0
-            pmax = np.max( envpower[envfreqs<self.fmax] )
+            pmax = np.max( envpower[envfreqs<100.0] )
             pmax = np.ceil(pmax/10.0)*10.0
             doty = pmax-5.0
             self.envpower_label.set_text( 'Envelope power [dB]' )
             self.axpe.set_ylim( pmin, pmax )
         else :
-            pmax = np.max( envpower[envfreqs<self.fmax] )
+            pmax = np.max( envpower[envfreqs<100.0] )
             doty = pmax
             pmax *= 1.1
             self.envpower_label.set_text( 'Envelope power' )
