@@ -25,7 +25,11 @@ cfg['highpassfreq'] = [ 1000.0, 'Hz', 'Cutoff frequency of the high-pass filter 
 cfg['lowpassfreq'] = [ 10000.0, 'Hz', 'Cutoff frequency of the low-pass filter applied to the signal.' ]
 
 cfgsec['envelopecutofffreq'] = 'Envelope:'
-cfg['envelopecutofffreq'] = [ 200.0, 'Hz', 'Cutoff frequency of the low-pass filter used for computing the envelope from the squared signal.' ]
+cfg['envelopecutofffreq'] = [ 500.0, 'Hz', 'Cutoff frequency of the low-pass filter used for computing the envelope from the squared signal.' ]
+
+cfgsec['thresholdfactor'] = 'Thresholds:'
+cfg['thresholdfactor'] = [ 1.0, '', 'Factor that multiplies the standard deviation of the whole envelope.' ]
+cfg['noisethresholdfactor'] = [ 14.0, '', 'Factor that multiplies the standard deviation of the noise envelope.' ]
 
 cfgsec['minduration'] = 'Detection:'
 cfg['minduration'] = [ 0.4, 's', 'Minimum duration of an detected song.' ]
@@ -62,19 +66,20 @@ def bandpass_filter(data, rate, lowf=5500.0, highf=7500.0):
     nyq = 0.5*rate
     low = lowf/nyq
     high = highf/nyq
-    b, a = sig.butter(2, [low, high], btype='bandpass')
+    b, a = sig.butter(1, [low, high], btype='bandpass')
     #fdata = sig.lfilter(b, a, data, axis=0)
     fdata = sig.filtfilt(b, a, data, axis=0)
     return fdata
 
 
-def envelope( data, rate, freq=100.0 ):
+def envelope(data, rate, freq=100.0):
     nyq = 0.5*rate
     low = freq/nyq
-    b, a = sig.butter( 1, low, btype='lowpass' )
-    edata = 2.0*sig.filtfilt( b, a, data*data, axis=0 )
+    b, a = sig.butter(1, low, btype='lowpass')
+    edata = 2.0*sig.filtfilt(b, a, data*data, axis=0)
     edata[edata<0.0] = 0.0
-    envelope = np.sqrt( edata )*np.sqrt(2.0)
+    envelope = np.sqrt(edata)*np.sqrt(2.0)
+    #envelope = np.sqrt(data*data)*np.sqrt(2.0) # this is actually not bad for finding power!
     return envelope
 
 # def running_std( rate, data ):
@@ -142,7 +147,7 @@ def detect_power(envelope, rate, threshold, min_pause, min_duration):
     return np.array(onsets), np.array(offsets)
 
 
-def detect_songs(envelopes, rate, thresholds, min_pause=0.1, min_duration=0.1):
+def detect_songs(envelopes, rate, thresholds, min_pause=0.1, min_duration=0.1, thresh_fac=10.0):
     songonsets = []
     songoffsets = []
     for c in range(envelopes.shape[1]):
@@ -171,7 +176,7 @@ def detect_songs(envelopes, rate, thresholds, min_pause=0.1, min_duration=0.1):
                 n0 = 0
             if n1 - n0 < w:
                 n1 = i0
-            thresh0 = np.mean(envelopes[n0:n1,c]) + 10.0*np.std(envelopes[n0:n1,c])
+            thresh0 = np.mean(envelopes[n0:n1,c]) + thresh_fac*np.std(envelopes[n0:n1,c])
             # estimate noise level after song:
             n0 = ii1
             n1 = ii1 + 2*w
@@ -181,7 +186,7 @@ def detect_songs(envelopes, rate, thresholds, min_pause=0.1, min_duration=0.1):
                 n1 = len(envelopes[:,c])
             if n1 - n0 < w:
                 n0 = i1
-            thresh1 = np.mean(envelopes[n0:n1,c]) + 10.0*np.std(envelopes[n0:n1,c])
+            thresh1 = np.mean(envelopes[n0:n1,c]) + thresh_fac*np.std(envelopes[n0:n1,c])
             # set threshold:
             thresh = max(thresh0, thresh1)
             if thresh > thresholds[c]:
@@ -536,11 +541,12 @@ class SignalPlot :
         self.channels = data.shape[1]
         self.envelopecutofffreq = cfg['envelopecutofffreq'][0]
         self.envelope = envelope(self.fdata, self.rate, self.envelopecutofffreq )
-        fac = 1.0
-        self.thresholds = threshold_estimates(self.envelope, fac)
+        self.thresholdfac = cfg['thresholdfactor'][0]
+        self.thresholds = threshold_estimates(self.envelope, self.thresholdfac)
         self.min_duration = cfg['minduration'][0]
         self.min_pause = cfg['minpause'][0]
-        self.songonsets, self.songoffsets = detect_songs(self.envelope, self.rate, self.thresholds, self.min_pause, self.min_duration)
+        self.noisethresholdfac = cfg['noisethresholdfactor'][0]
+        self.songonsets, self.songoffsets = detect_songs(self.envelope, self.rate, self.thresholds, self.min_pause, self.min_duration, self.noisethresholdfac)
         self.trace_artists = []
         self.filtered_trace_artists = []
         self.envelope_artists = []

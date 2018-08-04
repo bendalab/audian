@@ -25,7 +25,7 @@ cfg = OrderedDict()
 cfgsec = dict()
 
 cfgsec['maxpixel'] = 'Plotting:'
-cfg['maxpixel'] = [ 0, '', 'Either maximum number of data points to be plotted or zero for plotting all data points.' ]
+cfg['maxpixel'] = [ 50000, '', 'Either maximum number of data points to be plotted or zero for plotting all data points.' ]
 
 cfgsec['envthreshfac'] = 'Envelope:'
 cfg['envcutofffreq'] = [ 100.0, 'Hz', 'Cutoff frequency of the low-pass filter used for computing the envelope from the squared signal.' ]
