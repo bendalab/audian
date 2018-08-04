@@ -35,10 +35,10 @@ cfgsec['verboseLevel'] = 'Debugging:'
 cfg['verboseLevel'] = [ 0, '', '0=off upto 4 very detailed' ]
 
 cfgsec['displayHelp'] = 'Items to display:'
+cfg['displayHelp'] = [ False, '', 'Display help on key bindings' ] 
 cfg['displayTraces'] = [ False, '', 'Display the raw data traces' ] 
 cfg['displayFilteredTraces'] = [ True, '', 'Display the filtered data traces' ] 
 cfg['displayEnvelope'] = [ True, '', 'Display the envelope' ] 
-cfg['displayHelp'] = [ False, '', 'Display help on key bindings' ] 
 
 
 ###############################################################################
@@ -544,9 +544,9 @@ class SignalPlot :
         self.threshold_artists = []
         self.songonset_artists = []
         self.songoffset_artists = []
-        self.highpass_artist = None
-        self.lowpass_artist = None
-        self.envelope_artist = None
+        self.highpass_label = None
+        self.lowpass_label = None
+        self.envelope_label = None
         self.show_traces = cfg['displayTraces'][0]
         self.show_filtered_traces = cfg['displayFilteredTraces'][0]
         self.show_envelope = cfg['displayEnvelope'][0]
@@ -589,9 +589,9 @@ class SignalPlot :
                 self.ymax[c] = +10.0
             if c == 0 :
                 self.axt.append( self.fig.add_axes( [ 0.08, 0.06+(self.channels-c-1)*ph, 0.89, ph ] ) )
-                self.highpass_artist = self.axt[0].text( 0.05, 0.9, 'highpass=%.1fkHz' % (0.001*self.highpassfreq), transform=self.axt[0].transAxes )
-                self.lowpass_artist = self.axt[0].text( 0.2, 0.9, 'lowpass=%.1fkHz' % (0.001*self.lowpassfreq), transform=self.axt[0].transAxes )
-                self.envelope_artist = self.axt[0].text( 0.35, 0.9, 'envelope=%.0fHz' % self.envelopecutofffreq, transform=self.axt[0].transAxes )
+                self.highpass_label = self.axt[0].text( 0.05, 0.9, 'highpass=%.1fkHz' % (0.001*self.highpassfreq), transform=self.axt[0].transAxes )
+                self.lowpass_label = self.axt[0].text( 0.2, 0.9, 'lowpass=%.1fkHz' % (0.001*self.lowpassfreq), transform=self.axt[0].transAxes )
+                self.envelope_label = self.axt[0].text( 0.35, 0.9, 'envelope=%.0fHz' % self.envelopecutofffreq, transform=self.axt[0].transAxes )
             else:
                 self.axt.append( self.fig.add_axes( [ 0.08, 0.08+(self.channels-c-1)*ph, 0.89, ph ], sharex=self.axt[0] ) )
             self.axt[-1].set_ylabel( 'Amplitude [{:s}]'.format( self.unit ) )
@@ -642,7 +642,7 @@ class SignalPlot :
             append = len(self.trace_artists) == 0
             for c in range(self.channels) :
                 if append :
-                    ta, = self.axt[c].plot( self.time[t0:t1:tstep], self.data[t0:t1:tstep, c], 'b' )
+                    ta, = self.axt[c].plot( self.time[t0:t1:tstep], self.data[t0:t1:tstep, c], 'b', zorder=0 )
                     self.trace_artists.append( ta )
                 else :
                     self.trace_artists[c].set_data( self.time[t0:t1:tstep], self.data[t0:t1:tstep, c] )
@@ -654,7 +654,7 @@ class SignalPlot :
             append = len(self.filtered_trace_artists) == 0
             for c in range(self.channels) :
                 if append :
-                    ta, = self.axt[c].plot( self.time[t0:t1:tstep], self.fdata[t0:t1:tstep, c], 'g' )
+                    ta, = self.axt[c].plot( self.time[t0:t1:tstep], self.fdata[t0:t1:tstep, c], 'g', zorder=1 )
                     self.filtered_trace_artists.append( ta )
                 else :
                     self.filtered_trace_artists[c].set_data( self.time[t0:t1:tstep], self.fdata[t0:t1:tstep, c] )
@@ -666,7 +666,7 @@ class SignalPlot :
             append = len(self.envelope_artists) == 0
             for c in range(self.channels) :
                 if append :
-                    ta, = self.axt[c].plot( self.time[t0:t1:tstep], self.envelope[t0:t1:tstep, c], 'r', lw=2 )
+                    ta, = self.axt[c].plot( self.time[t0:t1:tstep], self.envelope[t0:t1:tstep, c], 'r', lw=2, zorder=2 )
                     self.envelope_artists.append( ta )
                 else :
                     self.envelope_artists[c].set_data( self.time[t0:t1:tstep], self.envelope[t0:t1:tstep, c] )
@@ -681,7 +681,7 @@ class SignalPlot :
                 if tm >= len(self.time):
                     tm = len(self.time)-1
                 if append :
-                    ta, = self.axt[c].plot( [self.time[t0], self.time[tm]], [self.thresholds[c], self.thresholds[c]], 'k' )
+                    ta, = self.axt[c].plot( [self.time[t0], self.time[tm]], [self.thresholds[c], self.thresholds[c]], 'k', zorder=3 )
                     self.threshold_artists.append( ta )
                 else :
                     self.threshold_artists[c].set_data( [self.time[t0], self.time[tm]], [self.thresholds[c], self.thresholds[c]] )
@@ -693,7 +693,7 @@ class SignalPlot :
             append = len(self.songonset_artists) == 0
             for c in range(self.channels) :
                 if append :
-                    ta, = self.axt[c].plot( self.songonsets[c], self.thresholds[c]*np.ones(len(self.songonsets[c])), '.b', ms=10 )
+                    ta, = self.axt[c].plot( self.songonsets[c], self.thresholds[c]*np.ones(len(self.songonsets[c])), '.b', ms=10, zorder=4 )
                     self.songonset_artists.append( ta )
                 else :
                     self.songonset_artists[c].set_data( self.songonsets[c], self.thresholds[c]*np.ones(len(self.songonsets[c])) )
@@ -705,7 +705,7 @@ class SignalPlot :
             append = len(self.songoffset_artists) == 0
             for c in range(self.channels) :
                 if append :
-                    ta, = self.axt[c].plot( self.songoffsets[c], self.thresholds[c]*np.ones(len(self.songoffsets[c])), '.b', ms=10 )
+                    ta, = self.axt[c].plot( self.songoffsets[c], self.thresholds[c]*np.ones(len(self.songoffsets[c])), '.b', ms=10, zorder=5 )
                     self.songoffset_artists.append( ta )
                 else :
                     self.songoffset_artists[c].set_data( self.songoffsets[c], self.thresholds[c]*np.ones(len(self.songoffsets[c])) )
@@ -807,7 +807,7 @@ class SignalPlot :
                 self.update_plots()
         elif event.key == 'ctrl+f' :
             self.show_filtered_traces = not self.show_filtered_traces
-            if len(self.trace_artists) > 0 :
+            if len(self.filtered_trace_artists) > 0 :
                 for c in range(self.channels) :
                     self.filtered_trace_artists[c].set_visible( self.show_filtered_traces )
                 self.fig.canvas.draw()
@@ -815,41 +815,41 @@ class SignalPlot :
                 self.update_plots()
         elif event.key == 'ctrl+e' :
             self.show_envelope = not self.show_envelope
-            if len(self.trace_artists) > 0 :
+            if len(self.envelope_artists) > 0 :
                 for c in range(self.channels) :
-                    self.enelvope_artists[c].set_visible( self.show_envelope )
+                    self.envelope_artists[c].set_visible( self.show_envelope )
                 self.fig.canvas.draw()
             else:
                 self.update_plots()
         elif event.key == 'h' :
             self.highpassfreq /= 1.5
-            self.highpass_artist.set_text('highpass=%.1fkHz' % (0.001*self.highpassfreq))
+            self.highpass_label.set_text('highpass=%.1fkHz' % (0.001*self.highpassfreq))
             self.fdata = bandpass_filter(self.data, self.rate, self.highpassfreq, self.lowpassfreq)
             self.update_plots()
         elif event.key == 'H' :
             self.highpassfreq * 1.5
-            self.highpass_artist.set_text('highpass=%.1fkHz' % (0.001*self.highpassfreq))
+            self.highpass_label.set_text('highpass=%.1fkHz' % (0.001*self.highpassfreq))
             self.fdata = bandpass_filter(self.data, self.rate, self.highpassfreq, self.lowpassfreq)
             self.update_plots()
         elif event.key == 'l' :
             self.lowpassfreq /= 1.5
-            self.lowpass_artist.set_text('lowpass=%.1fkHz' % (0.001*self.lowpassfreq))
+            self.lowpass_label.set_text('lowpass=%.1fkHz' % (0.001*self.lowpassfreq))
             self.fdata = bandpass_filter(self.data, self.rate, self.highpassfreq, self.lowpassfreq)
             self.update_plots()
         elif event.key == 'L' :
             self.lowpassfreq * 1.5
-            self.lowpass_artist.set_text('lowpass=%.1fkHz' % (0.001*self.lowpassfreq))
+            self.lowpass_label.set_text('lowpass=%.1fkHz' % (0.001*self.lowpassfreq))
             self.fdata = bandpass_filter(self.data, self.rate, self.highpassfreq, self.lowpassfreq)
             self.update_plots()
         elif event.key == 'e' :
             self.envelopecutofffreq /= 1.5
-            self.envelope_artist.set_text('envelope=%.0fHz' % self.envelopecutofffreq)
+            self.envelope_label.set_text('envelope=%.0fHz' % self.envelopecutofffreq)
             self.envelope = envelope(self.fdata, self.rate, self.envelopecutofffreq )
             self.songonsets, self.songoffsets = detect_songs(self.envelope, self.rate, self.thresholds)
             self.update_plots()
         elif event.key == 'E' :
             self.envelopecutofffreq *= 1.5
-            self.envelope_artist.set_text('envelope=%.0fHz' % self.envelopecutofffreq)
+            self.envelope_label.set_text('envelope=%.0fHz' % self.envelopecutofffreq)
             self.envelope = envelope(self.fdata, self.rate, self.envelopecutofffreq )
             self.songonsets, self.songoffsets = detect_songs(self.envelope, self.rate, self.thresholds)
             self.update_plots()
