@@ -29,7 +29,7 @@ cfg['envelopecutofffreq'] = [ 500.0, 'Hz', 'Cutoff frequency of the low-pass fil
 
 cfgsec['thresholdfactor'] = 'Thresholds:'
 cfg['thresholdfactor'] = [ 1.0, '', 'Factor that multiplies the standard deviation of the whole envelope.' ]
-cfg['noisethresholdfactor'] = [ 14.0, '', 'Factor that multiplies the standard deviation of the noise envelope.' ]
+cfg['noisethresholdfactor'] = [ 10.0, '', 'Factor that multiplies the standard deviation of the noise envelope.' ]
 
 cfgsec['minduration'] = 'Detection:'
 cfg['minduration'] = [ 0.4, 's', 'Minimum duration of an detected song.' ]
@@ -68,6 +68,14 @@ def bandpass_filter(data, rate, lowf=5500.0, highf=7500.0):
     high = highf/nyq
     b, a = sig.butter(1, [low, high], btype='bandpass')
     #fdata = sig.lfilter(b, a, data, axis=0)
+    fdata = sig.filtfilt(b, a, data, axis=0)
+    return fdata
+
+
+def lowpass_filter(data, rate, freq=100.0):
+    nyq = 0.5*rate
+    low = freq/nyq
+    b, a = sig.butter(1, low, btype='lowpass')
     fdata = sig.filtfilt(b, a, data, axis=0)
     return fdata
 
@@ -153,6 +161,7 @@ def detect_songs(envelopes, rate, thresholds, min_pause=0.1, min_duration=0.1, t
     for c in range(envelopes.shape[1]):
         # corse detection of songs:
         onsets, offsets = detect_power(envelopes[:,c], rate, thresholds[c], min_pause, min_duration)
+        
         # refine detections:
         new_onsets = []
         new_offsets = []
@@ -167,17 +176,16 @@ def detect_songs(envelopes, rate, thresholds, min_pause=0.1, min_duration=0.1, t
             ii1 = i1 + w if i1 + w < len(envelopes[:,c]) else len(envelopes[:,c])
             if k < len(onsets)-1 and ii1 >= onsets[k+1]:
                 ii1 = onsets[k+1]
-            # estimate noise level before song:
-            n0 = ii0 - 2*w
-            n1 = ii0
-            if k > 0 and n0 < offsets[k-1] :
-                n0 = offsets[k-1]
-            if n0 < 0:
-                n0 = 0
-            if n1 - n0 < w:
-                n1 = i0
-            thresh0 = np.mean(envelopes[n0:n1,c]) + thresh_fac*np.std(envelopes[n0:n1,c])
-            # estimate noise level after song:
+            # window before song:
+            m0 = ii0 - 2*w
+            m1 = ii0
+            if k > 0 and m0 < offsets[k-1] :
+                m0 = offsets[k-1]
+            if m0 < 0:
+                m0 = 0
+            if m1 - m0 < w:
+                m1 = i0
+            # window after song:
             n0 = ii1
             n1 = ii1 + 2*w
             if k < len(onsets)-1 and n1 > onsets[k+1]:
@@ -186,14 +194,36 @@ def detect_songs(envelopes, rate, thresholds, min_pause=0.1, min_duration=0.1, t
                 n1 = len(envelopes[:,c])
             if n1 - n0 < w:
                 n0 = i1
-            thresh1 = np.mean(envelopes[n0:n1,c]) + thresh_fac*np.std(envelopes[n0:n1,c])
+            # spectrum of envelope:
+            freq_resolution = 2.0
+            min_nfft = 16
+            n = rate / freq_resolution
+            nfft = int(2 ** np.floor(np.log(n) / np.log(2.0) + 1.0-1e-8))
+            if nfft < min_nfft:
+                nfft = min_nfft
+            if nfft > ii1 - ii0 :
+                n = (ii1 - ii0)/2
+                nfft = int(2 ** np.floor(np.log(n) / np.log(2.0) + 1.0-1e-8))
+            f, Pxx = sig.welch(envelopes[ii0:ii1,c], fs=rate, nperseg=nfft, noverlap=nfft//2, nfft=None)
+            ipeak = np.argmax(Pxx)
+            fpeak = f[np.argmax(Pxx)]
+            ## Pdecibel = 10.0*np.log10(Pxx)
+            ## plt.plot(f, Pdecibel)
+            ## plt.scatter([fpeak], Pdecibel[ipeak])
+            ## plt.xlim(0.0, 100.0)
+            ## plt.ylim(np.min(Pdecibel[f<100.0]), np.max(Pdecibel[f<100.0])*0.95)
+            ## plt.show()
+            # lowpass filter on envelope:
+            fcutoff = 4*fpeak
+            envelopes[m0:n1,c] = lowpass_filter(envelopes[m0:n1,c], rate, fcutoff)
             # set threshold:
+            thresh0 = np.mean(envelopes[m0:m1,c]) + thresh_fac*np.std(envelopes[m0:m1,c])
+            thresh1 = np.mean(envelopes[n0:n1,c]) + thresh_fac*np.std(envelopes[n0:n1,c])
             thresh = max(thresh0, thresh1)
             if thresh > thresholds[c]:
                 thresh = thresholds[c]
             # detect song:
-            song_am = envelopes[ii0:ii1,c]
-            on, off = detect_power(song_am, rate, thresh, min_pause, min_duration)
+            on, off = detect_power(envelopes[ii0:ii1,c], rate, thresh, min_pause, min_duration)
             if len(on[on<=i0-ii0]) == 0 or len(off[off>=i1-ii0]) == 0:
                 new_onsets.append(i0/rate)
                 new_offsets.append(i1/rate)
@@ -907,13 +937,13 @@ class SignalPlot :
     def play_segment( self ) :
         t0 = int(np.round(self.toffset*self.rate))
         t1 = int(np.round((self.toffset+self.twindow)*self.rate))
-        playdata = 1.0*np.mean(self.data[t0:t1,:], axis=1)
+        playdata = 1.0*np.mean(self.fdata[t0:t1,:], axis=1)
         playdata -= np.mean(playdata)
         fade(playdata, self.rate, 0.1)
         self.audio.play(playdata, self.rate, blocking=False)
         
     def play_all( self ) :
-        playdata = np.mean(self.data, axis=1)
+        playdata = np.mean(self.fdata, axis=1)
         playdata -= np.mean(playdata)
         self.audio.play(np.mean(self.data, axis=1), self.rate, blocking=False)
                     
@@ -959,14 +989,6 @@ def main():
     env = envelope(fdata, rate, cfg['envelopecutofffreq'][0])
     threshs = threshold_estimates(env, cfg['thresholdfactor'][0])
     onsets, offsets = detect_songs(env, rate, threshs, cfg['minpause'][0], cfg['minduration'][0], cfg['noisethresholdfactor'][0])
-
-    ##
-    # - go through the songs
-    # - compute envelope spectrum
-    # - find position of maximimum
-    # - find largest frequency 10 dB below maximum
-    # - use twice this frequency as cutoff
-    # - detect syllables and song duration
     
     # plot:
     sp = SignalPlot(rate, data, fdata, env, threshs, onsets, offsets, unit, filepath, os.path.dirname(filepath))
