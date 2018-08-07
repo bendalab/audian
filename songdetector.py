@@ -84,7 +84,7 @@ def threshold_estimates(envelopes, fac=10.0):
     maxe = np.max(envelopes)
     threshs = []
     for c in range(envelopes.shape[1]):
-        h, b = np.histogram(envelopes[:,c], bins=np.linspace(0.0, maxe, 1000))
+        h, b = np.histogram(envelopes[:,c], bins=np.linspace(0.0, maxe, 50))
         mini = np.nonzero(h>0)[0][0]
         maxi = np.argmax(h)+1
         w = maxi - mini
@@ -94,6 +94,9 @@ def threshold_estimates(envelopes, fac=10.0):
         mean = np.mean(envelopes[envelopes[:,c]<b[maxi],c])
         std = np.std(envelopes[envelopes[:,c]<b[maxi],c])
         threshs.append(mean + fac*std)
+        # check whether there is a t least a second maximum in the histogram
+        # set the threshold between first and second maximum!
+        
         ## plt.bar(b[:-1], h, width=np.diff(b))
         ## plt.plot([mean, mean], [0, np.max(h)], 'k', lw=2)
         ## plt.plot([mean+std, mean+std], [0, np.max(h)], 'g', lw=2)
