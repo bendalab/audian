@@ -10,6 +10,7 @@ import matplotlib.mlab as ml
 import matplotlib.colors as mc
 import matplotlib.widgets as widgets
 import scipy.signal as sig
+import scipy.stats as stats
 from audioio import PlayAudio, fade
 from thunderfish.dataloader import load_data
 from thunderfish.configfile import ConfigFile
@@ -56,9 +57,13 @@ def envelope(data, rate, freq=100.0):
     b, a = sig.butter(1, low, btype='lowpass')
     edata = 2.0*sig.filtfilt(b, a, data*data, axis=0)
     edata[edata<0.0] = 0.0
-    envelope = np.sqrt(edata)*np.sqrt(2.0)
+    envrate = freq*10
+    if envrate > rate:
+        envrate = rate
+    step = int(np.round(rate / envrate))
+    envelope = np.sqrt(edata[::step])*np.sqrt(2.0)
     #envelope = np.sqrt(data*data)*np.sqrt(2.0) # this is actually not bad for finding power!
-    return envelope
+    return envelope, rate/step
 
 # def running_std( rate, data ):
 #def envelope( rate, data, freq=100.0 ):
@@ -74,29 +79,34 @@ def envelope(data, rate, freq=100.0):
 #                     np.correlate(data, w, mode='same') ** 2)).ravel()) * np.sqrt(2.)
 #    return rstd
 
-## histogram based threshold:
-## def threshold_estimates(envelopes, fac=10.0):
-##     maxe = np.max(envelopes)
-##     threshs = []
-##     for c in range(envelopes.shape[1]):
-##         h, b = np.histogram(envelopes[:,c], bins=np.linspace(0.0, maxe, 1000))
-##         ## if c == 0:
-##         ##     plt.bar(b[:-1], h, width=np.diff(b))
-##         ##     plt.show()
-##         maxi = 2*(np.argmax(h)+1)
-##         if maxi >= len(b):
-##             maxi = len(b)
-##         mean = np.mean(envelopes[envelopes[:,c]<b[maxi],c])
-##         std = np.std(envelopes[envelopes[:,c]<b[maxi],c])
-##         threshs.append(mean + fac*std)
-##     return threshs
-
-# std based threshold:
-def threshold_estimates(envelopes, fac=1.0):
-    threshs = np.mean(envelopes, axis=0) + fac*np.std(envelopes, axis=0)
-    max_thresh = np.max(threshs)
-    threshs = np.ones(len(threshs))*max_thresh
+# histogram based threshold:
+def threshold_estimates(envelopes, fac=10.0):
+    maxe = np.max(envelopes)
+    threshs = []
+    for c in range(envelopes.shape[1]):
+        h, b = np.histogram(envelopes[:,c], bins=np.linspace(0.0, maxe, 1000))
+        maxi = 4*(np.argmax(h)+1)
+        if maxi >= len(b):
+            maxi = len(b)
+        mean = np.mean(envelopes[envelopes[:,c]<b[maxi],c])
+        std = np.std(envelopes[envelopes[:,c]<b[maxi],c])
+        threshs.append(mean + fac*std)
+        ## plt.bar(b[:-1], h, width=np.diff(b))
+        ## plt.plot([mean, mean], [0, np.max(h)], 'k', lw=2)
+        ## plt.plot([mean+std, mean+std], [0, np.max(h)], 'g', lw=2)
+        ## plt.plot([threshs[-1], threshs[-1]], [0, np.max(h)], 'r', lw=2)
+        ## plt.show()
     return threshs
+
+## # std based threshold:
+## def threshold_estimates(envelopes, fac=1.0):
+##     # CV < 0.5: no songs!
+##     for k in range(envelopes.shape[1]):
+##         print('cv: %g' % (np.std(envelopes[:,k])/np.mean(envelopes[:,k])))
+##     threshs = np.mean(envelopes, axis=0) + fac*np.std(envelopes, axis=0)
+##     max_thresh = np.max(threshs)
+##     threshs = np.ones(len(threshs))*max_thresh
+##     return threshs
 
 def detect_power(envelope, rate, threshold, min_duration):
     onsets = np.nonzero((envelope[1:]>threshold) & (envelope[:-1]<=threshold))[0]
@@ -210,7 +220,7 @@ def detect_songs(envelopes, rate, thresholds, min_duration=0.1, thresh_fac=10.0,
 ## plotting etc.
     
 class SignalPlot :
-    def __init__(self, samplingrate, data, fdata, env, threshs, onsets, offsets, unit, filename, path, cfg) :
+    def __init__(self, samplingrate, data, fdata, env, envrate, threshs, onsets, offsets, unit, filename, path, cfg) :
         self.filepath = ''
         if platform.system() == 'Windows' :
             self.filepath = path
@@ -230,6 +240,7 @@ class SignalPlot :
         self.envelopecutofffreq = cfg.value('envelopecutofffreq')
         self.envelopeusefreq = cfg.value('envelopeusefreq')
         self.envelope = env
+        self.envrate = envrate
         self.thresholdfac = cfg.value('thresholdfactor')
         self.thresholds = threshs
         self.min_duration = cfg.value('minduration')
@@ -362,13 +373,17 @@ class SignalPlot :
             for c in range(len(self.filtered_trace_artists)) :
                 self.filtered_trace_artists[c].set_visible(False)
         if self.show_envelope :
+            et0 = int(np.round(self.toffset*self.envrate))
+            et1 = int(np.round((self.toffset+self.twindow)*self.envrate))
+            etstep = int(np.round(tstep*self.rate/self.envrate))
+            etime = self.time[t0:t1+etstep:etstep][:len(self.envelope[et0:et1:tstep, c])]
             append = len(self.envelope_artists) == 0
             for c in range(self.channels) :
                 if append :
-                    ta, = self.axt[c].plot( self.time[t0:t1:tstep], self.envelope[t0:t1:tstep, c], 'r', lw=2, zorder=2 )
+                    ta, = self.axt[c].plot( etime, self.envelope[et0:et1:tstep, c], 'r', lw=2, zorder=2 )
                     self.envelope_artists.append( ta )
                 else :
-                    self.envelope_artists[c].set_data( self.time[t0:t1:tstep], self.envelope[t0:t1:tstep, c] )
+                    self.envelope_artists[c].set_data( etime, self.envelope[et0:et1:tstep, c] )
                 self.envelope_artists[c].set_visible(True)
         else :
             for c in range(len(self.envelope_artists)) :
@@ -543,14 +558,14 @@ class SignalPlot :
         elif event.key == 'e' :
             self.envelopecutofffreq /= 1.5
             self.envelope_label.set_text('envelope=%.0fHz' % self.envelopecutofffreq)
-            self.envelope = envelope(self.fdata, self.rate, self.envelopecutofffreq )
-            self.songonsets, self.songoffsets = detect_songs(self.envelope, self.rate, self.thresholds, envelope_use_freq=self.envelopeusefreq)
+            self.envelope, self.envrate = envelope(self.fdata, self.rate, self.envelopecutofffreq)
+            self.songonsets, self.songoffsets = detect_songs(self.envelope, self.envrate, self.thresholds, envelope_use_freq=self.envelopeusefreq)
             self.update_plots()
         elif event.key == 'E' :
             self.envelopecutofffreq *= 1.5
             self.envelope_label.set_text('envelope=%.0fHz' % self.envelopecutofffreq)
-            self.envelope = envelope(self.fdata, self.rate, self.envelopecutofffreq )
-            self.songonsets, self.songoffsets = detect_songs(self.envelope, self.rate, self.thresholds, envelope_use_freq=self.envelopeusefreq)
+            self.envelope, self.envrate = envelope(self.fdata, self.rate, self.envelopecutofffreq)
+            self.songonsets, self.songoffsets = detect_songs(self.envelope, self.envrate, self.thresholds, envelope_use_freq=self.envelopeusefreq)
             self.update_plots()
 #        elif event.key in 'h' :
 #            self.help = not self.help
@@ -640,11 +655,11 @@ def main():
     cfg.add('envelopeusefreq', True, '', 'Apply lowpass filter to song envelope with cutoff determined from main peak in envelope spectrum.')
 
     cfg.add_section('Thresholds:')
-    cfg.add('thresholdfactor', 1.0, '', 'Factor that multiplies the standard deviation of the whole envelope.')
+    cfg.add('thresholdfactor', 6.0, '', 'Factor that multiplies the standard deviation of the whole envelope.')
     cfg.add('noisethresholdfactor', 12.0, '', 'Factor that multiplies the standard deviation of the noise envelope.')
 
     cfg.add_section('Detection:')
-    cfg.add('minduration', 0.4, 's', 'Minimum duration of an detected song.')
+    cfg.add('minduration', 0.5, 's', 'Minimum duration of an detected song.')
 
     cfg.add_section('Items to display:')
     cfg.add('displayHelp', False, '', 'Display help on key bindings' )
@@ -671,12 +686,12 @@ def main():
 
     # process data:
     fdata = bandpass_filter(data, rate, cfg.value('highpassfreq'), cfg.value('lowpassfreq'))
-    env = envelope(fdata, rate, cfg.value('envelopecutofffreq'))
+    env, envrate = envelope(fdata, rate, cfg.value('envelopecutofffreq'))
     threshs = threshold_estimates(env, cfg.value('thresholdfactor'))
-    onsets, offsets = detect_songs(env, rate, threshs, cfg.value('minduration'), cfg.value('noisethresholdfactor'), cfg.value('envelopeusefreq'))
+    onsets, offsets = detect_songs(env, envrate, threshs, cfg.value('minduration'), cfg.value('noisethresholdfactor'), cfg.value('envelopeusefreq'))
     
     # plot:
-    sp = SignalPlot(rate, data, fdata, env, threshs, onsets, offsets, unit, filepath, os.path.dirname(filepath), cfg)
+    sp = SignalPlot(rate, data, fdata, env, envrate, threshs, onsets, offsets, unit, filepath, os.path.dirname(filepath), cfg)
 
 if __name__ == '__main__':
     main()
