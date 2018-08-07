@@ -10,39 +10,9 @@ import matplotlib.mlab as ml
 import matplotlib.colors as mc
 import matplotlib.widgets as widgets
 import scipy.signal as sig
-from collections import OrderedDict
 from audioio import PlayAudio, fade
 from thunderfish.dataloader import load_data
-    
-cfg = OrderedDict()
-cfgsec = dict()
-
-cfgsec['maxpixel'] = 'Plotting:'
-cfg['maxpixel'] = [ 50000, '', 'Either maximum number of data points to be plotted or zero for plotting all data points.' ]
-
-cfgsec['highpassfreq'] = 'Filter:'
-cfg['highpassfreq'] = [ 1000.0, 'Hz', 'Cutoff frequency of the high-pass filter applied to the signal.' ]
-cfg['lowpassfreq'] = [ 10000.0, 'Hz', 'Cutoff frequency of the low-pass filter applied to the signal.' ]
-
-cfgsec['envelopecutofffreq'] = 'Envelope:'
-cfg['envelopecutofffreq'] = [ 500.0, 'Hz', 'Cutoff frequency of the low-pass filter used for computing the envelope from the squared signal.' ]
-
-cfgsec['thresholdfactor'] = 'Thresholds:'
-cfg['thresholdfactor'] = [ 1.0, '', 'Factor that multiplies the standard deviation of the whole envelope.' ]
-cfg['noisethresholdfactor'] = [ 10.0, '', 'Factor that multiplies the standard deviation of the noise envelope.' ]
-
-cfgsec['minduration'] = 'Detection:'
-cfg['minduration'] = [ 0.4, 's', 'Minimum duration of an detected song.' ]
-cfg['minpause'] = [ 0.4, 's', 'Minimum duration of a pause between detected songs.' ]
-
-cfgsec['verboseLevel'] = 'Debugging:'
-cfg['verboseLevel'] = [ 0, '', '0=off upto 4 very detailed' ]
-
-cfgsec['displayHelp'] = 'Items to display:'
-cfg['displayHelp'] = [ False, '', 'Display help on key bindings' ] 
-cfg['displayTraces'] = [ False, '', 'Display the raw data traces' ] 
-cfg['displayFilteredTraces'] = [ True, '', 'Display the filtered data traces' ] 
-cfg['displayEnvelope'] = [ True, '', 'Display the envelope' ] 
+from thunderfish.configfile import ConfigFile
 
 
 ###############################################################################
@@ -155,7 +125,7 @@ def detect_power(envelope, rate, threshold, min_pause, min_duration):
     return np.array(onsets), np.array(offsets)
 
 
-def detect_songs(envelopes, rate, thresholds, min_pause=0.1, min_duration=0.1, thresh_fac=10.0):
+def detect_songs(envelopes, rate, thresholds, min_pause=0.1, min_duration=0.1, thresh_fac=10.0, envelope_use_freq=True):
     songonsets = []
     songoffsets = []
     for c in range(envelopes.shape[1]):
@@ -194,28 +164,29 @@ def detect_songs(envelopes, rate, thresholds, min_pause=0.1, min_duration=0.1, t
                 n1 = len(envelopes[:,c])
             if n1 - n0 < w:
                 n0 = i1
-            # spectrum of envelope:
-            freq_resolution = 2.0
-            min_nfft = 16
-            n = rate / freq_resolution
-            nfft = int(2 ** np.floor(np.log(n) / np.log(2.0) + 1.0-1e-8))
-            if nfft < min_nfft:
-                nfft = min_nfft
-            if nfft > ii1 - ii0 :
-                n = (ii1 - ii0)/2
+            if envelope_use_freq:
+                # spectrum of envelope:
+                freq_resolution = 2.0
+                min_nfft = 16
+                n = rate / freq_resolution
                 nfft = int(2 ** np.floor(np.log(n) / np.log(2.0) + 1.0-1e-8))
-            f, Pxx = sig.welch(envelopes[ii0:ii1,c], fs=rate, nperseg=nfft, noverlap=nfft//2, nfft=None)
-            ipeak = np.argmax(Pxx)
-            fpeak = f[np.argmax(Pxx)]
-            ## Pdecibel = 10.0*np.log10(Pxx)
-            ## plt.plot(f, Pdecibel)
-            ## plt.scatter([fpeak], Pdecibel[ipeak])
-            ## plt.xlim(0.0, 100.0)
-            ## plt.ylim(np.min(Pdecibel[f<100.0]), np.max(Pdecibel[f<100.0])*0.95)
-            ## plt.show()
-            # lowpass filter on envelope:
-            fcutoff = 4*fpeak
-            envelopes[m0:n1,c] = lowpass_filter(envelopes[m0:n1,c], rate, fcutoff)
+                if nfft < min_nfft:
+                    nfft = min_nfft
+                if nfft > ii1 - ii0 :
+                    n = (ii1 - ii0)/2
+                    nfft = int(2 ** np.floor(np.log(n) / np.log(2.0) + 1.0-1e-8))
+                f, Pxx = sig.welch(envelopes[ii0:ii1,c], fs=rate, nperseg=nfft, noverlap=nfft//2, nfft=None)
+                ipeak = np.argmax(Pxx)
+                fpeak = f[np.argmax(Pxx)]
+                ## Pdecibel = 10.0*np.log10(Pxx)
+                ## plt.plot(f, Pdecibel)
+                ## plt.scatter([fpeak], Pdecibel[ipeak])
+                ## plt.xlim(0.0, 100.0)
+                ## plt.ylim(np.min(Pdecibel[f<100.0]), np.max(Pdecibel[f<100.0])*0.95)
+                ## plt.show()
+                # lowpass filter on envelope:
+                fcutoff = 4*fpeak
+                envelopes[m0:n1,c] = lowpass_filter(envelopes[m0:n1,c], rate, fcutoff)
             # set threshold:
             thresh0 = np.mean(envelopes[m0:m1,c]) + thresh_fac*np.std(envelopes[m0:m1,c])
             thresh1 = np.mean(envelopes[n0:n1,c]) + thresh_fac*np.std(envelopes[n0:n1,c])
@@ -234,325 +205,12 @@ def detect_songs(envelopes, rate, thresholds, min_pause=0.1, min_duration=0.1, t
         songoffsets.append(np.array(new_offsets))
     return songonsets, songoffsets
 
-###############################################################################
-## configuration file writing and loading:
-
-def dump_config( filename, cfg, sections=None, header=None, maxline=60 ) :
-    """
-    Pretty print non-nested dicionary cfg into file.
-
-    The keys of the dictionary are strings.
-    
-    The values of the dictionary can be single variables or lists:
-    [value, unit, comment]
-    Both unit and comment are optional.
-
-    value can be any type of variable.
-
-    unit is a string (that can be empty).
-    
-    Comments comment are printed out right before the key-value pair.
-    Comments are single strings. Newline characters are intepreted as new paragraphs.
-    Lines are folded if the character count exceeds maxline.
-
-    Section comments can be added by the sections dictionary.
-    It contains comment strings as values that are inserted right
-    before the key-value pair with the same key. Section comments
-    are formatted in the same way as comments for key-value pairs,
-    but get two comment characters prependend ('##').
-
-    A header can be printed initially. This is a simple string that is formatted
-    like the section comments.
-
-    Args:
-        filename: The name of the file for writing the configuration.
-        cfg (dict): Configuration keys, values, units, and comments.
-        sections (dict): Comments describing secions of the configuration file.
-        header (string): A string that is written as an introductory comment into the file.
-        maxline (int): Maximum number of characters that fit into a line.
-    """
-
-    def write_comment( f, comment, maxline=60, cs='#' ) :
-        # format comment:
-        if len( comment ) > 0 :
-            for line in comment.split( '\n' ) :
-                f.write( cs + ' ' )
-                cc = len( cs ) + 1  # character count
-                for w in line.strip().split( ' ' ) :
-                    # line too long?
-                    if cc + len( w ) > maxline :
-                        f.write( '\n' + cs + ' ' )
-                        cc = len( cs ) + 1
-                    f.write( w + ' ' )
-                    cc += len( w ) + 1
-                f.write( '\n' )
-    
-    with open( filename, 'w' ) as f :
-        if header != None :
-            write_comment( f, header, maxline, '##' )
-        maxkey = 0
-        for key in cfg.keys() :
-            if maxkey < len( key ) :
-                maxkey = len( key )
-        for key, v in cfg.items() :
-            # possible section entry:
-            if sections != None and key in sections :
-                f.write( '\n\n' )
-                write_comment( f, sections[key], maxline, '##' )
-
-            # get value, unit, and comment from v:
-            val = None
-            unit = ''
-            comment = ''
-            if hasattr(v, '__len__') and (not isinstance(v, str)) :
-                val = v[0]
-                if len( v ) > 1 :
-                    unit = ' ' + v[1]
-                if len( v ) > 2 :
-                    comment = v[2]
-            else :
-                val = v
-
-            # next key-value pair:
-            f.write( '\n' )
-            write_comment( f, comment, maxline, '#' )
-            f.write( '{key:<{width}s}: {val}{unit:s}\n'.format( key=key, width=maxkey, val=val, unit=unit ) )
-
-
-def load_config( filename, cfg ) :
-    """
-    Set values of dictionary cfg to values from key-value pairs read in from file.
-    
-    Args:
-        filename: The name of the file from which to read in the configuration.
-        cfg (dict): Configuration keys, values, units, and comments.
-    """
-    with open( filename, 'r' ) as f :
-        for line in f :
-            # do not process empty lines and comments:
-            if len( line.strip() ) == 0 or line[0] == '#' or not ':' in line :
-                continue
-            key, val = line.split(':', 1)
-            key = key.strip()
-            if not key in cfg :
-                continue
-            cv = cfg[key]
-            vals = val.strip().split( ' ' )
-            if hasattr(cv, '__len__') and (not isinstance(cv, str)) :
-                unit = ''
-                if len( vals ) > 1 :
-                    unit = vals[1]
-                if unit != cv[1] :
-                    print('unit for %s is %s but should be %s' % (key, unit, cv[1]))
-                cv[0] = type(cv[0])(vals[0])
-            else :
-                cfg[key] = type(cv)(vals[0])
-            
-
-###############################################################################
-## peak detection:
-
-def detect_peaks( time, data, threshold, check_func=None, check_conditions=None ):
-
-    if not check_conditions:
-        check_conditions = dict()
-        
-    event_list = list()
-
-    # initialize:
-    dir = 0
-    min_inx = 0
-    max_inx = 0
-    min_value = data[0]
-    max_value = min_value
-    trough_inx = 0
-
-    # loop through the new read data
-    for index, value in enumerate(data):
-
-        # rising?
-        if dir > 0:
-            # if the new value is bigger than the old maximum: set it as new maximum
-            if max_value < value:
-                max_inx = index  # maximum element
-                max_value = value
-
-            # otherwise, if the maximum value is bigger than the new value plus the threshold:
-            # this is a local maximum!
-            elif max_value >= value + threshold:
-                # there was a peak:
-                event_inx = max_inx
-
-                # check and update event with this magic function
-                if check_func:
-                    r = check_func( time, data, event_inx, index, trough_inx, min_inx, threshold, check_conditions )
-                    if len( r ) > 0 :
-                        # this really is an event:
-                        event_list.append( r )
-                else:
-                    # this really is an event:
-                    event_list.append( time[event_inx] )
-
-                # change direction:
-                min_inx = index  # minimum element
-                min_value = value
-                dir = -1
-
-        # falling?
-        elif dir < 0:
-            if value < min_value:
-                min_inx = index  # minimum element
-                min_value = value
-                trough_inx = index
-
-            elif value >= min_value + threshold:
-                # there was a trough:
-                # change direction:
-                max_inx = index  # maximum element
-                max_value = value
-                dir = 1
-
-        # don't know!
-        else:
-            if max_value >= value + threshold:
-                dir = -1  # falling
-            elif value >= min_value + threshold:
-                dir = 1  # rising
-
-            if max_value < value:
-                max_inx = index  # maximum element
-                max_value = value
-
-            elif value < min_value:
-                min_inx = index  # minimum element
-                min_value = value
-                trough_inx = index
-
-    return np.array( event_list )
-
-
-def threshold_estimate( data, noise_factor ) :
-    """
-    Estimate noise standard deviation from histogram
-    for usefull peak-detection thresholds.
-
-    The standard deviation of the noise floor without peaks is estimated from
-    the histogram of the data at 1/sqrt(e) relative height.
-
-    Args:
-        data: the data from which to estimate the thresholds
-        noise_factor (float): multiplies the estimate of the standard deviation
-                              of the noise to result in the threshold
-
-    Returns:
-        threshold (float): the threshold above the noise floor
-        center: (float): estimate of the median of the data without peaks
-    """
-    
-    # estimate noise standard deviation:
-    # XXX what about the number of bins for small data sets?
-    hist, bins = np.histogram( data, 100, density=True )
-    inx = hist > np.max( hist ) / np.sqrt( np.e )
-    lower = bins[inx][0]
-    upper = bins[inx][-1] # needs to return the next bin
-    center = 0.5*(lower+upper)
-    noisestd = 0.5*(upper-lower)
-    
-    # threshold:
-    threshold = noise_factor*noisestd
-
-    return threshold, center
-
-
-def accept_psd_peaks( freqs, data, peak_inx, index, trough_inx, min_inx, threshold, check_conditions ) :
-    """
-    Accept each detected peak and compute its size and width.
-
-    Args:
-        freqs (array): frequencies of the power spectrum
-        data (array): the power spectrum
-        peak_inx: index of the current peak
-        index: current index (first minimum after peak at threshold below)
-        trough_inx: index of the previous trough
-        min_inx: index of previous minimum
-        threshold: threshold value
-        check_conditions: not used
-    
-    Returns: 
-        freq (float): frequency of the peak
-        power (float): power of the peak (value of data at the peak)
-        size (float): size of the peak (peak minus previous trough)
-        width (float): width of the peak at 0.75*size
-        count (float): zero
-    """
-    size = data[peak_inx] - data[trough_inx]
-    wthresh = data[trough_inx] + 0.75*size
-    width = 0.0
-    for k in range( peak_inx, trough_inx, -1 ) :
-        if data[k] < wthresh :
-            width = freqs[peak_inx] - freqs[k]
-            break
-    for k in range( peak_inx, index ) :
-        if data[k] < wthresh :
-            width += freqs[k] - freqs[peak_inx]
-            break
-    return [ freqs[peak_inx], data[peak_inx], size, width, 0.0 ]
-
-
-def psd_peaks( psd_freqs, psd, cfg ) :
-    """
-    Detect peaks in power spectrum.
-
-    Args:
-        psd_freqs (array): frequencies of the power spectrum
-        psd (array): power spectrum
-        cfg (dict): configuration parameter
-
-    Returns:
-        all_freqs (2-d array): peaks in the power spectrum
-                  detected with low threshold
-                  [frequency, power, size, width, double use count]
-        threshold (float): the relative threshold for detecting all peaks in the decibel spectrum
-        center (float): the baseline level of the power spectrum
-    """
-    
-    verbose = cfg['verboseLevel'][0]
-
-    if verbose > 0 :
-        print()
-        print(70*'#')
-        print('##### psd_peaks', 48*'#')
-    
-    # decibel power spectrum:
-    log_psd = 10.0*np.log10( psd )
-
-    # thresholds:
-    threshold = cfg['threshold'][0]
-    center = 0.0
-    if cfg['threshold'][0] <= 0.0 :
-        n = len( log_psd )
-        threshold, center = threshold_estimate( log_psd[2*n/3:n*9/10],
-                                                cfg['noiseFactor'][0] )
-        if verbose > 1 :
-            print()
-            print('threshold=', threshold, center+threshold)
-            print('center=', center)
-    
-    # detect peaks in decibel power spectrum:
-    all_freqs = detect_peaks( psd_freqs, log_psd, threshold, accept_psd_peaks )
-
-    # convert peak sizes back to power:
-    if len( all_freqs ) > 0 :
-        all_freqs[:,1] = 10.0**(0.1*all_freqs[:,1])
-    
-    return all_freqs, threshold, center
-
     
 ###############################################################################
 ## plotting etc.
     
 class SignalPlot :
-    def __init__( self, samplingrate, data, fdata, env, threshs, onsets, offsets, unit, filename, path ) :
+    def __init__(self, samplingrate, data, fdata, env, threshs, onsets, offsets, unit, filename, path, cfg) :
         self.filepath = ''
         if platform.system() == 'Windows' :
             self.filepath = path
@@ -565,17 +223,18 @@ class SignalPlot :
         self.twindow = 60.0
         if self.twindow > self.time[-1] :
             self.twindow = np.round( 2**(np.floor(np.log(self.time[-1]) / np.log(2.0)) + 1.0) )
-        self.lowpassfreq = cfg['lowpassfreq'][0]
-        self.highpassfreq = cfg['highpassfreq'][0]
+        self.lowpassfreq = cfg.value('lowpassfreq')
+        self.highpassfreq = cfg.value('highpassfreq')
         self.fdata = fdata
         self.channels = data.shape[1]
-        self.envelopecutofffreq = cfg['envelopecutofffreq'][0]
+        self.envelopecutofffreq = cfg.value('envelopecutofffreq')
+        self.envelopeusefreq = cfg.value('envelopeusefreq')
         self.envelope = env
-        self.thresholdfac = cfg['thresholdfactor'][0]
+        self.thresholdfac = cfg.value('thresholdfactor')
         self.thresholds = threshs
-        self.min_duration = cfg['minduration'][0]
-        self.min_pause = cfg['minpause'][0]
-        self.noisethresholdfac = cfg['noisethresholdfactor'][0]
+        self.min_duration = cfg.value('minduration')
+        self.min_pause = cfg.value('minpause')
+        self.noisethresholdfac = cfg.value('noisethresholdfactor')
         self.songonsets = onsets
         self.songoffsets = offsets
         self.trace_artists = []
@@ -587,13 +246,14 @@ class SignalPlot :
         self.highpass_label = None
         self.lowpass_label = None
         self.envelope_label = None
-        self.show_traces = cfg['displayTraces'][0]
-        self.show_filtered_traces = cfg['displayFilteredTraces'][0]
-        self.show_envelope = cfg['displayEnvelope'][0]
+        self.max_pixel = cfg.value('maxpixel')
+        self.show_traces = cfg.value('displayTraces')
+        self.show_filtered_traces = cfg.value('displayFilteredTraces')
+        self.show_envelope = cfg.value('displayEnvelope')
         self.show_thresholds = True
         self.show_songonsets = True
         self.show_songoffsets = True
-        self.help = cfg['displayHelp'][0]
+        self.help = cfg.value('displayHelp')
         self.helptext = []
         self.analysis_file = None
 
@@ -671,8 +331,8 @@ class SignalPlot :
         t0 = int(np.round(self.toffset*self.rate))
         t1 = int(np.round((self.toffset+self.twindow)*self.rate))
         tstep = 1
-        if cfg['maxpixel'][0] > 0 :
-            tstep = int((t1-t0)//cfg['maxpixel'][0])
+        if self.max_pixel > 0 :
+            tstep = int((t1-t0)//self.max_pixel)
             if tstep < 1 :
                 tstep = 1
         for c in range(self.channels) :
@@ -885,13 +545,13 @@ class SignalPlot :
             self.envelopecutofffreq /= 1.5
             self.envelope_label.set_text('envelope=%.0fHz' % self.envelopecutofffreq)
             self.envelope = envelope(self.fdata, self.rate, self.envelopecutofffreq )
-            self.songonsets, self.songoffsets = detect_songs(self.envelope, self.rate, self.thresholds)
+            self.songonsets, self.songoffsets = detect_songs(self.envelope, self.rate, self.thresholds, envelope_use_freq=self.envelopeusefreq)
             self.update_plots()
         elif event.key == 'E' :
             self.envelopecutofffreq *= 1.5
             self.envelope_label.set_text('envelope=%.0fHz' % self.envelopecutofffreq)
             self.envelope = envelope(self.fdata, self.rate, self.envelopecutofffreq )
-            self.songonsets, self.songoffsets = detect_songs(self.envelope, self.rate, self.thresholds)
+            self.songonsets, self.songoffsets = detect_songs(self.envelope, self.rate, self.thresholds, envelope_use_freq=self.envelopeusefreq)
             self.update_plots()
 #        elif event.key in 'h' :
 #            self.help = not self.help
@@ -957,41 +617,68 @@ def main():
     parser = argparse.ArgumentParser(description='Detect songs in multitrace time series data.', epilog='by Jan Benda (2018)')
     parser.add_argument('--version', action='version', version='1.0')
     parser.add_argument('-v', action='count', dest='verbose', help='print debug information' )
-    parser.add_argument('-c', '--save-config', nargs='?', default='', const=cfgfile, type=str, metavar='cfgfile', help='save configuration to file cfgfile (defaults to {0})'.format( cfgfile ))
+    parser.add_argument('-c', '--save-config', nargs='?', default='', const=cfgfile, type=str, metavar='cfgfile', help='save configuration to file cfgfile (defaults to {0})'.format(cfgfile))
     parser.add_argument('file', nargs='?', default='', type=str, help='name of the files with the time series data')
     args = parser.parse_args()
 
-    # load configuration from the current directory:
-    if os.path.isfile( cfgfile ) :
-        print('load configuration file %s' % cfgfile)
-        load_config( cfgfile, cfg )
-
     # set configuration from command line:
-    if args.verbose != None :
-        cfg['verboseLevel'][0] = args.verbose
+    verbose = 0
+    if args.verbose != None:
+        verbose = args.verbose
     
+    # configuration options:
+    cfg = ConfigFile()
+
+    cfg.add_section('Plotting:')
+    cfg.add('maxpixel', 50000, '', 'Either maximum number of data points to be plotted or zero for plotting all data points.')
+
+    cfg.add_section('Filter:')
+    cfg.add('highpassfreq', 1000.0, 'Hz', 'Cutoff frequency of the high-pass filter applied to the signal.')
+    cfg.add('lowpassfreq', 10000.0, 'Hz', 'Cutoff frequency of the low-pass filter applied to the signal.')
+
+    cfg.add_section('Envelope:')
+    cfg.add('envelopecutofffreq', 500.0, 'Hz', 'Cutoff frequency of the low-pass filter used for computing the envelope from the squared signal.')
+    cfg.add('envelopeusefreq', True, '', 'Apply lowpass filter to song envelope with cutoff determined from main peak in envelope spectrum.')
+
+    cfg.add_section('Thresholds:')
+    cfg.add('thresholdfactor', 1.0, '', 'Factor that multiplies the standard deviation of the whole envelope.')
+    cfg.add('noisethresholdfactor', 12.0, '', 'Factor that multiplies the standard deviation of the noise envelope.')
+
+    cfg.add_section('Detection:')
+    cfg.add('minduration', 0.4, 's', 'Minimum duration of an detected song.')
+    cfg.add('minpause', 0.4, 's', 'Minimum duration of a pause between detected songs.')
+
+    cfg.add_section('Items to display:')
+    cfg.add('displayHelp', False, '', 'Display help on key bindings' )
+    cfg.add('displayTraces', False, '', 'Display the raw data traces' )
+    cfg.add('displayFilteredTraces', True, '', 'Display the filtered data traces' )
+    cfg.add('displayEnvelope', True, '', 'Display the envelope' )
+
+    # load configuration from working directory and data directories:
+    filepath = args.file
+    cfg.load_files(cfgfile, filepath, 3, verbose)
+
     # save configuration:
-    if len( args.save_config ) > 0 :
-        ext = os.path.splitext( args.save_config )[1]
-        if ext != '.cfg' :
+    if len(args.save_config) > 0:
+        ext = os.path.splitext(args.save_config)[1]
+        if ext != os.extsep + 'cfg':
             print('configuration file name must have .cfg as extension!')
-        else :
+        else:
             print('write configuration to %s ...' % args.save_config)
-            dump_config( args.save_config, cfg, cfgsec )
-        quit()
+            cfg.dump(args.save_config)
+        return
 
     # load data:
-    filepath = args.file
     data, rate, unit = load_data(filepath)
 
     # process data:
-    fdata = bandpass_filter(data, rate, cfg['highpassfreq'][0], cfg['lowpassfreq'][0])
-    env = envelope(fdata, rate, cfg['envelopecutofffreq'][0])
-    threshs = threshold_estimates(env, cfg['thresholdfactor'][0])
-    onsets, offsets = detect_songs(env, rate, threshs, cfg['minpause'][0], cfg['minduration'][0], cfg['noisethresholdfactor'][0])
+    fdata = bandpass_filter(data, rate, cfg.value('highpassfreq'), cfg.value('lowpassfreq'))
+    env = envelope(fdata, rate, cfg.value('envelopecutofffreq'))
+    threshs = threshold_estimates(env, cfg.value('thresholdfactor'))
+    onsets, offsets = detect_songs(env, rate, threshs, cfg.value('minpause'), cfg.value('minduration'), cfg.value('noisethresholdfactor'), cfg.value('envelopeusefreq'))
     
     # plot:
-    sp = SignalPlot(rate, data, fdata, env, threshs, onsets, offsets, unit, filepath, os.path.dirname(filepath))
+    sp = SignalPlot(rate, data, fdata, env, threshs, onsets, offsets, unit, filepath, os.path.dirname(filepath), cfg)
 
 if __name__ == '__main__':
     main()
