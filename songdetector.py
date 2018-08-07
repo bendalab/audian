@@ -98,7 +98,7 @@ def threshold_estimates(envelopes, fac=1.0):
     threshs = np.ones(len(threshs))*max_thresh
     return threshs
 
-def detect_power(envelope, rate, threshold, min_pause, min_duration):
+def detect_power(envelope, rate, threshold, min_duration):
     onsets = np.nonzero((envelope[1:]>threshold) & (envelope[:-1]<=threshold))[0]
     offsets = np.nonzero((envelope[1:]<=threshold) & (envelope[:-1]>threshold))[0]
     if len(onsets) == 0 or len(offsets) == 0:
@@ -114,7 +114,7 @@ def detect_power(envelope, rate, threshold, min_pause, min_duration):
             return np.array([]), np.array([])
         # merge songs:
         diff = (onsets[1:] - offsets[:-1])/rate
-        indices = diff > min_pause
+        indices = diff > min_duration
         onsets = onsets[np.hstack([True, indices])]
         offsets = offsets[np.hstack([indices, True])]
         # skip songs that are too short:
@@ -125,12 +125,12 @@ def detect_power(envelope, rate, threshold, min_pause, min_duration):
     return np.array(onsets), np.array(offsets)
 
 
-def detect_songs(envelopes, rate, thresholds, min_pause=0.1, min_duration=0.1, thresh_fac=10.0, envelope_use_freq=True):
+def detect_songs(envelopes, rate, thresholds, min_duration=0.1, thresh_fac=10.0, envelope_use_freq=True):
     songonsets = []
     songoffsets = []
     for c in range(envelopes.shape[1]):
         # corse detection of songs:
-        onsets, offsets = detect_power(envelopes[:,c], rate, thresholds[c], min_pause, min_duration)
+        onsets, offsets = detect_power(envelopes[:,c], rate, thresholds[c], min_duration)
         
         # refine detections:
         new_onsets = []
@@ -194,7 +194,7 @@ def detect_songs(envelopes, rate, thresholds, min_pause=0.1, min_duration=0.1, t
             if thresh > thresholds[c]:
                 thresh = thresholds[c]
             # detect song:
-            on, off = detect_power(envelopes[ii0:ii1,c], rate, thresh, min_pause, min_duration)
+            on, off = detect_power(envelopes[ii0:ii1,c], rate, thresh, min_duration)
             if len(on[on<=i0-ii0]) == 0 or len(off[off>=i1-ii0]) == 0:
                 new_onsets.append(i0/rate)
                 new_offsets.append(i1/rate)
@@ -233,7 +233,6 @@ class SignalPlot :
         self.thresholdfac = cfg.value('thresholdfactor')
         self.thresholds = threshs
         self.min_duration = cfg.value('minduration')
-        self.min_pause = cfg.value('minpause')
         self.noisethresholdfac = cfg.value('noisethresholdfactor')
         self.songonsets = onsets
         self.songoffsets = offsets
@@ -646,7 +645,6 @@ def main():
 
     cfg.add_section('Detection:')
     cfg.add('minduration', 0.4, 's', 'Minimum duration of an detected song.')
-    cfg.add('minpause', 0.4, 's', 'Minimum duration of a pause between detected songs.')
 
     cfg.add_section('Items to display:')
     cfg.add('displayHelp', False, '', 'Display help on key bindings' )
@@ -675,7 +673,7 @@ def main():
     fdata = bandpass_filter(data, rate, cfg.value('highpassfreq'), cfg.value('lowpassfreq'))
     env = envelope(fdata, rate, cfg.value('envelopecutofffreq'))
     threshs = threshold_estimates(env, cfg.value('thresholdfactor'))
-    onsets, offsets = detect_songs(env, rate, threshs, cfg.value('minpause'), cfg.value('minduration'), cfg.value('noisethresholdfactor'), cfg.value('envelopeusefreq'))
+    onsets, offsets = detect_songs(env, rate, threshs, cfg.value('minduration'), cfg.value('noisethresholdfactor'), cfg.value('envelopeusefreq'))
     
     # plot:
     sp = SignalPlot(rate, data, fdata, env, threshs, onsets, offsets, unit, filepath, os.path.dirname(filepath), cfg)
