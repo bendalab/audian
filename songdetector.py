@@ -91,11 +91,18 @@ def threshold_estimates(envelopes, fac=10.0):
         maxi = maxi + w
         if maxi >= len(b):
             maxi = len(b)-1
-        mean = np.mean(envelopes[envelopes[:,c]<b[maxi],c])
-        std = np.std(envelopes[envelopes[:,c]<b[maxi],c])
-        threshs.append(mean + fac*std)
-        # check whether there is a t least a second maximum in the histogram
-        # set the threshold between first and second maximum!
+        lower = envelopes[envelopes[:,c]<b[maxi],c]
+        mean = np.mean(lower)
+        std = np.std(lower)
+        #threshs.append(mean + fac*std)
+
+        # XXX improve (and proof) this:
+        upper = envelopes[envelopes[:,c]>mean+3.0*std,c]
+        uppermean = np.mean(upper)
+        if uppermean > mean + 6.0*std:
+            threshs.append(0.5*(mean + uppermean))
+        else:
+            threshs.append(maxe + std)
         
         ## plt.bar(b[:-1], h, width=np.diff(b))
         ## plt.plot([mean, mean], [0, np.max(h)], 'k', lw=2)
@@ -731,6 +738,7 @@ def main():
     threshs = threshold_estimates(slowenv, cfg.value('thresholdfactor'))
     if verbose > 0: print('detect songs ...')
     onsets, offsets = detect_songs(slowenv, env, envrate, threshs, cfg.value('minduration'), cfg.value('noisethresholdfactor'), cfg.value('envelopeusefreq'))
+    if verbose > 0: print('plot ...')
     
     # plot:
     sp = SignalPlot(rate, data, fdata, env, slowenv, envrate, threshs, onsets, offsets, unit, filepath, os.path.dirname(filepath), cfg)
