@@ -14,7 +14,8 @@ import scipy.stats as stats
 from audioio import PlayAudio, fade
 from thunderfish.dataloader import load_data
 from thunderfish.configfile import ConfigFile
-from thunderfish.peakdetection import threshold_crossings, merge_events, remove_events
+from thunderfish.peakdetection import threshold_crossings, merge_events
+from thunderfish.peakdetection import remove_events, widen_events
 from thunderfish.powerspectrum import peak_freqs
 
 
@@ -127,7 +128,7 @@ def threshold_estimates(envelopes, fac=10.0):
 
 
 def detect_songs(envelopes, rate, thresholds, min_duration=0.1):
-    # coarse detection of songs:
+    """Detect crossings of the envelope over a threshold."""
     songonsets = []
     songoffsets = []
     for c in range(envelopes.shape[1]):
@@ -143,17 +144,30 @@ def detect_songs(envelopes, rate, thresholds, min_duration=0.1):
 
 
 def env_freqs(onsets, offsets, envelopes, rate, freq_resolution=1.0, min_nfft=16):
-    # return list of peak freuqencies of the data snippets
+    """Return list of peak freuqencies of the data snippets"""
     freqs = []
     # for all traces:
     for c in range(envelopes.shape[1]):
         freqs.append(peak_freqs(onsets[c], offsets[c], envelopes[:,c], rate, freq_resolution, min_nfft))
-    print freqs
-    print np.mean(freqs)
     return freqs
 
 
-def refine_detection(onsets, offsets, envelopes, rate, thresholds, min_duration=0.1, envelope_use_freq=True):
+def filter_envelopes(onsets, offsets, freqs, envelopes, rate, min_duration=0.1, mode='apply'):
+    if mode == 'apply':
+        for c in range(envelopes.shape[1]):
+            on_indices, off_indices = widen_events(onsets[c], offsets[c],
+                                                   len(envelopes[:,c]), 1.5*min_duration*rate)
+            for on_idx, off_idx, fcutoff in zip(on_indices, off_indices, freqs[c]):
+                # lowpass filter on envelope:
+                envelopes[on_idx:off_idx,c] = lowpass_filter(envelopes[on_idx:off_idx,c],
+                                                             rate, fcutoff)
+    elif mode == 'average':
+        fcutoff = np.mean(freqs)
+        # lowpass filter on envelope:
+        envelopes[:,:] = lowpass_filter(envelopes[:,:], rate, fcutoff)
+        
+
+def refine_detection(onsets, offsets, envelopes, rate, thresholds, min_duration=0.1):
     # XXX TODO: separate out the recomputation of the envelope
     songonsets = []
     songoffsets = []
@@ -190,29 +204,6 @@ def refine_detection(onsets, offsets, envelopes, rate, thresholds, min_duration=
                 n1 = len(envelopes[:,c])
             if n1 - n0 < w:
                 n0 = i1
-            if envelope_use_freq:
-                # spectrum of envelope:
-                freq_resolution = 2.0
-                min_nfft = 16
-                n = rate / freq_resolution
-                nfft = int(2 ** np.floor(np.log(n) / np.log(2.0) + 1.0-1e-8))
-                if nfft < min_nfft:
-                    nfft = min_nfft
-                if nfft > ii1 - ii0 :
-                    n = (ii1 - ii0)/2
-                    nfft = int(2 ** np.floor(np.log(n) / np.log(2.0) + 1.0-1e-8))
-                f, Pxx = sig.welch(envelopes[ii0:ii1,c], fs=rate, nperseg=nfft, noverlap=nfft//2, nfft=None)
-                ipeak = np.argmax(Pxx)
-                fpeak = f[np.argmax(Pxx)]
-                ## Pdecibel = 10.0*np.log10(Pxx)
-                ## plt.plot(f, Pdecibel)
-                ## plt.scatter([fpeak], Pdecibel[ipeak])
-                ## plt.xlim(0.0, 100.0)
-                ## plt.ylim(np.min(Pdecibel[f<100.0]), np.max(Pdecibel[f<100.0])*0.95)
-                ## plt.show()
-                # lowpass filter on envelope:
-                fcutoff = 4*fpeak
-                envelopes[m0:n1,c] = lowpass_filter(envelopes[m0:n1,c], rate, fcutoff)
             # set threshold:
             thresh0 = np.max(envelopes[m0:m1,c])*1.2
             if thresh0 < 0.5*thresholds[c]:
@@ -260,7 +251,7 @@ class SignalPlot :
         self.fdata = fdata
         self.channels = data.shape[1]
         self.envelopecutofffreq = cfg.value('envelopecutofffreq')
-        self.envelopeusefreq = cfg.value('envelopeusefreq')
+        self.envelopefilter = cfg.value('envelopefilter')
         self.envelope = env
         self.slowenvelope = slowenv
         self.envrate = envrate
@@ -702,7 +693,7 @@ def main():
 
     cfg.add_section('Envelope:')
     cfg.add('envelopecutofffreq', 500.0, 'Hz', 'Cutoff frequency of the low-pass filter used for computing the envelope from the squared signal.')
-    cfg.add('envelopeusefreq', True, '', 'Apply lowpass filter to song envelope with cutoff determined from main peak in envelope spectrum.')
+    cfg.add('envelopefilter', 'apply', '', 'Apply lowpass filter to envelope with cutoff determined from main peak in envelope spectrum for each event (apply), filter envelopes with the average peak frequency (average), or do not filter envelope (none).')
 
     cfg.add_section('Thresholds:')
     cfg.add('thresholdfactor', 8.0, '', 'Factor that multiplies the standard deviation of the whole envelope.')
@@ -746,8 +737,11 @@ def main():
     threshs = threshold_estimates(slowenv, cfg.value('thresholdfactor'))
     if verbose > 0: print('detect songs ...')
     onsets, offsets = detect_songs(slowenv, envrate, threshs, cfg.value('minduration'))
+    if verbose > 0: print('compute envelope frequencies ...')
     envfreqs = env_freqs(onsets, offsets, env, envrate)
-    onsets, offsets = refine_detection(onsets, offsets, env, envrate, threshs, cfg.value('minduration'), cfg.value('envelopeusefreq'))
+    if verbose > 0: print('filter envelope (%s) ...' % cfg.value('envelopefilter'))
+    filter_envelopes(onsets, offsets, envfreqs, env, envrate, cfg.value('minduration'), cfg.value('envelopefilter'))
+    # onsets, offsets = refine_detection(onsets, offsets, env, envrate, threshs, cfg.value('minduration'), cfg.value('envelopeusefreq'))
     if verbose > 0: print('plot ...')
     
     # plot:
