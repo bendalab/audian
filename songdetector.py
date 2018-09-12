@@ -160,11 +160,11 @@ def filter_envelopes(onsets, offsets, freqs, envelopes, rate, min_duration=0.1, 
             for on_idx, off_idx, fcutoff in zip(on_indices, off_indices, freqs[c]):
                 # lowpass filter on envelope:
                 envelopes[on_idx:off_idx,c] = lowpass_filter(envelopes[on_idx:off_idx,c],
-                                                             rate, fcutoff)
+                                                             rate, 4.0*fcutoff)
     elif mode == 'average':
         fcutoff = np.mean(freqs)
         # lowpass filter on envelope:
-        envelopes[:,:] = lowpass_filter(envelopes[:,:], rate, fcutoff)
+        envelopes[:,:] = lowpass_filter(envelopes[:,:], rate, 4.0*fcutoff)
         
 
 def refine_detection(onsets, offsets, envelopes, rate, thresholds, min_duration=0.1):
