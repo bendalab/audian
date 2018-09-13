@@ -143,87 +143,100 @@ def detect_songs(envelopes, rate, thresholds, min_duration=0.1):
     return songonsets, songoffsets
 
 
-def env_freqs(onsets, offsets, envelopes, rate, freq_resolution=1.0, min_nfft=16):
-    """Return list of peak freuqencies of the data snippets"""
+def env_freqs(onsets, offsets, envelopes, rate, freq_resolution=1.0, min_nfft=16, thresh=10.0):
+    """Return list of peak frequencies of the data snippets"""
     freqs = []
     # for all traces:
     for c in range(envelopes.shape[1]):
-        freqs.append(peak_freqs(onsets[c], offsets[c], envelopes[:,c], rate, freq_resolution, min_nfft))
+        freqs.append(peak_freqs(onsets[c], offsets[c], envelopes[:,c], rate, freq_resolution, min_nfft, thresh))
     return freqs
+
+
+def clean_env_freqs(onsets, offsets, freqs, fac=6.0):
+    """remove songs with undefined or outlier envelope frequencies."""
+    # check for outliers:
+    ffreqs = np.concatenate(freqs)
+    lq, uq = np.percentile(ffreqs, [25.0, 75.0])
+    cfreqs = ffreqs[(~np.isnan(ffreqs))&(ffreqs>=lq)&(ffreqs<=uq)]
+    m = np.mean(cfreqs)
+    s = np.std(cfreqs)
+    for c in range(len(freqs)):
+        freqs[c][(~np.isnan(freqs[c]))&((freqs[c]<m-fac*s)|(freqs[c]>m+fac*s))] = float('NaN')
+    # remove songs:
+    new_onsets = []
+    new_offsets = []
+    new_freqs = []
+    for c in range(len(onsets)):
+        new_onsets.append(onsets[c][~np.isnan(freqs[c])])
+        new_offsets.append(offsets[c][~np.isnan(freqs[c])])
+        new_freqs.append(freqs[c][~np.isnan(freqs[c])])
+    return new_onsets, new_offsets, new_freqs
 
 
 def filter_envelopes(onsets, offsets, freqs, envelopes, rate, min_duration=0.1, mode='apply'):
     if mode == 'apply':
         for c in range(envelopes.shape[1]):
             on_indices, off_indices = widen_events(onsets[c], offsets[c],
-                                                   len(envelopes[:,c]), 1.5*min_duration*rate)
+                                                   len(envelopes[:,c]), 2.0*min_duration*rate)
             for on_idx, off_idx, fcutoff in zip(on_indices, off_indices, freqs[c]):
-                # lowpass filter on envelope:
-                envelopes[on_idx:off_idx,c] = lowpass_filter(envelopes[on_idx:off_idx,c],
-                                                             rate, 4.0*fcutoff)
+                if not np.isnan(fcutoff):
+                    # lowpass filter on envelope:
+                    envelopes[on_idx:off_idx,c] = lowpass_filter(envelopes[on_idx:off_idx,c],
+                                                                 rate, 4.0*fcutoff)
     elif mode == 'average':
-        fcutoff = np.mean(freqs)
-        # lowpass filter on envelope:
-        envelopes[:,:] = lowpass_filter(envelopes[:,:], rate, 4.0*fcutoff)
+        if (~np.isnan(freqs)).sum() > 0:
+            # lowpass filter on envelope:
+            fcutoff = np.nanmean(freqs)
+            envelopes[:,:] = lowpass_filter(envelopes[:,:], rate, 4.0*fcutoff)
         
 
-def refine_detection(onsets, offsets, envelopes, rate, thresholds, min_duration=0.1):
-    # XXX TODO: separate out the recomputation of the envelope
+def analyse_songs(onsets, offsets, envelopes, rate, envfreqs, thresholds, min_duration=0.1, min_thresh_fac=1.0):
     songonsets = []
     songoffsets = []
+    w = int(min_duration*rate)
     for c in range(envelopes.shape[1]):
+        wide_onsets, wide_offsets = widen_events(onsets[c], offsets[c],
+                                                 len(envelopes[:,c]), w)
+        noise_onsets, noise_offsets = widen_events(onsets[c], offsets[c],
+                                                   len(envelopes[:,c]), 2*w)
+        prev_wideoff = 0
+        thresh0 = thresholds[c]
+        thresh1 = thresholds[c]
         new_onsets = []
         new_offsets = []
-        for k in range(len(onsets[c])):
-            i0 = onsets[c][k]
-            i1 = offsets[c][k]
-            # enlarge song:
-            #w = (i1 - i0)//2
-            w = int(0.5*min_duration*rate)
-            ii0 = i0 - w if i0 >= w else 0
-            if k > 0 and ii0 <= offsets[c][k-1]:
-                ii0 = offsets[c][k-1]
-            ii1 = i1 + w if i1 + w < len(envelopes[:,c]) else len(envelopes[:,c])
-            if k+1 < len(onsets[c]) and ii1 >= onsets[c][k+1]:
-                ii1 = onsets[c][k+1]
-            # window before song:
-            m0 = ii0 - 2*w
-            m1 = ii0
-            if k > 0 and m0 < offsets[c][k-1] :
-                m0 = offsets[c][k-1]
-            if m0 < 0:
-                m0 = 0
-            if m1 - m0 < w:
-                m1 = i0
-            # window after song:
-            n0 = ii1
-            n1 = ii1 + 2*w
-            if k+1 < len(onsets[c]) and n1 > onsets[c][k+1]:
-                n1 = onsets[c][k+1]
-            if n1 > len(envelopes[:,c]):
-                n1 = len(envelopes[:,c])
-            if n1 - n0 < w:
-                n0 = i1
+        for noiseon, wideon, songon, songoff, wideoff, noiseoff, next_wideon, fcutoff in zip(noise_onsets, wide_onsets, onsets[c], offsets[c], wide_offsets, noise_offsets, np.hstack((wide_onsets[1:], len(envelopes[c]))), envfreqs[c]):
+            # if no peak frequency, then remove this song:
+            if np.isnan(fcutoff):
+                print('removed channel %d time %g because of missing envelope frequency' % (c, songon/rate))
+                prev_wideoff = wideoff
+                continue
+            # adjust window before song:
+            if wideon-noiseon < w:
+                noiseon = wideon-w
+                if noiseon < prev_wideoff:
+                    noiseon = prev_wideoff
+            # adjust window after song:
+            if noiseoff-wideoff < w:
+                noiseoff = wideoff+w
+                if noiseoff > next_wideon:
+                    noiseoff = next_wideon
             # set threshold:
-            thresh0 = np.max(envelopes[m0:m1,c])*1.2
-            if thresh0 < 0.5*thresholds[c]:
-                thresh0 = 0.5*thresholds[c]
-            thresh1 = np.max(envelopes[n0:n1,c])*1.2
-            if thresh1 < 0.5*thresholds[c]:
-                thresh1 = 0.5*thresholds[c]
-            # detect song:
-            env = envelopes[ii0:ii1,c]
-            on = np.nonzero((env[1:]>thresh0) & (env[:-1]<=thresh0))[0]
-            off = np.nonzero((env[1:]<=thresh1) & (env[:-1]>thresh1))[0]
+            if wideon - noiseon > w/2:
+                thresh0 = np.max(envelopes[noiseon:wideon,c])*1.2
+            if noiseoff - wideoff > w/2:
+                thresh1 = np.max(envelopes[wideoff:noiseoff,c])*1.2
+            thresh = max(thresh0, thresh1)
+            if thresh < min_thresh_fac*thresholds[c]:
+                thresh = min_thresh_fac*thresholds[c]
+            # redetect song on fast envelope:
+            on, off = threshold_crossings(envelopes[wideon:wideoff,c], thresh)
             # store song:
-            if len(on) > 0:
-                new_onsets.append(ii0+on[0])
-            else:
-                new_onsets.append(i0)
-            if len(off) > 0:
-                new_offsets.append(ii0+off[-1])
-            else:
-                new_offsets.append(i1)
+            if len(on) > 0 and len(off) > 0:
+                new_onsets.append(wideon+on[0])
+                new_offsets.append(wideon+off[-1])
+            # analyse song:
+            # ...
+            prev_wideoff = wideoff
         songonsets.append(np.array(new_onsets))
         songoffsets.append(np.array(new_offsets))
     return songonsets, songoffsets
@@ -535,12 +548,15 @@ class SignalPlot :
             self.fig.canvas.draw()
         elif event.key == 'v':
             for c in range(self.channels):
-                min = np.min( self.fdata[:, c] )
-                max = np.max( self.fdata[:, c] )
-                h = 0.5*(max - min)
-                v = 0.5*(max + min)
-                self.ymin[c] = v-h
-                self.ymax[c] = v+h
+                fdmin = np.min( self.fdata[:, c] )
+                fdmax = np.max( self.fdata[:, c] )
+                #h = 0.5*(fdmax - fdmin)
+                #v = 0.5*(fdmax + fdmin)
+                #self.ymin[c] = v-h
+                #self.ymax[c] = v+h
+                m = max(-fdmin, fdmax)
+                self.ymin[c] = -m
+                self.ymax[c] = m
                 self.axt[c].set_ylim( self.ymin[c], self.ymax[c] )
             self.fig.canvas.draw()
         elif event.key == 'V':
@@ -693,10 +709,12 @@ def main():
 
     cfg.add_section('Envelope:')
     cfg.add('envelopecutofffreq', 500.0, 'Hz', 'Cutoff frequency of the low-pass filter used for computing the envelope from the squared signal.')
+    cfg.add('envelopepeakthresh', 20.0, 'dB', 'Minimum required height of peak in envelope.')
     cfg.add('envelopefilter', 'apply', '', 'Apply lowpass filter to envelope with cutoff determined from main peak in envelope spectrum for each event (apply), filter envelopes with the average peak frequency (average), or do not filter envelope (none).')
 
     cfg.add_section('Thresholds:')
     cfg.add('thresholdfactor', 8.0, '', 'Factor that multiplies the standard deviation of the whole envelope.')
+    cfg.add('minthreshfac', 1.0, '', 'In the final analysis the local threshold must be larger than this factor times the global threshold.')
 
     cfg.add_section('Detection:')
     cfg.add('minduration', 0.5, 's', 'Minimum duration of an detected song.')
@@ -738,10 +756,13 @@ def main():
     if verbose > 0: print('detect songs ...')
     onsets, offsets = detect_songs(slowenv, envrate, threshs, cfg.value('minduration'))
     if verbose > 0: print('compute envelope frequencies ...')
-    envfreqs = env_freqs(onsets, offsets, env, envrate)
+    envfreqs = env_freqs(onsets, offsets, env, envrate, thresh=cfg.value('envelopepeakthresh'))
+    if verbose > 0: print('clean envelope frequencies ...')
+    onsets, offsets, envfreqs = clean_env_freqs(onsets, offsets, envfreqs)
     if verbose > 0: print('filter envelope (%s) ...' % cfg.value('envelopefilter'))
     filter_envelopes(onsets, offsets, envfreqs, env, envrate, cfg.value('minduration'), cfg.value('envelopefilter'))
-    # onsets, offsets = refine_detection(onsets, offsets, env, envrate, threshs, cfg.value('minduration'), cfg.value('envelopeusefreq'))
+    if verbose > 0: print('analyse songs ...')
+    onsets, offsets = analyse_songs(onsets, offsets, env, envrate, envfreqs, threshs, cfg.value('minduration'), cfg.value('minthreshfac'))
     if verbose > 0: print('plot ...')
     
     # plot:
@@ -751,3 +772,4 @@ if __name__ == '__main__':
     main()
 
 # python ~/prj/audian/songdetector.py -v 2017-08-05-ad/info.dat # data/slovenia/2017/distance-cages
+# crosstalk in front of songs in trace 0: 142.5 251.5
