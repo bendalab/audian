@@ -14,8 +14,8 @@ import scipy.stats as stats
 from audioio import PlayAudio, fade
 from thunderfish.dataloader import load_data
 from thunderfish.configfile import ConfigFile
-from thunderfish.peakdetection import threshold_crossings, merge_events
-from thunderfish.peakdetection import remove_events, widen_events
+from thunderfish.eventdetection import threshold_crossings, merge_events
+from thunderfish.eventdetection import remove_events, widen_events
 from thunderfish.powerspectrum import peak_freqs
 
 
