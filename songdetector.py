@@ -156,6 +156,8 @@ def clean_env_freqs(onsets, offsets, freqs, fac=6.0):
     """remove songs with undefined or outlier envelope frequencies."""
     # check for outliers:
     ffreqs = np.concatenate(freqs)
+    if len(ffreqs) == 0:
+        return onsets, offsets, freqs
     lq, uq = np.percentile(ffreqs, [25.0, 75.0])
     cfreqs = ffreqs[(~np.isnan(ffreqs))&(ffreqs>=lq)&(ffreqs<=uq)]
     m = np.mean(cfreqs)
@@ -709,7 +711,7 @@ def main():
 
     cfg.add_section('Envelope:')
     cfg.add('envelopecutofffreq', 500.0, 'Hz', 'Cutoff frequency of the low-pass filter used for computing the envelope from the squared signal.')
-    cfg.add('envelopepeakthresh', 20.0, 'dB', 'Minimum required height of peak in envelope.')
+    cfg.add('envelopepeakthresh', 10.0, 'dB', 'Minimum required height of peak in envelope.')
     cfg.add('envelopefilter', 'apply', '', 'Apply lowpass filter to envelope with cutoff determined from main peak in envelope spectrum for each event (apply), filter envelopes with the average peak frequency (average), or do not filter envelope (none).')
 
     cfg.add_section('Thresholds:')
