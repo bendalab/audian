@@ -537,6 +537,7 @@ class SignalPlot :
         self.channel = channel
         self.rate = samplingrate
         self.data = data
+        #self.data = highpass_filter(samplingrate, data, 10000.0)
         self.envcutofffreq = cfg['envcutofffreq'][0]
         self.envthreshfac = cfg['envthreshfac'][0]
         self.envelope = envelope( self.rate, self.data, self.envcutofffreq )
@@ -562,8 +563,6 @@ class SignalPlot :
         self.power_frequency_label = None
         self.envpower_label = None
         self.envpower_artist = None
-        self.legend = True
-        self.legendhandle = None
         self.help = cfg['displayHelp'][0]
         self.helptext = []
         self.allpeaks = []
@@ -584,14 +583,15 @@ class SignalPlot :
         plt.rcParams['keymap.yscale'] = ''
         plt.rcParams['keymap.xscale'] = ''
         plt.rcParams['keymap.grid'] = ''
-        plt.rcParams['keymap.all_axes'] = ''
+        if 'keymap.all_axes' in plt.rcParams:
+            plt.rcParams['keymap.all_axes'] = ''
         
         # the figure:
         self.fig = plt.figure( figsize=( 15, 9 ) )
         self.fig.canvas.set_window_title( 'AUDIoANalyser: ' + self.filename + ' channel {0:d}'.format( self.channel ) )
         self.fig.canvas.mpl_connect( 'key_press_event', self.keypress )
         self.fig.canvas.mpl_connect( 'button_press_event', self.buttonpress )
-        self.fig.canvas.mpl_connect( 'pick_event', self.onpick )
+        #self.fig.canvas.mpl_connect( 'pick_event', self.onpick )
         self.fig.canvas.mpl_connect( 'resize_event', self.resize )
         # trace plot:
         self.axt = self.fig.add_axes( [ 0.1, 0.7, 0.87, 0.25 ] )
@@ -630,8 +630,6 @@ class SignalPlot :
         ht = self.axp.text( 0.98, 0.8, 'f, F: zoom', ha='right', transform=self.axp.transAxes )
         self.helptext.append( ht )
         ht = self.axp.text( 0.98, 0.7, '(ctrl+) left, right: move', ha='right', transform=self.axp.transAxes )
-        self.helptext.append( ht )
-        ht = self.axp.text( 0.98, 0.6, 'l: toggle legend', ha='right', transform=self.axp.transAxes )
         self.helptext.append( ht )
         ht = self.axp.text( 0.98, 0.5, 'd: toggle decibel', ha='right', transform=self.axp.transAxes )
         self.helptext.append( ht )
@@ -1059,10 +1057,6 @@ class SignalPlot :
             for ht in self.helptext :
                 ht.set_visible( self.help )
             self.fig.canvas.draw()
-        elif event.key in 'l' :
-            self.legend = not self.legend
-            self.legendhandle.set_visible( self.legend )
-            self.fig.canvas.draw()
         elif event.key in 'w' :
             self.plot_waveform()
         elif event.key in 'W' :
@@ -1110,8 +1104,8 @@ class SignalPlot :
                 else :
                     self.fig.canvas.draw()
 
-    def onpick( self, event ) :
-        print('pick')
+    #def onpick( self, event ) :
+    #    print('pick')
 
     def analyse_envelopepeaks( self, tmin, tmax ) :
         t0 = int(tmin*self.rate)
