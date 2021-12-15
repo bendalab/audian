@@ -587,6 +587,7 @@ class SignalPlot :
             plt.rcParams['keymap.all_axes'] = ''
         
         # the figure:
+        plt.ioff()
         self.fig = plt.figure( figsize=( 15, 9 ) )
         self.fig.canvas.set_window_title( 'AUDIoANalyser: ' + self.filename + ' channel {0:d}'.format( self.channel ) )
         self.fig.canvas.mpl_connect( 'key_press_event', self.keypress )
