@@ -652,7 +652,7 @@ class SignalPlot :
         self.update_plots( False )
         plt.show()
 
-    def __del( self ) :
+    def __del__( self ) :
         if self.analysis_file != None :
             self.analysis_file.close()
         if self.audio is not None:
