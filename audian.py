@@ -589,7 +589,7 @@ class SignalPlot :
         # the figure:
         plt.ioff()
         self.fig = plt.figure( figsize=( 15, 9 ) )
-        self.fig.canvas.set_window_title( 'AUDIoANalyser: ' + self.filename + ' channel {0:d}'.format( self.channel ) )
+        self.fig.canvas.manager.set_window_title( 'AUDIoANalyser: ' + self.filename + ' channel {0:d}'.format( self.channel ) )
         self.fig.canvas.mpl_connect( 'key_press_event', self.keypress )
         self.fig.canvas.mpl_connect( 'button_press_event', self.buttonpress )
         #self.fig.canvas.mpl_connect( 'pick_event', self.onpick )
@@ -597,8 +597,8 @@ class SignalPlot :
         # trace plot:
         self.axt = self.fig.add_axes( [ 0.1, 0.7, 0.87, 0.25 ] )
         self.axt.set_ylabel( 'Amplitude [{:s}]'.format( self.unit ) )
-        self.span = widgets.SpanSelector( self.axt, self.analyse_trace, 'horizontal',
-                                            rectprops=dict(alpha=0.5, facecolor='red') )
+        self.span = widgets.SpanSelector(self.axt, self.analyse_trace,
+                                         direction='horizontal')
         ht = self.axt.text( 0.98, 0.05, '(ctrl+) page and arrow up, down, home, end: scroll', ha='right', transform=self.axt.transAxes )
         self.helptext.append( ht )
         ht = self.axt.text( 0.98, 0.15, '+, -, X, x: zoom in/out', ha='right', transform=self.axt.transAxes )
