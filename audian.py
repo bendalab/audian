@@ -652,7 +652,7 @@ class SignalPlot :
         self.update_plots( False )
         plt.show()
 
-    def __del( self ) :
+    def __del__( self ) :
         if self.analysis_file != None :
             self.analysis_file.close()
         if self.audio is not None:
@@ -1258,7 +1258,7 @@ class SignalPlot :
         self.audio.play(self.data, self.rate, blocking=False)
                     
 
-def main():
+def main(cargs):
     # config file name:
     prog, ext = os.path.splitext( sys.argv[0] )
     cfgfile = prog + '.cfg'
@@ -1270,7 +1270,7 @@ def main():
     parser.add_argument('-c', '--save-config', nargs='?', default='', const=cfgfile, type=str, metavar='cfgfile', help='save configuration to file cfgfile (defaults to {0})'.format( cfgfile ))
     parser.add_argument('file', nargs='?', default='', type=str, help='name of the file with the time series data')
     parser.add_argument('channel', nargs='?', default=0, type=int, help='channel to be displayed')
-    args = parser.parse_args()
+    args = parser.parse_args(cargs)
 
     # load configuration from the current directory:
     if os.path.isfile( cfgfile ) :
@@ -1313,4 +1313,4 @@ def main():
     sp = SignalPlot( freq, data, unit, filename, channel, os.path.dirname( filepath ) )
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])
