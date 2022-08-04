@@ -607,7 +607,7 @@ class SignalPlot :
         for ht in self.helptext :
             ht.set_visible(self.help)
         self.update_plots(False)
-        plt.show()
+        plt.show(block=True)
 
     def __del__(self) :
         if self.analysis_file != None :

@@ -32,7 +32,7 @@ setup(
     packages = ['audian'],
     entry_points = {
         'console_scripts': [
-            'audian = audian.audian:main',
+            'audian = audian.audian:run',
         ]},
     python_requires = '>=3.4',
     install_requires = ['scipy', 'numpy', 'matplotlib', 'audioio'],
