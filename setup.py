@@ -16,7 +16,7 @@ setup(
     description = 'Simple GUI for viewing biosignals.',
     long_description = long_description,
     long_description_content_type = "text/markdown",
-    url = "https://github.com/janscience/audian",
+    url = "https://github.com/bendalab/audian",
     license = "GPLv3",
     classifiers = [
         "Development Status :: 4 - Beta",
