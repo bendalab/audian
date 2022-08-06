@@ -120,7 +120,7 @@ def load_wave(filename, trace=0) :
 ###############################################################################
 ## filter and envelope:
 
-def highpass_filter(rate, data, cutoff) :
+def highpass_filter(data, rate, cutoff) :
     sos = sig.butter(2, freq, 'highpass', fs=rate, output='sos')
     fdata = sig.sosfiltfilt(sos, data)
     return fdata
@@ -135,7 +135,7 @@ def bandpass_filter(data, rate, lowf=5500.0, highf=7500.0):
     return fdata
 
 
-def envelope(rate, data, freq=100.0):
+def envelope(data, rate, freq=100.0):
     sos = sig.butter(2, freq, 'lowpass', fs=rate, output='sos')
     envelope = np.sqrt(2)*sig.sosfiltfilt(sos, np.abs(data))
     return envelope
@@ -470,7 +470,7 @@ class SignalPlot :
         self.unit = unit
         self.envcutofffreq = cfg['envcutofffreq'][0]
         self.envthreshfac = cfg['envthreshfac'][0]
-        self.envelope = envelope(self.rate, self.data, self.envcutofffreq)
+        self.envelope = envelope(self.data, self.rate, self.envcutofffreq)
         self.envpower = None
         self.envfreqs = None
         self.time = np.arange(0.0, len(self.data))/self.rate
@@ -941,11 +941,11 @@ class SignalPlot :
             self.fig.canvas.draw()
         elif event.key in 'C' :
             self.envcutofffreq *= 1.2
-            self.envelope = envelope(self.rate, self.data, self.envcutofffreq)
+            self.envelope = envelope(self.data, self.rate, self.envcutofffreq)
             self.update_plots()
         elif event.key in 'c' :
             self.envcutofffreq /= 1.2
-            self.envelope = envelope(self.rate, self.data, self.envcutofffreq)
+            self.envelope = envelope(self.data, self.rate, self.envcutofffreq)
             self.update_plots()
         elif event.key in 'T' :
             self.envthreshfac *= 1.2
@@ -1263,6 +1263,8 @@ def main(cargs):
                         help='save configuration to file cfgfile (defaults to {0})'.format(cfgfile))
     parser.add_argument('-f', dest='high_pass', type=float, metavar='FREQ', default=None,
                         help='cutoff frequency of highpass filter in Hz')
+    parser.add_argument('-l', dest='low_pass', type=float, metavar='FREQ', default=None,
+                        help='cutoff frequency of lowpass filter in Hz')
     parser.add_argument('file', nargs='?', default='', type=str, help='name of the file with the time series data')
     parser.add_argument('channel', nargs='?', default=0, type=int, help='channel to be displayed')
     args = parser.parse_args(cargs)
@@ -1296,7 +1298,10 @@ def main(cargs):
     else :
         rate, data = load_wave(filepath, channel)
     if not args.high_pass is None:
-        data = highpass_filter(rate, data, args.high_pass)
+        if not args.low_pass is None:
+            data = bandpass_filter(data, rate, args.high_pass, args.low_pass)
+        else:
+            data = highpass_filter(data, rate, args.high_pass)
     unit = 'a.u.'
     
     # plot:
