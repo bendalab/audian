@@ -1083,7 +1083,7 @@ class SignalPlot :
                 datafile = '{name}-data.txt'.format(name=name)
             self.analysis_file = open(os.path.join(self.filepath, datafile), 'w')
             self.analysis_file.write('\t'.join([ '{:10s}'.format(x) for x in [ "# width [s]", "trace mean", "trace std", "env mean", "env std", "env peaks", "env T [s]", "env rate [Hz]" ] ]) + '\n')
-            print('saved selected data to %s' % datafile)
+            print('saved selected data to: %s' % datafile)
         self.analysis_file.write('\t'.join('{:10.4f}'.format(x) for x in [ tmax-tmin, np.mean(self.data[t0:t1]), np.std(self.data[t0:t1]), np.mean(self.envelope[t0:t1]), np.std(self.envelope[t0:t1]), npeaks, pinterval, prate ]) + '\n')
         self.analysis_file.flush()
             
@@ -1143,7 +1143,7 @@ class SignalPlot :
         fig.savefig(os.path.join(self.filepath, figfile))
         fig.clear()
         plt.close(fig)
-        print('saved waveform figure to %s' % figfile)
+        print('saved waveform figure to: %s' % figfile)
 
     def plot_powerspec(self) :
         fig = plt.figure()
@@ -1170,7 +1170,7 @@ class SignalPlot :
         fig.savefig(os.path.join(self.filepath, figfile))
         fig.clear()
         plt.close(fig)
-        print('saved power spectrum figure to %s' % figfile)
+        print('saved power spectrum figure to: %s' % figfile)
 
         
     def save_segment(self):
@@ -1210,7 +1210,7 @@ class SignalPlot :
             df.write('# {:<7s}\t{:s}\n'.format('Hz', punit))
             for f, p in zip(self.freqs, self.power) :
                 df.write('{:9.2f}\t{:g}\n'.format(f, p))
-        print('saved power spectrum data to %s' % filename)
+        print('saved power spectrum data to: %s' % filename)
 
         
     def save_envelope(self):
@@ -1249,7 +1249,7 @@ class SignalPlot :
             df.write('# {:<7s}\t{:s}\n'.format('Hz', punit))
             for f, p in zip(self.envfreqs, self.envpower) :
                 df.write('{:9.2f}\t{:g}\n'.format(f, p))
-        print('saved power spectrum of envelope to %s' % filename)
+        print('saved power spectrum of envelope to: %s' % filename)
         
 
     def play_segment(self) :
