@@ -121,13 +121,8 @@ def load_wave(filename, trace=0) :
 ## filter and envelope:
 
 def highpass_filter(rate, data, cutoff) :
-    nyq = 0.5*rate
-    high = cutoff/nyq
-    b, a = sig.butter(4, high, btype='highpass')
-    ## w, h = sig.freqz(b, a)
-    ## plt.semilogx(w, 20 * np.log10(abs(h)))
-    ## plt.show()
-    fdata = sig.lfilter(b, a, data)
+    sos = sig.butter(2, freq, 'highpass', fs=rate, output='sos')
+    fdata = sig.sosfiltfilt(sos, data)
     return fdata
 
 
@@ -135,36 +130,16 @@ def bandpass_filter(data, rate, lowf=5500.0, highf=7500.0):
     """
     Bandpass filter the signal.
     """
-    nyq = 0.5*rate
-    low = lowf/nyq
-    high = highf/nyq
-    b, a = sig.butter(4, [low, high], btype='bandpass')
-    fdata = sig.lfilter(b, a, data)
+    sos = sig.butter(2, (lowf, highf), 'bandpass', fs=rate, output='sos')
+    fdata = sig.sosfiltfilt(sos, data)
     return fdata
 
 
-# def envelope(rate, data, freq=100.0):
-#     nyq = 0.5*rate
-#     low = freq/nyq
-#     b, a = sig.butter(2, low, btype='lowpass')
-#     edata = 2.0*sig.lfilter(b, a, data*data)
-#     edata[edata<0.0] = 0.0
-#     envelope = np.sqrt(edata)
-#     return envelope
-
-# def running_std(rate, data):
 def envelope(rate, data, freq=100.0):
-    #from scipy.signal import gaussian
+    sos = sig.butter(2, freq, 'lowpass', fs=rate, output='sos')
+    envelope = np.sqrt(2)*sig.sosfiltfilt(sos, np.abs(data))
+    return envelope
 
-    # width
-    rstd_window_size_time = 1.0/freq  # s
-    rstd_window_size = int(rstd_window_size_time * rate)
-    # w = 1.0 * gaussian(rstd_window_size, std=rstd_window_size/7)
-    w = 1.0 * np.ones(rstd_window_size)
-    w /= np.sum(w)
-    rstd = (np.sqrt((np.correlate(data ** 2, w, mode='same') -
-                     np.correlate(data, w, mode='same') ** 2)).ravel()) * np.sqrt(2.)
-    return rstd
 
 ###############################################################################
 ## configuration file writing and loading:
@@ -814,7 +789,7 @@ class SignalPlot :
         if t00 < 0 :
             t00 = 0
             t11 = w
-        self.envpower, self.envfreqs = ml.psd(self.envelope[t00:t11], NFFT=nfft, noverlap=nfft/2, Fs=self.rate, detrend=ml.detrend_mean)
+        self.envpower, self.envfreqs = ml.psd(self.envelope[t00:t11], NFFT=nfft, noverlap=nfft//2, Fs=self.rate, detrend=ml.detrend_mean)
         self.axpe.set_xlim(0.0, 100.0)
         self.axpe.set_xlabel('Frequency [Hz]')
         if self.envpower_label == None :
