@@ -1,4 +1,4 @@
-__version__='1.0'
+__version__='1.1'
 """Current version of the audian package."""
 
 __year__ = '2022'

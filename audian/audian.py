@@ -121,7 +121,7 @@ def load_wave(filename, trace=0) :
 ## filter and envelope:
 
 def highpass_filter(data, rate, cutoff) :
-    sos = sig.butter(2, freq, 'highpass', fs=rate, output='sos')
+    sos = sig.butter(2, cutoff, 'highpass', fs=rate, output='sos')
     fdata = sig.sosfiltfilt(sos, data)
     return fdata
 
@@ -1171,6 +1171,24 @@ class SignalPlot :
         fig.clear()
         plt.close(fig)
         print('saved power spectrum figure to %s' % figfile)
+
+        
+    def save_segment(self):
+        t0s = int(np.round(self.toffset))
+        t1s = int(np.round(self.toffset + self.twindow))
+        t0 = int(np.round(self.toffset * self.rate))
+        t1 = int(np.round((self.toffset + self.twindow) * self.rate))
+        savedata = 1.0 * self.data[t0:t1]
+        filename = self.filename.split('.')[0]
+        if self.channel > 0:
+            segmentfilename = '{name}-{channel:d}-{time0:.4g}s-{time1:.4g}s.wav'.format(
+                name=filename, time0=t0s, time1=t1s)
+        else:
+            segmentfilename = '{name}-{time0:.4g}s-{time1:.4g}s.wav'.format(
+                name=filename, time0=t0s, time1=t1s)
+        write_audio(segmentfilename, savedata, self.rate)
+        print('saved segment to: ' , segmentfilename)
+    
 
     def save_powerspec(self) :
         t0s = int(np.round(self.toffset))
