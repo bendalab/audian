@@ -21,6 +21,13 @@ high_pass = 500.0
 audian.main(['-f', f'{high_pass}', filepath])
 ```
 
+## Run it from Spyder IPython console:
+
+In the IPython console do:
+``` py
+%set_env MPLBACKEND=
+! audian -f 1000 -l 15000 data.wav
+```
 
 ## Installation
 
