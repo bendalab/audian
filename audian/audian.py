@@ -492,10 +492,12 @@ class SignalPlot :
         self.channel = channel
         self.rate = samplingrate
         self.data = data
+        self.unit = unit
         self.envcutofffreq = cfg['envcutofffreq'][0]
         self.envthreshfac = cfg['envthreshfac'][0]
         self.envelope = envelope(self.rate, self.data, self.envcutofffreq)
-        self.unit = unit
+        self.envpower = None
+        self.envfreqs = None
         self.time = np.arange(0.0, len(self.data))/self.rate
         self.toffset = 0.0
         self.twindow = 8.0
@@ -568,13 +570,11 @@ class SignalPlot :
         self.helptext.append(ht)
         ht = self.axt.text(0.98, 0.55, 'w, W: plot waveform/spectrum into png file', ha='right', transform=self.axt.transAxes)
         self.helptext.append(ht)
-        ht = self.axt.text(0.98, 0.65, 's: save figure', ha='right', transform=self.axt.transAxes)
+        ht = self.axt.text(0.98, 0.65, 's: save current segment to wav file', ha='right', transform=self.axt.transAxes)
         self.helptext.append(ht)
         ht = self.axt.text(0.98, 0.75, 'q: quit', ha='right', transform=self.axt.transAxes)
         self.helptext.append(ht)
         ht = self.axt.text(0.98, 0.85, 'h: toggle this help', ha='right', transform=self.axt.transAxes)
-        self.helptext.append(ht)
-        ht = self.axt.text(0.98, 0.95, 'e: toggle envelope', ha='right', transform=self.axt.transAxes)
         self.helptext.append(ht)
         #self.axt.set_xticklabels([])
         # spectrogram:
@@ -597,14 +597,17 @@ class SignalPlot :
         self.helptext.append(ht)
         ht = self.axp.text(0.98, 0.2, 'shift/ctrl + left/right mouse: goto previous/next harmonic', ha='right', transform=self.axp.transAxes)
         self.helptext.append(ht)
-        ht = self.axp.text(0.98, 0.1, 's: save segment to file', ha='right', transform=self.axp.transAxes)
-        ht = self.axp.text(0.98, 0.01, 'S: save spectrum to file', ha='right', transform=self.axp.transAxes)
+        ht = self.axp.text(0.98, 0.1, 'S: save current spectrum to csv file', ha='right', transform=self.axp.transAxes)
         self.helptext.append(ht)
         # power spectrum of envelope:
         self.axpe = self.fig.add_axes([ 0.6, 0.1, 0.4, 0.25 ])
         ht = self.axpe.text(0.98, 0.9, 'c, C: envelope cutoff frequency', ha='right', transform=self.axpe.transAxes)
         self.helptext.append(ht)
         ht = self.axpe.text(0.98, 0.8, 't, T: threshold for envelope peak detection', ha='right', transform=self.axpe.transAxes)
+        self.helptext.append(ht)
+        ht = self.axpe.text(0.98, 0.7, 'e: toggle envelope', ha='right', transform=self.axpe.transAxes)
+        self.helptext.append(ht)
+        ht = self.axpe.text(0.98, 0.6, 'E: save envelope and its spectrum to files', ha='right', transform=self.axpe.transAxes)
         self.helptext.append(ht)
         # plot:
         for ht in self.helptext :
@@ -810,31 +813,31 @@ class SignalPlot :
             t00 = t11 - w
         if t00 < 0 :
             t00 = 0
-            t11 = w           
-        envpower, envfreqs = ml.psd(self.envelope[t00:t11], NFFT=nfft, noverlap=nfft/2, Fs=self.rate, detrend=ml.detrend_mean)
+            t11 = w
+        self.envpower, self.envfreqs = ml.psd(self.envelope[t00:t11], NFFT=nfft, noverlap=nfft/2, Fs=self.rate, detrend=ml.detrend_mean)
         self.axpe.set_xlim(0.0, 100.0)
         self.axpe.set_xlabel('Frequency [Hz]')
         if self.envpower_label == None :
             self.envpower_label = self.axpe.set_ylabel('Envelope power')
         if self.decibel :
-            envpower = 10.0*np.log10(envpower)
-            pmin = np.min(envpower[envfreqs<100.0])
+            self.envpower = 10.0*np.log10(self.envpower)
+            pmin = np.min(self.envpower[self.envfreqs<100.0])
             pmin = np.floor(pmin/10.0)*10.0
-            pmax = np.max(envpower[envfreqs<100.0])
+            pmax = np.max(self.envpower[self.envfreqs<100.0])
             pmax = np.ceil(pmax/10.0)*10.0
             doty = pmax-5.0
             self.envpower_label.set_text('Envelope power [dB]')
             self.axpe.set_ylim(pmin, pmax)
         else :
-            pmax = np.max(envpower[envfreqs<100.0])
+            pmax = np.max(self.envpower[self.envfreqs<100.0])
             doty = pmax
             pmax *= 1.1
             self.envpower_label.set_text('Envelope power')
             self.axpe.set_ylim(0.0, pmax)
         if self.envpower_artist == None :
-            self.envpower_artist, = self.axpe.plot(envfreqs, envpower, 'r', zorder=2)
+            self.envpower_artist, = self.axpe.plot(self.envfreqs, self.envpower, 'r', zorder=2)
         else :
-            self.envpower_artist.set_data(envfreqs, envpower)
+            self.envpower_artist.set_data(self.envfreqs, self.envpower)
         
         if draw :
             self.fig.canvas.draw()
@@ -1030,6 +1033,9 @@ class SignalPlot :
             self.save_segment()
         elif event.key in 'S' :
             self.save_powerspec()
+        elif event.key in 'E' :
+            self.save_envelope()
+            self.save_envelope_powerspec()
         elif event.key in 'p' :
             self.play_segment()
         elif event.key in 'P' :
@@ -1213,21 +1219,45 @@ class SignalPlot :
                 df.write('{:9.2f}\t{:g}\n'.format(f, p))
         print('saved power spectrum data to %s' % filename)
 
-    def save_segment(self):
+        
+    def save_envelope(self):
         t0s = int(np.round(self.toffset))
         t1s = int(np.round(self.toffset + self.twindow))
         t0 = int(np.round(self.toffset * self.rate))
         t1 = int(np.round((self.toffset + self.twindow) * self.rate))
-        savedata = 1.0 * self.data[t0:t1]
+        savedata = 1.0 * self.envelope[t0:t1]
         filename = self.filename.split('.')[0]
         if self.channel > 0:
-            segmentfilename = '{name}-{channel:d}-{time0:.4g}s-{time1:.4g}s.wav'.format(
+            segmentfilename = '{name}-{channel:d}-{time0:.4g}s-{time1:.4g}s-envelope.wav'.format(
                 name=filename, time0=t0s, time1=t1s)
         else:
-            segmentfilename = '{name}-{time0:.4g}s-{time1:.4g}s.wav'.format(
+            segmentfilename = '{name}-{time0:.4g}s-{time1:.4g}s-envelope.wav'.format(
                 name=filename, time0=t0s, time1=t1s)
         write_audio(segmentfilename, savedata, self.rate)
-        print('saved segment to: ' , segmentfilename)
+        print('saved envelope to: ' , segmentfilename)
+
+    def save_envelope_powerspec(self) :
+        t0s = int(np.round(self.toffset))
+        t1s = int(np.round(self.toffset + self.twindow))
+        t0 = int(np.round(self.toffset * self.rate))
+        t1 = int(np.round((self.toffset + self.twindow) * self.rate))
+        filename = self.filename.split('.')[0]
+        if self.channel > 0:
+            filename = '{name}-{channel:d}-{time0:.4g}s-{time1:.4g}s-envelope-powerspec.csv'.format(
+                name=filename, time0=t0s, time1=t1s)
+        else:
+            filename = '{name}-{time0:.4g}s-{time1:.4g}s-envelope-powerspec.csv'.format(
+                name=filename, time0=t0s, time1=t1s)
+        punit = 'x^2/Hz'
+        if self.decibel :
+            punit = 'dB'
+        with open(filename, 'w') as df:
+            df.write('# {:<7s}\t{:s}\n'.format('freq', 'power'))
+            df.write('# {:<7s}\t{:s}\n'.format('Hz', punit))
+            for f, p in zip(self.envfreqs, self.envpower) :
+                df.write('{:9.2f}\t{:g}\n'.format(f, p))
+        print('saved power spectrum of envelope to %s' % filename)
+        
 
     def play_segment(self) :
         if not have_audioio :
