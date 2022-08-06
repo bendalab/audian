@@ -10,8 +10,9 @@ import matplotlib.widgets as widgets
 import scipy.signal as sig
 from collections import OrderedDict
 from .version import __version__, __year__
+from audioio import load_audio, write_audio, PlayAudio, fade
 try:
-    from audioio import load_audio, PlayAudio, fade
+    from audioio import load_audio, write_audio, PlayAudio, fade
     have_audioio = True
 except ImportError:
     have_audioio = False
@@ -101,7 +102,7 @@ def load_wave(filename, trace=0) :
     #print nchannels, sampwidth, rate, nframes, comptype, compname
     buffer = wf.readframes(nframes)
     format = 'i%d' % sampwidth
-    data = np.fromstring(buffer, dtype=format).reshape(-1, nchannels)  # read data
+    data = np.frombuffer(buffer, dtype=format).reshape(-1, nchannels)  # read data
     wf.close()
     if len(data.shape) == 1 :
         if trace >= 1 :
@@ -538,6 +539,7 @@ class SignalPlot :
         plt.rcParams['keymap.yscale'] = ''
         plt.rcParams['keymap.xscale'] = ''
         plt.rcParams['keymap.grid'] = ''
+        plt.rcParams['keymap.save'] = ''
         if 'keymap.all_axes' in plt.rcParams:
             plt.rcParams['keymap.all_axes'] = ''
         
@@ -595,7 +597,8 @@ class SignalPlot :
         self.helptext.append(ht)
         ht = self.axp.text(0.98, 0.2, 'shift/ctrl + left/right mouse: goto previous/next harmonic', ha='right', transform=self.axp.transAxes)
         self.helptext.append(ht)
-        ht = self.axp.text(0.98, 0.1, 'D: save spectrum to file', ha='right', transform=self.axp.transAxes)
+        ht = self.axp.text(0.98, 0.1, 's: save segment to file', ha='right', transform=self.axp.transAxes)
+        ht = self.axp.text(0.98, 0.01, 'S: save spectrum to file', ha='right', transform=self.axp.transAxes)
         self.helptext.append(ht)
         # power spectrum of envelope:
         self.axpe = self.fig.add_axes([ 0.6, 0.1, 0.4, 0.25 ])
@@ -1023,8 +1026,10 @@ class SignalPlot :
             self.plot_waveform()
         elif event.key in 'W' :
             self.plot_powerspec()
-        elif event.key in 'D' :
-            self.write_powerspec()
+        elif event.key in 's' :
+            self.save_segment()
+        elif event.key in 'S' :
+            self.save_powerspec()
         elif event.key in 'p' :
             self.play_segment()
         elif event.key in 'P' :
@@ -1186,23 +1191,43 @@ class SignalPlot :
         plt.close(fig)
         print('saved power spectrum figure to %s' % figfile)
 
-    def write_powerspec(self) :
-        name = os.path.splitext(self.filename)[0]
-        if self.channel > 0 :
-            datafile = '{name}-{channel:d}-{time:.4g}s-powerspec.txt'.format(
-                name=name, channel=self.channel, time=self.toffset)
-        else :
-            datafile = '{name}-{time:.4g}s-powerspec.txt'.format(
-                name=name, time=self.toffset)
+    def save_powerspec(self) :
+        t0s = int(np.round(self.toffset))
+        t1s = int(np.round(self.toffset + self.twindow))
+        t0 = int(np.round(self.toffset * self.rate))
+        t1 = int(np.round((self.toffset + self.twindow) * self.rate))
+        filename = self.filename.split('.')[0]
+        if self.channel > 0:
+            filename = '{name}-{channel:d}-{time0:.4g}s-{time1:.4g}s-powerspec.csv'.format(
+                name=filename, time0=t0s, time1=t1s)
+        else:
+            filename = '{name}-{time0:.4g}s-{time1:.4g}s-powerspec.csv'.format(
+                name=filename, time0=t0s, time1=t1s)
         punit = 'x^2/Hz'
         if self.decibel :
             punit = 'dB'
-        with open(os.path.join(self.filepath, datafile), 'w') as df :
+        with open(filename, 'w') as df:
             df.write('# {:<7s}\t{:s}\n'.format('freq', 'power'))
             df.write('# {:<7s}\t{:s}\n'.format('Hz', punit))
             for f, p in zip(self.freqs, self.power) :
                 df.write('{:9.2f}\t{:g}\n'.format(f, p))
-        print('saved power spectrum data to %s' % datafile)
+        print('saved power spectrum data to %s' % filename)
+
+    def save_segment(self):
+        t0s = int(np.round(self.toffset))
+        t1s = int(np.round(self.toffset + self.twindow))
+        t0 = int(np.round(self.toffset * self.rate))
+        t1 = int(np.round((self.toffset + self.twindow) * self.rate))
+        savedata = 1.0 * self.data[t0:t1]
+        filename = self.filename.split('.')[0]
+        if self.channel > 0:
+            segmentfilename = '{name}-{channel:d}-{time0:.4g}s-{time1:.4g}s.wav'.format(
+                name=filename, time0=t0s, time1=t1s)
+        else:
+            segmentfilename = '{name}-{time0:.4g}s-{time1:.4g}s.wav'.format(
+                name=filename, time0=t0s, time1=t1s)
+        write_audio(segmentfilename, savedata, self.rate)
+        print('saved segment to: ' , segmentfilename)
 
     def play_segment(self) :
         if not have_audioio :
