@@ -951,8 +951,9 @@ class SignalPlot:
         t0 = int(tmin*self.rate)
         t1 = int(tmax*self.rate)
         npeaks, pinterval, prate = self.analyse_envelopepeaks(tmin, tmax)
-        print('\t'.join([ '{:10s}'.format(x) for x in [ "# width [s]", "trace mean", "trace std", "env mean", "env std", "env peaks", "env T [s]", "env rate [Hz]" ] ]))
-        print('\t'.join('{:10.4f}'.format(x) for x in [ tmax-tmin, np.mean(self.data[t0:t1]), np.std(self.data[t0:t1]), np.mean(self.envelope[t0:t1]), np.std(self.envelope[t0:t1]), npeaks, pinterval, prate ]))
+        peak_freq = self.allpeaks[np.argmax(self.allpeaks[:,1]),0]
+        print('\t'.join([ '{:10s}'.format(x) for x in [ "# width [s]", "trace mean", "trace std", "peak freq [Hz]", "env mean", "env std", "env peaks", "env T [s]", "env rate [Hz]" ] ]))
+        print('\t'.join('{:10.4f}'.format(x) for x in [tmax-tmin, np.mean(self.data[t0:t1]), np.std(self.data[t0:t1]), peak_freq, np.mean(self.envelope[t0:t1]), np.std(self.envelope[t0:t1]), npeaks, pinterval, prate]))
         if self.analysis_file is None:
             name = os.path.splitext(self.filename)[0]
             if self.channel > 0:
@@ -961,9 +962,9 @@ class SignalPlot:
             else:
                 datafile = '{name}-data.txt'.format(name=name)
             self.analysis_file = open(os.path.join(self.filepath, datafile), 'w')
-            self.analysis_file.write('\t'.join([ '{:10s}'.format(x) for x in [ "# width [s]", "trace mean", "trace std", "env mean", "env std", "env peaks", "env T [s]", "env rate [Hz]" ] ]) + '\n')
+            self.analysis_file.write('\t'.join([ '{:10s}'.format(x) for x in [ "# width [s]", "trace mean", "trace std", "peak freq [Hz]", "env mean", "env std", "env peaks", "env T [s]", "env rate [Hz]" ] ]) + '\n')
             print('saved selected data to: %s' % datafile)
-        self.analysis_file.write('\t'.join('{:10.4f}'.format(x) for x in [ tmax-tmin, np.mean(self.data[t0:t1]), np.std(self.data[t0:t1]), np.mean(self.envelope[t0:t1]), np.std(self.envelope[t0:t1]), npeaks, pinterval, prate ]) + '\n')
+        self.analysis_file.write('\t'.join('{:10.4f}'.format(x) for x in [ tmax-tmin, np.mean(self.data[t0:t1]), np.std(self.data[t0:t1]), peak_freq, np.mean(self.envelope[t0:t1]), np.std(self.envelope[t0:t1]), npeaks, pinterval, prate ]) + '\n')
         self.analysis_file.flush()
             
 
