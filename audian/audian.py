@@ -26,13 +26,13 @@ cfg['maxpixel'] = [ 50000, '', 'Either maximum number of data points to be plott
 
 cfgsec['envthreshfac'] = 'Envelope:'
 cfg['envcutofffreq'] = [ 100.0, 'Hz', 'Cutoff frequency of the low-pass filter used for computing the envelope from the squared signal.' ]
-cfg['envthreshfac'] = [ 2.0, '', 'Threshold for peak detection in envelope is this factor time the standard deviation of the envelope.' ]
+cfg['envthreshfac'] = [ 2.0, '', 'Threshold for peak detection in envelope is this factor times the standard deviation of the envelope.' ]
 
 cfgsec['minPSDAverages'] = 'Power spectrum estimation:'
 cfg['minPSDAverages'] = [ 3, '', 'Minimum number of fft averages for estimating the power spectrum.' ]
 
 cfgsec['threshold'] = 'Thresholds for peak detection in power spectra:'
-cfg['threshold'] = [ 2.0, 'dB', 'Threshold for all peaks.\n If set to 0.0, estimate threshold from histogram.' ]
+cfg['threshold'] = [10.0, 'dB', 'Threshold for all peaks.\n If set to 0.0, estimate threshold from histogram.']
 
 cfgsec['noiseFactor'] = 'Threshold estimation:\nIf no thresholds are specified, they are estimated from the histogram of the decibel power spectrum.'
 cfg['noiseFactor'] = [ 12.0, '', 'Factor for multiplying std of noise floor for lower threshold.' ]
@@ -50,19 +50,19 @@ cfg['verboseLevel'] = [ 0, '', '0=off upto 4 very detailed' ]
 ###############################################################################
 ## load data:
     
-def load_audioio(filename, trace=0) :
+def load_audioio(filename, trace=0):
     """
     load audio file using audioio
     """
     data, rate = load_audio(filename)
-    if len(data.shape) == 1 :
-        if trace >= 1 :
+    if len(data.shape) == 1:
+        if trace >= 1:
             print('number of traces in file is %d' % 1)
             quit()
         return rate, data
-    else :
+    else:
         tracen = data.shape[1]
-        if trace >= tracen :
+        if trace >= tracen:
             print('number of traces in file is %d' % tracen)
             quit()
         return rate, data[:,trace]
@@ -74,20 +74,20 @@ def load_wavfile(filename, trace=0):
     """
     from scipy.io import wavfile
     rate, data = wavfile.read(filename)
-    if len(data.shape) == 1 :
-        if trace >= 1 :
+    if len(data.shape) == 1:
+        if trace >= 1:
             print('number of traces in file is %d' % 1)
             quit()
         return rate, data/2.0**15, 'a.u.'
-    else :
+    else:
         tracen = data.shape[1]
-        if trace >= tracen :
+        if trace >= tracen:
             print('number of traces in file is %d' % tracen)
             quit()
         return rate, data[:,trace]/2.0**15, 'a.u.'
 
     
-def load_wave(filename, trace=0) :
+def load_wave(filename, trace=0):
     """
     load wav file using wave module
     """
@@ -104,14 +104,14 @@ def load_wave(filename, trace=0) :
     format = 'i%d' % sampwidth
     data = np.frombuffer(buffer, dtype=format).reshape(-1, nchannels)  # read data
     wf.close()
-    if len(data.shape) == 1 :
-        if trace >= 1 :
+    if len(data.shape) == 1:
+        if trace >= 1:
             print('number of traces in file is %d' % 1)
             quit()
         return rate, data/2.0**(sampwidth*8-1)
-    else :
+    else:
         tracen = data.shape[1]
-        if trace >= tracen :
+        if trace >= tracen:
             print('number of traces in file is %d' % tracen)
             quit()
         return rate, data[:,trace]/2.0**(sampwidth*8-1)
@@ -120,7 +120,7 @@ def load_wave(filename, trace=0) :
 ###############################################################################
 ## filter and envelope:
 
-def highpass_filter(data, rate, cutoff) :
+def highpass_filter(data, rate, cutoff):
     sos = sig.butter(2, cutoff, 'highpass', fs=rate, output='sos')
     fdata = sig.sosfiltfilt(sos, data)
     return fdata
@@ -144,7 +144,7 @@ def envelope(data, rate, freq=100.0):
 ###############################################################################
 ## configuration file writing and loading:
 
-def dump_config(filename, cfg, sections=None, header=None, maxline=60) :
+def dump_config(filename, cfg, sections=None, header=None, maxline=60):
     """
     Pretty print non-nested dicionary cfg into file.
 
@@ -179,31 +179,31 @@ def dump_config(filename, cfg, sections=None, header=None, maxline=60) :
         maxline (int): Maximum number of characters that fit into a line.
     """
 
-    def write_comment(f, comment, maxline=60, cs='#') :
+    def write_comment(f, comment, maxline=60, cs='#'):
         # format comment:
-        if len(comment) > 0 :
-            for line in comment.split('\n') :
+        if len(comment) > 0:
+            for line in comment.split('\n'):
                 f.write(cs + ' ')
                 cc = len(cs) + 1  # character count
-                for w in line.strip().split(' ') :
+                for w in line.strip().split(' '):
                     # line too long?
-                    if cc + len(w) > maxline :
+                    if cc + len(w) > maxline:
                         f.write('\n' + cs + ' ')
                         cc = len(cs) + 1
                     f.write(w + ' ')
                     cc += len(w) + 1
                 f.write('\n')
     
-    with open(filename, 'w') as f :
-        if header != None :
+    with open(filename, 'w') as f:
+        if header != None:
             write_comment(f, header, maxline, '##')
         maxkey = 0
-        for key in cfg.keys() :
-            if maxkey < len(key) :
+        for key in cfg.keys():
+            if maxkey < len(key):
                 maxkey = len(key)
-        for key, v in cfg.items() :
+        for key, v in cfg.items():
             # possible section entry:
-            if sections != None and key in sections :
+            if sections != None and key in sections:
                 f.write('\n\n')
                 write_comment(f, sections[key], maxline, '##')
 
@@ -211,13 +211,13 @@ def dump_config(filename, cfg, sections=None, header=None, maxline=60) :
             val = None
             unit = ''
             comment = ''
-            if hasattr(v, '__len__') and (not isinstance(v, str)) :
+            if hasattr(v, '__len__') and (not isinstance(v, str)):
                 val = v[0]
-                if len(v) > 1 :
+                if len(v) > 1:
                     unit = ' ' + v[1]
-                if len(v) > 2 :
+                if len(v) > 2:
                     comment = v[2]
-            else :
+            else:
                 val = v
 
             # next key-value pair:
@@ -226,7 +226,7 @@ def dump_config(filename, cfg, sections=None, header=None, maxline=60) :
             f.write('{key:<{width}s}: {val}{unit:s}\n'.format(key=key, width=maxkey, val=val, unit=unit))
 
 
-def load_config(filename, cfg) :
+def load_config(filename, cfg):
     """
     Set values of dictionary cfg to values from key-value pairs read in from file.
     
@@ -234,111 +234,118 @@ def load_config(filename, cfg) :
         filename: The name of the file from which to read in the configuration.
         cfg (dict): Configuration keys, values, units, and comments.
     """
-    with open(filename, 'r') as f :
-        for line in f :
+    with open(filename, 'r') as f:
+        for line in f:
             # do not process empty lines and comments:
-            if len(line.strip()) == 0 or line[0] == '#' or not ':' in line :
+            if len(line.strip()) == 0 or line[0] == '#' or not ':' in line:
                 continue
             key, val = line.split(':', 1)
             key = key.strip()
-            if not key in cfg :
+            if not key in cfg:
                 continue
             cv = cfg[key]
             vals = val.strip().split(' ')
-            if hasattr(cv, '__len__') and (not isinstance(cv, str)) :
+            if hasattr(cv, '__len__') and (not isinstance(cv, str)):
                 unit = ''
-                if len(vals) > 1 :
+                if len(vals) > 1:
                     unit = vals[1]
-                if unit != cv[1] :
+                if unit != cv[1]:
                     print('unit for %s is %s but should be %s' % (key, unit, cv[1]))
                 cv[0] = type(cv[0])(vals[0])
-            else :
+            else:
                 cfg[key] = type(cv)(vals[0])
             
 
 ###############################################################################
 ## peak detection:
 
-def detect_peaks(time, data, threshold, check_func=None, check_conditions=None):
+def detect_peaks_fixed(data, threshold):
+    """Detect peaks and troughs using a fixed, relative threshold.
 
-    if not check_conditions:
-        check_conditions = dict()
-        
-    event_list = list()
+    From https://github.com/bendalab/thunderfish/blob/master/thunderfish/eventdetection.py
+
+    Parameters
+    ----------
+    data: array
+        An 1-D array of input data where peaks are detected.
+    threshold: float
+        A positive number setting the detection threshold,
+        i.e. the minimum distance between peaks and troughs.
+    
+    Returns
+    -------
+    peaks: array of ints
+        An array of indices of detected peaks.
+    troughs: array of ints
+        An array of indices of detected troughs.
+    """
+    peaks = []
+    troughs = []
 
     # initialize:
-    dir = 0
+    direction = 0
     min_inx = 0
     max_inx = 0
     min_value = data[0]
     max_value = min_value
-    trough_inx = 0
 
-    # loop through the new read data
+    # loop through the data:
     for index, value in enumerate(data):
-
         # rising?
-        if dir > 0:
-            # if the new value is bigger than the old maximum: set it as new maximum
-            if max_value < value:
-                max_inx = index  # maximum element
+        if direction > 0:
+            if value > max_value:
+                # update maximum element:
+                max_inx = index
                 max_value = value
-
-            # otherwise, if the maximum value is bigger than the new value plus the threshold:
-            # this is a local maximum!
-            elif max_value >= value + threshold:
-                # there was a peak:
-                event_inx = max_inx
-
-                # check and update event with this magic function
-                if check_func:
-                    r = check_func(time, data, event_inx, index, trough_inx, min_inx, threshold, check_conditions)
-                    if len(r) > 0 :
-                        # this really is an event:
-                        event_list.append(r)
-                else:
-                    # this really is an event:
-                    event_list.append(time[event_inx])
-
+            # otherwise, if the new value is falling below
+            # the maximum value minus the threshold:
+            # the maximum is a peak!
+            elif value <= max_value - threshold:
+                peaks.append(max_inx)
                 # change direction:
-                min_inx = index  # minimum element
+                direction = -1
+                # store minimum element:
+                min_inx = index
                 min_value = value
-                dir = -1
 
         # falling?
-        elif dir < 0:
+        elif direction < 0:
             if value < min_value:
-                min_inx = index  # minimum element
+                # update minimum element:
+                min_inx = index
                 min_value = value
-                trough_inx = index
-
+            # otherwise, if the new value is rising above
+            # the minimum value plus the threshold:
+            # the minimum is a trough!
             elif value >= min_value + threshold:
-                # there was a trough:
+                troughs.append(min_inx)
                 # change direction:
-                max_inx = index  # maximum element
+                direction = +1
+                # store maximum element:
+                max_inx = index
                 max_value = value
-                dir = 1
 
-        # don't know!
+        # don't know direction yet:
         else:
-            if max_value >= value + threshold:
-                dir = -1  # falling
+            if value <= max_value - threshold:
+                direction = -1  # falling
             elif value >= min_value + threshold:
-                dir = 1  # rising
-
-            if max_value < value:
-                max_inx = index  # maximum element
+                direction = 1  # rising
+                
+            if value > max_value:
+                # update maximum element:
+                max_inx = index
                 max_value = value
-
             elif value < min_value:
-                min_inx = index  # minimum element
+                # update minimum element:
+                min_inx = index
                 min_value = value
-                trough_inx = index
 
-    return np.array(event_list)
+    return np.asarray(peaks, dtype=np.int), \
+           np.asarray(troughs, dtype=np.int)
 
 
-def threshold_estimate(data, noise_factor) :
+def threshold_estimate(data, noise_factor):
     """
     Estimate noise standard deviation from histogram
     for usefull peak-detection thresholds.
@@ -371,42 +378,112 @@ def threshold_estimate(data, noise_factor) :
     return threshold, center
 
 
-def accept_psd_peaks(freqs, data, peak_inx, index, trough_inx, min_inx, threshold, check_conditions) :
-    """
-    Accept each detected peak and compute its size and width.
+def peak_size_width(time, data, peak_indices, trough_indices,
+                    peak_frac=0.75, base='closest'):
+    """Compute size and width of each peak.
 
-    Args:
-        freqs (array): frequencies of the power spectrum
-        data (array): the power spectrum
-        peak_inx: index of the current peak
-        index: current index (first minimum after peak at threshold below)
-        trough_inx: index of the previous trough
-        min_inx: index of previous minimum
-        threshold: threshold value
-        check_conditions: not used
+    Parameters
+    ----------
+    time: array
+        Time, must not be `None`.
+    data: array
+        The data with the peaks.
+    peak_indices: array
+        Indices of the peaks.
+    trough_indices: array
+        Indices of the troughs.
+    peak_frac: float
+        Fraction of peak height where its width is measured.
+    base: string
+        Height and width of peak is measured relative to
+        - 'left': trough to the left
+        - 'right': trough to the right
+        - 'min': the minimum of the two troughs to the left and to the right
+        - 'max': the maximum of the two troughs to the left and to the right
+        - 'mean': mean of the throughs to the left and to the rigth
+        - 'closest': trough that is closest to peak
     
-    Returns: 
-        freq (float): frequency of the peak
-        power (float): power of the peak (value of data at the peak)
-        size (float): size of the peak (peak minus previous trough)
-        width (float): width of the peak at 0.75*size
-        count (float): zero
+    Returns
+    -------
+    peaks: 2-D array
+        First dimension is the peak index. Second dimension is
+        time, height (value of data at the peak),
+        size (peak height minus height of closest trough),
+        width (at `peak_frac` size), 0.0 (count) of the peak. See `peak_width()`.
+
+    Raises
+    ------
+    ValueError:
+        If an invalid value is passed to `base`.
     """
-    size = data[peak_inx] - data[trough_inx]
-    wthresh = data[trough_inx] + 0.75*size
-    width = 0.0
-    for k in range(peak_inx, trough_inx, -1) :
-        if data[k] < wthresh :
-            width = freqs[peak_inx] - freqs[k]
-            break
-    for k in range(peak_inx, index) :
-        if data[k] < wthresh :
-            width += freqs[k] - freqs[peak_inx]
-            break
-    return [ freqs[peak_inx], data[peak_inx], size, width, 0.0 ]
+    def left_base(data, left_inx, right_inx, peak_inx):
+        return data[left_inx] 
+    def right_base(data, left_inx, right_inx, peak_inx):
+        return data[right_inx] 
+    def min_base(data, left_inx, right_inx, peak_inx):
+        return min(data[left_inx], data[right_inx])
+    def max_base(data, left_inx, right_inx, peak_inx):
+        return max(data[left_inx], data[right_inx])
+    def mean_base(data, left_inx, right_inx, peak_inx):
+        return np.mean((data[left_inx], data[right_inx]))
+    def closest_base(data, left_inx, right_inx, peak_inx):
+        return data[left_inx] if peak_inx-left_inx <= right_inx-peak_inx else data[right_inx]
+    
+    peaks = np.zeros((len(peak_indices), 5))
+    if len(peak_indices) == 0:
+        return peaks
+    # time point of peaks:
+    peaks[:, 0] = time[peak_indices]
+    # height of peaks:
+    peaks[:, 1] = data[peak_indices]
+    # we need a trough before and after each peak:
+    peak_inx = np.asarray(peak_indices, dtype=int)
+    trough_inx = np.asarray(trough_indices, dtype=int)
+    if len(trough_inx) == 0 or peak_inx[0] < trough_inx[0]:
+         trough_inx = np.hstack((0, trough_inx))
+
+    if peak_inx[-1] > trough_inx[-1]:
+         trough_inx = np.hstack((trough_inx, len(data)-1))
+    # base for size of peaks:
+    base_func = closest_base
+    if base == 'left':
+        base_func = left_base
+    elif base == 'right':
+        base_func = right_base
+    elif base == 'min':
+        base_func = min_base
+    elif base == 'max':
+        base_func = max_base
+    elif base == 'mean':
+        base_func = mean_base
+    elif base == 'closest':
+        base_func = closest_base
+
+    else:
+        raise ValueError('Invalid value for base (%s)' % base)
+    # size and width of peaks:
+    for j, pi in enumerate(peak_inx):
+        li = trough_inx[j]
+        ri = trough_inx[j+1]
+        baseval = base_func(data, li, ri, pi)
+        thresh = baseval*(1.0-peak_frac) + data[pi]*peak_frac
+        inx = li + np.argmax(data[li:ri] > thresh)
+        if inx > 0:
+            ti0 = np.interp(thresh, data[inx-1:inx+1], time[inx-1:inx+1])
+        else:
+            ti0 = time[0]
+        inx = ri - np.argmax(data[ri:li:-1] > thresh)
+        if inx+1 < len(data):
+            ti1 = np.interp(thresh, data[inx+1:inx-1:-1], time[inx+1:inx-1:-1])
+        else:
+            ti1 = time[-1]
+        if np.any(np.isfinite((data[pi], baseval))):
+            peaks[j, 2] = data[pi] - baseval
+        peaks[j, 3] = ti1 - ti0
+    return peaks
 
 
-def psd_peaks(psd_freqs, psd, cfg) :
+def psd_peaks(psd_freqs, psd, cfg):
     """
     Detect peaks in power spectrum.
 
@@ -425,7 +502,7 @@ def psd_peaks(psd_freqs, psd, cfg) :
     
     verbose = cfg['verboseLevel'][0]
 
-    if verbose > 0 :
+    if verbose > 0:
         print()
         print(70*'#')
         print('##### psd_peaks', 48*'#')
@@ -436,32 +513,29 @@ def psd_peaks(psd_freqs, psd, cfg) :
     # thresholds:
     threshold = cfg['threshold'][0]
     center = 0.0
-    if cfg['threshold'][0] <= 0.0 :
+    if cfg['threshold'][0] <= 0.0:
         n = len(log_psd)
         threshold, center = threshold_estimate(log_psd[2*n/3:n*9/10],
                                                 cfg['noiseFactor'][0])
-        if verbose > 1 :
+        if verbose > 1:
             print()
             print('threshold=', threshold, center+threshold)
             print('center=', center)
     
     # detect peaks in decibel power spectrum:
-    all_freqs = detect_peaks(psd_freqs, log_psd, threshold, accept_psd_peaks)
-
-    # convert peak sizes back to power:
-    if len(all_freqs) > 0 :
-        all_freqs[:,1] = 10.0**(0.1*all_freqs[:,1])
+    peaks, troughs = detect_peaks_fixed(log_psd, threshold)
+    all_peaks = peak_size_width(psd_freqs, log_psd, peaks, troughs)
     
-    return all_freqs, threshold, center
+    return all_peaks, threshold, center
 
     
 ###############################################################################
 ## plotting etc.
     
-class SignalPlot :
-    def __init__(self, samplingrate, data, unit, filename, channel, path) :
+class SignalPlot:
+    def __init__(self, samplingrate, data, unit, filename, channel, path):
         self.filepath = ''
-        if platform.system() == 'Windows' :
+        if platform.system() == 'Windows':
             self.filepath = path
         self.filename = filename
         self.channel = channel
@@ -476,7 +550,7 @@ class SignalPlot :
         self.time = np.arange(0.0, len(self.data))/self.rate
         self.toffset = 0.0
         self.twindow = 8.0
-        if self.twindow > self.time[-1] :
+        if self.twindow > self.time[-1]:
             self.twindow = np.round(2**(np.floor(np.log(self.time[-1]) / np.log(2.0)) + 1.0))
         self.ymin = -1.0
         self.ymax = +1.0
@@ -489,13 +563,11 @@ class SignalPlot :
         self.decibel = True
         self.fresolution = 300.0
         self.power_label = None
-        self.all_peaks_artis = None
+        self.all_peaks_artist = None
         self.power_artist = None
         self.power_frequency_label = None
         self.envpower_label = None
         self.envpower_artist = None
-        self.legend = True
-        self.legendhandle = None
         self.help = cfg['displayHelp'][0]
         self.helptext = []
         self.allpeaks = []
@@ -504,9 +576,9 @@ class SignalPlot :
         self.analysis_file = None
 
         # audio output:
-        if have_audioio :
+        if have_audioio:
             self.audio = PlayAudio()
-        else :
+        else:
             self.audio = None
 
         # set key bindings:
@@ -564,9 +636,7 @@ class SignalPlot :
         self.helptext.append(ht)
         ht = self.axp.text(0.98, 0.7, '(ctrl+) left, right: move', ha='right', transform=self.axp.transAxes)
         self.helptext.append(ht)
-        ht = self.axp.text(0.98, 0.6, 'l: toggle legend', ha='right', transform=self.axp.transAxes)
-        self.helptext.append(ht)
-        ht = self.axp.text(0.98, 0.5, 'd: toggle decibel', ha='right', transform=self.axp.transAxes)
+        ht = self.axp.text(0.98, 0.6, 'd: toggle decibel', ha='right', transform=self.axp.transAxes)
         self.helptext.append(ht)
         ht = self.axp.text(0.98, 0.3, 'left mouse: show peak properties', ha='right', transform=self.axp.transAxes)
         self.helptext.append(ht)
@@ -585,47 +655,47 @@ class SignalPlot :
         ht = self.axpe.text(0.98, 0.6, 'E: save envelope and its spectrum to files', ha='right', transform=self.axpe.transAxes)
         self.helptext.append(ht)
         # plot:
-        for ht in self.helptext :
+        for ht in self.helptext:
             ht.set_visible(self.help)
         self.update_plots(False)
         plt.show()
 
-    def __del__(self) :
-        if self.analysis_file != None :
+    def __del__(self):
+        if self.analysis_file != None:
             self.analysis_file.close()
         if self.audio is not None:
             self.audio.close()
 
-    def compute_psd(self, t0, t1) :
+    def compute_psd(self, t0, t1):
         nfft = int(np.round(2**(np.floor(np.log(self.rate/self.fresolution) / np.log(2.0)) + 1.0)))
-        if nfft < 16 :
+        if nfft < 16:
             self.fresolution *= 0.5
             nfft = 16
         t00 = t0
         t11 = t1
         w = t11-t00
         minw = int(nfft*(cfg['minPSDAverages'][0]+1)//2)
-        if t11-t00 < minw :
+        if t11-t00 < minw:
             w = minw
             t11 = t00 + w
-        if t11 >= len(self.data) :
+        if t11 >= len(self.data):
             t11 = len(self.data)
             t00 = t11 - w
-        if t00 < 0 :
+        if t00 < 0:
             t00 = 0
             t11 = w           
         power, freqs = ml.psd(self.data[t00:t11], NFFT=nfft, noverlap=nfft//2, Fs=self.rate, detrend=ml.detrend_mean)
         return power, freqs, nfft, w
 
-    def remove_peak_annotation(self) :
-        for fm in self.peak_specmarker :
+    def remove_peak_annotation(self):
+        for fm in self.peak_specmarker:
             fm.remove()
         self.peak_specmarker = []
-        for fa in self.peak_annotation :
+        for fa in self.peak_annotation:
             fa.remove()
         self.peak_annotation = []
 
-    def annotate_peak(self, peak) :
+    def annotate_peak(self, peak):
         # marker:
         m, = self.axs.plot([self.toffset+0.01*self.twindow], [peak[0]], linestyle='None',
                             color='k', marker='o', ms=10.0, mec=None, mew=0.0, zorder=2)
@@ -633,54 +703,55 @@ class SignalPlot :
         # annotation:
         fwidth = self.fmax - self.fmin
         pt = []
-        if cfg['labelFrequency'][0] :
+        if cfg['labelFrequency'][0]:
             pt.append(r'$f=${:.1f} Hz'.format(peak[0]))
-        if cfg['labelPower'][0] :
-            pt.append(r'$p=${:g}'.format(peak[1]))
-        if cfg['labelWidth'][0] :
-            pt.append(r'$\Delta f=${:.2f} Hz'.format(peak[3]))
-        self.peak_annotation.append(self.axp.annotate('\n'.join(pt), xy=(peak[0], peak[1]),
-                       xytext=(peak[0]+0.03*fwidth, peak[1]),
+        if cfg['labelPower'][0]:
+            pt.append(r'$p=${:.1f} dB'.format(peak[1]))
+        if cfg['labelWidth'][0]:
+            pt.append(r'$\Delta f=${:.0f} Hz'.format(peak[3]))
+        ypeak = peak[1] if self.decibel else 10.0**(0.1*peak[1])
+        self.peak_annotation.append(self.axp.annotate('\n'.join(pt), xy=(peak[0], ypeak),
+                       xytext=(peak[0]+0.03*fwidth, ypeak),
                        bbox=dict(boxstyle='round',facecolor='white'),
                        arrowprops=dict(arrowstyle='-')))
             
-    def update_plots(self, draw=True) :
+    def update_plots(self, draw=True):
         self.remove_peak_annotation()
         # trace:
         self.axt.set_xlim(self.toffset, self.toffset+self.twindow)
         t0 = int(np.round(self.toffset*self.rate))
         t1 = int(np.round((self.toffset+self.twindow)*self.rate))
         tstep = 1
-        if cfg['maxpixel'][0] > 0 :
+        if cfg['maxpixel'][0] > 0:
             tstep = int((t1-t0)//cfg['maxpixel'][0])
-            if tstep < 1 :
+            if tstep < 1:
                 tstep = 1
-        if self.trace_artist == None :
+        if self.trace_artist == None:
             self.trace_artist, = self.axt.plot(self.time[t0:t1:tstep], self.data[t0:t1:tstep])
-        else :
+        else:
             self.trace_artist.set_data(self.time[t0:t1:tstep], self.data[t0:t1:tstep])
-        if self.envelope_artist == None :
+        if self.envelope_artist == None:
             self.envelope_artist,  = self.axt.plot(self.time[t0:t1:tstep], self.envelope[t0:t1:tstep], '-r')
-        else :
+        else:
             self.envelope_artist.set_data(self.time[t0:t1:tstep], self.envelope[t0:t1:tstep])
         self.axt.set_ylim(self.ymin, self.ymax)
 
         # compute power spectrum:
         nfft = int(np.round(2**(np.floor(np.log(self.rate/self.fresolution) / np.log(2.0)) + 1.0)))
-        if nfft < 16 :
+        if nfft < 16:
             self.fresolution *= 0.5
             nfft = 16
         t00 = t0
         t11 = t1
         w = t11-t00
         minw = int(nfft*(cfg['minPSDAverages'][0]+1)//2)
-        if t11-t00 < minw :
+        if t11-t00 < minw:
             w = minw
             t11 = t00 + w
-        if t11 >= len(self.data) :
+        if t11 >= len(self.data):
             t11 = len(self.data)
             t00 = t11 - w
-        if t00 < 0 :
+        if t00 < 0:
             t00 = 0
             t11 = w           
         self.power, self.freqs = ml.psd(self.data[t00:t11], NFFT=nfft, noverlap=nfft/2, Fs=self.rate, detrend=ml.detrend_mean)
@@ -696,11 +767,11 @@ class SignalPlot :
         z = 10.*np.log10(specpower)
         z = np.flipud(z)
         sstep = z.shape[1]//2000
-        if sstep < 1 :
+        if sstep < 1:
             sstep = 1
         extent = self.toffset, self.toffset+np.amax(bins), freqs[0], freqs[-1]
         self.axs.set_xlim(self.toffset, self.toffset+self.twindow)
-        if self.spectrogram_artist == None :
+        if self.spectrogram_artist == None:
             self.fmax = np.round((freqs[-1])/1000.0)*1000.0
             min = np.percentile(z, 70.0)
             max = np.percentile(z, 99.9) + 5.0
@@ -711,33 +782,32 @@ class SignalPlot :
             #self.spectrogram_artist = self.axs.pcolormesh(bins, freqs, z,
             #                                                vmin=min, vmax=max,
             #                                                cmap=cm, zorder=1)
-        else :
+        else:
             self.spectrogram_artist.set_data(z[:,::sstep])
             self.spectrogram_artist.set_extent(extent)
         self.axs.set_ylim(self.fmin, self.fmax)
 
         # power spectrum:
         df = self.freqs[1]-self.freqs[0]
-        if df >= 1000.0 :
+        if df >= 1000.0:
             dfs = '%.3gkHz' % (0.001*df)
-        else :
+        else:
             dfs = '%.3gHz' % df
         tw = float(w)/self.rate
-        if tw < 1.0 :
+        if tw < 1.0:
             tws = '%.3gms' % (1000.0*tw)
-        else :
+        else:
             tws = '%.3gs' % (tw)
         a = 2*w/nfft-1 # number of ffts
-        if self.power_frequency_label == None :
+        if self.power_frequency_label == None:
             self.power_frequency_label = self.axp.set_xlabel(r'Frequency [Hz] (nfft={:d}, $\Delta f$={:s}: T={:s}/{:.0f})'.format(nfft, dfs, tws, a))
-        else :
+        else:
             self.power_frequency_label.set_text(r'Frequency [Hz] (nfft={:d}, $\Delta f$={:s}: T={:s}/{:.0f})'.format(nfft, dfs, tws, a))
         self.axp.set_xlim(self.fmin, self.fmax)
-        if self.power_label == None :
+        if self.power_label == None:
             self.power_label = self.axp.set_ylabel('Signal power')
-        if self.decibel :
-            if len(self.allpeaks) > 0 :
-                self.allpeaks[:,1] = 10.0*np.log10(self.allpeaks[:,1])
+        if self.decibel:
+            peak_power = self.allpeaks[:,1]
             self.power = 10.0*np.log10(self.power)
             pmin = np.min(self.power[self.freqs<self.fmax])
             pmin = np.floor(pmin/10.0)*10.0
@@ -746,55 +816,54 @@ class SignalPlot :
             doty = pmax-5.0
             self.power_label.set_text('Signal power [dB]')
             self.axp.set_ylim(pmin, pmax)
-        else :
+        else:
+            peak_power = 10.0**(0.1*self.allpeaks[:,1])
             pmax = np.max(self.power[self.freqs<self.fmax])
             doty = pmax
             pmax *= 1.1
             self.power_label.set_text('Signal power')
             self.axp.set_ylim(0.0, pmax)
-        if self.all_peaks_artis == None :
-            if len(self.allpeaks) > 0 :
-                self.all_peaks_artis, = self.axp.plot(self.allpeaks[:,0],
-                                                       np.zeros(len(self.allpeaks[:,0]))+doty,
-                                                       'o', color='#ffffff')
-            else :
-                self.all_peaks_artis, = self.axp.plot([], [], 'o', color='#ffffff')
-        else :
-            if len(self.allpeaks) > 0 :
-                self.all_peaks_artis.set_data(self.allpeaks[:,0],
-                                                np.zeros(len(self.allpeaks[:,0]))+doty)
-            else :
-                self.all_peaks_artis.set_data([], [])
-        if self.power_artist == None :
+        if self.all_peaks_artist == None:
+            if len(self.allpeaks) > 0:
+                self.all_peaks_artist, = self.axp.plot(self.allpeaks[:,0], peak_power,
+                                                       'o', color='red')
+            else:
+                self.all_peaks_artist, = self.axp.plot([], [], 'o', color='red')
+        else:
+            if len(self.allpeaks) > 0:
+                self.all_peaks_artist.set_data(self.allpeaks[:,0], peak_power)
+            else:
+                self.all_peaks_artist.set_data([], [])
+        if self.power_artist == None:
             self.power_artist, = self.axp.plot(self.freqs, self.power, 'b', zorder=2)
-        else :
+        else:
             self.power_artist.set_data(self.freqs, self.power)
 
         # power spectrum of envelope:
         self.envfresolution=1.0
         nfft = int(np.round(2**(np.floor(np.log(self.rate/self.envfresolution) / np.log(2.0)) + 1.0)))
-        if nfft < 16 :
+        if nfft < 16:
             self.envfresolution *= 0.5
             nfft = 16
         t00 = t0
         t11 = t1
         w = t11-t00
         minw = int(nfft*(cfg['minPSDAverages'][0]+1)//2)
-        if t11-t00 < minw :
+        if t11-t00 < minw:
             w = minw
             t11 = t00 + w
-        if t11 >= len(self.envelope) :
+        if t11 >= len(self.envelope):
             t11 = len(self.envelope)
             t00 = t11 - w
-        if t00 < 0 :
+        if t00 < 0:
             t00 = 0
             t11 = w
         self.envpower, self.envfreqs = ml.psd(self.envelope[t00:t11], NFFT=nfft, noverlap=nfft//2, Fs=self.rate, detrend=ml.detrend_mean)
         self.axpe.set_xlim(0.0, 100.0)
         self.axpe.set_xlabel('Frequency [Hz]')
-        if self.envpower_label == None :
+        if self.envpower_label == None:
             self.envpower_label = self.axpe.set_ylabel('Envelope power')
-        if self.decibel :
+        if self.decibel:
             self.envpower = 10.0*np.log10(self.envpower)
             pmin = np.min(self.envpower[self.envfreqs<100.0])
             pmin = np.floor(pmin/10.0)*10.0
@@ -803,67 +872,67 @@ class SignalPlot :
             doty = pmax-5.0
             self.envpower_label.set_text('Envelope power [dB]')
             self.axpe.set_ylim(pmin, pmax)
-        else :
+        else:
             pmax = np.max(self.envpower[self.envfreqs<100.0])
             doty = pmax
             pmax *= 1.1
             self.envpower_label.set_text('Envelope power')
             self.axpe.set_ylim(0.0, pmax)
-        if self.envpower_artist == None :
+        if self.envpower_artist == None:
             self.envpower_artist, = self.axpe.plot(self.envfreqs, self.envpower, 'r', zorder=2)
-        else :
+        else:
             self.envpower_artist.set_data(self.envfreqs, self.envpower)
         
-        if draw :
+        if draw:
             self.fig.canvas.draw()
                  
-    def keypress(self, event) :
+    def keypress(self, event):
         # print 'pressed', event.key
-        if event.key in '+=X' :
-            if self.twindow*self.rate > 20 :
+        if event.key in '+=X':
+            if self.twindow*self.rate > 20:
                 self.twindow *= 0.5
                 self.update_plots()
-        elif event.key in '-x' :
-            if self.twindow < len(self.data)/self.rate :
+        elif event.key in '-x':
+            if self.twindow < len(self.data)/self.rate:
                 self.twindow *= 2.0
                 self.update_plots()
-        elif event.key == 'pagedown' :
-            if self.toffset + 0.5*self.twindow < len(self.data)/self.rate :
+        elif event.key == 'pagedown':
+            if self.toffset + 0.5*self.twindow < len(self.data)/self.rate:
                 self.toffset += 0.5*self.twindow
                 self.update_plots()
-        elif event.key == 'pageup' :
-            if self.toffset > 0 :
+        elif event.key == 'pageup':
+            if self.toffset > 0:
                 self.toffset -= 0.5*self.twindow
-                if self.toffset < 0.0 :
+                if self.toffset < 0.0:
                     self.toffset = 0.0
                 self.update_plots()
-        elif event.key == 'ctrl+pagedown' :
-            if self.toffset + 5.0*self.twindow < len(self.data)/self.rate :
+        elif event.key == 'ctrl+pagedown':
+            if self.toffset + 5.0*self.twindow < len(self.data)/self.rate:
                 self.toffset += 5.0*self.twindow
                 self.update_plots()
-        elif event.key == 'ctrl+pageup' :
-            if self.toffset > 0 :
+        elif event.key == 'ctrl+pageup':
+            if self.toffset > 0:
                 self.toffset -= 5.0*self.twindow
-                if self.toffset < 0.0 :
+                if self.toffset < 0.0:
                     self.toffset = 0.0
                 self.update_plots()
-        elif event.key == 'down' :
-            if self.toffset + self.twindow < len(self.data)/self.rate :
+        elif event.key == 'down':
+            if self.toffset + self.twindow < len(self.data)/self.rate:
                 self.toffset += 0.05*self.twindow
                 self.update_plots()
-        elif event.key == 'up' :
-            if self.toffset > 0.0 :
+        elif event.key == 'up':
+            if self.toffset > 0.0:
                 self.toffset -= 0.05*self.twindow
-                if self.toffset < 0.0 :
+                if self.toffset < 0.0:
                     self.toffset = 0.0
                 self.update_plots()
         elif event.key == 'home':
-            if self.toffset > 0.0 :
+            if self.toffset > 0.0:
                 self.toffset = 0.0
                 self.update_plots()
         elif event.key == 'end':
             toffs = np.floor(len(self.data)/self.rate / self.twindow) * self.twindow
-            if self.toffset < toffs :
+            if self.toffset < toffs:
                 self.toffset = toffs
                 self.update_plots()
         elif event.key == 'y':
@@ -896,140 +965,136 @@ class SignalPlot :
             self.ymax = +1.0
             self.axt.set_ylim(self.ymin, self.ymax)
             self.fig.canvas.draw()
-        elif event.key == 'left' :
-            if self.fmin > 0.0 :
+        elif event.key == 'left':
+            if self.fmin > 0.0:
                 fwidth = self.fmax-self.fmin
                 self.fmin -= 0.5*fwidth
                 self.fmax -= 0.5*fwidth
-                if self.fmin < 0.0 :
+                if self.fmin < 0.0:
                     self.fmin = 0.0
                     self.fmax = fwidth
                 self.axs.set_ylim(self.fmin, self.fmax)
                 self.axp.set_xlim(self.fmin, self.fmax)
                 self.fig.canvas.draw()
-        elif event.key == 'right' :
-            if self.fmax < 0.5*self.rate :
+        elif event.key == 'right':
+            if self.fmax < 0.5*self.rate:
                 fwidth = self.fmax-self.fmin
                 self.fmin += 0.5*fwidth
                 self.fmax += 0.5*fwidth
                 self.axs.set_ylim(self.fmin, self.fmax)
                 self.axp.set_xlim(self.fmin, self.fmax)
                 self.fig.canvas.draw()
-        elif event.key == 'ctrl+left' :
-            if self.fmin > 0.0 :
+        elif event.key == 'ctrl+left':
+            if self.fmin > 0.0:
                 fwidth = self.fmax-self.fmin
                 self.fmin = 0.0
                 self.fmax = fwidth
                 self.axs.set_ylim(self.fmin, self.fmax)
                 self.axp.set_xlim(self.fmin, self.fmax)
                 self.fig.canvas.draw()
-        elif event.key == 'ctrl+right' :
-            if self.fmax < 0.5*self.rate :
+        elif event.key == 'ctrl+right':
+            if self.fmax < 0.5*self.rate:
                 fwidth = self.fmax-self.fmin
                 fm = 0.5*self.rate
                 self.fmax = np.ceil(fm/fwidth)*fwidth
                 self.fmin = self.fmax - fwidth
-                if self.fmin < 0.0 :
+                if self.fmin < 0.0:
                     self.fmin = 0.0
                     self.fmax = fwidth
                 self.axs.set_ylim(self.fmin, self.fmax)
                 self.axp.set_xlim(self.fmin, self.fmax)
                 self.fig.canvas.draw()
-        elif event.key in 'e' :
+        elif event.key in 'e':
             self.show_envelope = not self.show_envelope
             self.envelope_artist.set_visible(self.show_envelope)
             self.fig.canvas.draw()
-        elif event.key in 'C' :
+        elif event.key in 'C':
             self.envcutofffreq *= 1.2
             self.envelope = envelope(self.data, self.rate, self.envcutofffreq)
             self.update_plots()
-        elif event.key in 'c' :
+        elif event.key in 'c':
             self.envcutofffreq /= 1.2
             self.envelope = envelope(self.data, self.rate, self.envcutofffreq)
             self.update_plots()
-        elif event.key in 'T' :
+        elif event.key in 'T':
             self.envthreshfac *= 1.2
-        elif event.key in 't' :
+        elif event.key in 't':
             self.envthreshfac /= 1.2
-        elif event.key in 'f' :
-            if self.fmax < 0.5*self.rate or self.fmin > 0.0 :
+        elif event.key in 'f':
+            if self.fmax < 0.5*self.rate or self.fmin > 0.0:
                 fwidth = self.fmax-self.fmin
-                if self.fmax < 0.5*self.rate :
+                if self.fmax < 0.5*self.rate:
                     self.fmax = self.fmin + 2.0*fwidth
-                elif self.fmin > 0.0 :
+                elif self.fmin > 0.0:
                     self.fmin = self.fmax - 2.0*fwidth
-                    if self.fmin < 0.0 :
+                    if self.fmin < 0.0:
                         self.fmin = 0.0
                         self.fmax = 2.0*fwidth
                 self.axs.set_ylim(self.fmin, self.fmax)
                 self.axp.set_xlim(self.fmin, self.fmax)
                 self.fig.canvas.draw()
-        elif event.key in 'F' :
-            if self.fmax - self.fmin > 1.0 :
+        elif event.key in 'F':
+            if self.fmax - self.fmin > 1.0:
                 fwidth = self.fmax-self.fmin
                 self.fmax = self.fmin + 0.5*fwidth
                 self.axs.set_ylim(self.fmin, self.fmax)
                 self.axp.set_xlim(self.fmin, self.fmax)
                 self.fig.canvas.draw()
-        elif event.key in 'r' :
-            if self.fresolution < 10000.0 :
+        elif event.key in 'r':
+            if self.fresolution < 10000.0:
                 self.fresolution *= 2.0
                 self.update_plots()
-        elif event.key in 'R' :
-            if 1.0/self.fresolution < self.time[-1] :
+        elif event.key in 'R':
+            if 1.0/self.fresolution < self.time[-1]:
                 self.fresolution *= 0.5
                 self.update_plots()
-        elif event.key in 'd' :
+        elif event.key in 'd':
             self.decibel = not self.decibel
             self.update_plots()
-        elif event.key in 'm' :
-            if cfg['mainsFreq'][0] == 0.0 :
+        elif event.key in 'm':
+            if cfg['mainsFreq'][0] == 0.0:
                 cfg['mainsFreq'][0] = self.mains_freq
-            else :
+            else:
                 cfg['mainsFreq'][0] = 0.0
             self.update_plots()
-        elif event.key == 'escape' :
+        elif event.key == 'escape':
             self.remove_peak_annotation()
             self.fig.canvas.draw()
-        elif event.key in 'h' :
+        elif event.key in 'h':
             self.help = not self.help
-            for ht in self.helptext :
+            for ht in self.helptext:
                 ht.set_visible(self.help)
             self.fig.canvas.draw()
-        elif event.key in 'l' :
-            self.legend = not self.legend
-            self.legendhandle.set_visible(self.legend)
-            self.fig.canvas.draw()
-        elif event.key in 'w' :
+        elif event.key in 'w':
             self.plot_waveform()
-        elif event.key in 'W' :
+        elif event.key in 'W':
             self.plot_powerspec()
-        elif event.key in 's' :
+        elif event.key in 's':
             self.save_segment()
-        elif event.key in 'S' :
+        elif event.key in 'S':
             self.save_powerspec()
-        elif event.key in 'E' :
+        elif event.key in 'E':
             self.save_envelope()
             self.save_envelope_powerspec()
-        elif event.key in 'p' :
+        elif event.key in 'p':
             self.play_segment()
-        elif event.key in 'P' :
+        elif event.key in 'P':
             self.play_all()
 
-    def buttonpress(self, event) :
+    def buttonpress(self, event):
         # print 'mouse pressed', event.button, event.key, event.step
-        if event.inaxes == self.axp :
-            if event.key == 'shift' or event.key == 'control' :
+        if event.inaxes == self.axp:
+            if event.key == 'shift' or event.key == 'control':
                 # show next or previous harmonic:
-                if event.key == 'shift' :
-                    if event.button == 1 :
+                if event.key == 'shift':
+                    if event.button == 1:
                         ftarget = event.xdata/2.0
-                    elif event.button == 3 :
+                    elif event.button == 3:
                         ftarget = event.xdata*2.0
-                else :
-                    if event.button == 1 :
+                else:
+                    if event.button == 1:
                         ftarget = event.xdata/1.5
-                    elif event.button == 3 :
+                    elif event.button == 3:
                         ftarget = event.xdata*1.5
                 foffs = event.xdata - self.fmin
                 fwidth = self.fmax - self.fmin
@@ -1038,48 +1103,49 @@ class SignalPlot :
                 self.axs.set_ylim(self.fmin, self.fmax)
                 self.axp.set_xlim(self.fmin, self.fmax)
                 self.fig.canvas.draw()
-            else :
+            else:
                 # put label on peak
                 self.remove_peak_annotation()
                 # find closest peak:
                 fwidth = self.fmax - self.fmin
                 peakdist = np.abs(self.allpeaks[:,0]-event.xdata)
                 inx = np.argmin(peakdist)
-                if peakdist[inx] < 0.005*fwidth :
+                if peakdist[inx] < 0.005*fwidth:
                     peak = self.allpeaks[inx,:]
                     self.annotate_peak(peak)
                     self.fig.canvas.draw()
-                else :
+                else:
                     self.fig.canvas.draw()
 
-    def onpick(self, event) :
+    def onpick(self, event):
         print('pick')
 
-    def analyse_envelopepeaks(self, tmin, tmax) :
+    def analyse_envelopepeaks(self, tmin, tmax):
         t0 = int(tmin*self.rate)
         t1 = int(tmax*self.rate)
         threshold = self.envthreshfac*np.std(self.envelope[t0:t1])
-        peaktimes = detect_peaks(self.time[t0:t1], self.envelope[t0:t1], threshold)
-        npeaks = len(peaktimes)
+        peaks, _ = detect_peaks_fixed(self.envelope[t0:t1], threshold)
+        npeaks = len(peaks)
         rate = 0.0
         interval = 0.0
-        if npeaks > 1 :
+        if npeaks > 1:
+            peaktimes = self.time[t0:t1][peaks]
             rate = (npeaks-1.0)/(peaktimes[-1]-peaktimes[0])
             interval = 1.0/rate
         return npeaks, interval, rate
 
-    def analyse_trace(self, tmin, tmax) :
+    def analyse_trace(self, tmin, tmax):
         t0 = int(tmin*self.rate)
         t1 = int(tmax*self.rate)
         npeaks, pinterval, prate = self.analyse_envelopepeaks(tmin, tmax)
         print('\t'.join([ '{:10s}'.format(x) for x in [ "# width [s]", "trace mean", "trace std", "env mean", "env std", "env peaks", "env T [s]", "env rate [Hz]" ] ]))
         print('\t'.join('{:10.4f}'.format(x) for x in [ tmax-tmin, np.mean(self.data[t0:t1]), np.std(self.data[t0:t1]), np.mean(self.envelope[t0:t1]), np.std(self.envelope[t0:t1]), npeaks, pinterval, prate ]))
-        if self.analysis_file == None :
+        if self.analysis_file == None:
             name = os.path.splitext(self.filename)[0]
-            if self.channel > 0 :
+            if self.channel > 0:
                 datafile = '{name}-{channel:d}-data.txt'.format(
                     name=name, channel=self.channel)
-            else :
+            else:
                 datafile = '{name}-data.txt'.format(name=name)
             self.analysis_file = open(os.path.join(self.filepath, datafile), 'w')
             self.analysis_file.write('\t'.join([ '{:10s}'.format(x) for x in [ "# width [s]", "trace mean", "trace std", "env mean", "env std", "env peaks", "env T [s]", "env rate [Hz]" ] ]) + '\n')
@@ -1088,7 +1154,7 @@ class SignalPlot :
         self.analysis_file.flush()
             
 
-    def resize(self, event) :
+    def resize(self, event):
         # print 'resized', event.width, event.height
         leftpixel = 80.0
         rightpixel = 20.0
@@ -1103,39 +1169,39 @@ class SignalPlot :
         xaxis = xaxispixel/event.height
         top = toppixel/event.height
         height = (1.0-timeaxis-top)/2.0
-        if left < 0.5 and width < 1.0 and xaxis < 0.3 and top < 0.2 :
+        if left < 0.5 and width < 1.0 and xaxis < 0.3 and top < 0.2:
             self.axt.set_position([ left, timeaxis+height, width, height ])
             self.axs.set_position([ left, timeaxis, width, height ])
             self.axp.set_position([ left, xaxis, halfwidth, timeaxis-2.0*xaxis ])
             self.axpe.set_position([ halfleft, xaxis, halfwidth, timeaxis-2.0*xaxis ])
 
-    def plot_waveform(self) :
+    def plot_waveform(self):
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
         name = os.path.splitext(self.filename)[0]
-        if self.channel > 0 :
+        if self.channel > 0:
             ax.set_title('{filename} channel={channel:d}'.format(
                 filename=self.filename, channel=self.channel))
             figfile = '{name}-{channel:d}-{time:.4g}s-waveform.png'.format(
                 name=name, channel=self.channel, time=self.toffset)
-        else :
+        else:
             ax.set_title(self.filename)
             figfile = '{name}-{time:.4g}s-waveform.png'.format(
                 name=name, time=self.toffset)
         t0 = int(np.round(self.toffset*self.rate))
         t1 = int(np.round((self.toffset+self.twindow)*self.rate))
-        if self.twindow < 1.0 :
+        if self.twindow < 1.0:
             ax.set_xlabel('Time [ms]')
             ax.set_xlim(1000.0*self.toffset,
                          1000.0*(self.toffset+self.twindow))
             ax.plot(1000.0*self.time[t0:t1], self.data[t0:t1], 'b')
-            if self.show_envelope :
+            if self.show_envelope:
                 ax.plot(1000.0*self.time[t0:t1], self.envelope[t0:t1], 'r')
-        else :
+        else:
             ax.set_xlabel('Time [s]')
             ax.set_xlim(self.toffset, self.toffset+self.twindow)
             ax.plot(self.time[t0:t1], self.data[t0:t1], 'b')
-            if self.show_envelope :
+            if self.show_envelope:
                 ax.plot(self.time[t0:t1], self.envelope[t0:t1], 'r')
         ax.set_ylabel('Amplitude [{:s}]'.format(self.unit))
         fig.tight_layout()
@@ -1145,24 +1211,24 @@ class SignalPlot :
         plt.close(fig)
         print('saved waveform figure to: %s' % figfile)
 
-    def plot_powerspec(self) :
+    def plot_powerspec(self):
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
         name = os.path.splitext(self.filename)[0]
-        if self.channel > 0 :
+        if self.channel > 0:
             ax.set_title('{filename} channel={channel:d}'.format(
                 filename=self.filename, channel=self.channel))
             figfile = '{name}-{channel:d}-{time:.4g}s-powerspec.png'.format(
                 name=name, channel=self.channel, time=self.toffset)
-        else :
+        else:
             ax.set_title(self.filename)
             figfile = '{name}-{time:.4g}s-powerspec.png'.format(
                 name=name, time=self.toffset)
         ax.set_xlabel('Frequency [Hz]')
         ax.set_xlim(self.fmin, self.fmax)
-        if self.decibel :
+        if self.decibel:
             ax.set_ylabel('Signal power [dB]')
-        else :
+        else:
             ax.set_ylabel('Signal power')
         ax.plot(self.freqs, self.power, 'b')
         fig.tight_layout()
@@ -1190,7 +1256,7 @@ class SignalPlot :
         print('saved segment to: ' , segmentfilename)
     
 
-    def save_powerspec(self) :
+    def save_powerspec(self):
         t0s = int(np.round(self.toffset))
         t1s = int(np.round(self.toffset + self.twindow))
         t0 = int(np.round(self.toffset * self.rate))
@@ -1203,12 +1269,12 @@ class SignalPlot :
             filename = '{name}-{time0:.4g}s-{time1:.4g}s-powerspec.csv'.format(
                 name=filename, time0=t0s, time1=t1s)
         punit = 'x^2/Hz'
-        if self.decibel :
+        if self.decibel:
             punit = 'dB'
         with open(filename, 'w') as df:
             df.write('# {:<7s}\t{:s}\n'.format('freq', 'power'))
             df.write('# {:<7s}\t{:s}\n'.format('Hz', punit))
-            for f, p in zip(self.freqs, self.power) :
+            for f, p in zip(self.freqs, self.power):
                 df.write('{:9.2f}\t{:g}\n'.format(f, p))
         print('saved power spectrum data to: %s' % filename)
 
@@ -1229,7 +1295,7 @@ class SignalPlot :
         write_audio(segmentfilename, savedata, self.rate)
         print('saved envelope to: ' , segmentfilename)
 
-    def save_envelope_powerspec(self) :
+    def save_envelope_powerspec(self):
         t0s = int(np.round(self.toffset))
         t1s = int(np.round(self.toffset + self.twindow))
         t0 = int(np.round(self.toffset * self.rate))
@@ -1242,18 +1308,18 @@ class SignalPlot :
             filename = '{name}-{time0:.4g}s-{time1:.4g}s-envelope-powerspec.csv'.format(
                 name=filename, time0=t0s, time1=t1s)
         punit = 'x^2/Hz'
-        if self.decibel :
+        if self.decibel:
             punit = 'dB'
         with open(filename, 'w') as df:
             df.write('# {:<7s}\t{:s}\n'.format('freq', 'power'))
             df.write('# {:<7s}\t{:s}\n'.format('Hz', punit))
-            for f, p in zip(self.envfreqs, self.envpower) :
+            for f, p in zip(self.envfreqs, self.envpower):
                 df.write('{:9.2f}\t{:g}\n'.format(f, p))
         print('saved power spectrum of envelope to: %s' % filename)
         
 
-    def play_segment(self) :
-        if not have_audioio :
+    def play_segment(self):
+        if not have_audioio:
             return
         t0 = int(np.round(self.toffset*self.rate))
         t1 = int(np.round((self.toffset+self.twindow)*self.rate))
@@ -1261,8 +1327,8 @@ class SignalPlot :
         fade(playdata, self.rate, 0.1)
         self.audio.play(playdata, self.rate, blocking=False)
         
-    def play_all(self) :
-        if not have_audioio :
+    def play_all(self):
+        if not have_audioio:
             return
         self.audio.play(self.data, self.rate, blocking=False)
                     
@@ -1288,20 +1354,20 @@ def main(cargs):
     args = parser.parse_args(cargs)
 
     # load configuration from the current directory:
-    if os.path.isfile(cfgfile) :
+    if os.path.isfile(cfgfile):
         print('load configuration file %s' % cfgfile)
         load_config(cfgfile, cfg)
 
     # set configuration from command line:
-    if args.verbose != None :
+    if args.verbose != None:
         cfg['verboseLevel'][0] = args.verbose
     
     # save configuration:
-    if len(args.save_config) > 0 :
+    if len(args.save_config) > 0:
         ext = os.path.splitext(args.save_config)[1]
-        if ext != '.cfg' :
+        if ext != '.cfg':
             print('configuration file name must have .cfg as extension!')
-        else :
+        else:
             print('write configuration to %s ...' % args.save_config)
             dump_config(args.save_config, cfg, cfgsec)
         quit()
@@ -1311,9 +1377,9 @@ def main(cargs):
     channel = args.channel
     filename = os.path.basename(filepath)
     ext = os.path.splitext(filename)[1]
-    if have_audioio :
+    if have_audioio:
         rate, data = load_audioio(filepath, channel)
-    else :
+    else:
         rate, data = load_wave(filepath, channel)
     if not args.high_pass is None:
         if not args.low_pass is None:
