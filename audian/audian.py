@@ -379,12 +379,14 @@ class SignalPlot:
         self.power_frequency_label = None
         self.envpower_label = None
         self.envpower_artist = None
+        self.envpower_peaks_artist = None
         self.envpeaks_artist = None
         self.help = cfg.value('displayHelp')
         self.helptext = []
         self.allpeaks = []
         self.peak_specmarker = []
         self.peak_annotation = []
+        self.env_peak_annotation = []
         self.analysis_file = None
         self.audio = PlayAudio()
 
@@ -527,9 +529,30 @@ class SignalPlot:
                        xytext=(peak[0]+0.03*fwidth, ypeak),
                        bbox=dict(boxstyle='round',facecolor='white'),
                        arrowprops=dict(arrowstyle='-')))
+
+    def remove_env_peak_annotation(self):
+        for fa in self.env_peak_annotation:
+            fa.remove()
+        self.env_peak_annotation = []
+
+    def annotate_env_peak(self, peak):
+        fwidth = 100.0
+        pt = []
+        if cfg.value('labelFrequency'):
+            pt.append(r'$f=${:.1f} Hz'.format(peak[0]))
+        if cfg.value('labelPower'):
+            pt.append(r'$p=${:.1f} dB'.format(peak[1]))
+        if cfg.value('labelWidth'):
+            pt.append(r'$\Delta f=${:.1f} Hz'.format(peak[3]))
+        ypeak = peak[1] if self.decibel else 10.0**(0.1*peak[1])
+        self.env_peak_annotation.append(self.axpe.annotate('\n'.join(pt), xy=(peak[0], ypeak),
+                       xytext=(peak[0]+0.03*fwidth, ypeak),
+                       bbox=dict(boxstyle='round',facecolor='white'),
+                       arrowprops=dict(arrowstyle='-')))
             
     def update_plots(self, draw=True):
         self.remove_peak_annotation()
+        self.remove_env_peak_annotation()
         # trace:
         self.axt.set_xlim(self.toffset, self.toffset+self.twindow)
         t0 = int(np.round(self.toffset*self.rate))
@@ -540,11 +563,11 @@ class SignalPlot:
             if tstep < 1:
                 tstep = 1
         if self.trace_artist is None:
-            self.trace_artist, = self.axt.plot(self.time[t0:t1:tstep], self.data[t0:t1:tstep])
+            self.trace_artist, = self.axt.plot(self.time[t0:t1:tstep], self.data[t0:t1:tstep], color='tab:blue')
         else:
             self.trace_artist.set_data(self.time[t0:t1:tstep], self.data[t0:t1:tstep])
         if self.envelope_artist is None:
-            self.envelope_artist,  = self.axt.plot(self.time[t0:t1:tstep], self.envelope[t0:t1:tstep], '-r')
+            self.envelope_artist,  = self.axt.plot(self.time[t0:t1:tstep], self.envelope[t0:t1:tstep], color='tab:red')
         else:
             self.envelope_artist.set_data(self.time[t0:t1:tstep], self.envelope[t0:t1:tstep])
         self.axt.set_ylim(self.ymin, self.ymax)
@@ -570,7 +593,6 @@ class SignalPlot:
         self.power, self.freqs = ml.psd(self.data[t00:t11], NFFT=nfft, noverlap=nfft/2, Fs=self.rate, detrend=ml.detrend_mean)
         # detect peaks:
         self.allpeaks, lowth, center = psd_peaks(self.freqs, self.power, cfg)
-        lowth = center + 0.5*lowth
 
         # spectrogram:
         t2 = t1 + nfft
@@ -639,16 +661,16 @@ class SignalPlot:
         if self.all_peaks_artist is None:
             if len(self.allpeaks) > 0:
                 self.all_peaks_artist, = self.axp.plot(self.allpeaks[:,0], peak_power,
-                                                       'o', color='red')
+                                                       'o', color='tab:red')
             else:
-                self.all_peaks_artist, = self.axp.plot([], [], 'o', color='red')
+                self.all_peaks_artist, = self.axp.plot([], [], 'o', color='tab:red')
         else:
             if len(self.allpeaks) > 0:
                 self.all_peaks_artist.set_data(self.allpeaks[:,0], peak_power)
             else:
                 self.all_peaks_artist.set_data([], [])
         if self.power_artist is None:
-            self.power_artist, = self.axp.plot(self.freqs, self.power, 'b', zorder=2)
+            self.power_artist, = self.axp.plot(self.freqs, self.power, color='tab:blue', zorder=2)
         else:
             self.power_artist.set_data(self.freqs, self.power)
 
@@ -672,11 +694,13 @@ class SignalPlot:
             t00 = 0
             t11 = w
         self.envpower, self.envfreqs = ml.psd(self.envelope[t00:t11], NFFT=nfft, noverlap=nfft//2, Fs=self.rate, detrend=ml.detrend_mean)
+        self.envpeaks, _, _ = psd_peaks(self.envfreqs, self.envpower, cfg)
         self.axpe.set_xlim(0.0, 100.0)
         self.axpe.set_xlabel('Frequency [Hz]')
         if self.envpower_label is None:
             self.envpower_label = self.axpe.set_ylabel('Envelope power')
         if self.decibel:
+            env_peak_power = self.envpeaks[:,1]
             self.envpower = 10.0*np.log10(self.envpower)
             pmin = np.min(self.envpower[self.envfreqs<100.0])
             pmin = np.floor(pmin/10.0)*10.0
@@ -686,13 +710,25 @@ class SignalPlot:
             self.envpower_label.set_text('Envelope power [dB]')
             self.axpe.set_ylim(pmin, pmax)
         else:
+            env_peak_power = 10.0**(0.1*self.envpeaks[:,1])
             pmax = np.max(self.envpower[self.envfreqs<100.0])
             doty = pmax
             pmax *= 1.1
             self.envpower_label.set_text('Envelope power')
             self.axpe.set_ylim(0.0, pmax)
+        if self.envpower_peaks_artist is None:
+            if len(self.allpeaks) > 0:
+                self.envpower_peaks_artist, = self.axpe.plot(self.envpeaks[:,0], env_peak_power,
+                                                       'o', color='tab:blue')
+            else:
+                self.envpower_peaks_artist, = self.axpe.plot([], [], 'o', color='tab:blue')
+        else:
+            if len(self.allpeaks) > 0:
+                self.envpower_peaks_artist.set_data(self.envpeaks[:,0], env_peak_power)
+            else:
+                self.envpower_peaks_artist.set_data([], [])
         if self.envpower_artist is None:
-            self.envpower_artist, = self.axpe.plot(self.envfreqs, self.envpower, 'r', zorder=2)
+            self.envpower_artist, = self.axpe.plot(self.envfreqs, self.envpower, color='tab:red', zorder=2)
         else:
             self.envpower_artist.set_data(self.envfreqs, self.envpower)
         self.envcutoff_artist.set_text('cutoff={:.0f} Hz'.format(self.envcutofffreq))
@@ -873,6 +909,7 @@ class SignalPlot:
             self.update_plots()
         elif event.key == 'escape':
             self.remove_peak_annotation()
+            self.remove_env_peak_annotation()
             self.fig.canvas.draw()
         elif event.key in 'h':
             self.help = not self.help
@@ -930,6 +967,19 @@ class SignalPlot:
                     self.fig.canvas.draw()
                 else:
                     self.fig.canvas.draw()
+        if event.inaxes == self.axpe:
+            # put label on peak
+            self.remove_env_peak_annotation()
+            # find closest peak:
+            fwidth = 100.0
+            peakdist = np.abs(self.envpeaks[:,0]-event.xdata)
+            inx = np.argmin(peakdist)
+            if peakdist[inx] < 0.05*fwidth:
+                peak = self.envpeaks[inx,:]
+                self.annotate_env_peak(peak)
+                self.fig.canvas.draw()
+            else:
+                self.fig.canvas.draw()
 
     def onpick(self, event):
         print('pick')
@@ -945,7 +995,7 @@ class SignalPlot:
         if npeaks > 1:
             peaktimes = self.time[t0:t1][peaks]
             if self.envpeaks_artist is None:
-                self.envpeaks_artist, = self.axt.plot(peaktimes, self.envelope[t0+peaks], 'o')
+                self.envpeaks_artist, = self.axt.plot(peaktimes, self.envelope[t0+peaks], 'o', color='tab:orange')
             else:
                 self.envpeaks_artist.set_data(peaktimes, self.envelope[t0+peaks])
             rate = (npeaks-1.0)/(peaktimes[-1]-peaktimes[0])
@@ -968,9 +1018,9 @@ class SignalPlot:
             else:
                 datafile = '{name}-data.csv'.format(name=name)
             self.analysis_file = open(os.path.join(self.filepath, datafile), 'w')
-            self.analysis_file.write('\t'.join([ '{:10s}'.format(x) for x in [ "# width [s]", "trace mean", "trace std", "peak freq [kHz]", "peak width [kHz]", "env mean", "env std", "env peaks", "env T [s]", "env rate [Hz]" ] ]) + '\n')
+            self.analysis_file.write(';'.join([ '{:s}'.format(x) for x in [ "width [s]", "trace mean", "trace std", "peak freq [kHz]", "peak width [kHz]", "env mean", "env std", "env peaks", "env T [s]", "env rate [Hz]" ] ]) + '\n')
             print('saved selected data to: %s' % datafile)
-        self.analysis_file.write('\t'.join('{:10.4f}'.format(x) for x in [ tmax-tmin, np.mean(self.data[t0:t1]), np.std(self.data[t0:t1]), peak_freq, peak_width, np.mean(self.envelope[t0:t1]), np.std(self.envelope[t0:t1]), npeaks, pinterval, prate ]) + '\n')
+        self.analysis_file.write(';'.join('{:.4f}'.format(x) for x in [ tmax-tmin, np.mean(self.data[t0:t1]), np.std(self.data[t0:t1]), peak_freq, peak_width, np.mean(self.envelope[t0:t1]), np.std(self.envelope[t0:t1]), npeaks, pinterval, prate ]) + '\n')
         self.analysis_file.flush()
             
 
@@ -992,15 +1042,15 @@ class SignalPlot:
             ax.set_xlabel('Time [ms]')
             ax.set_xlim(1000.0*self.toffset,
                          1000.0*(self.toffset+self.twindow))
-            ax.plot(1000.0*self.time[t0:t1], self.data[t0:t1], 'b')
+            ax.plot(1000.0*self.time[t0:t1], self.data[t0:t1], 'color=tab:blue')
             if self.show_envelope:
-                ax.plot(1000.0*self.time[t0:t1], self.envelope[t0:t1], 'r')
+                ax.plot(1000.0*self.time[t0:t1], self.envelope[t0:t1], color='tab:red')
         else:
             ax.set_xlabel('Time [s]')
             ax.set_xlim(self.toffset, self.toffset+self.twindow)
-            ax.plot(self.time[t0:t1], self.data[t0:t1], 'b')
+            ax.plot(self.time[t0:t1], self.data[t0:t1], color='tab:blue')
             if self.show_envelope:
-                ax.plot(self.time[t0:t1], self.envelope[t0:t1], 'r')
+                ax.plot(self.time[t0:t1], self.envelope[t0:t1], color='tab:red')
         ax.set_ylabel('Amplitude [{:s}]'.format(self.unit))
         fig.tight_layout()
         # on linux the following is not what you want! You want to save this into the current working directory!!!
@@ -1027,7 +1077,7 @@ class SignalPlot:
             ax.set_ylabel('Signal power [dB]')
         else:
             ax.set_ylabel('Signal power')
-        ax.plot(self.freqs, self.power, 'b')
+        ax.plot(self.freqs, self.power, color='tab:blue')
         fig.tight_layout()
         # on linux the following is not what you want! You want to save this into the current working directory!!!
         fig.savefig(os.path.join(self.filepath, figfile))
