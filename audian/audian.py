@@ -401,14 +401,18 @@ class SignalPlot:
         
         # the figure:
         plt.ioff()
-        self.fig = plt.figure(figsize=(15, 9))
+        self.fig = plt.figure(figsize=(15, 9), constrained_layout=True)
         self.fig.canvas.manager.set_window_title('AUDIoANalyser: ' + self.filename + ' channel {0:d}'.format(self.channel))
         self.fig.canvas.mpl_connect('key_press_event', self.keypress)
         self.fig.canvas.mpl_connect('button_press_event', self.buttonpress)
         self.fig.canvas.mpl_connect('pick_event', self.onpick)
-        self.fig.canvas.mpl_connect('resize_event', self.resize)
+        gs = self.fig.add_gridspec(2, 1, height_ratios=[5, 2])
+        gst = gs[0].subgridspec(2, 1, hspace=0.0)
+        gsp = gs[1].subgridspec(1, 2)
         # trace plot:
-        self.axt = self.fig.add_axes([ 0.1, 0.7, 0.87, 0.25 ])
+        #self.axt = self.fig.add_axes([ 0.1, 0.7, 0.87, 0.25 ])
+        self.axt = self.fig.add_subplot(gst[0])
+        self.axt.xaxis.set_major_locator(plt.NullLocator())
         self.axt.set_ylabel('Amplitude [{:s}]'.format(self.unit))
         self.span = widgets.SpanSelector(self.axt, self.analyse_trace,
                                          direction='horizontal')
@@ -432,11 +436,14 @@ class SignalPlot:
         self.helptext.append(ht)
         #self.axt.set_xticklabels([])
         # spectrogram:
-        self.axs = self.fig.add_axes([ 0.1, 0.45, 0.87, 0.25 ])
+        #self.axs = self.fig.add_axes([ 0.1, 0.45, 0.87, 0.25 ])
+        self.axs = self.fig.add_subplot(gst[1])
+        self.axs.sharex(self.axt)
         self.axs.set_xlabel('Time [seconds]')
         self.axs.set_ylabel('Frequency [Hz]')
         # power spectrum:
-        self.axp = self.fig.add_axes([ 0.1, 0.1, 0.4, 0.25 ])
+        #self.axp = self.fig.add_axes([ 0.1, 0.1, 0.4, 0.25 ])
+        self.axp = self.fig.add_subplot(gsp[0])
         ht = self.axp.text(0.98, 0.9, 'r, R: frequency resolution', ha='right', transform=self.axp.transAxes)
         self.helptext.append(ht)
         ht = self.axp.text(0.98, 0.8, 'f, F: zoom', ha='right', transform=self.axp.transAxes)
@@ -452,7 +459,8 @@ class SignalPlot:
         ht = self.axp.text(0.98, 0.1, 'S: save current spectrum to csv file', ha='right', transform=self.axp.transAxes)
         self.helptext.append(ht)
         # power spectrum of envelope:
-        self.axpe = self.fig.add_axes([ 0.6, 0.1, 0.4, 0.25 ])
+        #self.axpe = self.fig.add_axes([ 0.6, 0.1, 0.4, 0.25 ])
+        self.axpe = self.fig.add_subplot(gsp[1])
         self.envcutoff_artist = self.axpe.text(0.05, 0.1, 'cutoff={:.0f} Hz'.format(self.envcutofffreq), transform=self.axpe.transAxes)
         ht = self.axpe.text(0.98, 0.9, 'c, C: envelope cutoff frequency', ha='right', transform=self.axpe.transAxes)
         self.helptext.append(ht)
@@ -968,30 +976,8 @@ class SignalPlot:
         self.analysis_file.flush()
             
 
-    def resize(self, event):
-        # print 'resized', event.width, event.height
-        leftpixel = 80.0
-        rightpixel = 20.0
-        midpixel = 80.0
-        xaxispixel = 50.0
-        toppixel = 20.0
-        timeaxis = 0.42
-        left = leftpixel/event.width
-        width = 1.0 - left - rightpixel/event.width
-        halfwidth = 0.5*(width - midpixel/event.width)
-        halfleft = left + halfwidth + midpixel/event.width
-        xaxis = xaxispixel/event.height
-        top = toppixel/event.height
-        height = (1.0-timeaxis-top)/2.0
-        if left < 0.5 and width < 1.0 and xaxis < 0.3 and top < 0.2:
-            self.axt.set_position([ left, timeaxis+height, width, height ])
-            self.axs.set_position([ left, timeaxis, width, height ])
-            self.axp.set_position([ left, xaxis, halfwidth, timeaxis-2.0*xaxis ])
-            self.axpe.set_position([ halfleft, xaxis, halfwidth, timeaxis-2.0*xaxis ])
-
     def plot_waveform(self):
-        fig = plt.figure()
-        ax = fig.add_subplot(1, 1, 1)
+        fig, ax = plt.subplots()
         name = os.path.splitext(self.filename)[0]
         if self.channel > 0:
             ax.set_title('{filename} channel={channel:d}'.format(
@@ -1026,8 +1012,7 @@ class SignalPlot:
         print('saved waveform figure to: %s' % figfile)
 
     def plot_powerspec(self):
-        fig = plt.figure()
-        ax = fig.add_subplot(1, 1, 1)
+        fig, ax = plt.subplots()
         name = os.path.splitext(self.filename)[0]
         if self.channel > 0:
             ax.set_title('{filename} channel={channel:d}'.format(
