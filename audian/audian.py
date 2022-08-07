@@ -436,7 +436,8 @@ class SignalPlot:
         #self.axt.set_xticklabels([])
         # spectrogram:
         self.axs = self.fig.add_subplot(gst[1])
-        self.axs.sharex(self.axt)
+        #self.axs.sharex(self.axt)
+        self.axs.get_shared_x_axes().join(self.axs, self.axt)
         self.axs.set_xlabel('Time [seconds]')
         self.axs.set_ylabel('Frequency [Hz]')
         # power spectrum:
@@ -955,20 +956,21 @@ class SignalPlot:
         t0 = int(tmin*self.rate)
         t1 = int(tmax*self.rate)
         npeaks, pinterval, prate = self.analyse_envelopepeaks(tmin, tmax)
-        peak_freq = self.allpeaks[np.argmax(self.allpeaks[:,1]),0]
-        print('\t'.join([ '{:10s}'.format(x) for x in [ "# width [s]", "trace mean", "trace std", "peak freq [Hz]", "env mean", "env std", "env peaks", "env T [s]", "env rate [Hz]" ] ]))
-        print('\t'.join('{:10.4f}'.format(x) for x in [tmax-tmin, np.mean(self.data[t0:t1]), np.std(self.data[t0:t1]), peak_freq, np.mean(self.envelope[t0:t1]), np.std(self.envelope[t0:t1]), npeaks, pinterval, prate]))
+        peak_freq = 0.001*self.allpeaks[np.argmax(self.allpeaks[:,1]),0]
+        peak_width = 0.001*self.allpeaks[np.argmax(self.allpeaks[:,1]),3]
+        print('\t'.join([ '{:10s}'.format(x) for x in [ "# width [s]", "trace mean", "trace std", "peak freq [kHz]", "peak width [kHz]", "env mean", "env std", "env peaks", "env T [s]", "env rate [Hz]" ] ]))
+        print('\t'.join('{:10.4f}'.format(x) for x in [tmax-tmin, np.mean(self.data[t0:t1]), np.std(self.data[t0:t1]), peak_freq, peak_width, np.mean(self.envelope[t0:t1]), np.std(self.envelope[t0:t1]), npeaks, pinterval, prate]))
         if self.analysis_file is None:
             name = os.path.splitext(self.filename)[0]
             if self.channel > 0:
-                datafile = '{name}-{channel:d}-data.txt'.format(
+                datafile = '{name}-{channel:d}-data.csv'.format(
                     name=name, channel=self.channel)
             else:
-                datafile = '{name}-data.txt'.format(name=name)
+                datafile = '{name}-data.csv'.format(name=name)
             self.analysis_file = open(os.path.join(self.filepath, datafile), 'w')
-            self.analysis_file.write('\t'.join([ '{:10s}'.format(x) for x in [ "# width [s]", "trace mean", "trace std", "peak freq [Hz]", "env mean", "env std", "env peaks", "env T [s]", "env rate [Hz]" ] ]) + '\n')
+            self.analysis_file.write('\t'.join([ '{:10s}'.format(x) for x in [ "# width [s]", "trace mean", "trace std", "peak freq [kHz]", "peak width [kHz]", "env mean", "env std", "env peaks", "env T [s]", "env rate [Hz]" ] ]) + '\n')
             print('saved selected data to: %s' % datafile)
-        self.analysis_file.write('\t'.join('{:10.4f}'.format(x) for x in [ tmax-tmin, np.mean(self.data[t0:t1]), np.std(self.data[t0:t1]), peak_freq, np.mean(self.envelope[t0:t1]), np.std(self.envelope[t0:t1]), npeaks, pinterval, prate ]) + '\n')
+        self.analysis_file.write('\t'.join('{:10.4f}'.format(x) for x in [ tmax-tmin, np.mean(self.data[t0:t1]), np.std(self.data[t0:t1]), peak_freq, peak_width, np.mean(self.envelope[t0:t1]), np.std(self.envelope[t0:t1]), npeaks, pinterval, prate ]) + '\n')
         self.analysis_file.flush()
             
 
