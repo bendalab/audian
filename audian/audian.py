@@ -21,7 +21,7 @@ cfg.add('maxpixel', 50000, '', 'Either maximum number of data points to be plott
 
 cfg.add_section('Envelope:')
 cfg.add('envcutofffreq', 100.0, 'Hz', 'Cutoff frequency of the low-pass filter used for computing the envelope from the squared signal.')
-cfg.add('envthreshfac', 2.0, '', 'Threshold for peak detection in envelope is this factor times the standard deviation of the envelope.')
+cfg.add('envthreshfac', 0.2, '', 'Threshold for peak detection in envelope is this factor times the 95% - 5% percentile of the envelope.')
 
 cfg.add_section('Power spectrum estimation:')
 cfg.add('minPSDAverages', 3, '', 'Minimum number of fft averages for estimating the power spectrum.')
@@ -379,6 +379,7 @@ class SignalPlot:
         self.power_frequency_label = None
         self.envpower_label = None
         self.envpower_artist = None
+        self.envpeaks_artist = None
         self.help = cfg.value('displayHelp')
         self.helptext = []
         self.allpeaks = []
@@ -533,11 +534,11 @@ class SignalPlot:
             tstep = int((t1-t0)//cfg.value('maxpixel'))
             if tstep < 1:
                 tstep = 1
-        if self.trace_artist == None:
+        if self.trace_artist is None:
             self.trace_artist, = self.axt.plot(self.time[t0:t1:tstep], self.data[t0:t1:tstep])
         else:
             self.trace_artist.set_data(self.time[t0:t1:tstep], self.data[t0:t1:tstep])
-        if self.envelope_artist == None:
+        if self.envelope_artist is None:
             self.envelope_artist,  = self.axt.plot(self.time[t0:t1:tstep], self.envelope[t0:t1:tstep], '-r')
         else:
             self.envelope_artist.set_data(self.time[t0:t1:tstep], self.envelope[t0:t1:tstep])
@@ -578,7 +579,7 @@ class SignalPlot:
             sstep = 1
         extent = self.toffset, self.toffset+np.amax(bins), freqs[0], freqs[-1]
         self.axs.set_xlim(self.toffset, self.toffset+self.twindow)
-        if self.spectrogram_artist == None:
+        if self.spectrogram_artist is None:
             self.fmax = np.round((freqs[-1])/1000.0)*1000.0
             min = np.percentile(z, 70.0)
             max = np.percentile(z, 99.9) + 5.0
@@ -606,12 +607,12 @@ class SignalPlot:
         else:
             tws = '%.3gs' % (tw)
         a = 2*w/nfft-1 # number of ffts
-        if self.power_frequency_label == None:
+        if self.power_frequency_label is None:
             self.power_frequency_label = self.axp.set_xlabel(r'Frequency [Hz] (nfft={:d}, $\Delta f$={:s}: T={:s}/{:.0f})'.format(nfft, dfs, tws, a))
         else:
             self.power_frequency_label.set_text(r'Frequency [Hz] (nfft={:d}, $\Delta f$={:s}: T={:s}/{:.0f})'.format(nfft, dfs, tws, a))
         self.axp.set_xlim(self.fmin, self.fmax)
-        if self.power_label == None:
+        if self.power_label is None:
             self.power_label = self.axp.set_ylabel('Signal power')
         if self.decibel:
             peak_power = self.allpeaks[:,1]
@@ -630,7 +631,7 @@ class SignalPlot:
             pmax *= 1.1
             self.power_label.set_text('Signal power')
             self.axp.set_ylim(0.0, pmax)
-        if self.all_peaks_artist == None:
+        if self.all_peaks_artist is None:
             if len(self.allpeaks) > 0:
                 self.all_peaks_artist, = self.axp.plot(self.allpeaks[:,0], peak_power,
                                                        'o', color='red')
@@ -641,7 +642,7 @@ class SignalPlot:
                 self.all_peaks_artist.set_data(self.allpeaks[:,0], peak_power)
             else:
                 self.all_peaks_artist.set_data([], [])
-        if self.power_artist == None:
+        if self.power_artist is None:
             self.power_artist, = self.axp.plot(self.freqs, self.power, 'b', zorder=2)
         else:
             self.power_artist.set_data(self.freqs, self.power)
@@ -668,7 +669,7 @@ class SignalPlot:
         self.envpower, self.envfreqs = ml.psd(self.envelope[t00:t11], NFFT=nfft, noverlap=nfft//2, Fs=self.rate, detrend=ml.detrend_mean)
         self.axpe.set_xlim(0.0, 100.0)
         self.axpe.set_xlabel('Frequency [Hz]')
-        if self.envpower_label == None:
+        if self.envpower_label is None:
             self.envpower_label = self.axpe.set_ylabel('Envelope power')
         if self.decibel:
             self.envpower = 10.0*np.log10(self.envpower)
@@ -685,7 +686,7 @@ class SignalPlot:
             pmax *= 1.1
             self.envpower_label.set_text('Envelope power')
             self.axpe.set_ylim(0.0, pmax)
-        if self.envpower_artist == None:
+        if self.envpower_artist is None:
             self.envpower_artist, = self.axpe.plot(self.envfreqs, self.envpower, 'r', zorder=2)
         else:
             self.envpower_artist.set_data(self.envfreqs, self.envpower)
@@ -931,13 +932,17 @@ class SignalPlot:
     def analyse_envelopepeaks(self, tmin, tmax):
         t0 = int(tmin*self.rate)
         t1 = int(tmax*self.rate)
-        threshold = self.envthreshfac*np.std(self.envelope[t0:t1])
+        threshold = self.envthreshfac*np.diff(np.quantile(self.envelope[t0:t1], [0.05, 0.95]))[0]
         peaks, _ = detect_peaks_fixed(self.envelope[t0:t1], threshold)
         npeaks = len(peaks)
         rate = 0.0
         interval = 0.0
         if npeaks > 1:
             peaktimes = self.time[t0:t1][peaks]
+            if self.envpeaks_artist is None:
+                self.envpeaks_artist, = self.axt.plot(peaktimes, self.envelope[t0+peaks], 'o')
+            else:
+                self.envpeaks_artist.set_data(peaktimes, self.envelope[t0+peaks])
             rate = (npeaks-1.0)/(peaktimes[-1]-peaktimes[0])
             interval = 1.0/rate
         return npeaks, interval, rate
@@ -948,7 +953,7 @@ class SignalPlot:
         npeaks, pinterval, prate = self.analyse_envelopepeaks(tmin, tmax)
         print('\t'.join([ '{:10s}'.format(x) for x in [ "# width [s]", "trace mean", "trace std", "env mean", "env std", "env peaks", "env T [s]", "env rate [Hz]" ] ]))
         print('\t'.join('{:10.4f}'.format(x) for x in [ tmax-tmin, np.mean(self.data[t0:t1]), np.std(self.data[t0:t1]), np.mean(self.envelope[t0:t1]), np.std(self.envelope[t0:t1]), npeaks, pinterval, prate ]))
-        if self.analysis_file == None:
+        if self.analysis_file is None:
             name = os.path.splitext(self.filename)[0]
             if self.channel > 0:
                 datafile = '{name}-{channel:d}-data.txt'.format(
