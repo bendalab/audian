@@ -14,33 +14,32 @@ from .version import __version__, __year__
 from .configfile import ConfigFile
 
     
-cfg = OrderedDict()
-cfgsec = dict()
+cfg = ConfigFile()
 
-cfgsec['maxpixel'] = 'Plotting:'
-cfg['maxpixel'] = [ 50000, '', 'Either maximum number of data points to be plotted or zero for plotting all data points.' ]
+cfg.add_section('Plotting:')
+cfg.add('maxpixel', 50000, '', 'Either maximum number of data points to be plotted or zero for plotting all data points.')
 
-cfgsec['envthreshfac'] = 'Envelope:'
-cfg['envcutofffreq'] = [ 100.0, 'Hz', 'Cutoff frequency of the low-pass filter used for computing the envelope from the squared signal.' ]
-cfg['envthreshfac'] = [ 2.0, '', 'Threshold for peak detection in envelope is this factor times the standard deviation of the envelope.' ]
+cfg.add_section('Envelope:')
+cfg.add('envcutofffreq', 100.0, 'Hz', 'Cutoff frequency of the low-pass filter used for computing the envelope from the squared signal.')
+cfg.add('envthreshfac', 2.0, '', 'Threshold for peak detection in envelope is this factor times the standard deviation of the envelope.')
 
-cfgsec['minPSDAverages'] = 'Power spectrum estimation:'
-cfg['minPSDAverages'] = [ 3, '', 'Minimum number of fft averages for estimating the power spectrum.' ]
+cfg.add_section('Power spectrum estimation:')
+cfg.add('minPSDAverages', 3, '', 'Minimum number of fft averages for estimating the power spectrum.')
 
-cfgsec['threshold'] = 'Thresholds for peak detection in power spectra:'
-cfg['threshold'] = [10.0, 'dB', 'Threshold for all peaks.\n If set to 0.0, estimate threshold from histogram.']
+cfg.add_section('Thresholds for peak detection in power spectra:')
+cfg.add('threshold', 10.0, 'dB', 'Threshold for all peaks.\n If set to 0.0, estimate threshold from histogram.')
 
-cfgsec['noiseFactor'] = 'Threshold estimation:\nIf no thresholds are specified, they are estimated from the histogram of the decibel power spectrum.'
-cfg['noiseFactor'] = [ 12.0, '', 'Factor for multiplying std of noise floor for lower threshold.' ]
+cfg.add_section('Threshold estimation:\nIf no thresholds are specified, they are estimated from the histogram of the decibel power spectrum.')
+cfg.add('noiseFactor', 12.0, '', 'Factor for multiplying std of noise floor for lower threshold.')
 
-cfgsec['displayHelp'] = 'Items to display:'
-cfg['displayHelp'] = [ False, '', 'Display help on key bindings' ] 
-cfg['labelFrequency'] = [ True, '', 'Display the frequency of the peak' ] 
-cfg['labelPower'] = [ True, '', 'Display the power of the peak' ]
-cfg['labelWidth'] = [ True, '', 'Display the width of the peak' ]
+cfg.add_section('Items to display:')
+cfg.add('displayHelp', False, '', 'Display help on key bindings')
+cfg.add('labelFrequency', True, '', 'Display the frequency of the peak')
+cfg.add('labelPower', True, '', 'Display the power of the peak')
+cfg.add('labelWidth', True, '', 'Display the width of the peak')
 
-cfgsec['verboseLevel'] = 'Debugging:'
-cfg['verboseLevel'] = [ 0, '', '0=off upto 4 very detailed' ]
+cfg.add_section('Debugging:')
+cfg.add('verboseLevel', 0, '', '0=off upto 4 very detailed')
 
     
 ###############################################################################
@@ -66,121 +65,6 @@ def envelope(data, rate, freq=100.0):
     envelope = np.sqrt(2)*sig.sosfiltfilt(sos, np.abs(data))
     return envelope
 
-
-###############################################################################
-## configuration file writing and loading:
-
-def dump_config(filename, cfg, sections=None, header=None, maxline=60):
-    """
-    Pretty print non-nested dicionary cfg into file.
-
-    The keys of the dictionary are strings.
-    
-    The values of the dictionary can be single variables or lists:
-    [value, unit, comment]
-    Both unit and comment are optional.
-
-    value can be any type of variable.
-
-    unit is a string (that can be empty).
-    
-    Comments comment are printed out right before the key-value pair.
-    Comments are single strings. Newline characters are intepreted as new paragraphs.
-    Lines are folded if the character count exceeds maxline.
-
-    Section comments can be added by the sections dictionary.
-    It contains comment strings as values that are inserted right
-    before the key-value pair with the same key. Section comments
-    are formatted in the same way as comments for key-value pairs,
-    but get two comment characters prependend ('##').
-
-    A header can be printed initially. This is a simple string that is formatted
-    like the section comments.
-
-    Args:
-        filename: The name of the file for writing the configuration.
-        cfg (dict): Configuration keys, values, units, and comments.
-        sections (dict): Comments describing secions of the configuration file.
-        header (string): A string that is written as an introductory comment into the file.
-        maxline (int): Maximum number of characters that fit into a line.
-    """
-
-    def write_comment(f, comment, maxline=60, cs='#'):
-        # format comment:
-        if len(comment) > 0:
-            for line in comment.split('\n'):
-                f.write(cs + ' ')
-                cc = len(cs) + 1  # character count
-                for w in line.strip().split(' '):
-                    # line too long?
-                    if cc + len(w) > maxline:
-                        f.write('\n' + cs + ' ')
-                        cc = len(cs) + 1
-                    f.write(w + ' ')
-                    cc += len(w) + 1
-                f.write('\n')
-    
-    with open(filename, 'w') as f:
-        if header != None:
-            write_comment(f, header, maxline, '##')
-        maxkey = 0
-        for key in cfg.keys():
-            if maxkey < len(key):
-                maxkey = len(key)
-        for key, v in cfg.items():
-            # possible section entry:
-            if sections != None and key in sections:
-                f.write('\n\n')
-                write_comment(f, sections[key], maxline, '##')
-
-            # get value, unit, and comment from v:
-            val = None
-            unit = ''
-            comment = ''
-            if hasattr(v, '__len__') and (not isinstance(v, str)):
-                val = v[0]
-                if len(v) > 1:
-                    unit = ' ' + v[1]
-                if len(v) > 2:
-                    comment = v[2]
-            else:
-                val = v
-
-            # next key-value pair:
-            f.write('\n')
-            write_comment(f, comment, maxline, '#')
-            f.write('{key:<{width}s}: {val}{unit:s}\n'.format(key=key, width=maxkey, val=val, unit=unit))
-
-
-def load_config(filename, cfg):
-    """
-    Set values of dictionary cfg to values from key-value pairs read in from file.
-    
-    Args:
-        filename: The name of the file from which to read in the configuration.
-        cfg (dict): Configuration keys, values, units, and comments.
-    """
-    with open(filename, 'r') as f:
-        for line in f:
-            # do not process empty lines and comments:
-            if len(line.strip()) == 0 or line[0] == '#' or not ':' in line:
-                continue
-            key, val = line.split(':', 1)
-            key = key.strip()
-            if not key in cfg:
-                continue
-            cv = cfg[key]
-            vals = val.strip().split(' ')
-            if hasattr(cv, '__len__') and (not isinstance(cv, str)):
-                unit = ''
-                if len(vals) > 1:
-                    unit = vals[1]
-                if unit != cv[1]:
-                    print('unit for %s is %s but should be %s' % (key, unit, cv[1]))
-                cv[0] = type(cv[0])(vals[0])
-            else:
-                cfg[key] = type(cv)(vals[0])
-            
 
 ###############################################################################
 ## peak detection:
@@ -426,7 +310,7 @@ def psd_peaks(psd_freqs, psd, cfg):
         center (float): the baseline level of the power spectrum
     """
     
-    verbose = cfg['verboseLevel'][0]
+    verbose = cfg.value('verboseLevel')
 
     if verbose > 0:
         print()
@@ -437,12 +321,12 @@ def psd_peaks(psd_freqs, psd, cfg):
     log_psd = 10.0*np.log10(psd)
 
     # thresholds:
-    threshold = cfg['threshold'][0]
+    threshold = cfg.value('threshold')
     center = 0.0
-    if cfg['threshold'][0] <= 0.0:
+    if cfg.value('threshold') <= 0.0:
         n = len(log_psd)
         threshold, center = threshold_estimate(log_psd[2*n/3:n*9/10],
-                                                cfg['noiseFactor'][0])
+                                                cfg.value('noiseFactor'))
         if verbose > 1:
             print()
             print('threshold=', threshold, center+threshold)
@@ -468,8 +352,9 @@ class SignalPlot:
         self.rate = samplingrate
         self.data = data
         self.unit = unit
-        self.envcutofffreq = cfg['envcutofffreq'][0]
-        self.envthreshfac = cfg['envthreshfac'][0]
+        self.envcutofffreq = cfg.value('envcutofffreq')
+        self.envcutoff_artist = None
+        self.envthreshfac = cfg.value('envthreshfac')
         self.envelope = envelope(self.data, self.rate, self.envcutofffreq)
         self.envpower = None
         self.envfreqs = None
@@ -494,7 +379,7 @@ class SignalPlot:
         self.power_frequency_label = None
         self.envpower_label = None
         self.envpower_artist = None
-        self.help = cfg['displayHelp'][0]
+        self.help = cfg.value('displayHelp')
         self.helptext = []
         self.allpeaks = []
         self.peak_specmarker = []
@@ -567,6 +452,7 @@ class SignalPlot:
         self.helptext.append(ht)
         # power spectrum of envelope:
         self.axpe = self.fig.add_axes([ 0.6, 0.1, 0.4, 0.25 ])
+        self.envcutoff_artist = self.axpe.text(0.05, 0.1, 'cutoff={:.0f} Hz'.format(self.envcutofffreq), transform=self.axpe.transAxes)
         ht = self.axpe.text(0.98, 0.9, 'c, C: envelope cutoff frequency', ha='right', transform=self.axpe.transAxes)
         self.helptext.append(ht)
         ht = self.axpe.text(0.98, 0.8, 't, T: threshold for envelope peak detection', ha='right', transform=self.axpe.transAxes)
@@ -595,7 +481,7 @@ class SignalPlot:
         t00 = t0
         t11 = t1
         w = t11-t00
-        minw = int(nfft*(cfg['minPSDAverages'][0]+1)//2)
+        minw = int(nfft*(cfg.value('minPSDAverages')+1)//2)
         if t11-t00 < minw:
             w = minw
             t11 = t00 + w
@@ -624,11 +510,11 @@ class SignalPlot:
         # annotation:
         fwidth = self.fmax - self.fmin
         pt = []
-        if cfg['labelFrequency'][0]:
+        if cfg.value('labelFrequency'):
             pt.append(r'$f=${:.1f} Hz'.format(peak[0]))
-        if cfg['labelPower'][0]:
+        if cfg.value('labelPower'):
             pt.append(r'$p=${:.1f} dB'.format(peak[1]))
-        if cfg['labelWidth'][0]:
+        if cfg.value('labelWidth'):
             pt.append(r'$\Delta f=${:.0f} Hz'.format(peak[3]))
         ypeak = peak[1] if self.decibel else 10.0**(0.1*peak[1])
         self.peak_annotation.append(self.axp.annotate('\n'.join(pt), xy=(peak[0], ypeak),
@@ -643,8 +529,8 @@ class SignalPlot:
         t0 = int(np.round(self.toffset*self.rate))
         t1 = int(np.round((self.toffset+self.twindow)*self.rate))
         tstep = 1
-        if cfg['maxpixel'][0] > 0:
-            tstep = int((t1-t0)//cfg['maxpixel'][0])
+        if cfg.value('maxpixel') > 0:
+            tstep = int((t1-t0)//cfg.value('maxpixel'))
             if tstep < 1:
                 tstep = 1
         if self.trace_artist == None:
@@ -665,7 +551,7 @@ class SignalPlot:
         t00 = t0
         t11 = t1
         w = t11-t00
-        minw = int(nfft*(cfg['minPSDAverages'][0]+1)//2)
+        minw = int(nfft*(cfg.value('minPSDAverages')+1)//2)
         if t11-t00 < minw:
             w = minw
             t11 = t00 + w
@@ -769,7 +655,7 @@ class SignalPlot:
         t00 = t0
         t11 = t1
         w = t11-t00
-        minw = int(nfft*(cfg['minPSDAverages'][0]+1)//2)
+        minw = int(nfft*(cfg.value('minPSDAverages')+1)//2)
         if t11-t00 < minw:
             w = minw
             t11 = t00 + w
@@ -803,6 +689,7 @@ class SignalPlot:
             self.envpower_artist, = self.axpe.plot(self.envfreqs, self.envpower, 'r', zorder=2)
         else:
             self.envpower_artist.set_data(self.envfreqs, self.envpower)
+        self.envcutoff_artist.set_text('cutoff={:.0f} Hz'.format(self.envcutofffreq))
         
         if draw:
             self.fig.canvas.draw()
@@ -930,17 +817,17 @@ class SignalPlot:
             self.envelope_artist.set_visible(self.show_envelope)
             self.fig.canvas.draw()
         elif event.key in 'C':
-            self.envcutofffreq *= 1.2
+            self.envcutofffreq *= 1.5
             self.envelope = envelope(self.data, self.rate, self.envcutofffreq)
             self.update_plots()
         elif event.key in 'c':
-            self.envcutofffreq /= 1.2
+            self.envcutofffreq /= 1.5
             self.envelope = envelope(self.data, self.rate, self.envcutofffreq)
             self.update_plots()
         elif event.key in 'T':
-            self.envthreshfac *= 1.2
+            self.envthreshfac *= 1.5
         elif event.key in 't':
-            self.envthreshfac /= 1.2
+            self.envthreshfac /= 1.5
         elif event.key in 'f':
             if self.fmax < 0.5*self.rate or self.fmin > 0.0:
                 fwidth = self.fmax-self.fmin
@@ -973,10 +860,10 @@ class SignalPlot:
             self.decibel = not self.decibel
             self.update_plots()
         elif event.key in 'm':
-            if cfg['mainsFreq'][0] == 0.0:
-                cfg['mainsFreq'][0] = self.mains_freq
+            if cfg.value('mainsFreq') == 0.0:
+                cfg.set('mainsFreq', self.mains_freq)
             else:
-                cfg['mainsFreq'][0] = 0.0
+                cfg.set('mainsFreq', 0.0)
             self.update_plots()
         elif event.key == 'escape':
             self.remove_peak_annotation()
@@ -1252,8 +1139,7 @@ class SignalPlot:
 
 def main(cargs):
     # config file name:
-    prog, ext = os.path.splitext(sys.argv[0])
-    cfgfile = prog + '.cfg'
+    cfgfile = __package__ + '.cfg'
 
     # command line arguments:
     parser = argparse.ArgumentParser(description='Display waveform, spectrogram, power spectrum, envelope, and envelope spectrum of time series data.', epilog=f'version {__version__} by Jan Benda (2015-{__year__})')
@@ -1270,24 +1156,23 @@ def main(cargs):
     parser.add_argument('channel', nargs='?', default=0, type=int, help='channel to be displayed')
     args = parser.parse_args(cargs)
 
-    # load configuration from the current directory:
-    if os.path.isfile(cfgfile):
-        print('load configuration file %s' % cfgfile)
-        load_config(cfgfile, cfg)
-
     # set configuration from command line:
     if args.verbose != None:
-        cfg['verboseLevel'][0] = args.verbose
+        cfg.set('verboseLevel', args.verbose)
+
+    # load configuration file:
+    cfg.load_files(cfgfile, args.file, 3, cfg.value('verboseLevel'))
     
     # save configuration:
-    if len(args.save_config) > 0:
-        ext = os.path.splitext(args.save_config)[1]
-        if ext != '.cfg':
+    if args.save_config:
+        cfg.load_files(cfgfile, args.file, 3, cfg.value('verboseLevel'))
+        ext = os.path.splitext(cfgfile)[1]
+        if ext != os.extsep + 'cfg':
             print('configuration file name must have .cfg as extension!')
         else:
-            print('write configuration to %s ...' % args.save_config)
-            dump_config(args.save_config, cfg, cfgsec)
-        quit()
+            print('write configuration to %s ...' % cfgfile)
+            cfg.dump(cfgfile)
+        exit()
 
     # load data:
     filepath = args.file
