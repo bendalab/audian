@@ -9,13 +9,9 @@ import matplotlib.colors as mc
 import matplotlib.widgets as widgets
 import scipy.signal as sig
 from collections import OrderedDict
-from .version import __version__, __year__
 from audioio import load_audio, write_audio, PlayAudio, fade
-try:
-    from audioio import load_audio, write_audio, PlayAudio, fade
-    have_audioio = True
-except ImportError:
-    have_audioio = False
+from .version import __version__, __year__
+from .configfile import ConfigFile
 
     
 cfg = OrderedDict()
@@ -46,77 +42,7 @@ cfg['labelWidth'] = [ True, '', 'Display the width of the peak' ]
 cfgsec['verboseLevel'] = 'Debugging:'
 cfg['verboseLevel'] = [ 0, '', '0=off upto 4 very detailed' ]
 
-
-###############################################################################
-## load data:
     
-def load_audioio(filename, trace=0):
-    """
-    load audio file using audioio
-    """
-    data, rate = load_audio(filename)
-    if len(data.shape) == 1:
-        if trace >= 1:
-            print('number of traces in file is %d' % 1)
-            quit()
-        return rate, data
-    else:
-        tracen = data.shape[1]
-        if trace >= tracen:
-            print('number of traces in file is %d' % tracen)
-            quit()
-        return rate, data[:,trace]
-
-    
-def load_wavfile(filename, trace=0):
-    """
-    load wav file using scipy io.wavfile
-    """
-    from scipy.io import wavfile
-    rate, data = wavfile.read(filename)
-    if len(data.shape) == 1:
-        if trace >= 1:
-            print('number of traces in file is %d' % 1)
-            quit()
-        return rate, data/2.0**15, 'a.u.'
-    else:
-        tracen = data.shape[1]
-        if trace >= tracen:
-            print('number of traces in file is %d' % tracen)
-            quit()
-        return rate, data[:,trace]/2.0**15, 'a.u.'
-
-    
-def load_wave(filename, trace=0):
-    """
-    load wav file using wave module
-    """
-    try:
-        import wave
-    except ImportError:
-        print('python module "wave" is not installed.')
-        return load_wavfile(filename, trace)
-
-    wf = wave.open(filename, 'r')
-    (nchannels, sampwidth, rate, nframes, comptype, compname) = wf.getparams()
-    #print nchannels, sampwidth, rate, nframes, comptype, compname
-    buffer = wf.readframes(nframes)
-    format = 'i%d' % sampwidth
-    data = np.frombuffer(buffer, dtype=format).reshape(-1, nchannels)  # read data
-    wf.close()
-    if len(data.shape) == 1:
-        if trace >= 1:
-            print('number of traces in file is %d' % 1)
-            quit()
-        return rate, data/2.0**(sampwidth*8-1)
-    else:
-        tracen = data.shape[1]
-        if trace >= tracen:
-            print('number of traces in file is %d' % tracen)
-            quit()
-        return rate, data[:,trace]/2.0**(sampwidth*8-1)
-
-
 ###############################################################################
 ## filter and envelope:
 
@@ -574,12 +500,7 @@ class SignalPlot:
         self.peak_specmarker = []
         self.peak_annotation = []
         self.analysis_file = None
-
-        # audio output:
-        if have_audioio:
-            self.audio = PlayAudio()
-        else:
-            self.audio = None
+        self.audio = PlayAudio()
 
         # set key bindings:
         plt.rcParams['keymap.fullscreen'] = 'ctrl+f'
@@ -661,7 +582,7 @@ class SignalPlot:
         plt.show()
 
     def __del__(self):
-        if self.analysis_file != None:
+        if not self.analysis_file is None:
             self.analysis_file.close()
         if self.audio is not None:
             self.audio.close()
@@ -1319,8 +1240,6 @@ class SignalPlot:
         
 
     def play_segment(self):
-        if not have_audioio:
-            return
         t0 = int(np.round(self.toffset*self.rate))
         t1 = int(np.round((self.toffset+self.twindow)*self.rate))
         playdata = 1.0*self.data[t0:t1]
@@ -1328,8 +1247,6 @@ class SignalPlot:
         self.audio.play(playdata, self.rate, blocking=False)
         
     def play_all(self):
-        if not have_audioio:
-            return
         self.audio.play(self.data, self.rate, blocking=False)
                     
 
@@ -1377,10 +1294,8 @@ def main(cargs):
     channel = args.channel
     filename = os.path.basename(filepath)
     ext = os.path.splitext(filename)[1]
-    if have_audioio:
-        rate, data = load_audioio(filepath, channel)
-    else:
-        rate, data = load_wave(filepath, channel)
+    data, rate = load_audio(filepath)
+    data = data[:,channel]
     if not args.high_pass is None:
         if not args.low_pass is None:
             data = bandpass_filter(data, rate, args.high_pass, args.low_pass)
