@@ -410,7 +410,6 @@ class SignalPlot:
         gst = gs[0].subgridspec(2, 1, hspace=0.0)
         gsp = gs[1].subgridspec(1, 2)
         # trace plot:
-        #self.axt = self.fig.add_axes([ 0.1, 0.7, 0.87, 0.25 ])
         self.axt = self.fig.add_subplot(gst[0])
         self.axt.xaxis.set_major_locator(plt.NullLocator())
         self.axt.set_ylabel('Amplitude [{:s}]'.format(self.unit))
@@ -436,13 +435,11 @@ class SignalPlot:
         self.helptext.append(ht)
         #self.axt.set_xticklabels([])
         # spectrogram:
-        #self.axs = self.fig.add_axes([ 0.1, 0.45, 0.87, 0.25 ])
         self.axs = self.fig.add_subplot(gst[1])
         self.axs.sharex(self.axt)
         self.axs.set_xlabel('Time [seconds]')
         self.axs.set_ylabel('Frequency [Hz]')
         # power spectrum:
-        #self.axp = self.fig.add_axes([ 0.1, 0.1, 0.4, 0.25 ])
         self.axp = self.fig.add_subplot(gsp[0])
         ht = self.axp.text(0.98, 0.9, 'r, R: frequency resolution', ha='right', transform=self.axp.transAxes)
         self.helptext.append(ht)
@@ -459,7 +456,6 @@ class SignalPlot:
         ht = self.axp.text(0.98, 0.1, 'S: save current spectrum to csv file', ha='right', transform=self.axp.transAxes)
         self.helptext.append(ht)
         # power spectrum of envelope:
-        #self.axpe = self.fig.add_axes([ 0.6, 0.1, 0.4, 0.25 ])
         self.axpe = self.fig.add_subplot(gsp[1])
         self.envcutoff_artist = self.axpe.text(0.05, 0.1, 'cutoff={:.0f} Hz'.format(self.envcutofffreq), transform=self.axpe.transAxes)
         ht = self.axpe.text(0.98, 0.9, 'c, C: envelope cutoff frequency', ha='right', transform=self.axpe.transAxes)
