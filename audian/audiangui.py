@@ -2,7 +2,7 @@ import os
 import sys
 import argparse
 import numpy as np
-from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, QLabel
+from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, QLabel, QFileDialog
 from PyQt5.QtGui import QKeySequence
 import pyqtgraph as pg
 from audioio import AudioLoader
@@ -64,21 +64,18 @@ class DataItem(pg.PlotDataItem):
         
 
 class MainWindow(QMainWindow):
-    def __init__(self, data, channel, rate, filename):
+    def __init__(self, file_path, channel):
         super().__init__()
 
         # data:
-        self.data = data
+        self.file_path = file_path
         self.channel = channel
-        self.rate = rate
-        self.filename = filename
+        self.data = None
+        self.rate = None
 
         # view:
         self.toffset = 0.0
         self.twindow = 2.0
-        tmax = len(self.data)/rate
-        if self.twindow > tmax:
-            self.twindow = np.round(2**(np.floor(np.log(tmax) / np.log(2.0)) + 1.0))
         self.ymin = -1.0
         self.ymax = +1.0
         
@@ -86,11 +83,11 @@ class MainWindow(QMainWindow):
         self.grids = 0
 
         # window title:
-        self.setWindowTitle(f'AUDIoANalyzer {__version__}: {os.path.basename(self.filename)} {channel}')
+        self.setWindowTitle(f'AUDIoANalyzer {__version__}: {os.path.basename(self.file_path)} {channel}')
         
         # file menu:
         open_act = QAction('&Open', self)
-        #act.setShortcut('F')
+        open_act.setShortcuts(QKeySequence.Open)
         open_act.setShortcuts(QKeySequence.Open)
         open_act.triggered.connect(self.open_file)
 
@@ -200,22 +197,46 @@ class MainWindow(QMainWindow):
 
         # main plots:
         self.axts = []
-        fig = pg.GraphicsLayoutWidget()
-        self.setCentralWidget(fig)
-        fig.setBackground(None)
+        self.fig = pg.GraphicsLayoutWidget()
+        self.setCentralWidget(self.fig)
+        self.fig.setBackground(None)
 
-        #trace1 = DataItem(self.data, self.rate, self.channel)
-        trace2 = DataItem(self.data, self.rate, self.channel)
-        #ax1 = fig.addPlot(row=0, col=0)
-        ax2 = fig.addPlot(row=0, col=0)
-        #self.trace_plot(ax1, len(data), rate)
-        self.trace_plot(ax2, len(data), rate)
-        #ax1.addItem(trace1)
-        ax2.addItem(trace2)
-        #ax1.setLabel('left', 'Sound', 'V', color='black')
-        ax2.setLabel('left', 'Sound', 'V', color='black')
-        ax2.setLabel('bottom', 'Time', 's', color='black')
+        self.ax = self.fig.addPlot(row=0, col=0)
+        self.trace = None
 
+        self.open()
+
+
+    def open(self):
+        print(self.file_path)
+        if not self.data is None:
+            self.data.close()
+        self.data = AudioLoader(self.file_path, 60.0)
+        self.rate = self.data.samplerate
+
+        self.toffset = 0.0
+        self.twindow = 2.0
+        tmax = len(self.data)/self.rate
+        if self.twindow > tmax:
+            self.twindow = np.round(2**(np.floor(np.log(tmax) / np.log(2.0)) + 1.0))
+        self.ymin = -1.0
+        self.ymax = +1.0
+
+        if not self.trace is None:
+            self.ax.removeItem(self.trace)
+            del self.trace
+        self.trace_plot(self.ax, len(self.data), self.rate)
+        self.trace = DataItem(self.data, self.rate, self.channel)
+        self.ax.addItem(self.trace)
+        self.ax.setLabel('left', 'Sound', 'V', color='black')
+        self.ax.setLabel('bottom', 'Time', 's', color='black')
+
+        
+    def open_file(self):
+        file_path = QFileDialog.getOpenFileName(self, directory='.', filter='All files (*);;Wave files (*.wav *.WAV);;MP3 files (*.mp3)')[0]
+        #file_paths = QFileDialog.getOpenFileNames(self)[0]
+        self.file_path = file_path
+        self.open()
 
 
     def trace_plot(self, ax, n, rate):
@@ -238,6 +259,12 @@ class MainWindow(QMainWindow):
         ax.setYRange(-1, 1)
         self.axts.append(ax)
 
+            
+    def set_xrange(self, viewbox, xrange):
+        self.toffset = xrange[0]
+        self.twindow = xrange[1] - xrange[0]
+        self.set_traces_xrange()
+        
 
     def set_traces_xrange(self):
         for ax in self.axts:
@@ -249,10 +276,6 @@ class MainWindow(QMainWindow):
     def set_traces_yrange(self):
         for ax in self.axts:
             ax.setYRange(self.ymin, self.ymax)
-
-        
-    def open_file(self):
-        print('open file')
 
         
     def zoom_x_in(self):
@@ -366,12 +389,6 @@ class MainWindow(QMainWindow):
         self.ymax = +dy/2
         self.set_traces_yrange()
             
-            
-    def set_xrange(self, viewbox, xrange):
-        self.toffset = xrange[0]
-        self.twindow = xrange[1] - xrange[0]
-        self.set_traces_xrange()
-        
 
     def toggle_mouse(self):
         if self.mouse_mode == pg.ViewBox.PanMode:
@@ -399,6 +416,8 @@ class MainWindow(QMainWindow):
 
             
     def quit(self):
+        if not self.data is None:
+            self.data.close()
         QApplication.quit()
 
 
@@ -421,11 +440,10 @@ def main(cargs):
     parser.add_argument('channel', nargs='?', default=0, type=int, help='channel to be displayed')
     args, qt_args = parser.parse_known_args(cargs)
     
-    with AudioLoader(args.file, 60.0) as data:
-        app = QApplication(sys.argv[:1] + qt_args)
-        main = MainWindow(data, 0, data.samplerate, args.file)
-        main.show()
-        app.exec_()
+    app = QApplication(sys.argv[:1] + qt_args)
+    main = MainWindow(args.file, args.channel)
+    main.show()
+    app.exec_()
 
 
 def run():
