@@ -1,5 +1,5 @@
 """
-Simple GUI for viewing biosignals.
+GUI for viewing biosignals.
 """
 
 from .version import __version__

@@ -3,9 +3,9 @@ from setuptools import setup, find_packages
 exec(open('audian/version.py').read())
 
 long_description = """
-# AUDIoANalyser
+# AUDIoANalyzer
 
-Simple GUI for viewing biosignals.
+GUI for viewing biosignals.
 """
 
 setup(
@@ -33,6 +33,7 @@ setup(
     entry_points = {
         'console_scripts': [
             'audian = audian.audian:run',
+            'audiangui = audian.audiangui:run',
         ]},
     python_requires = '>=3.4',
     install_requires = ['scipy', 'numpy', 'pyqtgraph', 'matplotlib', 'audioio'],

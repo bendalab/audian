@@ -1,3 +1,4 @@
+import os
 import sys
 import argparse
 import numpy as np
@@ -63,13 +64,14 @@ class DataItem(pg.PlotDataItem):
         
 
 class MainWindow(QMainWindow):
-    def __init__(self, data, channel, rate):
+    def __init__(self, data, channel, rate, filename):
         super().__init__()
 
         # data:
         self.data = data
         self.channel = channel
         self.rate = rate
+        self.filename = filename
 
         # view:
         self.toffset = 0.0
@@ -82,6 +84,9 @@ class MainWindow(QMainWindow):
         
         self.mouse_mode = pg.ViewBox.PanMode
         self.grids = 0
+
+        # window title:
+        self.setWindowTitle(f'AUDIoANalyzer {__version__}: {os.path.basename(self.filename)} {channel}')
         
         # file menu:
         open_act = QAction('&Open', self)
@@ -399,8 +404,7 @@ class MainWindow(QMainWindow):
 
 def main(cargs):
     # config file name:
-    #cfgfile = __package__ + '.cfg'
-    cfgfile = 'audian.cfg'
+    cfgfile = __package__ + '.cfg'
     
     # command line arguments:
     parser = argparse.ArgumentParser(description='Display waveform, spectrogram, power spectrum, envelope, and envelope spectrum of time series data.', epilog=f'version {__version__} by Jan Benda (2015-{__year__})')
@@ -419,7 +423,7 @@ def main(cargs):
     
     with AudioLoader(args.file, 60.0) as data:
         app = QApplication(sys.argv[:1] + qt_args)
-        main = MainWindow(data, 0, data.samplerate)
+        main = MainWindow(data, 0, data.samplerate, args.file)
         main.show()
         app.exec_()
 

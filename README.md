@@ -1,7 +1,7 @@
 [![PyPI license](https://img.shields.io/pypi/l/audian.svg)](https://pypi.python.org/pypi/audian/)
 [![PyPI version](https://badge.fury.io/py/audian.svg)](https://badge.fury.io/py/audian)
 
-# audian - AUDIoANalyser
+# audian - AUDIoANalyzer
 
 Simple python script for viewing and analyzing audio recordings of
 animal vocalizations.
@@ -20,6 +20,15 @@ filepath = 'data.wav'
 high_pass = 500.0
 audian.main(['-f', f'{high_pass}', filepath])
 ```
+
+## audiangui
+
+Still experimental new implementation of `audian` based on [pyqtgraph](https://pyqtgraph.readthedocs.io):
+
+``` sh
+audiangui data.wav
+```
+
 
 ## Run it from Spyder IPython console:
 
