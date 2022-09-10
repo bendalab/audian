@@ -35,5 +35,5 @@ setup(
             'audian = audian.audian:run',
         ]},
     python_requires = '>=3.4',
-    install_requires = ['scipy', 'numpy', 'matplotlib', 'audioio'],
+    install_requires = ['scipy', 'numpy', 'pyqtgraph', 'matplotlib', 'audioio'],
 )

@@ -343,7 +343,7 @@ def psd_peaks(psd_freqs, psd, cfg):
 ## plotting etc.
     
 class SignalPlot:
-    def __init__(self, samplingrate, data, unit, filename, channel, path):
+    def __init__(self, data, samplingrate, unit, filename, channel, path):
         self.filepath = ''
         if platform.system() == 'Windows':
             self.filepath = path
@@ -1228,11 +1228,12 @@ def main(cargs):
     unit = 'a.u.'
     
     # plot:
-    sp = SignalPlot(rate, data, unit, filename, channel, os.path.dirname(filepath))
+    sp = SignalPlot(data, rate, unit, filename, channel, os.path.dirname(filepath))
 
 
 def run():
     main(sys.argv[1:])
 
+    
 if __name__ == '__main__':
     run()
