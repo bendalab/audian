@@ -3,8 +3,8 @@
 
 # audian - AUDIoANalyzer
 
-Simple python script for viewing and analyzing audio recordings of
-animal vocalizations.
+Python-based GUI for viewing and analyzing recordings of animal
+vocalizations.
 
 Simply run it from a terminal:
 ``` sh

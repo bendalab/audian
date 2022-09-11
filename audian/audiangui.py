@@ -10,6 +10,9 @@ from .version import __version__, __year__
 from IPython import embed
 
 
+main_wins = []
+
+
 class DataItem(pg.PlotDataItem):
     
     def __init__(self, data, rate, channel, *args, **kwargs):
@@ -64,12 +67,12 @@ class DataItem(pg.PlotDataItem):
         
 
 class MainWindow(QMainWindow):
-    def __init__(self, file_path, channel):
+    def __init__(self, file_path, channels):
         super().__init__()
 
         # data:
-        self.file_path = file_path
-        self.channel = channel
+        self.file_path = file_path if file_path else None
+        self.channels = channels
         self.data = None
         self.rate = None
 
@@ -83,7 +86,7 @@ class MainWindow(QMainWindow):
         self.grids = 0
 
         # window title:
-        self.setWindowTitle(f'AUDIoANalyzer {__version__}: {os.path.basename(self.file_path)} {channel}')
+        self.setWindowTitle(f'AUDIoANalyzer {__version__}')
         
         # file menu:
         open_act = QAction('&Open', self)
@@ -208,11 +211,17 @@ class MainWindow(QMainWindow):
 
 
     def open(self):
-        print(self.file_path)
+        if not self.file_path:
+            return
         if not self.data is None:
             self.data.close()
         self.data = AudioLoader(self.file_path, 60.0)
         self.rate = self.data.samplerate
+        if len(self.channels) == 0:
+            self.show_channels = np.arange(self.data.channels)
+        else:
+            self.show_channels = np.array(self.channels)
+        self.channel = self.show_channels[0]
 
         self.toffset = 0.0
         self.twindow = 2.0
@@ -230,13 +239,16 @@ class MainWindow(QMainWindow):
         self.ax.addItem(self.trace)
         self.ax.setLabel('left', 'Sound', 'V', color='black')
         self.ax.setLabel('bottom', 'Time', 's', color='black')
+        self.setWindowTitle(f'AUDIoANalyzer {__version__}: {os.path.basename(self.file_path)} {self.channel}')
 
         
     def open_file(self):
-        file_path = QFileDialog.getOpenFileName(self, directory='.', filter='All files (*);;Wave files (*.wav *.WAV);;MP3 files (*.mp3)')[0]
-        #file_paths = QFileDialog.getOpenFileNames(self)[0]
-        self.file_path = file_path
-        self.open()
+        global main_wins
+        file_paths = QFileDialog.getOpenFileNames(self, directory='.', filter='All files (*);;Wave files (*.wav *.WAV);;MP3 files (*.mp3)')[0]
+        for file_path in file_paths:
+            main = MainWindow(file_path, self.channels)
+            main.show()
+            main_wins.append(main)
 
 
     def trace_plot(self, ax, n, rate):
@@ -426,23 +438,34 @@ def main(cargs):
     cfgfile = __package__ + '.cfg'
     
     # command line arguments:
-    parser = argparse.ArgumentParser(description='Display waveform, spectrogram, power spectrum, envelope, and envelope spectrum of time series data.', epilog=f'version {__version__} by Jan Benda (2015-{__year__})')
+    parser = argparse.ArgumentParser(description='Browse and analyze recordings of animal vocalizations..', epilog=f'version {__version__} by Jan Benda (2015-{__year__})')
     parser.add_argument('--version', action='version', version=__version__)
     parser.add_argument('-v', action='count', dest='verbose',
-                        help='print debug information')
-    parser.add_argument('-c', '--save-config', nargs='?', default='', const=cfgfile, type=str, metavar='cfgfile',
-                        help='save configuration to file cfgfile (defaults to {0})'.format(cfgfile))
+                        help='Print debug information')
+    parser.add_argument('--config', nargs='?', default='', const=cfgfile, type=str, metavar='CFGFILE',
+                        help='Save configuration to file cfgfile (defaults to {0})'.format(cfgfile))
+    parser.add_argument('-c', dest='channels', default='',
+                        type=str, metavar='CHANNELS',
+                        help='Comma separated list of channels to be displayed (first channel is 0).')
     parser.add_argument('-f', dest='high_pass', type=float, metavar='FREQ', default=None,
-                        help='cutoff frequency of highpass filter in Hz')
+                        help='Cutoff frequency of highpass filter in Hz')
     parser.add_argument('-l', dest='low_pass', type=float, metavar='FREQ', default=None,
-                        help='cutoff frequency of lowpass filter in Hz')
-    parser.add_argument('file', nargs='?', default='', type=str, help='name of the file with the time series data')
-    parser.add_argument('channel', nargs='?', default=0, type=int, help='channel to be displayed')
+                        help='Cutoff frequency of lowpass filter in Hz')
+    parser.add_argument('files', nargs='*', default=[], type=str, help='name of the file with the time series data')
     args, qt_args = parser.parse_known_args(cargs)
+
+    cs = [s.strip() for s in args.channels.split(',')]
+    channels = [int(c) for c in cs if len(c)>0]
     
     app = QApplication(sys.argv[:1] + qt_args)
-    main = MainWindow(args.file, args.channel)
-    main.show()
+    if len(args.files) == 0:
+        main = MainWindow(None, channels)
+        main.show()
+    else:
+        for file_path in args.files:
+            main = MainWindow(file_path, channels)
+            main.show()
+            main_wins.append(main)
     app.exec_()
 
 

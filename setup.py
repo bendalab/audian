@@ -13,7 +13,7 @@ setup(
     version = __version__,
     author = 'Jan Benda',
     author_email = "jan.benda@uni-tuebingen.de",
-    description = 'Simple GUI for viewing biosignals.',
+    description = 'GUI for viewing and analyzing recordings of animal vocalizations.',
     long_description = long_description,
     long_description_content_type = "text/markdown",
     url = "https://github.com/bendalab/audian",
