@@ -4,6 +4,7 @@ import argparse
 import numpy as np
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtWidgets import QAction, QPushButton, QFileDialog
+from PyQt5.QtWidgets import QWidget, QVBoxLayout
 from PyQt5.QtGui import QKeySequence
 import pyqtgraph as pg
 from audioio import AudioLoader
@@ -64,6 +65,9 @@ class DataItem(pg.PlotDataItem):
         self.data = data
         self.rate = rate
         self.channel = channel
+        self.ymin = -1.0
+        self.ymax = +1.0
+        
         pg.PlotDataItem.__init__(self, *args, connect='all',
                                  antialias=False, skipFiniteCheck=True,
                                  **kwargs)
@@ -109,6 +113,42 @@ class DataItem(pg.PlotDataItem):
                 self.setSymbol('o')
             else:
                 self.setSymbol(None)
+
+
+    def zoom_y_in(self):
+        h = 0.25*(self.ymax - self.ymin)
+        c = 0.5*(self.ymax + self.ymin)
+        self.ymin = c - h
+        self.ymax = c + h
+
+        
+    def zoom_y_out(self):
+        h = self.ymax - self.ymin
+        c = 0.5*(self.ymax + self.ymin)
+        self.ymin = c - h
+        self.ymax = c + h
+        
+        
+    def auto_y(self, toffset, twindow):
+        t0 = int(np.round(toffset * self.rate))
+        t1 = int(np.round((toffset + twindow) * self.rate))
+        ymin = np.min(self.data[t0:t1, self.channel])
+        ymax = np.max(self.data[t0:t1, self.channel])
+        h = 0.5*(ymax - ymin)
+        c = 0.5*(ymax + ymin)
+        self.ymin = c - h
+        self.ymax = c + h
+
+        
+    def reset_y(self):
+        self.ymin = -1.0
+        self.ymax = +1.0
+
+
+    def center_y(self):
+        dy = self.ymax - self.ymin
+        self.ymin = -dy/2
+        self.ymax = +dy/2
         
 
 class MainWindow(QMainWindow):
@@ -125,8 +165,6 @@ class MainWindow(QMainWindow):
         # view:
         self.toffset = 0.0
         self.twindow = 2.0
-        self.ymin = -1.0
-        self.ymax = +1.0
         
         self.mouse_mode = pg.ViewBox.PanMode
         self.grids = 0
@@ -135,15 +173,10 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f'AUDIoANalyzer {__version__}')
         self.setup_file_actions()
         self.setup_view_actions()
-
-        # main plots:
-        self.axts = []
-        self.fig = pg.GraphicsLayoutWidget()
-        self.setCentralWidget(self.fig)
-        self.fig.setBackground(None)
-
-        self.ax = self.fig.addPlot(row=0, col=0)
-        self.trace = None
+        vbox_widget = QWidget(self)
+        self.vbox = QVBoxLayout(vbox_widget)
+        self.vbox.setSpacing(0)
+        self.setCentralWidget(vbox_widget)
 
         self.open()
 
@@ -229,6 +262,13 @@ class MainWindow(QMainWindow):
         centery_act.setShortcut('C')
         centery_act.triggered.connect(self.center_y)
 
+        toggle_channel_acts = []
+        for c in range(10):
+            togglechannel_act = QAction(f'Toggle channel &{c}', self)
+            togglechannel_act.setShortcut(f'{c}')
+            togglechannel_act.triggered.connect(lambda x, c=c: self.toggle_channel(c))
+            toggle_channel_acts.append(togglechannel_act)
+
         grid_act = QAction('Toggle &grid', self)
         grid_act.setShortcut('g')
         grid_act.triggered.connect(self.toggle_grids)
@@ -259,6 +299,9 @@ class MainWindow(QMainWindow):
         view_menu.addAction(resety_act)
         view_menu.addAction(centery_act)
         view_menu.addSeparator()
+        for act in toggle_channel_acts:
+            view_menu.addAction(act)
+        view_menu.addSeparator()
         view_menu.addAction(mouse_act)
         view_menu.addAction(grid_act)
         view_menu.addAction(maximize_act)
@@ -271,29 +314,38 @@ class MainWindow(QMainWindow):
             self.data.close()
         self.data = AudioLoader(self.file_path, 60.0)
         self.rate = self.data.samplerate
-        if len(self.channels) == 0:
-            self.show_channels = np.arange(self.data.channels)
-        else:
-            self.show_channels = np.array(self.channels)
-        self.channel = self.show_channels[0]
+        self.setWindowTitle(f'AUDIoANalyzer {__version__}: {os.path.basename(self.file_path)}')
 
         self.toffset = 0.0
         self.twindow = 2.0
         self.tmax = len(self.data)/self.rate
         if self.twindow > self.tmax:
             self.twindow = np.round(2**(np.floor(np.log(self.tmax) / np.log(2.0)) + 1.0))
-        self.ymin = -1.0
-        self.ymax = +1.0
+        
+        if len(self.channels) == 0:
+            self.show_channels = np.arange(self.data.channels)
+        else:
+            self.show_channels = np.array([c for c in self.channels if c < self.data.channels])
+        channel = self.show_channels[0]  # TODO: remove
 
-        if not self.trace is None:
-            self.ax.removeItem(self.trace)
-            del self.trace
-        self.trace_plot(self.ax, len(self.data), self.rate)
-        self.trace = DataItem(self.data, self.rate, self.channel)
-        self.ax.addItem(self.trace)
-        self.ax.setLabel('left', 'Sound', 'V', color='black')
-        self.ax.setLabel('bottom', 'Time', 's', color='black')
-        self.setWindowTitle(f'AUDIoANalyzer {__version__}: {os.path.basename(self.file_path)} {self.channel}')
+        self.figs = []
+        self.axts = []
+        self.traces = []
+        for c in range(self.data.channels):
+            fig = pg.GraphicsLayoutWidget()
+            fig.setBackground(None)
+            self.vbox.addWidget(fig, 1)
+            ax = fig.addPlot(row=0, col=0)
+            trace = DataItem(self.data, self.rate, c)
+            self.traces.append(trace)
+            self.setup_trace_plot(ax, c)
+            ax.addItem(trace)
+            ax.setLabel('left', f'channel {c}', color='black')
+            ax.setLabel('bottom', 'Time', 's', color='black')
+            ax.getAxis('bottom').showLabel(c == self.data.channels-1)
+            ax.getAxis('bottom').setStyle(showValues=(c == self.data.channels-1))
+            self.figs.append(fig)
+            self.axts.append(ax)
 
         
     def open_files(self):
@@ -305,25 +357,24 @@ class MainWindow(QMainWindow):
             main_wins.append(main)
 
 
-    def trace_plot(self, ax, n, rate):
-        tmax = n/rate
-        if self.twindow > tmax:
-            self.twindow = tmax
+    def setup_trace_plot(self, ax, c):
         ax.getViewBox().setBackgroundColor('black')
         ax.getViewBox().setDefaultPadding(padding=0.0)
         ax.getViewBox().setLimits(xMin=0,
-                                  xMax=max(tmax, self.toffset + self.twindow),
-                                  yMin=-1, yMax=1,
-                                  minXRange=10/rate, maxXRange=tmax,
-                                  minYRange=1/2**16, maxYRange=2)
+                                  xMax=max(self.tmax,
+                                           self.toffset + self.twindow),
+                                  yMin=self.traces[c].ymin,
+                                  yMax=self.traces[c].ymax,
+                                  minXRange=10/self.rate, maxXRange=self.tmax,
+                                  minYRange=1/2**16,
+                                  maxYRange=self.traces[c].ymax - self.traces[c].ymin)
         ax.getAxis('bottom').setTextPen('black')
         ax.getAxis('left').setTextPen('black')
-        ax.getAxis('left').setWidth(60)
+        ax.getAxis('left').setWidth(80)
         ax.enableAutoRange(False, False)
         ax.setXRange(self.toffset, self.toffset + self.twindow)
         ax.sigXRangeChanged.connect(self.set_xrange)
-        ax.setYRange(-1, 1)
-        self.axts.append(ax)
+        ax.setYRange(self.traces[c].ymin, self.traces[c].ymax)
 
             
     def set_xrange(self, viewbox, xrange):
@@ -337,11 +388,6 @@ class MainWindow(QMainWindow):
             ax.getViewBox().setLimits(xMax=max(self.tmax,
                                                self.toffset + self.twindow))
             ax.setXRange(self.toffset, self.toffset + self.twindow)
-
-
-    def set_traces_yrange(self):
-        for ax in self.axts:
-            ax.setYRange(self.ymin, self.ymax)
 
         
     def zoom_x_in(self):
@@ -416,44 +462,38 @@ class MainWindow(QMainWindow):
 
 
     def zoom_y_in(self):
-        h = 0.25*(self.ymax - self.ymin)
-        c = 0.5*(self.ymax + self.ymin)
-        self.ymin = c - h
-        self.ymax = c + h
-        self.set_traces_yrange()
+        for ax, trace in zip(self.axts, self.traces):
+            trace.zoom_y_in()
+            ax.setYRange(trace.ymin, trace.ymax)
 
         
     def zoom_y_out(self):
-        h = self.ymax - self.ymin
-        c = 0.5*(self.ymax + self.ymin)
-        self.ymin = c - h
-        self.ymax = c + h
-        self.set_traces_yrange()
+        for ax, trace in zip(self.axts, self.traces):
+            trace.zoom_y_out()
+            ax.setYRange(trace.ymin, trace.ymax)
         
         
     def auto_y(self):
-        t0 = int(np.round(self.toffset * self.rate))
-        t1 = int(np.round((self.toffset + self.twindow) * self.rate))
-        ymin = np.min(self.data[t0:t1, self.channel])
-        ymax = np.max(self.data[t0:t1, self.channel])
-        h = 0.5*(ymax - ymin)
-        c = 0.5*(ymax + ymin)
-        self.ymin = c - h
-        self.ymax = c + h
-        self.set_traces_yrange()
+        for ax, trace in zip(self.axts, self.traces):
+            trace.auto_y(self.toffset, self.twindow)
+            ax.setYRange(trace.ymin, trace.ymax)
 
         
     def reset_y(self):
-        self.ymin = -1.0
-        self.ymax = +1.0
-        self.set_traces_yrange()
+        for ax, trace in zip(self.axts, self.traces):
+            trace.reset_y()
+            ax.setYRange(trace.ymin, trace.ymax)
 
 
     def center_y(self):
-        dy = self.ymax - self.ymin
-        self.ymin = -dy/2
-        self.ymax = +dy/2
-        self.set_traces_yrange()
+        for ax, trace in zip(self.axts, self.traces):
+            trace.center_y()
+            ax.setYRange(trace.ymin, trace.ymax)
+
+
+    def toggle_channel(self, channel):
+        if len(self.figs) > channel:
+            self.figs[channel].setVisible(not self.figs[channel].isVisible())
             
 
     def toggle_zoom_mode(self):
