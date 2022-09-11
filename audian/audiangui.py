@@ -20,11 +20,18 @@ class MenuWindow(QMainWindow):
         super().__init__()
         self.channels = channels
         self.setWindowTitle(f'AUDIoANalyzer {__version__}')
-        
-        # file menu:
+        self.setup_file_actions()
+
+        # button:
+        open_button = QPushButton('&Open files')
+        open_button.clicked.connect(self.open_files)
+        self.setCentralWidget(open_button)
+
+
+    def setup_file_actions(self):
         open_act = QAction('&Open', self)
         open_act.setShortcuts(QKeySequence.Open)
-        open_act.triggered.connect(self.open_file)
+        open_act.triggered.connect(self.open_files)
 
         quit_act = QAction('&Quit', self)
         quit_act.setShortcuts(QKeySequence.Quit)
@@ -33,14 +40,9 @@ class MenuWindow(QMainWindow):
         file_menu = self.menuBar().addMenu('&File')
         file_menu.addAction(open_act)
         file_menu.addAction(quit_act)
-
-        # button:
-        open_button = QPushButton('&Open Files')
-        open_button.clicked.connect(self.open_file)
-        self.setCentralWidget(open_button)
         
         
-    def open_file(self):
+    def open_files(self):
         global main_wins
         file_paths = QFileDialog.getOpenFileNames(self, directory='.', filter='All files (*);;Wave files (*.wav *.WAV);;MP3 files (*.mp3)')[0]
         for file_path in reversed(file_paths):
@@ -85,7 +87,7 @@ class DataItem(pg.PlotDataItem):
         start = max(0, int(trange[0]*self.rate))
         stop = min(len(self.data), int(trange[1]*self.rate+1))
         step = max(1, (stop - start)//10000)
-        if step > 10:
+        if step > 1:
             # min - max: (good but a bit slow - let numba do it!)
             step2 = step//2
             step = step2*2
@@ -93,7 +95,7 @@ class DataItem(pg.PlotDataItem):
             data = np.array([(np.min(self.data[start+k*step:start+(k+1)*step, self.channel]), np.max(self.data[start+k*step:start+(k+1)*step, self.channel])) for k in range(n)]).reshape((-1))
             self.setData(np.arange(start, start + len(data)*step2, step2)/self.rate, data)
             self.setPen(dict(color='#00ff00', width=1.1))
-        elif step > 1:
+        elif step > 1:  # TODO: not used
             # subsample:
             self.setData(np.arange(start, stop, step)/self.rate,
                          self.data[start:stop:step, self.channel])
@@ -128,13 +130,27 @@ class MainWindow(QMainWindow):
         self.mouse_mode = pg.ViewBox.PanMode
         self.grids = 0
 
-        # window title:
+        # window:
         self.setWindowTitle(f'AUDIoANalyzer {__version__}')
-        
-        # file menu:
+        self.setup_file_actions()
+        self.setup_view_actions()
+
+        # main plots:
+        self.axts = []
+        self.fig = pg.GraphicsLayoutWidget()
+        self.setCentralWidget(self.fig)
+        self.fig.setBackground(None)
+
+        self.ax = self.fig.addPlot(row=0, col=0)
+        self.trace = None
+
+        self.open()
+
+
+    def setup_file_actions(self):
         open_act = QAction('&Open', self)
         open_act.setShortcuts(QKeySequence.Open)
-        open_act.triggered.connect(self.open_file)
+        open_act.triggered.connect(self.open_files)
 
         close_act = QAction('&Close', self)
         close_act.setShortcut('q')  # QKeySequence.Close
@@ -150,7 +166,8 @@ class MainWindow(QMainWindow):
         file_menu.addAction(close_act)
         file_menu.addAction(quit_act)
 
-        # view menu:
+
+    def setup_view_actions(self):
         zoomxin_act = QAction('Zoom &in', self)
         zoomxin_act.setShortcuts(['+', '=', 'Shift+X']) # + QKeySequence.ZoomIn
         zoomxin_act.triggered.connect(self.zoom_x_in)
@@ -215,9 +232,9 @@ class MainWindow(QMainWindow):
         grid_act.setShortcut('g')
         grid_act.triggered.connect(self.toggle_grids)
 
-        mouse_act = QAction('Toggle &mouse', self)
+        mouse_act = QAction('Toggle &zoom mode', self)
         mouse_act.setShortcut('o')
-        mouse_act.triggered.connect(self.toggle_mouse)
+        mouse_act.triggered.connect(self.toggle_zoom_mode)
 
         maximize_act = QAction('Toggle &maximize', self)
         maximize_act.setShortcut('m')
@@ -245,18 +262,7 @@ class MainWindow(QMainWindow):
         view_menu.addAction(grid_act)
         view_menu.addAction(maximize_act)
 
-        # main plots:
-        self.axts = []
-        self.fig = pg.GraphicsLayoutWidget()
-        self.setCentralWidget(self.fig)
-        self.fig.setBackground(None)
-
-        self.ax = self.fig.addPlot(row=0, col=0)
-        self.trace = None
-
-        self.open()
-
-
+        
     def open(self):
         if not self.file_path:
             return
@@ -289,7 +295,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f'AUDIoANalyzer {__version__}: {os.path.basename(self.file_path)} {self.channel}')
 
         
-    def open_file(self):
+    def open_files(self):
         global main_wins
         file_paths = QFileDialog.getOpenFileNames(self, directory='.', filter='All files (*);;Wave files (*.wav *.WAV);;MP3 files (*.mp3)')[0]
         for file_path in reversed(file_paths):
@@ -427,8 +433,8 @@ class MainWindow(QMainWindow):
     def auto_y(self):
         t0 = int(np.round(self.toffset * self.rate))
         t1 = int(np.round((self.toffset + self.twindow)*self.rate))
-        ymin = np.min(self.data[t0:t1])
-        ymax = np.max(self.data[t0:t1])
+        ymin = np.min(self.data[t0:t1, self.channel])
+        ymax = np.max(self.data[t0:t1, self.channel])
         h = 0.5*(ymax - ymin)
         c = 0.5*(ymax + ymin)
         self.ymin = c - h
@@ -449,7 +455,7 @@ class MainWindow(QMainWindow):
         self.set_traces_yrange()
             
 
-    def toggle_mouse(self):
+    def toggle_zoom_mode(self):
         if self.mouse_mode == pg.ViewBox.PanMode:
             self.mouse_mode = pg.ViewBox.RectMode
         else:
