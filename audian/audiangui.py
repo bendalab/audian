@@ -120,6 +120,7 @@ class MainWindow(QMainWindow):
         self.channels = channels
         self.data = None
         self.rate = None
+        self.tmax = 0.0
 
         # view:
         self.toffset = 0.0
@@ -278,9 +279,9 @@ class MainWindow(QMainWindow):
 
         self.toffset = 0.0
         self.twindow = 2.0
-        tmax = len(self.data)/self.rate
-        if self.twindow > tmax:
-            self.twindow = np.round(2**(np.floor(np.log(tmax) / np.log(2.0)) + 1.0))
+        self.tmax = len(self.data)/self.rate
+        if self.twindow > self.tmax:
+            self.twindow = np.round(2**(np.floor(np.log(self.tmax) / np.log(2.0)) + 1.0))
         self.ymin = -1.0
         self.ymax = +1.0
 
@@ -333,7 +334,7 @@ class MainWindow(QMainWindow):
 
     def set_traces_xrange(self):
         for ax in self.axts:
-            ax.getViewBox().setLimits(xMax=max(len(self.data)/self.rate,
+            ax.getViewBox().setLimits(xMax=max(self.tmax,
                                                self.toffset + self.twindow))
             ax.setXRange(self.toffset, self.toffset + self.twindow)
 
@@ -344,19 +345,19 @@ class MainWindow(QMainWindow):
 
         
     def zoom_x_in(self):
-        if self.twindow*self.rate >= 20:
+        if self.twindow * self.rate >= 20:
             self.twindow *= 0.5
             self.set_traces_xrange()
         
         
     def zoom_x_out(self):
-        if self.toffset + self.twindow < len(self.data)/self.rate:
+        if self.toffset + self.twindow < self.tmax:
             self.twindow *= 2.0
             self.set_traces_xrange()
 
                 
     def page_down(self):
-        if self.toffset + self.twindow < len(self.data)/self.rate:
+        if self.toffset + self.twindow < self.tmax:
             self.toffset += 0.5*self.twindow
             self.set_traces_xrange()
 
@@ -370,10 +371,10 @@ class MainWindow(QMainWindow):
 
                 
     def large_down(self):
-        if self.toffset + self.twindow < len(self.data)/self.rate:
+        if self.toffset + self.twindow < self.tmax:
             for k in range(5):
                 self.toffset += self.twindow
-                if self.toffset + self.twindow >= len(self.data)/self.rate:
+                if self.toffset + self.twindow >= self.tmax:
                     break
             self.set_traces_xrange()
 
@@ -387,7 +388,7 @@ class MainWindow(QMainWindow):
 
                 
     def data_down(self):
-        if self.toffset + self.twindow < len(self.data)/self.rate:
+        if self.toffset + self.twindow < self.tmax:
             self.toffset += 0.05*self.twindow
             self.set_traces_xrange()
 
@@ -407,7 +408,7 @@ class MainWindow(QMainWindow):
 
                 
     def data_end(self):
-        n2 = np.floor(len(self.data)/self.rate / (0.5*self.twindow))
+        n2 = np.floor(self.tmax / (0.5*self.twindow))
         toffs = max(0, n2-1)  * 0.5*self.twindow
         if self.toffset < toffs:
             self.toffset = toffs
@@ -432,7 +433,7 @@ class MainWindow(QMainWindow):
         
     def auto_y(self):
         t0 = int(np.round(self.toffset * self.rate))
-        t1 = int(np.round((self.toffset + self.twindow)*self.rate))
+        t1 = int(np.round((self.toffset + self.twindow) * self.rate))
         ymin = np.min(self.data[t0:t1, self.channel])
         ymax = np.max(self.data[t0:t1, self.channel])
         h = 0.5*(ymax - ymin)
