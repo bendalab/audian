@@ -2,7 +2,8 @@ import os
 import sys
 import argparse
 import numpy as np
-from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, QLabel, QFileDialog
+from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QAction, QPushButton, QFileDialog
 from PyQt5.QtGui import QKeySequence
 import pyqtgraph as pg
 from audioio import AudioLoader
@@ -10,7 +11,49 @@ from .version import __version__, __year__
 from IPython import embed
 
 
+# list of all open data files:
 main_wins = []
+
+
+class MenuWindow(QMainWindow):
+    def __init__(self, channels):
+        super().__init__()
+        self.channels = channels
+        self.setWindowTitle(f'AUDIoANalyzer {__version__}')
+        
+        # file menu:
+        open_act = QAction('&Open', self)
+        open_act.setShortcuts(QKeySequence.Open)
+        open_act.triggered.connect(self.open_file)
+
+        quit_act = QAction('&Quit', self)
+        quit_act.setShortcuts(QKeySequence.Quit)
+        quit_act.triggered.connect(self.quit)
+        
+        file_menu = self.menuBar().addMenu('&File')
+        file_menu.addAction(open_act)
+        file_menu.addAction(quit_act)
+
+        # button:
+        open_button = QPushButton('&Open Files')
+        open_button.clicked.connect(self.open_file)
+        self.setCentralWidget(open_button)
+        
+        
+    def open_file(self):
+        global main_wins
+        file_paths = QFileDialog.getOpenFileNames(self, directory='.', filter='All files (*);;Wave files (*.wav *.WAV);;MP3 files (*.mp3)')[0]
+        for file_path in reversed(file_paths):
+            main = MainWindow(file_path, self.channels)
+            main.show()
+            main_wins.append(main)
+        if len(main_wins) > 0:
+            self.close()
+
+            
+    def quit(self):
+        QApplication.quit()
+
 
 
 class DataItem(pg.PlotDataItem):
@@ -91,16 +134,20 @@ class MainWindow(QMainWindow):
         # file menu:
         open_act = QAction('&Open', self)
         open_act.setShortcuts(QKeySequence.Open)
-        open_act.setShortcuts(QKeySequence.Open)
         open_act.triggered.connect(self.open_file)
 
+        close_act = QAction('&Close', self)
+        close_act.setShortcut('q')  # QKeySequence.Close
+        close_act.triggered.connect(self.close)
+
         quit_act = QAction('&Quit', self)
-        quit_act.setShortcut('q')
+        quit_act.setShortcuts(QKeySequence.Quit)
         quit_act.triggered.connect(self.quit)
         
         file_menu = self.menuBar().addMenu('&File')
         file_menu.addAction(open_act)
         file_menu.addSeparator()
+        file_menu.addAction(close_act)
         file_menu.addAction(quit_act)
 
         # view menu:
@@ -245,7 +292,7 @@ class MainWindow(QMainWindow):
     def open_file(self):
         global main_wins
         file_paths = QFileDialog.getOpenFileNames(self, directory='.', filter='All files (*);;Wave files (*.wav *.WAV);;MP3 files (*.mp3)')[0]
-        for file_path in file_paths:
+        for file_path in reversed(file_paths):
             main = MainWindow(file_path, self.channels)
             main.show()
             main_wins.append(main)
@@ -427,9 +474,17 @@ class MainWindow(QMainWindow):
             self.showMaximized()
 
             
+    def close(self):
+        global main_wins
+        QMainWindow.close(self)
+        main_wins.remove(self)
+
+            
     def quit(self):
-        if not self.data is None:
-            self.data.close()
+        global main_wins
+        print(main_wins)
+        for win in reversed(main_wins):
+            win.close()
         QApplication.quit()
 
 
@@ -459,10 +514,10 @@ def main(cargs):
     
     app = QApplication(sys.argv[:1] + qt_args)
     if len(args.files) == 0:
-        main = MainWindow(None, channels)
+        main = MenuWindow(channels)
         main.show()
     else:
-        for file_path in args.files:
+        for file_path in reversed(args.files):
             main = MainWindow(file_path, channels)
             main.show()
             main_wins.append(main)
