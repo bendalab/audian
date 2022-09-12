@@ -172,8 +172,6 @@ class MainWindow(QMainWindow):
 
         # window:
         self.setWindowTitle(f'AUDIoANalyzer {__version__}')
-        self.setup_file_actions()
-        self.setup_view_actions()
         vbox_widget = QWidget(self)
         self.vbox = QVBoxLayout(vbox_widget)
         self.vbox.setSpacing(0)
@@ -181,7 +179,11 @@ class MainWindow(QMainWindow):
 
         self.open()
 
+        # actions:
+        self.setup_file_actions()
+        self.setup_view_actions()
 
+        
     def setup_file_actions(self):
         open_act = QAction('&Open', self)
         open_act.setShortcuts(QKeySequence.Open)
@@ -263,12 +265,17 @@ class MainWindow(QMainWindow):
         centery_act.setShortcut('C')
         centery_act.triggered.connect(self.center_y)
 
+        togglecbars_act = QAction('Toggle color bars', self)
+        togglecbars_act.setShortcut('Shift+C')
+        togglecbars_act.triggered.connect(self.toggle_colorbars)
+
         toggle_channel_acts = []
-        for c in range(10):
-            togglechannel_act = QAction(f'Toggle channel &{c}', self)
-            togglechannel_act.setShortcut(f'{c}')
-            togglechannel_act.triggered.connect(lambda x, c=c: self.toggle_channel(c))
-            toggle_channel_acts.append(togglechannel_act)
+        if self.data.channels > 1:
+            for c in range(min(10, self.data.channels)):
+                togglechannel_act = QAction(f'Toggle channel &{c}', self)
+                togglechannel_act.setShortcut(f'{c}')
+                togglechannel_act.triggered.connect(lambda x, c=c: self.toggle_channel(c))
+                toggle_channel_acts.append(togglechannel_act)
 
         grid_act = QAction('Toggle &grid', self)
         grid_act.setShortcut('g')
@@ -300,6 +307,7 @@ class MainWindow(QMainWindow):
         view_menu.addAction(resety_act)
         view_menu.addAction(centery_act)
         view_menu.addSeparator()
+        view_menu.addAction(togglecbars_act)
         for act in toggle_channel_acts:
             view_menu.addAction(act)
         view_menu.addSeparator()
@@ -330,11 +338,12 @@ class MainWindow(QMainWindow):
         channel = self.show_channels[0]  # TODO: remove
 
         self.figs = []
-        self.axs  = []  # all plots
-        self.axts = []  # plots with time axis
-        self.axys = []  # plots with amplitude axis
-        self.axfs = []  # plots with frequency axis
-        self.axgs = []  # plots with grids
+        self.axs  = []   # all plots
+        self.axts = []   # plots with time axis
+        self.axys = []   # plots with amplitude axis
+        self.axfs = []   # plots with frequency axis
+        self.axgs = []   # plots with grids
+        self.cbars = []  # all color bars
         self.traces = []
         self.specs = []
         for c in range(self.data.channels):
@@ -354,11 +363,7 @@ class MainWindow(QMainWindow):
             zmin = zmax - 60
             pg.setConfigOptions(imageAxisOrder='row-major')
             axs = fig.addPlot(row=0, col=0)
-            spec = pg.ImageItem() # self.data, self.rate, c)
-            cm = pg.colormap.get('CET-R4')   # R2, R4, L3
-            spec.setColorMap(cm)
-            spec.setLevels([zmin, zmax])
-            spec.setImage(Sxx)
+            spec = pg.ImageItem(Sxx) # self.data, self.rate, c)
             spec.scale(time[-1]/len(time), freq[-1]/len(freq))
             axs.setLimits(xMin=0, xMax=time[-1], yMin=0, yMax=freq[-1])
             self.specs.append(spec)
@@ -368,6 +373,14 @@ class MainWindow(QMainWindow):
             axs.setLabel('bottom', 'Time', 's', color='black')
             axs.getAxis('bottom').showLabel(False)
             axs.getAxis('bottom').setStyle(showValues=False)
+            cbar = pg.ColorBarItem(colorMap='CET-R4', interactive=True,
+                                   rounding=1, limits=(-200, 20))
+            cbar.setLabel('right', 'Power [dB]')
+            cbar.getAxis('right').setTextPen('black')
+            cbar.setLevels([zmin, zmax])
+            cbar.setImageItem(spec)
+            self.cbars.append(cbar)
+            fig.addItem(cbar, row=0, col=1)
             self.axts.append(axs)
             self.axfs.append(axs)
             self.axs.append(axs)
@@ -555,6 +568,11 @@ class MainWindow(QMainWindow):
     def toggle_channel(self, channel):
         if len(self.figs) > channel:
             self.figs[channel].setVisible(not self.figs[channel].isVisible())
+            
+
+    def toggle_colorbars(self):
+        for cb in self.cbars:
+            cb.setVisible(not cb.isVisible())
             
 
     def toggle_zoom_mode(self):
