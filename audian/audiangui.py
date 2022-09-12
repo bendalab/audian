@@ -2,6 +2,7 @@ import os
 import sys
 import argparse
 import numpy as np
+from scipy.signal import spectrogram
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtWidgets import QAction, QPushButton, QFileDialog
 from PyQt5.QtWidgets import QWidget, QVBoxLayout
@@ -59,7 +60,7 @@ class MenuWindow(QMainWindow):
 
 
 
-class DataItem(pg.PlotDataItem):
+class TraceItem(pg.PlotDataItem):
     
     def __init__(self, data, rate, channel, *args, **kwargs):
         self.data = data
@@ -79,10 +80,10 @@ class DataItem(pg.PlotDataItem):
 
         
     def viewRangeChanged(self):
-        self.updateDataPlot()
+        self.update()
     
 
-    def updateDataPlot(self):
+    def update(self):
         vb = self.getViewBox()
         if not isinstance(vb, pg.ViewBox):
             return
@@ -329,23 +330,59 @@ class MainWindow(QMainWindow):
         channel = self.show_channels[0]  # TODO: remove
 
         self.figs = []
-        self.axts = []
+        self.axs  = []  # all plots
+        self.axts = []  # plots with time axis
+        self.axys = []  # plots with amplitude axis
+        self.axfs = []  # plots with frequency axis
         self.traces = []
+        self.specs = []
         for c in range(self.data.channels):
+            # one figure per channel:
             fig = pg.GraphicsLayoutWidget()
             fig.setBackground(None)
             self.vbox.addWidget(fig, 1)
-            ax = fig.addPlot(row=0, col=0)
-            trace = DataItem(self.data, self.rate, c)
-            self.traces.append(trace)
-            self.setup_trace_plot(ax, c)
-            ax.addItem(trace)
-            ax.setLabel('left', f'channel {c}', color='black')
-            ax.setLabel('bottom', 'Time', 's', color='black')
-            ax.getAxis('bottom').showLabel(c == self.data.channels-1)
-            ax.getAxis('bottom').setStyle(showValues=(c == self.data.channels-1))
             self.figs.append(fig)
-            self.axts.append(ax)
+            # spectrograms:
+            nfft = 2048//4
+            freq, time, Sxx = spectrogram(self.data[:, c], self.rate, nperseg=nfft, noverlap=nfft/2)
+            Sxx = 10*np.log10(Sxx)
+            print(np.max(Sxx))
+            zmax = np.percentile(Sxx, 99.9) + 5.0
+            #zmin = np.percentile(Sxx, 50.0)
+            #zmax = -20
+            zmin = zmax - 60
+            pg.setConfigOptions(imageAxisOrder='row-major')
+            axs = fig.addPlot(row=0, col=0)
+            spec = pg.ImageItem() # self.data, self.rate, c)
+            cm = pg.colormap.get('CET-R4')   # R2, R4, L3
+            spec.setColorMap(cm)
+            spec.setLevels([zmin, zmax])
+            spec.setImage(Sxx)
+            spec.scale(time[-1]/len(time), freq[-1]/len(freq))
+            axs.setLimits(xMin=0, xMax=time[-1], yMin=0, yMax=freq[-1])
+            self.specs.append(spec)
+            self.setup_spec_plot(axs, c)
+            axs.addItem(spec)
+            axs.setLabel('left', 'Frequency', 'Hz', color='black')
+            axs.setLabel('bottom', 'Time', 's', color='black')
+            axs.getAxis('bottom').showLabel(False)
+            axs.getAxis('bottom').setStyle(showValues=False)
+            self.axts.append(axs)
+            self.axfs.append(axs)
+            self.axs.append(axs)
+            # trace plot:
+            axt = fig.addPlot(row=1, col=0)
+            trace = TraceItem(self.data, self.rate, c)
+            self.traces.append(trace)
+            self.setup_trace_plot(axt, c)
+            axt.addItem(trace)
+            axt.setLabel('left', f'channel {c}', color='black')
+            axt.setLabel('bottom', 'Time', 's', color='black')
+            axt.getAxis('bottom').showLabel(c == self.data.channels-1)
+            axt.getAxis('bottom').setStyle(showValues=(c == self.data.channels-1))
+            self.axts.append(axt)
+            self.axys.append(axt)
+            self.axs.append(axt)
 
         
     def open_files(self):
@@ -375,6 +412,28 @@ class MainWindow(QMainWindow):
         ax.setXRange(self.toffset, self.toffset + self.twindow)
         ax.sigXRangeChanged.connect(self.set_xrange)
         ax.setYRange(self.traces[c].ymin, self.traces[c].ymax)
+
+
+    def setup_spec_plot(self, ax, c):
+        ax.getViewBox().setBackgroundColor('black')
+        ax.getViewBox().setDefaultPadding(padding=0.0)
+        """
+        ax.getViewBox().setLimits(xMin=0,
+                                  xMax=max(self.tmax,
+                                           self.toffset + self.twindow),
+                                  yMin=self.traces[c].ymin,
+                                  yMax=self.traces[c].ymax,
+                                  minXRange=10/self.rate, maxXRange=self.tmax,
+                                  minYRange=1/2**16,
+                                  maxYRange=self.traces[c].ymax - self.traces[c].ymin)
+        """
+        ax.getAxis('bottom').setTextPen('black')
+        ax.getAxis('left').setTextPen('black')
+        ax.getAxis('left').setWidth(80)
+        ax.enableAutoRange(False, False)
+        ax.setXRange(self.toffset, self.toffset + self.twindow)
+        ax.sigXRangeChanged.connect(self.set_xrange)
+        #ax.setYRange(self.traces[c].ymin, self.traces[c].ymax)
 
             
     def set_xrange(self, viewbox, xrange):
@@ -462,31 +521,31 @@ class MainWindow(QMainWindow):
 
 
     def zoom_y_in(self):
-        for ax, trace in zip(self.axts, self.traces):
+        for ax, trace in zip(self.axys, self.traces):
             trace.zoom_y_in()
             ax.setYRange(trace.ymin, trace.ymax)
 
         
     def zoom_y_out(self):
-        for ax, trace in zip(self.axts, self.traces):
+        for ax, trace in zip(self.axys, self.traces):
             trace.zoom_y_out()
             ax.setYRange(trace.ymin, trace.ymax)
         
         
     def auto_y(self):
-        for ax, trace in zip(self.axts, self.traces):
+        for ax, trace in zip(self.axys, self.traces):
             trace.auto_y(self.toffset, self.twindow)
             ax.setYRange(trace.ymin, trace.ymax)
 
         
     def reset_y(self):
-        for ax, trace in zip(self.axts, self.traces):
+        for ax, trace in zip(self.axys, self.traces):
             trace.reset_y()
             ax.setYRange(trace.ymin, trace.ymax)
 
 
     def center_y(self):
-        for ax, trace in zip(self.axts, self.traces):
+        for ax, trace in zip(self.axys, self.traces):
             trace.center_y()
             ax.setYRange(trace.ymin, trace.ymax)
 
@@ -501,7 +560,7 @@ class MainWindow(QMainWindow):
             self.mouse_mode = pg.ViewBox.RectMode
         else:
             self.mouse_mode = pg.ViewBox.PanMode
-        for ax in self.axts:
+        for ax in self.axs:
             ax.getViewBox().setMouseMode(self.mouse_mode)
 
             
@@ -509,7 +568,7 @@ class MainWindow(QMainWindow):
         self.grids -= 1
         if self.grids < 0:
             self.grids = 3
-        for ax in self.axts:
+        for ax in self.axs:
             ax.showGrid(x=(self.grids & 1) > 0, y=(self.grids & 2) > 0,
                         alpha=0.8)
 
