@@ -334,6 +334,7 @@ class MainWindow(QMainWindow):
         self.axts = []  # plots with time axis
         self.axys = []  # plots with amplitude axis
         self.axfs = []  # plots with frequency axis
+        self.axgs = []  # plots with grids
         self.traces = []
         self.specs = []
         for c in range(self.data.channels):
@@ -382,6 +383,7 @@ class MainWindow(QMainWindow):
             axt.getAxis('bottom').setStyle(showValues=(c == self.data.channels-1))
             self.axts.append(axt)
             self.axys.append(axt)
+            self.axgs.append(axt)
             self.axs.append(axt)
 
         
@@ -568,9 +570,15 @@ class MainWindow(QMainWindow):
         self.grids -= 1
         if self.grids < 0:
             self.grids = 3
-        for ax in self.axs:
+        for ax in self.axgs:
             ax.showGrid(x=(self.grids & 1) > 0, y=(self.grids & 2) > 0,
                         alpha=0.8)
+            # fix grid bug:
+            ax.getAxis('bottom').setGrid(False)
+            ax.getAxis('left').setGrid(False)
+            for axis in ['right', 'top']:
+                ax.showAxis(axis)
+                ax.getAxis(axis).setStyle(showValues=False)
 
 
     def toggle_maximize(self):
