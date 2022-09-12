@@ -265,8 +265,16 @@ class MainWindow(QMainWindow):
         centery_act.setShortcut('C')
         centery_act.triggered.connect(self.center_y)
 
+        toggletraces_act = QAction('Toggle traces', self)
+        toggletraces_act.setShortcut('Ctrl+T')
+        toggletraces_act.triggered.connect(self.toggle_traces)
+
+        togglespectros_act = QAction('Toggle spectrograms', self)
+        togglespectros_act.setShortcut('Ctrl+S')
+        togglespectros_act.triggered.connect(self.toggle_spectrograms)
+
         togglecbars_act = QAction('Toggle color bars', self)
-        togglecbars_act.setShortcut('Shift+C')
+        togglecbars_act.setShortcut('Ctrl+C')
         togglecbars_act.triggered.connect(self.toggle_colorbars)
 
         toggle_channel_acts = []
@@ -307,6 +315,8 @@ class MainWindow(QMainWindow):
         view_menu.addAction(resety_act)
         view_menu.addAction(centery_act)
         view_menu.addSeparator()
+        view_menu.addAction(toggletraces_act)
+        view_menu.addAction(togglespectros_act)
         view_menu.addAction(togglecbars_act)
         for act in toggle_channel_acts:
             view_menu.addAction(act)
@@ -338,12 +348,14 @@ class MainWindow(QMainWindow):
         channel = self.show_channels[0]  # TODO: remove
 
         self.figs = []
-        self.axs  = []   # all plots
-        self.axts = []   # plots with time axis
-        self.axys = []   # plots with amplitude axis
-        self.axfs = []   # plots with frequency axis
-        self.axgs = []   # plots with grids
-        self.cbars = []  # all color bars
+        self.axs  = []     # all plots
+        self.axts = []     # plots with time axis
+        self.axys = []     # plots with amplitude axis
+        self.axfs = []     # plots with frequency axis
+        self.axgs = []     # plots with grids
+        self.axtraces = [] # all traces
+        self.axspecs = []  # all spectrogams
+        self.cbars = []    # all color bars
         self.traces = []
         self.specs = []
         for c in range(self.data.channels):
@@ -383,6 +395,7 @@ class MainWindow(QMainWindow):
             fig.addItem(cbar, row=0, col=1)
             self.axts.append(axs)
             self.axfs.append(axs)
+            self.axspecs.append(axs)
             self.axs.append(axs)
             # trace plot:
             axt = fig.addPlot(row=1, col=0)
@@ -397,6 +410,7 @@ class MainWindow(QMainWindow):
             self.axts.append(axt)
             self.axys.append(axt)
             self.axgs.append(axt)
+            self.axtraces.append(axt)
             self.axs.append(axt)
 
         
@@ -570,6 +584,21 @@ class MainWindow(QMainWindow):
             self.figs[channel].setVisible(not self.figs[channel].isVisible())
             
 
+    def toggle_traces(self):
+        for axt, axs in zip(self.axtraces, self.axspecs):
+            if axt.isVisible():
+                axs.setVisible(True)
+            axt.setVisible(not axt.isVisible())
+            
+
+    def toggle_spectrograms(self):
+        self.toggle_colorbars()
+        for axt, axs in zip(self.axtraces, self.axspecs):
+            if axs.isVisible():
+                axt.setVisible(True)
+            axs.setVisible(not axs.isVisible())
+            
+
     def toggle_colorbars(self):
         for cb in self.cbars:
             cb.setVisible(not cb.isVisible())
@@ -614,7 +643,6 @@ class MainWindow(QMainWindow):
             
     def quit(self):
         global main_wins
-        print(main_wins)
         for win in reversed(main_wins):
             win.close()
         QApplication.quit()
