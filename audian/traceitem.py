@@ -30,6 +30,12 @@ class TraceItem(pg.PlotDataItem):
         if not isinstance(vb, pg.ViewBox):
             return
 
+        # amplitude:
+        yrange = vb.viewRange()[1]
+        self.ymin = yrange[0]
+        self.ymax = yrange[1]
+
+        # time:
         trange = vb.viewRange()[0]
         start = max(0, int(trange[0]*self.rate))
         stop = min(len(self.data), int(trange[1]*self.rate+1))

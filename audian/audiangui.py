@@ -419,6 +419,7 @@ class MainWindow(QMainWindow):
         ax.setXRange(self.toffset, self.toffset + self.twindow)
         ax.sigXRangeChanged.connect(self.set_xrange)
         ax.setYRange(self.f0, self.f1)
+        ax.sigYRangeChanged.connect(self.set_frange)
 
             
     def set_xrange(self, viewbox, xrange):
@@ -535,19 +536,25 @@ class MainWindow(QMainWindow):
             ax.setYRange(trace.ymin, trace.ymax)
 
 
-    def set_franges(self):
+    def set_freq_ranges(self):
         for ax in self.axfys:
             ax.setYRange(self.f0, self.f1)
         for ax in self.axfxs:
             ax.setXRange(self.f0, self.f1)
 
             
+    def set_frange(self, viewbox, frange):
+        self.f0 = frange[0]
+        self.f1 = frange[1]
+        self.set_freq_ranges()
+        
+            
     def zoom_freq_in(self):
         df = self.f1 - self.f0
         if df > 0.1:
             df *= 0.5
             self.f1 = self.f0 + df
-            self.set_franges()
+            self.set_freq_ranges()
             
         
     def zoom_freq_out(self):
@@ -563,7 +570,7 @@ class MainWindow(QMainWindow):
             if self.f0 < 0:
                 self.f0 = 0
                 self.f1 = df
-            self.set_franges()
+            self.set_freq_ranges()
                 
         
     def freq_down(self):
@@ -574,7 +581,7 @@ class MainWindow(QMainWindow):
             if self.f0 < 0.0:
                 self.f0 = 0.0
                 self.f1 = df
-            self.set_franges()
+            self.set_freq_ranges()
 
             
     def freq_up(self):
@@ -582,7 +589,7 @@ class MainWindow(QMainWindow):
             df = self.f1 - self.f0
             self.f0 += 0.5*df
             self.f1 += 0.5*df
-            self.set_franges()
+            self.set_freq_ranges()
 
 
     def freq_home(self):
@@ -590,7 +597,7 @@ class MainWindow(QMainWindow):
             df = self.f1 - self.f0
             self.f0 = 0.0
             self.f1 = df
-            self.set_franges()
+            self.set_freq_ranges()
 
             
     def freq_end(self):
@@ -601,7 +608,7 @@ class MainWindow(QMainWindow):
             if self.f0 < 0.0:
                 self.f0 = 0.0
                 self.f1 = df
-            self.set_franges()
+            self.set_freq_ranges()
 
         
     def freq_resolution_down(self):

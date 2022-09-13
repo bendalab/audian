@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.signal import spectrogram
+from PyQt5.QtCore import pyqtSignal
 import pyqtgraph as pg
 
 
@@ -86,6 +87,7 @@ class SpecItem(pg.ImageItem):
         if not isinstance(vb, pg.ViewBox):
             return
 
+        # time:
         trange = vb.viewRange()[0]
         start = max(0, int(trange[0]*self.rate))
         stop = min(len(self.data), int(trange[1]*self.rate+1))
