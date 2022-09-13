@@ -53,6 +53,7 @@ class SpecItem(pg.ImageItem):
         self.offset = 0
         self.fmax = 0.5/self.rate
         self.zmin, self.zmax = self.setNFFT(nfft)
+        self.cbar = None
 
 
     def setNFFT(self, nfft):
@@ -60,10 +61,16 @@ class SpecItem(pg.ImageItem):
         return self.updateSpec()
 
 
-    def setCBarLevels(self, cbar):
-        self.zmin = cbar.levels()[0]
-        self.zmax = cbar.levels()[1]
+    def setCBar(self, cbar):
+        self.cbar = cbar
+
+
+    def setCBarLevels(self, zmin, zmax):
+        self.zmin = zmin
+        self.zmax = zmax
         self.setLevels((self.zmin, self.zmax), update=True)
+        if not self.cbar is None:
+            self.cbar.setLevels((self.zmin, self.zmax))
         self.update()
 
         

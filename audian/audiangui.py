@@ -238,7 +238,7 @@ class MainWindow(QMainWindow):
         fresdown_act.setShortcut('R')
         fresdown_act.triggered.connect(self.freq_resolution_down)
         
-        freq_menu = self.menuBar().addMenu('&Frequency')
+        freq_menu = self.menuBar().addMenu('Frequenc&y')
         freq_menu.addAction(zoomfin_act)
         freq_menu.addAction(zoomfout_act)
         freq_menu.addAction(frequp_act)
@@ -356,9 +356,10 @@ class MainWindow(QMainWindow):
             cbar.getAxis('right').setTextPen('black')
             cbar.setLevels([spec.zmin, spec.zmax])
             cbar.setImageItem(spec)
-            cbar.sigLevelsChanged.connect(spec.setCBarLevels)
+            cbar.sigLevelsChanged.connect(self.set_cbar_levels)
             self.cbars.append(cbar)
             fig.addItem(cbar, row=0, col=1)
+            spec.setCBar(cbar)
             self.axts.append(axs)
             self.axfys.append(axs)
             self.axspecs.append(axs)
@@ -628,6 +629,13 @@ class MainWindow(QMainWindow):
             self.nfft = int(np.round(2**(np.floor(np.log(self.rate/self.fresolution) / np.log(2.0)))))
             for s in self.specs + self.psds:
                 s.setNFFT(self.nfft)
+
+
+    def set_cbar_levels(self, cbar):
+        zmin = cbar.levels()[0]
+        zmax = cbar.levels()[1]
+        for s in self.specs:
+            s.setCBarLevels(zmin, zmax)
 
             
     def toggle_channel(self, channel):
