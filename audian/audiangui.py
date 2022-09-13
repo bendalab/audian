@@ -299,7 +299,7 @@ class MainWindow(QMainWindow):
             return
         if not self.data is None:
             self.data.close()
-        self.data = AudioLoader(self.file_path, 60.0)
+        self.data = AudioLoader(self.file_path, 60.0, 10.0)
         self.rate = self.data.samplerate
         self.setWindowTitle(f'AUDIoANalyzer {__version__}: {os.path.basename(self.file_path)}')
 
@@ -319,6 +319,9 @@ class MainWindow(QMainWindow):
             self.show_channels = np.arange(self.data.channels)
         else:
             self.show_channels = np.array([c for c in self.channels if c < self.data.channels])
+
+        # load data:
+        self.data[0,:]
 
         self.figs = []     # all GraphicsLayoutWidgets - one for each channel
         self.axs  = []     # all plots

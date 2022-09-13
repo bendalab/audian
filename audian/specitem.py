@@ -50,25 +50,14 @@ class SpecItem(pg.ImageItem):
         self.data = data
         self.rate = rate
         self.channel = channel
+        self.offset = 0
         self.fmax = 0.5/self.rate
         self.zmin, self.zmax = self.setNFFT(nfft)
 
 
     def setNFFT(self, nfft):
         self.nfft = nfft
-        freq, time, Sxx = spectrogram(self.data[:, self.channel], self.rate, nperseg=self.nfft, noverlap=self.nfft-self.nfft//8)
-        self.fresolution = freq[1] - freq[0]
-        Sxx = decibel(Sxx)
-        #print(np.max(Sxx))
-        zmax = np.percentile(Sxx, 99.9) + 5.0
-        #zmin = np.percentile(Sxx, 70.0)
-        #zmax = -20
-        zmin = zmax - 60
-        self.fmax = freq[-1]
-        self.setImage(Sxx, autoLevels=False)
-        self.resetTransform()
-        self.scale(time[-1]/len(time), freq[-1]/len(freq))
-        return zmin, zmax
+        return self.updateSpec()
 
 
     def setCBarLevels(self, cbar):
@@ -79,16 +68,37 @@ class SpecItem(pg.ImageItem):
 
         
     def viewRangeChanged(self):
-        self.updateSpec()
-    
-
-    def updateSpec(self):
         vb = self.getViewBox()
         if not isinstance(vb, pg.ViewBox):
             return
-
-        # time:
+        
         trange = vb.viewRange()[0]
         start = max(0, int(trange[0]*self.rate))
         stop = min(len(self.data), int(trange[1]*self.rate+1))
-        step = max(1, (stop - start)//10000)
+        if start < self.data.offset or stop >= self.data.offset + len(self.data.buffer):
+            self.data.update_buffer(start, stop)
+        if self.offset != self.data.offset:
+            self.updateSpec()
+    
+
+    def updateSpec(self):
+        if len(self.data.buffer) == 0:
+            return 0, 1
+        
+        freq, time, Sxx = spectrogram(self.data.buffer[:, self.channel],
+                                      self.rate, nperseg=self.nfft,
+                                      noverlap=self.nfft-self.nfft//2)
+        self.fresolution = freq[1] - freq[0]
+        Sxx = decibel(Sxx)
+        #print(np.max(Sxx))
+        zmax = np.percentile(Sxx, 99.9) + 5.0
+        #zmin = np.percentile(Sxx, 70.0)
+        #zmax = -20
+        zmin = zmax - 60
+        self.fmax = freq[-1]
+        self.setImage(Sxx, autoLevels=False)
+        self.resetTransform()
+        self.translate(self.data.offset/self.rate, 0)
+        self.scale(time[-1]/len(time), freq[-1]/len(freq))
+        self.offset = self.data.offset
+        return zmin, zmax
