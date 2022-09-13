@@ -2,7 +2,6 @@ import os
 import sys
 import argparse
 import numpy as np
-from scipy.signal import spectrogram
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtWidgets import QAction, QPushButton, QFileDialog
 from PyQt5.QtWidgets import QWidget, QVBoxLayout
@@ -11,6 +10,7 @@ import pyqtgraph as pg
 from audioio import AudioLoader
 from .version import __version__, __year__
 from .traceitem import TraceItem
+from .specitem import SpecItem
 from IPython import embed
 
 
@@ -254,7 +254,6 @@ class MainWindow(QMainWindow):
             self.show_channels = np.arange(self.data.channels)
         else:
             self.show_channels = np.array([c for c in self.channels if c < self.data.channels])
-        channel = self.show_channels[0]  # TODO: remove
 
         self.figs = []
         self.axs  = []     # all plots
@@ -274,19 +273,9 @@ class MainWindow(QMainWindow):
             self.vbox.addWidget(fig, 1)
             self.figs.append(fig)
             # spectrograms:
-            nfft = 2048//4
-            freq, time, Sxx = spectrogram(self.data[:, c], self.rate, nperseg=nfft, noverlap=nfft/2)
-            Sxx = 10*np.log10(Sxx)
-            print(np.max(Sxx))
-            zmax = np.percentile(Sxx, 99.9) + 5.0
-            #zmin = np.percentile(Sxx, 50.0)
-            #zmax = -20
-            zmin = zmax - 60
-            pg.setConfigOptions(imageAxisOrder='row-major')
             axs = fig.addPlot(row=0, col=0)
-            spec = pg.ImageItem(Sxx) # self.data, self.rate, c)
-            spec.scale(time[-1]/len(time), freq[-1]/len(freq))
-            axs.setLimits(xMin=0, xMax=time[-1], yMin=0, yMax=freq[-1])
+            spec = SpecItem(self.data, self.rate, c)
+            axs.setLimits(xMin=0, xMax=self.tmax, yMin=spec.fmin, yMax=spec.fmax)
             self.specs.append(spec)
             self.setup_spec_plot(axs, c)
             axs.addItem(spec)
@@ -298,7 +287,7 @@ class MainWindow(QMainWindow):
                                    rounding=1, limits=(-200, 20))
             cbar.setLabel('right', 'Power [dB]')
             cbar.getAxis('right').setTextPen('black')
-            cbar.setLevels([zmin, zmax])
+            cbar.setLevels([spec.zmin, spec.zmax])
             cbar.setImageItem(spec)
             self.cbars.append(cbar)
             fig.addItem(cbar, row=0, col=1)
