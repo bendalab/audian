@@ -79,6 +79,8 @@ class MainWindow(QMainWindow):
         self.f0 = 0.0
         self.f1 = 1000.0
         self.fmax = 1000.0
+        self.fresolution = 500.0
+        self.nfft = 256
         
         self.mouse_mode = pg.ViewBox.PanMode
         self.grids = 0
@@ -202,6 +204,14 @@ class MainWindow(QMainWindow):
         freqend_act.setShortcuts(QKeySequence.MoveToNextWord)
         freqend_act.triggered.connect(self.freq_end)
 
+        fresup_act = QAction('Increase frequency resolution', self)
+        fresup_act.setShortcut('Shift+R')
+        fresup_act.triggered.connect(self.freq_resolution_up)
+
+        fresdown_act = QAction('Decrease frequency resolution', self)
+        fresdown_act.setShortcut('R')
+        fresdown_act.triggered.connect(self.freq_resolution_down)
+
         toggletraces_act = QAction('Toggle traces', self)
         toggletraces_act.setShortcut('Ctrl+T')
         toggletraces_act.triggered.connect(self.toggle_traces)
@@ -258,6 +268,8 @@ class MainWindow(QMainWindow):
         view_menu.addAction(freqdown_act)
         view_menu.addAction(freqhome_act)
         view_menu.addAction(freqend_act)
+        view_menu.addAction(fresup_act)
+        view_menu.addAction(fresdown_act)
         view_menu.addSeparator()
         view_menu.addAction(toggletraces_act)
         view_menu.addAction(togglespectros_act)
@@ -288,13 +300,15 @@ class MainWindow(QMainWindow):
         self.fmax = 0.5*self.rate
         self.f0 = 0.0
         self.f1 = self.fmax
+        self.nfft = 256
+        self.fresolution = self.rate/self.nfft
         
         if len(self.channels) == 0:
             self.show_channels = np.arange(self.data.channels)
         else:
             self.show_channels = np.array([c for c in self.channels if c < self.data.channels])
 
-        self.figs = []
+        self.figs = []     # all GraphicsLayoutWidgets - one for each channel
         self.axs  = []     # all plots
         self.axts = []     # plots with time axis
         self.axys = []     # plots with amplitude axis
@@ -302,10 +316,11 @@ class MainWindow(QMainWindow):
         self.axfys = []    # plots with y-frequency axis
         self.axgs = []     # plots with grids
         self.axtraces = [] # all traces
-        self.axspecs = []  # all spectrogams
+        self.axspecs = []  # all plots with spectrograms
+        self.traces = []   # all traces
+        self.specs = []    # all spectrograms
         self.cbars = []    # all color bars
-        self.traces = []
-        self.specs = []
+        self.psds = []     # all power spectra
         for c in range(self.data.channels):
             # one figure per channel:
             fig = pg.GraphicsLayoutWidget()
@@ -314,7 +329,7 @@ class MainWindow(QMainWindow):
             self.figs.append(fig)
             # spectrograms:
             axs = fig.addPlot(row=0, col=0)
-            spec = SpecItem(self.data, self.rate, c)
+            spec = SpecItem(self.data, self.rate, c, self.nfft)
             self.fmax = spec.fmax
             self.f1 = self.fmax
             axs.setLimits(xMin=0, xMax=self.tmax, yMin=0.0, yMax=spec.fmax)
@@ -587,7 +602,23 @@ class MainWindow(QMainWindow):
                 self.f1 = df
             self.set_franges()
 
-                
+        
+    def freq_resolution_down(self):
+        if self.fresolution < 10000.0 and self.nfft > 16:
+            self.fresolution *= 2.0
+            self.nfft = int(np.round(2**(np.floor(np.log(self.rate/self.fresolution) / np.log(2.0)))))
+            for s in self.specs + self.psds:
+                s.setNFFT(self.nfft)
+
+        
+    def freq_resolution_up(self):
+        if self.nfft*2 < len(self.data):
+            self.fresolution *= 0.5
+            self.nfft = int(np.round(2**(np.floor(np.log(self.rate/self.fresolution) / np.log(2.0)))))
+            for s in self.specs + self.psds:
+                s.setNFFT(self.nfft)
+
+            
     def toggle_channel(self, channel):
         if len(self.figs) > channel:
             self.figs[channel].setVisible(not self.figs[channel].isVisible())
