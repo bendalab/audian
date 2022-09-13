@@ -96,6 +96,9 @@ class MainWindow(QMainWindow):
 
         # actions:
         self.setup_file_actions()
+        self.setup_time_actions()
+        self.setup_amplitude_actions()
+        self.setup_frequency_actions()
         self.setup_view_actions()
 
         
@@ -119,7 +122,7 @@ class MainWindow(QMainWindow):
         file_menu.addAction(quit_act)
 
 
-    def setup_view_actions(self):
+    def setup_time_actions(self):
         zoomxin_act = QAction('Zoom &in', self)
         zoomxin_act.setShortcuts(['+', '=', 'Shift+X']) # + QKeySequence.ZoomIn
         zoomxin_act.triggered.connect(self.zoom_x_in)
@@ -160,67 +163,102 @@ class MainWindow(QMainWindow):
         datahome_act.setShortcuts([QKeySequence.MoveToStartOfLine, QKeySequence.MoveToStartOfDocument])
         datahome_act.triggered.connect(self.data_home)
 
-        zoomyin_act = QAction('Zoom y in', self)
+        time_menu = self.menuBar().addMenu('&Time')
+        time_menu.addAction(zoomxin_act)
+        time_menu.addAction(zoomxout_act)
+        time_menu.addAction(pagedown_act)
+        time_menu.addAction(pageup_act)
+        self.addAction(largedown_act)
+        self.addAction(largeup_act)
+        time_menu.addAction(datadown_act)
+        time_menu.addAction(dataup_act)
+        time_menu.addAction(dataend_act)
+        time_menu.addAction(datahome_act)
+
+        
+    def setup_amplitude_actions(self):
+        zoomyin_act = QAction('Zoom &in', self)
         zoomyin_act.setShortcut('Shift+Y')
         zoomyin_act.triggered.connect(self.zoom_y_in)
 
-        zoomyout_act = QAction('Zoom y out', self)
+        zoomyout_act = QAction('Zoom &out', self)
         zoomyout_act.setShortcut('Y')
         zoomyout_act.triggered.connect(self.zoom_y_out)
 
-        autoy_act = QAction('Auto set y', self)
+        autoy_act = QAction('&Auto scale', self)
         autoy_act.setShortcut('v')
         autoy_act.triggered.connect(self.auto_y)
 
-        resety_act = QAction('Reset y range', self)
+        resety_act = QAction('&Reset', self)
         resety_act.setShortcut('Shift+V')
         resety_act.triggered.connect(self.reset_y)
 
-        centery_act = QAction('Center y range', self)
+        centery_act = QAction('&Center', self)
         centery_act.setShortcut('C')
         centery_act.triggered.connect(self.center_y)
 
-        zoomfin_act = QAction('Zoom frequency in', self)
+        ampl_menu = self.menuBar().addMenu('&Amplitude')
+        ampl_menu.addAction(zoomyin_act)
+        ampl_menu.addAction(zoomyout_act)
+        ampl_menu.addAction(autoy_act)
+        ampl_menu.addAction(resety_act)
+        ampl_menu.addAction(centery_act)
+
+
+    def setup_frequency_actions(self):
+        zoomfin_act = QAction('Zoom &in', self)
         zoomfin_act.setShortcut('Shift+F')
         zoomfin_act.triggered.connect(self.zoom_freq_in)
 
-        zoomfout_act = QAction('Zoom frequency out', self)
+        zoomfout_act = QAction('Zoom &out', self)
         zoomfout_act.setShortcut('F')
         zoomfout_act.triggered.connect(self.zoom_freq_out)
 
-        frequp_act = QAction('Frequency up', self)
+        frequp_act = QAction('Move &up', self)
         frequp_act.setShortcuts(QKeySequence.MoveToNextChar)
         frequp_act.triggered.connect(self.freq_up)
 
-        freqdown_act = QAction('Frequency down', self)
+        freqdown_act = QAction('Move &down', self)
         freqdown_act.setShortcuts(QKeySequence.MoveToPreviousChar)
         freqdown_act.triggered.connect(self.freq_down)
 
-        freqhome_act = QAction('Frequency home', self)
+        freqhome_act = QAction('&Home', self)
         freqhome_act.setShortcuts(QKeySequence.MoveToPreviousWord)
         freqhome_act.triggered.connect(self.freq_home)
 
-        freqend_act = QAction('Frequency end', self)
+        freqend_act = QAction('&End', self)
         freqend_act.setShortcuts(QKeySequence.MoveToNextWord)
         freqend_act.triggered.connect(self.freq_end)
 
-        fresup_act = QAction('Increase frequency resolution', self)
+        fresup_act = QAction('Increase &resolution', self)
         fresup_act.setShortcut('Shift+R')
         fresup_act.triggered.connect(self.freq_resolution_up)
 
-        fresdown_act = QAction('Decrease frequency resolution', self)
+        fresdown_act = QAction('De&crease resolution', self)
         fresdown_act.setShortcut('R')
         fresdown_act.triggered.connect(self.freq_resolution_down)
+        
+        freq_menu = self.menuBar().addMenu('&Frequency')
+        freq_menu.addAction(zoomfin_act)
+        freq_menu.addAction(zoomfout_act)
+        freq_menu.addAction(frequp_act)
+        freq_menu.addAction(freqdown_act)
+        freq_menu.addAction(freqhome_act)
+        freq_menu.addAction(freqend_act)
+        freq_menu.addAction(fresup_act)
+        freq_menu.addAction(fresdown_act)
 
-        toggletraces_act = QAction('Toggle traces', self)
+
+    def setup_view_actions(self):
+        toggletraces_act = QAction('Toggle &traces', self)
         toggletraces_act.setShortcut('Ctrl+T')
         toggletraces_act.triggered.connect(self.toggle_traces)
 
-        togglespectros_act = QAction('Toggle spectrograms', self)
+        togglespectros_act = QAction('Toggle &spectrograms', self)
         togglespectros_act.setShortcut('Ctrl+S')
         togglespectros_act.triggered.connect(self.toggle_spectrograms)
 
-        togglecbars_act = QAction('Toggle color bars', self)
+        togglecbars_act = QAction('Toggle &color bars', self)
         togglecbars_act.setShortcut('Ctrl+C')
         togglecbars_act.triggered.connect(self.toggle_colorbars)
 
@@ -245,32 +283,6 @@ class MainWindow(QMainWindow):
         maximize_act.triggered.connect(self.toggle_maximize)
 
         view_menu = self.menuBar().addMenu('&View')
-        view_menu.addAction(zoomxin_act)
-        view_menu.addAction(zoomxout_act)
-        view_menu.addAction(pagedown_act)
-        view_menu.addAction(pageup_act)
-        self.addAction(largedown_act)
-        self.addAction(largeup_act)
-        view_menu.addAction(datadown_act)
-        view_menu.addAction(dataup_act)
-        view_menu.addAction(dataend_act)
-        view_menu.addAction(datahome_act)
-        view_menu.addSeparator()
-        view_menu.addAction(zoomyin_act)
-        view_menu.addAction(zoomyout_act)
-        view_menu.addAction(autoy_act)
-        view_menu.addAction(resety_act)
-        view_menu.addAction(centery_act)
-        view_menu.addSeparator()
-        view_menu.addAction(zoomfin_act)
-        view_menu.addAction(zoomfout_act)
-        view_menu.addAction(frequp_act)
-        view_menu.addAction(freqdown_act)
-        view_menu.addAction(freqhome_act)
-        view_menu.addAction(freqend_act)
-        view_menu.addAction(fresup_act)
-        view_menu.addAction(fresdown_act)
-        view_menu.addSeparator()
         view_menu.addAction(toggletraces_act)
         view_menu.addAction(togglespectros_act)
         view_menu.addAction(togglecbars_act)
