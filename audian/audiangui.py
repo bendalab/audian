@@ -125,43 +125,43 @@ class MainWindow(QMainWindow):
     def setup_time_actions(self):
         zoomxin_act = QAction('Zoom &in', self)
         zoomxin_act.setShortcuts(['+', '=', 'Shift+X']) # + QKeySequence.ZoomIn
-        zoomxin_act.triggered.connect(self.zoom_x_in)
+        zoomxin_act.triggered.connect(self.zoom_time_in)
 
         zoomxout_act = QAction('Zoom &out', self)
         zoomxout_act.setShortcuts(['-', 'x']) # + QKeySequence.ZoomOut
-        zoomxout_act.triggered.connect(self.zoom_x_out)
+        zoomxout_act.triggered.connect(self.zoom_time_out)
 
         pagedown_act = QAction('Page &down', self)
         pagedown_act.setShortcuts(QKeySequence.MoveToNextPage)
-        pagedown_act.triggered.connect(self.page_down)
+        pagedown_act.triggered.connect(self.time_page_down)
 
         pageup_act = QAction('Page &up', self)
         pageup_act.setShortcuts(QKeySequence.MoveToPreviousPage)
-        pageup_act.triggered.connect(self.page_up)
+        pageup_act.triggered.connect(self.time_page_up)
 
         largedown_act = QAction('Block down', self)
         largedown_act.setShortcut('Ctrl+PgDown')
-        largedown_act.triggered.connect(self.large_down)
+        largedown_act.triggered.connect(self.time_block_down)
 
         largeup_act = QAction('Block up', self)
         largeup_act.setShortcut('Ctrl+PgUp')
-        largeup_act.triggered.connect(self.large_up)
+        largeup_act.triggered.connect(self.time_block_up)
 
         datadown_act = QAction('Data down', self)
         datadown_act.setShortcuts(QKeySequence.MoveToNextLine)
-        datadown_act.triggered.connect(self.data_down)
+        datadown_act.triggered.connect(self.time_down)
 
         dataup_act = QAction('Data up', self)
         dataup_act.setShortcuts(QKeySequence.MoveToPreviousLine)
-        dataup_act.triggered.connect(self.data_up)
+        dataup_act.triggered.connect(self.time_up)
 
         dataend_act = QAction('&End', self)
         dataend_act.setShortcuts([QKeySequence.MoveToEndOfLine, QKeySequence.MoveToEndOfDocument])
-        dataend_act.triggered.connect(self.data_end)
+        dataend_act.triggered.connect(self.time_end)
 
         datahome_act = QAction('&Home', self)
         datahome_act.setShortcuts([QKeySequence.MoveToStartOfLine, QKeySequence.MoveToStartOfDocument])
-        datahome_act.triggered.connect(self.data_home)
+        datahome_act.triggered.connect(self.time_home)
 
         time_menu = self.menuBar().addMenu('&Time')
         time_menu.addAction(zoomxin_act)
@@ -179,23 +179,23 @@ class MainWindow(QMainWindow):
     def setup_amplitude_actions(self):
         zoomyin_act = QAction('Zoom &in', self)
         zoomyin_act.setShortcut('Shift+Y')
-        zoomyin_act.triggered.connect(self.zoom_y_in)
+        zoomyin_act.triggered.connect(self.zoom_ampl_in)
 
         zoomyout_act = QAction('Zoom &out', self)
         zoomyout_act.setShortcut('Y')
-        zoomyout_act.triggered.connect(self.zoom_y_out)
+        zoomyout_act.triggered.connect(self.zoom_ampl_out)
 
         autoy_act = QAction('&Auto scale', self)
         autoy_act.setShortcut('v')
-        autoy_act.triggered.connect(self.auto_y)
+        autoy_act.triggered.connect(self.auto_ampl)
 
         resety_act = QAction('&Reset', self)
         resety_act.setShortcut('Shift+V')
-        resety_act.triggered.connect(self.reset_y)
+        resety_act.triggered.connect(self.reset_ampl)
 
         centery_act = QAction('&Center', self)
         centery_act.setShortcut('C')
-        centery_act.triggered.connect(self.center_y)
+        centery_act.triggered.connect(self.center_ampl)
 
         ampl_menu = self.menuBar().addMenu('&Amplitude')
         ampl_menu.addAction(zoomyin_act)
@@ -340,24 +340,20 @@ class MainWindow(QMainWindow):
             self.vbox.addWidget(fig, 1)
             self.figs.append(fig)
             # spectrograms:
-            axs = fig.addPlot(row=0, col=0)
             spec = SpecItem(self.data, self.rate, c, self.nfft)
             self.fmax = spec.fmax
             self.f1 = self.fmax
-            axs.setLimits(xMin=0, xMax=self.tmax, yMin=0.0, yMax=spec.fmax)
             self.specs.append(spec)
-            self.setup_spec_plot(axs, c)
+            axs = fig.addPlot(row=0, col=0)
             axs.addItem(spec)
-            axs.setLabel('left', 'Frequency', 'Hz', color='black')
-            axs.setLabel('bottom', 'Time', 's', color='black')
-            axs.getAxis('bottom').showLabel(False)
-            axs.getAxis('bottom').setStyle(showValues=False)
+            self.setup_spec_plot(axs, c)
             cbar = pg.ColorBarItem(colorMap='CET-R4', interactive=True,
                                    rounding=1, limits=(-200, 20))
             cbar.setLabel('right', 'Power [dB]')
             cbar.getAxis('right').setTextPen('black')
             cbar.setLevels([spec.zmin, spec.zmax])
             cbar.setImageItem(spec)
+            cbar.sigLevelsChanged.connect(spec.setCBarLevels)
             self.cbars.append(cbar)
             fig.addItem(cbar, row=0, col=1)
             self.axts.append(axs)
@@ -393,14 +389,12 @@ class MainWindow(QMainWindow):
     def setup_trace_plot(self, ax, c):
         ax.getViewBox().setBackgroundColor('black')
         ax.getViewBox().setDefaultPadding(padding=0.0)
-        ax.getViewBox().setLimits(xMin=0,
-                                  xMax=max(self.tmax,
-                                           self.toffset + self.twindow),
-                                  yMin=self.traces[c].ymin,
-                                  yMax=self.traces[c].ymax,
-                                  minXRange=10/self.rate, maxXRange=self.tmax,
-                                  minYRange=1/2**16,
-                                  maxYRange=self.traces[c].ymax - self.traces[c].ymin)
+        ax.setLimits(xMin=0,
+                     xMax=max(self.tmax, self.toffset + self.twindow),
+                     yMin=self.traces[c].ymin, yMax=self.traces[c].ymax,
+                     minXRange=10/self.rate, maxXRange=self.tmax,
+                     minYRange=1/2**16,
+                     maxYRange=self.traces[c].ymax - self.traces[c].ymin)
         ax.getAxis('bottom').setTextPen('black')
         ax.getAxis('left').setTextPen('black')
         ax.getAxis('left').setWidth(80)
@@ -413,23 +407,18 @@ class MainWindow(QMainWindow):
     def setup_spec_plot(self, ax, c):
         ax.getViewBox().setBackgroundColor('black')
         ax.getViewBox().setDefaultPadding(padding=0.0)
-        """
-        ax.getViewBox().setLimits(xMin=0,
-                                  xMax=max(self.tmax,
-                                           self.toffset + self.twindow),
-                                  yMin=self.traces[c].ymin,
-                                  yMax=self.traces[c].ymax,
-                                  minXRange=10/self.rate, maxXRange=self.tmax,
-                                  minYRange=1/2**16,
-                                  maxYRange=self.traces[c].ymax - self.traces[c].ymin)
-        """
+        ax.setLimits(xMin=0, xMax=self.tmax, yMin=0.0, yMax=self.fmax)
+        ax.setLabel('left', 'Frequency', 'Hz', color='black')
+        ax.setLabel('bottom', 'Time', 's', color='black')
+        ax.getAxis('bottom').showLabel(False)
+        ax.getAxis('bottom').setStyle(showValues=False)
         ax.getAxis('bottom').setTextPen('black')
         ax.getAxis('left').setTextPen('black')
         ax.getAxis('left').setWidth(80)
         ax.enableAutoRange(False, False)
         ax.setXRange(self.toffset, self.toffset + self.twindow)
         ax.sigXRangeChanged.connect(self.set_xrange)
-        #ax.setYRange(self.traces[c].ymin, self.traces[c].ymax)
+        ax.setYRange(self.f0, self.f1)
 
             
     def set_xrange(self, viewbox, xrange):
@@ -445,25 +434,25 @@ class MainWindow(QMainWindow):
             ax.setXRange(self.toffset, self.toffset + self.twindow)
 
         
-    def zoom_x_in(self):
+    def zoom_time_in(self):
         if self.twindow * self.rate >= 20:
             self.twindow *= 0.5
             self.set_traces_xrange()
         
         
-    def zoom_x_out(self):
+    def zoom_time_out(self):
         if self.toffset + self.twindow < self.tmax:
             self.twindow *= 2.0
             self.set_traces_xrange()
 
                 
-    def page_down(self):
+    def time_page_down(self):
         if self.toffset + self.twindow < self.tmax:
             self.toffset += 0.5*self.twindow
             self.set_traces_xrange()
 
             
-    def page_up(self):
+    def time_page_up(self):
         if self.toffset > 0:
             self.toffset -= 0.5*self.twindow
             if self.toffset < 0.0:
@@ -471,7 +460,7 @@ class MainWindow(QMainWindow):
             self.set_traces_xrange()
 
                 
-    def large_down(self):
+    def time_block_down(self):
         if self.toffset + self.twindow < self.tmax:
             for k in range(5):
                 self.toffset += self.twindow
@@ -480,7 +469,7 @@ class MainWindow(QMainWindow):
             self.set_traces_xrange()
 
                 
-    def large_up(self):
+    def time_block_up(self):
         if self.toffset > 0:
             self.toffset -= 5.0*self.twindow
             if self.toffset < 0.0:
@@ -488,13 +477,13 @@ class MainWindow(QMainWindow):
             self.set_traces_xrange()
 
                 
-    def data_down(self):
+    def time_down(self):
         if self.toffset + self.twindow < self.tmax:
             self.toffset += 0.05*self.twindow
             self.set_traces_xrange()
 
                 
-    def data_up(self):
+    def time_up(self):
         if self.toffset > 0.0:
             self.toffset -= 0.05*self.twindow
             if self.toffset < 0.0:
@@ -502,13 +491,13 @@ class MainWindow(QMainWindow):
             self.set_traces_xrange()
 
                 
-    def data_home(self):
+    def time_home(self):
         if self.toffset > 0.0:
             self.toffset = 0.0
             self.set_traces_xrange()
 
                 
-    def data_end(self):
+    def time_end(self):
         n2 = np.floor(self.tmax / (0.5*self.twindow))
         toffs = max(0, n2-1)  * 0.5*self.twindow
         if self.toffset < toffs:
@@ -516,33 +505,33 @@ class MainWindow(QMainWindow):
             self.set_traces_xrange()
 
 
-    def zoom_y_in(self):
+    def zoom_ampl_in(self):
         for ax, trace in zip(self.axys, self.traces):
-            trace.zoom_y_in()
+            trace.zoom_ampl_in()
             ax.setYRange(trace.ymin, trace.ymax)
 
         
-    def zoom_y_out(self):
+    def zoom_ampl_out(self):
         for ax, trace in zip(self.axys, self.traces):
-            trace.zoom_y_out()
+            trace.zoom_ampl_out()
             ax.setYRange(trace.ymin, trace.ymax)
         
         
-    def auto_y(self):
+    def auto_ampl(self):
         for ax, trace in zip(self.axys, self.traces):
-            trace.auto_y(self.toffset, self.twindow)
+            trace.auto_ampl(self.toffset, self.twindow)
             ax.setYRange(trace.ymin, trace.ymax)
 
         
-    def reset_y(self):
+    def reset_ampl(self):
         for ax, trace in zip(self.axys, self.traces):
-            trace.reset_y()
+            trace.reset_ampl()
             ax.setYRange(trace.ymin, trace.ymax)
 
 
-    def center_y(self):
+    def center_ampl(self):
         for ax, trace in zip(self.axys, self.traces):
-            trace.center_y()
+            trace.center_ampl()
             ax.setYRange(trace.ymin, trace.ymax)
 
 

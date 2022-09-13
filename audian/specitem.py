@@ -50,10 +50,7 @@ class SpecItem(pg.ImageItem):
         self.rate = rate
         self.channel = channel
         self.fmax = 0.5/self.rate
-        self.zmin = -100.0
-        self.zmax = 0.0
-
-        self.setNFFT(nfft)
+        self.zmin, self.zmax = self.setNFFT(nfft)
 
 
     def setNFFT(self, nfft):
@@ -62,21 +59,29 @@ class SpecItem(pg.ImageItem):
         self.fresolution = freq[1] - freq[0]
         Sxx = decibel(Sxx)
         #print(np.max(Sxx))
-        self.zmax = np.percentile(Sxx, 99.9) + 5.0
-        #self.zmin = np.percentile(Sxx, 70.0)
-        #self.zmax = -20
-        self.zmin = self.zmax - 60
+        zmax = np.percentile(Sxx, 99.9) + 5.0
+        #zmin = np.percentile(Sxx, 70.0)
+        #zmax = -20
+        zmin = zmax - 60
         self.fmax = freq[-1]
         self.setImage(Sxx, autoLevels=False)
         self.resetTransform()
         self.scale(time[-1]/len(time), freq[-1]/len(freq))
+        return zmin, zmax
+
+
+    def setCBarLevels(self, cbar):
+        self.zmin = cbar.levels()[0]
+        self.zmax = cbar.levels()[1]
+        self.setLevels((self.zmin, self.zmax), update=True)
+        self.update()
 
         
     def viewRangeChanged(self):
-        self.update()
+        self.updateSpec()
     
 
-    def update(self):
+    def updateSpec(self):
         vb = self.getViewBox()
         if not isinstance(vb, pg.ViewBox):
             return

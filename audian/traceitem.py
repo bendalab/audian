@@ -22,10 +22,10 @@ class TraceItem(pg.PlotDataItem):
 
         
     def viewRangeChanged(self):
-        self.update()
+        self.updateTrace()
     
 
-    def update(self):
+    def updateTrace(self):
         vb = self.getViewBox()
         if not isinstance(vb, pg.ViewBox):
             return
@@ -58,21 +58,26 @@ class TraceItem(pg.PlotDataItem):
                 self.setSymbol(None)
 
 
-    def zoom_y_in(self):
+    def zoom_ampl_in(self):
         h = 0.25*(self.ymax - self.ymin)
         c = 0.5*(self.ymax + self.ymin)
         self.ymin = c - h
         self.ymax = c + h
 
         
-    def zoom_y_out(self):
+    def zoom_ampl_out(self):
         h = self.ymax - self.ymin
         c = 0.5*(self.ymax + self.ymin)
         self.ymin = c - h
         self.ymax = c + h
+        if self.ymax > 1:
+            self.ymax = 1
+            self.ymin = 1 - 2*h
+        if self.ymin < -1:
+            self.ymin = -1
         
         
-    def auto_y(self, toffset, twindow):
+    def auto_ampl(self, toffset, twindow):
         t0 = int(np.round(toffset * self.rate))
         t1 = int(np.round((toffset + twindow) * self.rate))
         ymin = np.min(self.data[t0:t1, self.channel])
@@ -83,12 +88,12 @@ class TraceItem(pg.PlotDataItem):
         self.ymax = c + h
 
         
-    def reset_y(self):
+    def reset_ampl(self):
         self.ymin = -1.0
         self.ymax = +1.0
 
 
-    def center_y(self):
+    def center_ampl(self):
         dy = self.ymax - self.ymin
         self.ymin = -dy/2
         self.ymax = +dy/2
