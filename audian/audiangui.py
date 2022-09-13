@@ -180,11 +180,27 @@ class MainWindow(QMainWindow):
 
         zoomfin_act = QAction('Zoom frequency in', self)
         zoomfin_act.setShortcut('Shift+F')
-        zoomfin_act.triggered.connect(self.zoom_f_in)
+        zoomfin_act.triggered.connect(self.zoom_freq_in)
 
         zoomfout_act = QAction('Zoom frequency out', self)
         zoomfout_act.setShortcut('F')
-        zoomfout_act.triggered.connect(self.zoom_f_out)
+        zoomfout_act.triggered.connect(self.zoom_freq_out)
+
+        frequp_act = QAction('Frequency up', self)
+        frequp_act.setShortcuts(QKeySequence.MoveToNextChar)
+        frequp_act.triggered.connect(self.freq_up)
+
+        freqdown_act = QAction('Frequency down', self)
+        freqdown_act.setShortcuts(QKeySequence.MoveToPreviousChar)
+        freqdown_act.triggered.connect(self.freq_down)
+
+        freqhome_act = QAction('Frequency home', self)
+        freqhome_act.setShortcuts(QKeySequence.MoveToPreviousWord)
+        freqhome_act.triggered.connect(self.freq_home)
+
+        freqend_act = QAction('Frequency end', self)
+        freqend_act.setShortcuts(QKeySequence.MoveToNextWord)
+        freqend_act.triggered.connect(self.freq_end)
 
         toggletraces_act = QAction('Toggle traces', self)
         toggletraces_act.setShortcut('Ctrl+T')
@@ -238,6 +254,10 @@ class MainWindow(QMainWindow):
         view_menu.addSeparator()
         view_menu.addAction(zoomfin_act)
         view_menu.addAction(zoomfout_act)
+        view_menu.addAction(frequp_act)
+        view_menu.addAction(freqdown_act)
+        view_menu.addAction(freqhome_act)
+        view_menu.addAction(freqend_act)
         view_menu.addSeparator()
         view_menu.addAction(toggletraces_act)
         view_menu.addAction(togglespectros_act)
@@ -499,28 +519,75 @@ class MainWindow(QMainWindow):
             ax.setYRange(trace.ymin, trace.ymax)
 
 
-    def zoom_f_in(self):
+    def set_franges(self):
+        for ax in self.axfys:
+            ax.setYRange(self.f0, self.f1)
+        for ax in self.axfxs:
+            ax.setXRange(self.f0, self.f1)
+
+            
+    def zoom_freq_in(self):
         df = self.f1 - self.f0
         if df > 0.1:
             df *= 0.5
             self.f1 = self.f0 + df
-            for ax in self.axfys:
-                ax.setYRange(self.f0, self.f1)
-            for ax in self.axfxs:
-                ax.setXRange(self.f0, self.f1)
-
+            self.set_franges()
+            
         
-    def zoom_f_out(self):
-        if self.f1 < self.fmax:
+    def zoom_freq_out(self):
+        if self.f1 - self.f0 < self.fmax:
             df = self.f1 - self.f0
             df *= 2.0
+            if df > self.fmax:
+                df = self.fmax
             self.f1 = self.f0 + df
-            for ax in self.axfys:
-                ax.setYRange(self.f0, self.f1)
-            for ax in self.axfxs:
-                ax.setXRange(self.f0, self.f1)
+            if self.f1 > self.fmax:
+                self.f1 = self.fmax
+                self.f0 = self.fmax - df
+            if self.f0 < 0:
+                self.f0 = 0
+                self.f1 = df
+            self.set_franges()
+                
         
+    def freq_down(self):
+        if self.f0 > 0.0:
+            df = self.f1 - self.f0
+            self.f0 -= 0.5*df
+            self.f1 -= 0.5*df
+            if self.f0 < 0.0:
+                self.f0 = 0.0
+                self.f1 = df
+            self.set_franges()
 
+            
+    def freq_up(self):
+        if self.f1 < self.fmax:
+            df = self.f1 - self.f0
+            self.f0 += 0.5*df
+            self.f1 += 0.5*df
+            self.set_franges()
+
+
+    def freq_home(self):
+        if self.f0 > 0.0:
+            df = self.f1 - self.f0
+            self.f0 = 0.0
+            self.f1 = df
+            self.set_franges()
+
+            
+    def freq_end(self):
+        if self.f1 < self.fmax:
+            df = self.f1 - self.f0
+            self.f1 = np.ceil(self.fmax/(0.5*df))*(0.5*df)
+            self.f0 = self.f1 - df
+            if self.f0 < 0.0:
+                self.f0 = 0.0
+                self.f1 = df
+            self.set_franges()
+
+                
     def toggle_channel(self, channel):
         if len(self.figs) > channel:
             self.figs[channel].setVisible(not self.figs[channel].isVisible())
