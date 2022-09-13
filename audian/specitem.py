@@ -12,7 +12,6 @@ class SpecItem(pg.ImageItem):
         self.data = data
         self.rate = rate
         self.channel = channel
-        self.fmin = 0.0
         self.fmax = 0.5/self.rate
         self.zmin = -100.0
         self.zmax = 0.0

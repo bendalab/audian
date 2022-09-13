@@ -75,6 +75,10 @@ class MainWindow(QMainWindow):
         # view:
         self.toffset = 0.0
         self.twindow = 2.0
+
+        self.f0 = 0.0
+        self.f1 = 1000.0
+        self.fmax = 1000.0
         
         self.mouse_mode = pg.ViewBox.PanMode
         self.grids = 0
@@ -174,6 +178,14 @@ class MainWindow(QMainWindow):
         centery_act.setShortcut('C')
         centery_act.triggered.connect(self.center_y)
 
+        zoomfin_act = QAction('Zoom frequency in', self)
+        zoomfin_act.setShortcut('Shift+F')
+        zoomfin_act.triggered.connect(self.zoom_f_in)
+
+        zoomfout_act = QAction('Zoom frequency out', self)
+        zoomfout_act.setShortcut('F')
+        zoomfout_act.triggered.connect(self.zoom_f_out)
+
         toggletraces_act = QAction('Toggle traces', self)
         toggletraces_act.setShortcut('Ctrl+T')
         toggletraces_act.triggered.connect(self.toggle_traces)
@@ -224,6 +236,9 @@ class MainWindow(QMainWindow):
         view_menu.addAction(resety_act)
         view_menu.addAction(centery_act)
         view_menu.addSeparator()
+        view_menu.addAction(zoomfin_act)
+        view_menu.addAction(zoomfout_act)
+        view_menu.addSeparator()
         view_menu.addAction(toggletraces_act)
         view_menu.addAction(togglespectros_act)
         view_menu.addAction(togglecbars_act)
@@ -249,6 +264,10 @@ class MainWindow(QMainWindow):
         self.tmax = len(self.data)/self.rate
         if self.twindow > self.tmax:
             self.twindow = np.round(2**(np.floor(np.log(self.tmax) / np.log(2.0)) + 1.0))
+
+        self.fmax = 0.5*self.rate
+        self.f0 = 0.0
+        self.f1 = self.fmax
         
         if len(self.channels) == 0:
             self.show_channels = np.arange(self.data.channels)
@@ -259,7 +278,8 @@ class MainWindow(QMainWindow):
         self.axs  = []     # all plots
         self.axts = []     # plots with time axis
         self.axys = []     # plots with amplitude axis
-        self.axfs = []     # plots with frequency axis
+        self.axfxs = []    # plots with x-frequency axis
+        self.axfys = []    # plots with y-frequency axis
         self.axgs = []     # plots with grids
         self.axtraces = [] # all traces
         self.axspecs = []  # all spectrogams
@@ -275,7 +295,9 @@ class MainWindow(QMainWindow):
             # spectrograms:
             axs = fig.addPlot(row=0, col=0)
             spec = SpecItem(self.data, self.rate, c)
-            axs.setLimits(xMin=0, xMax=self.tmax, yMin=spec.fmin, yMax=spec.fmax)
+            self.fmax = spec.fmax
+            self.f1 = self.fmax
+            axs.setLimits(xMin=0, xMax=self.tmax, yMin=0.0, yMax=spec.fmax)
             self.specs.append(spec)
             self.setup_spec_plot(axs, c)
             axs.addItem(spec)
@@ -292,7 +314,7 @@ class MainWindow(QMainWindow):
             self.cbars.append(cbar)
             fig.addItem(cbar, row=0, col=1)
             self.axts.append(axs)
-            self.axfs.append(axs)
+            self.axfys.append(axs)
             self.axspecs.append(axs)
             self.axs.append(axs)
             # trace plot:
@@ -476,6 +498,28 @@ class MainWindow(QMainWindow):
             trace.center_y()
             ax.setYRange(trace.ymin, trace.ymax)
 
+
+    def zoom_f_in(self):
+        df = self.f1 - self.f0
+        if df > 0.1:
+            df *= 0.5
+            self.f1 = self.f0 + df
+            for ax in self.axfys:
+                ax.setYRange(self.f0, self.f1)
+            for ax in self.axfxs:
+                ax.setXRange(self.f0, self.f1)
+
+        
+    def zoom_f_out(self):
+        if self.f1 < self.fmax:
+            df = self.f1 - self.f0
+            df *= 2.0
+            self.f1 = self.f0 + df
+            for ax in self.axfys:
+                ax.setYRange(self.f0, self.f1)
+            for ax in self.axfxs:
+                ax.setXRange(self.f0, self.f1)
+        
 
     def toggle_channel(self, channel):
         if len(self.figs) > channel:
