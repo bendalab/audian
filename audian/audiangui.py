@@ -90,6 +90,7 @@ class MainWindow(QMainWindow):
         
         self.mouse_mode = pg.ViewBox.PanMode
         self.grids = 0
+        self.show_cbars = True
 
         # window:
         self.setWindowTitle(f'AUDIoANalyzer {__version__}')
@@ -320,7 +321,7 @@ class MainWindow(QMainWindow):
         mouse_act.triggered.connect(self.toggle_zoom_mode)
 
         maximize_act = QAction('Toggle &maximize', self)
-        maximize_act.setShortcut('m')
+        maximize_act.setShortcut('Ctrl+M')
         maximize_act.triggered.connect(self.toggle_maximize)
 
         view_menu = self.menuBar().addMenu('&View')
@@ -371,12 +372,12 @@ class MainWindow(QMainWindow):
         self.axfxs = []    # plots with x-frequency axis
         self.axfys = []    # plots with y-frequency axis
         self.axgs = []     # plots with grids
-        self.axtraces = [] # all traces
-        self.axspecs = []  # all plots with spectrograms
-        self.traces = []   # all traces
-        self.specs = []    # all spectrograms
-        self.cbars = []    # all color bars
-        self.psds = []     # all power spectra
+        self.axtraces = [] # all trace plots - one for each channel
+        self.axspecs = []  # all spectrogram plots - one for each channel
+        self.traces = []   # all traces - one for each channel
+        self.specs = []    # all spectrograms - one for each channel
+        self.cbars = []    # all color bars - one for each channel
+        self.psds = []     # all power spectra - one for each channel
         for c in range(self.data.channels):
             # one figure per channel:
             fig = pg.GraphicsLayoutWidget()
@@ -398,6 +399,7 @@ class MainWindow(QMainWindow):
             cbar.setLevels([spec.zmin, spec.zmax])
             cbar.setImageItem(spec)
             cbar.sigLevelsChanged.connect(self.set_cbar_levels)
+            cbar.setVisible(self.show_cbars)
             self.cbars.append(cbar)
             fig.addItem(cbar, row=0, col=1)
             spec.setCBar(cbar)
@@ -732,23 +734,29 @@ class MainWindow(QMainWindow):
             
 
     def toggle_traces(self):
-        for axt, axs in zip(self.axtraces, self.axspecs):
+        for axt, axs, cb in zip(self.axtraces, self.axspecs, self.cbars):
             if axt.isVisible():
                 axs.setVisible(True)
+                cb.setVisible(self.show_cbars)
             axt.setVisible(not axt.isVisible())
             
 
     def toggle_spectrograms(self):
-        self.toggle_colorbars()
-        for axt, axs in zip(self.axtraces, self.axspecs):
+        for axt, axs, cb in zip(self.axtraces, self.axspecs, self.cbars):
             if axs.isVisible():
                 axt.setVisible(True)
             axs.setVisible(not axs.isVisible())
-            
+            if axs.isVisible():
+                cb.setVisible(self.show_cbars)
+            else:
+                cb.setVisible(False)
 
+                
     def toggle_colorbars(self):
-        for cb in self.cbars:
-            cb.setVisible(not cb.isVisible())
+        self.show_cbars = not self.show_cbars
+        for cb, axs in zip(self.cbars, self.axspecs):
+            if axs.isVisible():
+                cb.setVisible(self.show_cbars)
             
 
     def toggle_zoom_mode(self):
