@@ -7,7 +7,8 @@ from PyQt5.QtWidgets import QAction, QPushButton, QFileDialog
 from PyQt5.QtWidgets import QWidget, QVBoxLayout
 from PyQt5.QtGui import QKeySequence
 import pyqtgraph as pg
-from audioio import AudioLoader, available_formats
+from audioio import AudioLoader, available_formats, write_audio
+from audioio import PlayAudio, fade
 from .version import __version__, __year__
 from .traceitem import TraceItem
 from .specitem import SpecItem
@@ -92,6 +93,9 @@ class MainWindow(QMainWindow):
         self.grids = 0
         self.show_cbars = True
 
+        # audio:
+        self.audio = PlayAudio()
+
         # window:
         self.setWindowTitle(f'AUDIoANalyzer {__version__}')
         vbox_widget = QWidget(self)
@@ -108,6 +112,13 @@ class MainWindow(QMainWindow):
         self.setup_frequency_actions()
         self.setup_power_actions()
         self.setup_view_actions()
+
+
+    def __del__(self):
+        if not self.data is None:
+            self.data.close()
+        if self.audio is not None:
+            self.audio.close()
 
         
     def setup_file_actions(self):
@@ -131,6 +142,10 @@ class MainWindow(QMainWindow):
 
 
     def setup_time_actions(self):
+        play_act = QAction('&Play', self)
+        play_act.setShortcut('P')
+        play_act.triggered.connect(self.play_segment)
+        
         zoomxin_act = QAction('Zoom &in', self)
         zoomxin_act.setShortcuts(['+', '=', 'Shift+X']) # + QKeySequence.ZoomIn
         zoomxin_act.triggered.connect(self.zoom_time_in)
@@ -172,6 +187,7 @@ class MainWindow(QMainWindow):
         datahome_act.triggered.connect(self.time_home)
 
         time_menu = self.menuBar().addMenu('&Time')
+        time_menu.addAction(play_act)
         time_menu.addAction(zoomxin_act)
         time_menu.addAction(zoomxout_act)
         time_menu.addAction(pagedown_act)
@@ -789,6 +805,14 @@ class MainWindow(QMainWindow):
         else:
             self.showMaximized()
 
+
+    def play_segment(self):
+        t0 = int(np.round(self.toffset*self.rate))
+        t1 = int(np.round((self.toffset+self.twindow)*self.rate))
+        playdata = 1.0*self.data[t0:t1,:]
+        fade(playdata, self.rate, 0.1)
+        self.audio.play(playdata, self.rate, blocking=False)
+        
             
     def close(self):
         global main_wins
