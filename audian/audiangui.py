@@ -495,6 +495,17 @@ class MainWindow(QMainWindow):
         ax.setYRange(self.f0, self.f1)
         ax.sigYRangeChanged.connect(self.set_frange)
 
+
+    def show_xticks(self, channel, show_ticks):
+        if self.axtraces[channel].isVisible():
+            self.axtraces[channel].getAxis('bottom').showLabel(show_ticks)
+            self.axtraces[channel].getAxis('bottom').setStyle(showValues=show_ticks)
+            self.axspecs[channel].getAxis('bottom').showLabel(False)
+            self.axspecs[channel].getAxis('bottom').setStyle(showValues=False)
+        elif self.axspecs[channel].isVisible():
+            self.axspecs[channel].getAxis('bottom').showLabel(show_ticks)
+            self.axspecs[channel].getAxis('bottom').setStyle(showValues=show_ticks)
+
             
     def set_xrange(self, viewbox, xrange):
         self.toffset = xrange[0]
@@ -747,27 +758,43 @@ class MainWindow(QMainWindow):
 
             
     def toggle_channel(self, channel):
-        if len(self.figs) > channel:
+        if len(self.figs) > channel and \
+           (len(self.show_channels) > 1 or channel != self.show_channels[0]):
+            prev_channel = self.show_channels[-1]
             self.figs[channel].setVisible(not self.figs[channel].isVisible())
             if self.figs[channel].isVisible():
                 self.show_channels.append(channel)
                 self.show_channels.sort()
             else:
                 self.show_channels.remove(channel)
+            if prev_channel != self.show_channels[-1]:
+                self.show_xticks(prev_channel, False)
+                self.show_xticks(self.show_channels[-1], True)
             
 
     def toggle_traces(self):
         for axt, axs, cb in zip(self.axtraces, self.axspecs, self.cbars):
             if axt.isVisible():
                 axs.setVisible(True)
+                if axs is self.axspecs[self.show_channels[-1]]:
+                    axs.getAxis('bottom').showLabel(True)
+                    axs.getAxis('bottom').setStyle(showValues=True)
                 cb.setVisible(self.show_cbars)
             axt.setVisible(not axt.isVisible())
+            if axt.isVisible():
+                axs.getAxis('bottom').showLabel(False)
+                axs.getAxis('bottom').setStyle(showValues=False)
+                axt.getAxis('bottom').showLabel(axt is self.axtraces[self.show_channels[-1]])
+                axt.getAxis('bottom').setStyle(showValues=(axt is self.axtraces[self.show_channels[-1]]))
             
 
     def toggle_spectrograms(self):
         for axt, axs, cb in zip(self.axtraces, self.axspecs, self.cbars):
             if axs.isVisible():
                 axt.setVisible(True)
+                if axt is self.axtraces[self.show_channels[-1]]:
+                    axt.getAxis('bottom').showLabel(True)
+                    axt.getAxis('bottom').setStyle(showValues=True)
             axs.setVisible(not axs.isVisible())
             if axs.isVisible():
                 cb.setVisible(self.show_cbars)
