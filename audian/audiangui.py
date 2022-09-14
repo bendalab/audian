@@ -105,6 +105,7 @@ class MainWindow(QMainWindow):
         self.setup_time_actions()
         self.setup_amplitude_actions()
         self.setup_frequency_actions()
+        self.setup_power_actions()
         self.setup_view_actions()
 
         
@@ -255,6 +256,40 @@ class MainWindow(QMainWindow):
         freq_menu.addAction(fresdown_act)
 
 
+    def setup_power_actions(self):
+        powerup_act = QAction('Power &up', self)
+        powerup_act.setShortcut('Shift+Z')
+        powerup_act.triggered.connect(self.power_up)
+
+        powerdown_act = QAction('Power &down', self)
+        powerdown_act.setShortcut('Z')
+        powerdown_act.triggered.connect(self.power_down)
+
+        maxpowerup_act = QAction('Max up', self)
+        maxpowerup_act.setShortcut('Shift+K')
+        maxpowerup_act.triggered.connect(self.max_power_up)
+
+        maxpowerdown_act = QAction('Max down', self)
+        maxpowerdown_act.setShortcut('K')
+        maxpowerdown_act.triggered.connect(self.max_power_down)
+
+        minpowerup_act = QAction('Min up', self)
+        minpowerup_act.setShortcut('Shift+J')
+        minpowerup_act.triggered.connect(self.min_power_up)
+
+        minpowerdown_act = QAction('Min down', self)
+        minpowerdown_act.setShortcut('J')
+        minpowerdown_act.triggered.connect(self.min_power_down)
+        
+        power_menu = self.menuBar().addMenu('&Power')
+        power_menu.addAction(powerup_act)
+        power_menu.addAction(powerdown_act)
+        power_menu.addAction(maxpowerup_act)
+        power_menu.addAction(maxpowerdown_act)
+        power_menu.addAction(minpowerup_act)
+        power_menu.addAction(minpowerdown_act)
+
+
     def setup_view_actions(self):
         toggletraces_act = QAction('Toggle &traces', self)
         toggletraces_act.setShortcut('Ctrl+T')
@@ -310,7 +345,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f'AUDIoANalyzer {__version__}: {os.path.basename(self.file_path)}')
 
         self.toffset = 0.0
-        self.twindow = 2.0
+        self.twindow = 10.0
         self.tmax = len(self.data)/self.rate
         if self.twindow > self.tmax:
             self.twindow = np.round(2**(np.floor(np.log(self.tmax) / np.log(2.0)) + 1.0))
@@ -644,6 +679,44 @@ class MainWindow(QMainWindow):
             self.nfft = int(np.round(2**(np.floor(np.log(self.rate/self.fresolution) / np.log(2.0)))))
             for s in self.specs + self.psds:
                 s.setNFFT(self.nfft)
+
+
+    def power_up(self):
+        self.specs[0].zmax += 5.0
+        self.specs[0].zmin += 5.0
+        for s in self.specs:
+            s.setCBarLevels(self.specs[0].zmin, self.specs[0].zmax)
+
+
+    def power_down(self):
+        self.specs[0].zmax -= 5.0
+        self.specs[0].zmin -= 5.0
+        for s in self.specs:
+            s.setCBarLevels(self.specs[0].zmin, self.specs[0].zmax)
+
+
+    def max_power_up(self):
+        self.specs[0].zmax += 5.0
+        for s in self.specs:
+            s.setCBarLevels(self.specs[0].zmin, self.specs[0].zmax)
+
+
+    def max_power_down(self):
+        self.specs[0].zmax -= 5.0
+        for s in self.specs:
+            s.setCBarLevels(self.specs[0].zmin, self.specs[0].zmax)
+
+
+    def min_power_up(self):
+        self.specs[0].zmin += 5.0
+        for s in self.specs:
+            s.setCBarLevels(self.specs[0].zmin, self.specs[0].zmax)
+
+
+    def min_power_down(self):
+        self.specs[0].zmin -= 5.0
+        for s in self.specs:
+            s.setCBarLevels(self.specs[0].zmin, self.specs[0].zmax)
 
 
     def set_cbar_levels(self, cbar):
