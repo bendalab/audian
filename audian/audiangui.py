@@ -374,9 +374,9 @@ class MainWindow(QMainWindow):
         self.fresolution = self.rate/self.nfft
         
         if len(self.channels) == 0:
-            self.show_channels = np.arange(self.data.channels)
+            self.show_channels = list(range(self.data.channels))
         else:
-            self.show_channels = np.array([c for c in self.channels if c < self.data.channels])
+            self.show_channels = [c for c in self.channels if c < self.data.channels]
 
         # load data:
         self.data[0,:]
@@ -398,6 +398,7 @@ class MainWindow(QMainWindow):
             # one figure per channel:
             fig = pg.GraphicsLayoutWidget()
             fig.setBackground(None)
+            fig.setVisible(c in self.show_channels)
             self.vbox.addWidget(fig, 1)
             self.figs.append(fig)
             # spectrograms:
@@ -438,6 +439,7 @@ class MainWindow(QMainWindow):
             self.axgs.append(axt)
             self.axtraces.append(axt)
             self.axs.append(axt)
+            
 
         
     def open_files(self):
@@ -747,6 +749,11 @@ class MainWindow(QMainWindow):
     def toggle_channel(self, channel):
         if len(self.figs) > channel:
             self.figs[channel].setVisible(not self.figs[channel].isVisible())
+            if self.figs[channel].isVisible():
+                self.show_channels.append(channel)
+                self.show_channels.sort()
+            else:
+                self.show_channels.remove(channel)
             
 
     def toggle_traces(self):
