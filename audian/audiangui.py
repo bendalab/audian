@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QAction, QPushButton, QFileDialog
 from PyQt5.QtWidgets import QWidget, QVBoxLayout
 from PyQt5.QtGui import QKeySequence
 import pyqtgraph as pg
-from audioio import AudioLoader
+from audioio import AudioLoader, available_formats
 from .version import __version__, __year__
 from .traceitem import TraceItem
 from .specitem import SpecItem
@@ -47,7 +47,13 @@ class MenuWindow(QMainWindow):
         
     def open_files(self):
         global main_wins
-        file_paths = QFileDialog.getOpenFileNames(self, directory='.', filter='All files (*);;Wave files (*.wav *.WAV);;MP3 files (*.mp3)')[0]
+        formats = available_formats()
+        for f in ['MP3', 'OGG', 'WAV']:
+            if 'WAV' in formats:
+                formats.remove(f)
+                formats.insert(0, f)
+        filters = ['All files (*)'] + [f'{f} files (*.{f}, *.{f.lower()})' for f in formats]
+        file_paths = QFileDialog.getOpenFileNames(self, directory='.', filter=';;'.join(filters))[0]
         for file_path in reversed(file_paths):
             main = MainWindow(file_path, self.channels)
             main.show()
@@ -383,7 +389,16 @@ class MainWindow(QMainWindow):
         
     def open_files(self):
         global main_wins
-        file_paths = QFileDialog.getOpenFileNames(self, directory='.', filter='All files (*);;Wave files (*.wav *.WAV);;MP3 files (*.mp3)')[0]
+        formats = available_formats()
+        for f in ['MP3', 'OGG', 'WAV']:
+            if 'WAV' in formats:
+                formats.remove(f)
+                formats.insert(0, f)
+        filters = ['All files (*)'] + [f'{f} files (*.{f}, *.{f.lower()})' for f in formats]
+        path = '.' if self.file_path is None else os.path.dirname(self.file_path)
+        if len(path) == 0:
+            path = '.'
+        file_paths = QFileDialog.getOpenFileNames(self, directory=path, filter=';;'.join(filters))[0]
         for file_path in reversed(file_paths):
             main = MainWindow(file_path, self.channels)
             main.show()
