@@ -223,23 +223,6 @@ class DataBrowser(QWidget):
             self.set_traces_xrange()
 
                 
-    def time_block_down(self):
-        if self.toffset + self.twindow < self.tmax:
-            for k in range(5):
-                self.toffset += self.twindow
-                if self.toffset + self.twindow >= self.tmax:
-                    break
-            self.set_traces_xrange()
-
-                
-    def time_block_up(self):
-        if self.toffset > 0:
-            self.toffset -= 5.0*self.twindow
-            if self.toffset < 0.0:
-                self.toffset = 0.0
-            self.set_traces_xrange()
-
-                
     def time_down(self):
         if self.toffset + self.twindow < self.tmax:
             self.toffset += 0.05*self.twindow

@@ -9,82 +9,40 @@ from .version import __version__, __year__
 from .databrowser import DataBrowser
 
 
-# list of all open data files:
-main_wins = []
-
-
-class MenuWindow(QMainWindow):
-    def __init__(self, channels):
-        super().__init__()
-        self.channels = channels
-        self.setWindowTitle(f'AUDIoANalyzer {__version__}')
-        self.setup_file_actions()
-
-        # button:
-        open_button = QPushButton('&Open files')
-        open_button.clicked.connect(self.open_files)
-        self.setCentralWidget(open_button)
-
-
-    def setup_file_actions(self):
-        open_act = QAction('&Open', self)
-        open_act.setShortcuts(QKeySequence.Open)
-        open_act.triggered.connect(self.open_files)
-
-        quit_act = QAction('&Quit', self)
-        quit_act.setShortcuts(QKeySequence.Quit)
-        quit_act.triggered.connect(self.quit)
-        
-        file_menu = self.menuBar().addMenu('&File')
-        file_menu.addAction(open_act)
-        file_menu.addAction(quit_act)
-        
-        
-    def open_files(self):
-        global main_wins
-        formats = available_formats()
-        for f in ['MP3', 'OGG', 'WAV']:
-            if 'WAV' in formats:
-                formats.remove(f)
-                formats.insert(0, f)
-        filters = ['All files (*)'] + [f'{f} files (*.{f}, *.{f.lower()})' for f in formats]
-        file_paths = QFileDialog.getOpenFileNames(self, directory='.', filter=';;'.join(filters))[0]
-        for file_path in reversed(file_paths):
-            main = MainWindow(file_path, self.channels)
-            main.show()
-            main_wins.append(main)
-        if len(main_wins) > 0:
-            self.close()
-
-            
-    def quit(self):
-        QApplication.quit()
-
-
-
-class MainWindow(QMainWindow):
-    def __init__(self, file_path, channels):
+class Audian(QMainWindow):
+    def __init__(self, file_paths, channels):
         super().__init__()
 
         self.channels = channels
         self.audio = PlayAudio()
 
         # window:
-        self.setWindowTitle(f'AUDIoANalyzer {__version__}')
+        self.setWindowTitle(f'AUDIAN {__version__}')
         self.tabs = QTabWidget(self)
         self.tabs.setDocumentMode(True)
         self.tabs.setMovable(True)
         self.tabs.setTabBarAutoHide(True)
         self.tabs.setTabsClosable(True)
+        self.tabs.tabCloseRequested.connect(lambda index: self.close(index))
         self.setCentralWidget(self.tabs)
 
-        # data:
-        browser = DataBrowser(file_path, channels, self.audio)
-        self.tabs.addTab(browser, os.path.basename(file_path))
-        
         # actions:
         self.setup_file_actions(self.menuBar())
         self.setup_view_actions(self.menuBar())
+        
+        # default widget:
+        self.open_button = QPushButton('&Open files')
+        self.open_button.clicked.connect(self.open_files)
+        self.tabs.addTab(self.open_button, 'Open file')
+        self.open_button_active = True
+
+        # data:
+        for file_path in file_paths:
+            browser = DataBrowser(file_path, self.channels, self.audio)
+            self.tabs.addTab(browser, os.path.basename(file_path))
+        if self.tabs.count() > 1:
+            self.tabs.removeTab(0)
+            self.open_button_active = False
 
 
     def __del__(self):
@@ -102,7 +60,7 @@ class MainWindow(QMainWindow):
         open_act.triggered.connect(self.open_files)
 
         close_act = QAction('&Close', self)
-        close_act.setShortcut('q')  # QKeySequence.Close
+        close_act.setShortcut(QKeySequence.Close)
         close_act.triggered.connect(self.close)
 
         quit_act = QAction('&Quit', self)
@@ -137,14 +95,6 @@ class MainWindow(QMainWindow):
         pageup_act.setShortcuts(QKeySequence.MoveToPreviousPage)
         pageup_act.triggered.connect(lambda x=0: self.browser().time_page_up())
 
-        largedown_act = QAction('Block down', self)
-        largedown_act.setShortcut('Ctrl+PgDown')
-        largedown_act.triggered.connect(lambda x=0: self.browser().time_block_down())
-
-        largeup_act = QAction('Block up', self)
-        largeup_act.setShortcut('Ctrl+PgUp')
-        largeup_act.triggered.connect(lambda x=0: self.browser().time_block_up())
-
         datadown_act = QAction('Trace down', self)
         datadown_act.setShortcuts(QKeySequence.MoveToNextLine)
         datadown_act.triggered.connect(lambda x=0: self.browser().time_down())
@@ -167,8 +117,6 @@ class MainWindow(QMainWindow):
         time_menu.addAction(zoomxout_act)
         time_menu.addAction(pagedown_act)
         time_menu.addAction(pageup_act)
-        self.addAction(largedown_act)
-        self.addAction(largeup_act)
         time_menu.addAction(datadown_act)
         time_menu.addAction(dataup_act)
         time_menu.addAction(dataend_act)
@@ -331,20 +279,21 @@ class MainWindow(QMainWindow):
 
         
     def open_files(self):
-        global main_wins
         formats = available_formats()
         for f in ['MP3', 'OGG', 'WAV']:
             if 'WAV' in formats:
                 formats.remove(f)
                 formats.insert(0, f)
         filters = ['All files (*)'] + [f'{f} files (*.{f}, *.{f.lower()})' for f in formats]
-        path = '.' if self.browser().file_path is None else os.path.dirname(self.browser().file_path)
+        path = '.' if self.open_button_active else os.path.dirname(self.browser().file_path)
         if len(path) == 0:
             path = '.'
         file_paths = QFileDialog.getOpenFileNames(self, directory=path, filter=';;'.join(filters))[0]
         for file_path in file_paths:
             browser = DataBrowser(file_path, self.channels, self.audio)
             self.tabs.addTab(browser, os.path.basename(file_path))
+        if self.open_button_active and self.tabs.count() > 1:
+            self.tabs.removeTab(0)
 
 
     def toggle_maximize(self):
@@ -354,16 +303,17 @@ class MainWindow(QMainWindow):
             self.showMaximized()
 
             
-    def close(self):
-        global main_wins
-        QMainWindow.close(self)
-        main_wins.remove(self)
+    def close(self, index=None):
+        if self.tabs.count() > 0:
+            if index is None:
+                index = self.tabs.currentIndex()
+            self.tabs.removeTab(index)
+        if self.tabs.count() == 0:
+            self.tabs.addTab(self.open_button, 'File open')
+            self.open_button_active = True
 
             
     def quit(self):
-        global main_wins
-        for win in reversed(main_wins):
-            win.close()
         QApplication.quit()
 
 
@@ -392,14 +342,8 @@ def main(cargs):
     channels = [int(c) for c in cs if len(c)>0]
     
     app = QApplication(sys.argv[:1] + qt_args)
-    if len(args.files) == 0:
-        main = MenuWindow(channels)
-        main.show()
-    else:
-        for file_path in reversed(args.files):
-            main = MainWindow(file_path, channels)
-            main.show()
-            main_wins.append(main)
+    main = Audian(args.files, channels)
+    main.show()
     app.exec_()
 
 
