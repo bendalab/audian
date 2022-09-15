@@ -29,6 +29,7 @@ class Audian(QMainWindow):
         self.tabs.setTabBarAutoHide(True)
         self.tabs.setTabsClosable(True)
         self.tabs.tabCloseRequested.connect(lambda index: self.close(index))
+        self.tabs.currentChanged.connect(self.adapt_menu)
         self.setCentralWidget(self.tabs)
 
         # actions:
@@ -42,9 +43,15 @@ class Audian(QMainWindow):
         for file_path in file_paths:
             browser = DataBrowser(file_path, self.channels, self.audio)
             self.tabs.addTab(browser, os.path.basename(file_path))
-        if self.tabs.count() > 1:
-            self.tabs.removeTab(0)
+        if self.tabs.count() > 0:
+            self.startup.setVisible(False)
             self.startup_active = False
+            self.view_menu.setEnabled(True)
+        else:
+            self.startup.setVisible(True)
+            self.startup_active = True
+            self.tabs.addTab(self.startup, 'Startup')
+            self.view_menu.setEnabled(False)
 
 
     def __del__(self):
@@ -74,8 +81,6 @@ class Audian(QMainWindow):
         vbox.addWidget(quit_button)
         vbox.addStretch(3)
         hbox.addStretch(2)
-        self.tabs.addTab(self.startup, 'Startup')
-        self.startup_active = True
 
 
     def browser(self):
@@ -270,12 +275,12 @@ class Audian(QMainWindow):
         togglecbars_act = QAction('Toggle &color bars', self)
         togglecbars_act.setShortcut('Ctrl+C')
         togglecbars_act.triggered.connect(lambda x=0: self.browser().toggle_colorbars())
-        toggle_channel_acts = []
+        self.toggle_channel_acts = []
         for c in range(10):
             togglechannel_act = QAction(f'Toggle channel &{c}', self)
             togglechannel_act.setShortcut(f'{c}')
             togglechannel_act.triggered.connect(lambda x, channel=c: self.browser().toggle_channel(channel))
-            toggle_channel_acts.append(togglechannel_act)
+            self.toggle_channel_acts.append(togglechannel_act)
         grid_act = QAction('Toggle &grid', self)
         grid_act.setShortcut('g')
         grid_act.triggered.connect(lambda x=0: self.browser().toggle_grids())
@@ -288,21 +293,28 @@ class Audian(QMainWindow):
         maximize_act.setShortcut('Ctrl+M')
         maximize_act.triggered.connect(self.toggle_maximize)
 
-        view_menu = menu.addMenu('&View')
-        self.setup_time_actions(view_menu)
-        self.setup_amplitude_actions(view_menu)
-        self.setup_frequency_actions(view_menu)
-        self.setup_power_actions(view_menu)
-        view_menu.addAction(toggletraces_act)
-        view_menu.addAction(togglespectros_act)
-        view_menu.addAction(togglecbars_act)
-        channel_menu = view_menu.addMenu('&Channels')
-        for act in toggle_channel_acts:
+        self.view_menu = menu.addMenu('&View')
+        self.setup_time_actions(self.view_menu)
+        self.setup_amplitude_actions(self.view_menu)
+        self.setup_frequency_actions(self.view_menu)
+        self.setup_power_actions(self.view_menu)
+        channel_menu = self.view_menu.addMenu('&Channels')
+        for act in self.toggle_channel_acts:
             channel_menu.addAction(act)
-        view_menu.addSeparator()
-        view_menu.addAction(mouse_act)
-        view_menu.addAction(grid_act)
-        view_menu.addAction(maximize_act)
+        self.view_menu.addAction(toggletraces_act)
+        self.view_menu.addAction(togglespectros_act)
+        self.view_menu.addAction(togglecbars_act)
+        self.view_menu.addSeparator()
+        self.view_menu.addAction(mouse_act)
+        self.view_menu.addAction(grid_act)
+        self.view_menu.addAction(maximize_act)
+
+
+    def adapt_menu(self, index):
+        browser = self.tabs.widget(index)
+        if isinstance(browser, DataBrowser):
+            for i, act in enumerate(self.toggle_channel_acts):
+                act.setVisible(i < browser.data.channels)
 
         
     def open_files(self):
@@ -321,7 +333,9 @@ class Audian(QMainWindow):
             self.tabs.addTab(browser, os.path.basename(file_path))
         if self.startup_active and self.tabs.count() > 1:
             self.tabs.removeTab(0)
+            self.startup.setVisible(False)
             self.startup_active = False
+            self.view_menu.setEnabled(True)
 
 
     def toggle_maximize(self):
@@ -338,7 +352,9 @@ class Audian(QMainWindow):
             self.tabs.removeTab(index)
         if self.tabs.count() == 0:
             self.tabs.addTab(self.startup, 'Startup')
+            self.startup.setVisible(True)
             self.startup_active = True
+            self.view_menu.setEnabled(False)
 
             
     def quit(self):
