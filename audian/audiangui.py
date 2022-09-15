@@ -17,6 +17,9 @@ class Audian(QMainWindow):
         self.channels = channels
         self.audio = PlayAudio()
 
+        self.link_channels = True
+        self.link_panels = True
+
         # window:
         rec = QApplication.desktop().screenGeometry()
         height = rec.height();
@@ -263,25 +266,85 @@ class Audian(QMainWindow):
         power_menu.addAction(minpowerup_act)
         power_menu.addAction(minpowerdown_act)
 
+        
+    def toggle_link_channels(self):
+        self.link_channels = not self.link_channels
+
+        
+    def toggle_channel(self, channel):
+        self.browser().toggle_channel(channel)
+        if self.link_channels:
+            for i in range(self.tabs.count()):
+                if i != self.tabs.currentIndex():
+                    self.tabs.widget(i).set_channels(self.browser().show_channels)
+
+        
+    def toggle_link_panels(self):
+        self.link_panels = not self.link_panels
+
+        
+    def toggle_traces(self):
+        self.browser().toggle_traces()
+        if self.link_panels:
+            for i in range(self.tabs.count()):
+                if i != self.tabs.currentIndex():
+                    self.tabs.widget(i).set_panels(self.browser().show_traces,
+                                                   self.browser().show_specs,
+                                                   self.browser().show_cbars)
+
+        
+    def toggle_spectrograms(self):
+        self.browser().toggle_spectrograms()
+        if self.link_panels:
+            for i in range(self.tabs.count()):
+                if i != self.tabs.currentIndex():
+                    self.tabs.widget(i).set_panels(self.browser().show_traces,
+                                                   self.browser().show_specs,
+                                                   self.browser().show_cbars)
+
+        
+    def toggle_colorbars(self):
+        self.browser().toggle_colorbars()
+        if self.link_panels:
+            for i in range(self.tabs.count()):
+                if i != self.tabs.currentIndex():
+                    self.tabs.widget(i).set_panels(self.browser().show_traces,
+                                                   self.browser().show_specs,
+                                                   self.browser().show_cbars)
+
 
     def setup_view_actions(self, menu):
-        toggletraces_act = QAction('Toggle &traces', self)
-        toggletraces_act.setShortcut('Ctrl+T')
-        toggletraces_act.triggered.connect(lambda x=0: self.browser().toggle_traces())
+        linkchannels_act = QAction('Link &channels', self)
+        linkchannels_act.setShortcut('Alt+C')
+        linkchannels_act.setCheckable(True)
+        linkchannels_act.setChecked(self.link_channels)
+        linkchannels_act.toggled.connect(self.toggle_link_channels)
 
-        togglespectros_act = QAction('Toggle &spectrograms', self)
-        togglespectros_act.setShortcut('Ctrl+S')
-        togglespectros_act.triggered.connect(lambda x=0: self.browser().toggle_spectrograms())
-
-        togglecbars_act = QAction('Toggle &color bars', self)
-        togglecbars_act.setShortcut('Ctrl+C')
-        togglecbars_act.triggered.connect(lambda x=0: self.browser().toggle_colorbars())
         self.toggle_channel_acts = []
         for c in range(10):
             togglechannel_act = QAction(f'Toggle channel &{c}', self)
             togglechannel_act.setShortcut(f'{c}')
-            togglechannel_act.triggered.connect(lambda x, channel=c: self.browser().toggle_channel(channel))
+            togglechannel_act.triggered.connect(lambda x, channel=c: self.toggle_channel(channel))
             self.toggle_channel_acts.append(togglechannel_act)
+
+        linkpanels_act = QAction('Link &panels', self)
+        linkpanels_act.setShortcut('Alt+P')
+        linkpanels_act.setCheckable(True)
+        linkpanels_act.setChecked(self.link_panels)
+        linkpanels_act.toggled.connect(self.toggle_link_panels)
+
+        toggletraces_act = QAction('Toggle &traces', self)
+        toggletraces_act.setShortcut('Ctrl+T')
+        toggletraces_act.triggered.connect(self.toggle_traces)
+
+        togglespectros_act = QAction('Toggle &spectrograms', self)
+        togglespectros_act.setShortcut('Ctrl+S')
+        togglespectros_act.triggered.connect(self.toggle_spectrograms)
+
+        togglecbars_act = QAction('Toggle color bars', self)
+        togglecbars_act.setShortcut('Ctrl+C')
+        togglecbars_act.triggered.connect(self.toggle_colorbars)
+            
         grid_act = QAction('Toggle &grid', self)
         grid_act.setShortcut('g')
         grid_act.triggered.connect(lambda x=0: self.browser().toggle_grids())
@@ -299,9 +362,11 @@ class Audian(QMainWindow):
         self.setup_amplitude_actions(self.view_menu)
         self.setup_frequency_actions(self.view_menu)
         self.setup_power_actions(self.view_menu)
+        self.view_menu.addAction(linkchannels_act)
         channel_menu = self.view_menu.addMenu('&Channels')
         for act in self.toggle_channel_acts:
             channel_menu.addAction(act)
+        self.view_menu.addAction(linkpanels_act)
         self.view_menu.addAction(toggletraces_act)
         self.view_menu.addAction(togglespectros_act)
         self.view_menu.addAction(togglecbars_act)
@@ -316,6 +381,7 @@ class Audian(QMainWindow):
         if isinstance(browser, DataBrowser):
             for i, act in enumerate(self.toggle_channel_acts):
                 act.setVisible(i < browser.data.channels)
+        browser.update()
 
         
     def open_files(self):

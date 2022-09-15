@@ -31,6 +31,8 @@ class DataBrowser(QWidget):
         
         self.mouse_mode = pg.ViewBox.PanMode
         self.grids = 0
+        self.show_traces = True
+        self.show_specs = True
         self.show_cbars = True
 
         # audio:
@@ -417,51 +419,55 @@ class DataBrowser(QWidget):
             s.setCBarLevels(zmin, zmax)
 
             
+    def set_channels(self, channels=None):
+        if not channels is None:
+            self.show_channels = [c for c in channels if c < len(self.figs)]
+        for c in range(len(self.figs)):
+            self.figs[c].setVisible(c in self.show_channels)
+            self.show_xticks(c, c == self.show_channels[-1])
+            
+            
     def toggle_channel(self, channel):
         if len(self.figs) > channel and \
            (len(self.show_channels) > 1 or channel != self.show_channels[0]):
-            prev_channel = self.show_channels[-1]
-            self.figs[channel].setVisible(not self.figs[channel].isVisible())
-            if self.figs[channel].isVisible():
+            if channel in self.show_channels:
+                self.show_channels.remove(channel)
+            else:
                 self.show_channels.append(channel)
                 self.show_channels.sort()
-            else:
-                self.show_channels.remove(channel)
-            if prev_channel != self.show_channels[-1]:
-                self.show_xticks(prev_channel, False)
-                self.show_xticks(self.show_channels[-1], True)
+            self.set_channels()
+
+
+    def set_panels(self, traces=None, specs=None, cbars=None):
+        if not traces is None:
+            self.show_traces = traces
+        if not specs is None:
+            self.show_specs = specs
+        if not cbars is None:
+            self.show_cbars = cbars
+        for axt, axs, cb in zip(self.axtraces, self.axspecs, self.cbars):
+            axt.setVisible(self.show_traces)
+            axs.setVisible(self.show_specs)
+            cb.setVisible(self.show_specs and self.show_cbars)
+            if axt is self.axtraces[self.show_channels[-1]]:
+                axs.getAxis('bottom').showLabel(not self.show_traces)
+                axs.getAxis('bottom').setStyle(showValues=not self.show_traces)
+                axt.getAxis('bottom').showLabel(self.show_traces)
+                axt.getAxis('bottom').setStyle(showValues=self.show_traces)
             
 
     def toggle_traces(self):
-        for axt, axs, cb in zip(self.axtraces, self.axspecs, self.cbars):
-            if axt.isVisible():
-                axs.setVisible(True)
-                if axs is self.axspecs[self.show_channels[-1]]:
-                    axs.getAxis('bottom').showLabel(True)
-                    axs.getAxis('bottom').setStyle(showValues=True)
-                cb.setVisible(self.show_cbars)
-            axt.setVisible(not axt.isVisible())
-            if axt.isVisible():
-                axs.getAxis('bottom').showLabel(False)
-                axs.getAxis('bottom').setStyle(showValues=False)
-                axt.getAxis('bottom').showLabel(axt is self.axtraces[self.show_channels[-1]])
-                axt.getAxis('bottom').setStyle(showValues=(axt is self.axtraces[self.show_channels[-1]]))
+        self.show_traces = not self.show_traces
+        if not self.show_traces:
+            self.show_specs = True
+        self.set_panels()
             
 
     def toggle_spectrograms(self):
-        for axt, axs, cb in zip(self.axtraces, self.axspecs, self.cbars):
-            if axs.isVisible():
-                axt.setVisible(True)
-            axs.setVisible(not axs.isVisible())
-            if axs.isVisible():
-                if axt.isVisible():
-                    axs.getAxis('bottom').showLabel(False)
-                    axs.getAxis('bottom').setStyle(showValues=False)
-                    axt.getAxis('bottom').showLabel(axt is self.axtraces[self.show_channels[-1]])
-                    axt.getAxis('bottom').setStyle(showValues=(axt is self.axtraces[self.show_channels[-1]]))
-                cb.setVisible(self.show_cbars)
-            else:
-                cb.setVisible(False)
+        self.show_specs = not self.show_specs
+        if not self.show_specs:
+            self.show_traces = True
+        self.set_panels()
 
                 
     def toggle_colorbars(self):
