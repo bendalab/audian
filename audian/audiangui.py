@@ -2,6 +2,7 @@ import os
 import sys
 import argparse
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTabWidget
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel
 from PyQt5.QtWidgets import QAction, QPushButton, QFileDialog
 from PyQt5.QtGui import QKeySequence
 from audioio import available_formats, PlayAudio
@@ -17,7 +18,11 @@ class Audian(QMainWindow):
         self.audio = PlayAudio()
 
         # window:
-        self.setWindowTitle(f'AUDIAN {__version__}')
+        rec = QApplication.desktop().screenGeometry()
+        height = rec.height();
+        width = rec.width();
+        self.resize(int(0.7*width), int(0.7*height))
+        self.setWindowTitle(f'Audian {__version__}')
         self.tabs = QTabWidget(self)
         self.tabs.setDocumentMode(True)
         self.tabs.setMovable(True)
@@ -31,10 +36,7 @@ class Audian(QMainWindow):
         self.setup_view_actions(self.menuBar())
         
         # default widget:
-        self.open_button = QPushButton('&Open files')
-        self.open_button.clicked.connect(self.open_files)
-        self.tabs.addTab(self.open_button, 'Open file')
-        self.open_button_active = True
+        self.setup_startup()
 
         # data:
         for file_path in file_paths:
@@ -42,12 +44,38 @@ class Audian(QMainWindow):
             self.tabs.addTab(browser, os.path.basename(file_path))
         if self.tabs.count() > 1:
             self.tabs.removeTab(0)
-            self.open_button_active = False
+            self.startup_active = False
 
 
     def __del__(self):
         if self.audio is not None:
             self.audio.close()
+
+
+    def setup_startup(self):
+        self.startup = QWidget(self)
+        hbox = QHBoxLayout(self.startup)
+        hbox.addStretch(1)
+        vbox = QVBoxLayout()
+        hbox.addLayout(vbox, 1)
+        vbox.addStretch(3)
+        title = QLabel(f'Audian {__version__}', self.startup)
+        font = title.font()
+        font.setPointSize(72)
+        font.setBold(True)
+        title.setFont(font)
+        vbox.addWidget(title)
+        vbox.addStretch(1)
+        open_button = QPushButton('&Open files')
+        open_button.clicked.connect(self.open_files)
+        vbox.addWidget(open_button)
+        quit_button = QPushButton('&Quit')
+        quit_button.clicked.connect(self.quit)
+        vbox.addWidget(quit_button)
+        vbox.addStretch(3)
+        hbox.addStretch(2)
+        self.tabs.addTab(self.startup, 'Startup')
+        self.startup_active = True
 
 
     def browser(self):
@@ -284,15 +312,16 @@ class Audian(QMainWindow):
                 formats.remove(f)
                 formats.insert(0, f)
         filters = ['All files (*)'] + [f'{f} files (*.{f}, *.{f.lower()})' for f in formats]
-        path = '.' if self.open_button_active else os.path.dirname(self.browser().file_path)
+        path = '.' if self.startup_active else os.path.dirname(self.browser().file_path)
         if len(path) == 0:
             path = '.'
         file_paths = QFileDialog.getOpenFileNames(self, directory=path, filter=';;'.join(filters))[0]
         for file_path in file_paths:
             browser = DataBrowser(file_path, self.channels, self.audio)
             self.tabs.addTab(browser, os.path.basename(file_path))
-        if self.open_button_active and self.tabs.count() > 1:
+        if self.startup_active and self.tabs.count() > 1:
             self.tabs.removeTab(0)
+            self.startup_active = False
 
 
     def toggle_maximize(self):
@@ -308,8 +337,8 @@ class Audian(QMainWindow):
                 index = self.tabs.currentIndex()
             self.tabs.removeTab(index)
         if self.tabs.count() == 0:
-            self.tabs.addTab(self.open_button, 'File open')
-            self.open_button_active = True
+            self.tabs.addTab(self.startup, 'Startup')
+            self.startup_active = True
 
             
     def quit(self):
