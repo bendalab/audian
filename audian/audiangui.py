@@ -1,7 +1,7 @@
 import os
 import sys
 import argparse
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTabWidget
 from PyQt5.QtWidgets import QAction, QPushButton, QFileDialog
 from PyQt5.QtGui import QKeySequence
 from audioio import available_formats, PlayAudio
@@ -66,14 +66,22 @@ class MainWindow(QMainWindow):
     def __init__(self, file_path, channels):
         super().__init__()
 
-        # audio:
+        self.channels = channels
         self.audio = PlayAudio()
 
         # window:
         self.setWindowTitle(f'AUDIoANalyzer {__version__}')
-        self.browser = DataBrowser(file_path, channels, self.audio)
-        self.setCentralWidget(self.browser)
+        self.tabs = QTabWidget(self)
+        self.tabs.setDocumentMode(True)
+        self.tabs.setMovable(True)
+        self.tabs.setTabBarAutoHide(True)
+        self.tabs.setTabsClosable(True)
+        self.setCentralWidget(self.tabs)
 
+        # data:
+        browser = DataBrowser(file_path, channels, self.audio)
+        self.tabs.addTab(browser, os.path.basename(file_path))
+        
         # actions:
         self.setup_file_actions(self.menuBar())
         self.setup_view_actions(self.menuBar())
@@ -82,6 +90,10 @@ class MainWindow(QMainWindow):
     def __del__(self):
         if self.audio is not None:
             self.audio.close()
+
+
+    def browser(self):
+        return self.tabs.currentWidget()
 
         
     def setup_file_actions(self, menu):
@@ -107,47 +119,47 @@ class MainWindow(QMainWindow):
     def setup_time_actions(self, menu):
         play_act = QAction('&Play', self)
         play_act.setShortcut('P')
-        play_act.triggered.connect(self.browser.play_segment)
+        play_act.triggered.connect(lambda x=0: self.browser().play_segment())
         
         zoomxin_act = QAction('Zoom &in', self)
         zoomxin_act.setShortcuts(['+', '=', 'Shift+X']) # + QKeySequence.ZoomIn
-        zoomxin_act.triggered.connect(self.browser.zoom_time_in)
-
+        zoomxin_act.triggered.connect(lambda x=0: self.browser().zoom_time_in())
+        
         zoomxout_act = QAction('Zoom &out', self)
         zoomxout_act.setShortcuts(['-', 'x']) # + QKeySequence.ZoomOut
-        zoomxout_act.triggered.connect(self.browser.zoom_time_out)
+        zoomxout_act.triggered.connect(lambda x=0: self.browser().zoom_time_out())
 
         pagedown_act = QAction('Page &down', self)
         pagedown_act.setShortcuts(QKeySequence.MoveToNextPage)
-        pagedown_act.triggered.connect(self.browser.time_page_down)
+        pagedown_act.triggered.connect(lambda x=0: self.browser().time_page_down())
 
         pageup_act = QAction('Page &up', self)
         pageup_act.setShortcuts(QKeySequence.MoveToPreviousPage)
-        pageup_act.triggered.connect(self.browser.time_page_up)
+        pageup_act.triggered.connect(lambda x=0: self.browser().time_page_up())
 
         largedown_act = QAction('Block down', self)
         largedown_act.setShortcut('Ctrl+PgDown')
-        largedown_act.triggered.connect(self.browser.time_block_down)
+        largedown_act.triggered.connect(lambda x=0: self.browser().time_block_down())
 
         largeup_act = QAction('Block up', self)
         largeup_act.setShortcut('Ctrl+PgUp')
-        largeup_act.triggered.connect(self.browser.time_block_up)
+        largeup_act.triggered.connect(lambda x=0: self.browser().time_block_up())
 
         datadown_act = QAction('Trace down', self)
         datadown_act.setShortcuts(QKeySequence.MoveToNextLine)
-        datadown_act.triggered.connect(self.browser.time_down)
+        datadown_act.triggered.connect(lambda x=0: self.browser().time_down())
 
         dataup_act = QAction('Trace up', self)
         dataup_act.setShortcuts(QKeySequence.MoveToPreviousLine)
-        dataup_act.triggered.connect(self.browser.time_up)
+        dataup_act.triggered.connect(lambda x=0: self.browser().time_up())
 
         dataend_act = QAction('&End', self)
         dataend_act.setShortcuts([QKeySequence.MoveToEndOfLine, QKeySequence.MoveToEndOfDocument])
-        dataend_act.triggered.connect(self.browser.time_end)
+        dataend_act.triggered.connect(lambda x=0: self.browser().time_end())
 
         datahome_act = QAction('&Home', self)
         datahome_act.setShortcuts([QKeySequence.MoveToStartOfLine, QKeySequence.MoveToStartOfDocument])
-        datahome_act.triggered.connect(self.browser.time_home)
+        datahome_act.triggered.connect(lambda x=0: self.browser().time_home())
 
         time_menu = menu.addMenu('&Time')
         time_menu.addAction(play_act)
@@ -166,23 +178,23 @@ class MainWindow(QMainWindow):
     def setup_amplitude_actions(self, menu):
         zoomyin_act = QAction('Zoom &in', self)
         zoomyin_act.setShortcut('Shift+Y')
-        zoomyin_act.triggered.connect(self.browser.zoom_ampl_in)
+        zoomyin_act.triggered.connect(lambda x=0: self.browser().zoom_ampl_in())
 
         zoomyout_act = QAction('Zoom &out', self)
         zoomyout_act.setShortcut('Y')
-        zoomyout_act.triggered.connect(self.browser.zoom_ampl_out)
+        zoomyout_act.triggered.connect(lambda x=0: self.browser().zoom_ampl_out())
 
         autoy_act = QAction('&Auto scale', self)
         autoy_act.setShortcut('v')
-        autoy_act.triggered.connect(self.browser.auto_ampl)
+        autoy_act.triggered.connect(lambda x=0: self.browser().auto_ampl())
 
         resety_act = QAction('&Reset', self)
         resety_act.setShortcut('Shift+V')
-        resety_act.triggered.connect(self.browser.reset_ampl)
+        resety_act.triggered.connect(lambda x=0: self.browser().reset_ampl())
 
         centery_act = QAction('&Center', self)
         centery_act.setShortcut('C')
-        centery_act.triggered.connect(self.browser.center_ampl)
+        centery_act.triggered.connect(lambda x=0: self.browser().center_ampl())
 
         ampl_menu = menu.addMenu('&Amplitude')
         ampl_menu.addAction(zoomyin_act)
@@ -195,35 +207,35 @@ class MainWindow(QMainWindow):
     def setup_frequency_actions(self, menu):
         zoomfin_act = QAction('Zoom &in', self)
         zoomfin_act.setShortcut('Shift+F')
-        zoomfin_act.triggered.connect(self.browser.zoom_freq_in)
+        zoomfin_act.triggered.connect(lambda x=0: self.browser().zoom_freq_in())
 
         zoomfout_act = QAction('Zoom &out', self)
         zoomfout_act.setShortcut('F')
-        zoomfout_act.triggered.connect(self.browser.zoom_freq_out)
+        zoomfout_act.triggered.connect(lambda x=0: self.browser().zoom_freq_out())
 
         frequp_act = QAction('Move &up', self)
         frequp_act.setShortcuts(QKeySequence.MoveToNextChar)
-        frequp_act.triggered.connect(self.browser.freq_up)
+        frequp_act.triggered.connect(lambda x=0: self.browser().freq_up())
 
         freqdown_act = QAction('Move &down', self)
         freqdown_act.setShortcuts(QKeySequence.MoveToPreviousChar)
-        freqdown_act.triggered.connect(self.browser.freq_down)
+        freqdown_act.triggered.connect(lambda x=0: self.browser().freq_down())
 
         freqhome_act = QAction('&Home', self)
         freqhome_act.setShortcuts(QKeySequence.MoveToPreviousWord)
-        freqhome_act.triggered.connect(self.browser.freq_home)
+        freqhome_act.triggered.connect(lambda x=0: self.browser().freq_home())
 
         freqend_act = QAction('&End', self)
         freqend_act.setShortcuts(QKeySequence.MoveToNextWord)
-        freqend_act.triggered.connect(self.browser.freq_end)
+        freqend_act.triggered.connect(lambda x=0: self.browser().freq_end())
 
         fresup_act = QAction('Increase &resolution', self)
         fresup_act.setShortcut('Shift+R')
-        fresup_act.triggered.connect(self.browser.freq_resolution_up)
+        fresup_act.triggered.connect(lambda x=0: self.browser().freq_resolution_up())
 
         fresdown_act = QAction('De&crease resolution', self)
         fresdown_act.setShortcut('R')
-        fresdown_act.triggered.connect(self.browser.freq_resolution_down)
+        fresdown_act.triggered.connect(lambda x=0: self.browser().freq_resolution_down())
         
         freq_menu = menu.addMenu('Frequenc&y')
         freq_menu.addAction(zoomfin_act)
@@ -239,27 +251,27 @@ class MainWindow(QMainWindow):
     def setup_power_actions(self, menu):
         powerup_act = QAction('Power &up', self)
         powerup_act.setShortcut('Shift+Z')
-        powerup_act.triggered.connect(self.browser.power_up)
+        powerup_act.triggered.connect(lambda x=0: self.browser().power_up())
 
         powerdown_act = QAction('Power &down', self)
         powerdown_act.setShortcut('Z')
-        powerdown_act.triggered.connect(self.browser.power_down)
+        powerdown_act.triggered.connect(lambda x=0: self.browser().power_down())
 
         maxpowerup_act = QAction('Max up', self)
         maxpowerup_act.setShortcut('Shift+K')
-        maxpowerup_act.triggered.connect(self.browser.max_power_up)
+        maxpowerup_act.triggered.connect(lambda x=0: self.browser().max_power_up())
 
         maxpowerdown_act = QAction('Max down', self)
         maxpowerdown_act.setShortcut('K')
-        maxpowerdown_act.triggered.connect(self.browser.max_power_down)
+        maxpowerdown_act.triggered.connect(lambda x=0: self.browser().max_power_down())
 
         minpowerup_act = QAction('Min up', self)
         minpowerup_act.setShortcut('Shift+J')
-        minpowerup_act.triggered.connect(self.browser.min_power_up)
+        minpowerup_act.triggered.connect(lambda x=0: self.browser().min_power_up())
 
         minpowerdown_act = QAction('Min down', self)
         minpowerdown_act.setShortcut('J')
-        minpowerdown_act.triggered.connect(self.browser.min_power_down)
+        minpowerdown_act.triggered.connect(lambda x=0: self.browser().min_power_down())
         
         power_menu = menu.addMenu('&Power')
         power_menu.addAction(powerup_act)
@@ -273,31 +285,30 @@ class MainWindow(QMainWindow):
     def setup_view_actions(self, menu):
         toggletraces_act = QAction('Toggle &traces', self)
         toggletraces_act.setShortcut('Ctrl+T')
-        toggletraces_act.triggered.connect(self.browser.toggle_traces)
+        toggletraces_act.triggered.connect(lambda x=0: self.browser().toggle_traces())
 
         togglespectros_act = QAction('Toggle &spectrograms', self)
         togglespectros_act.setShortcut('Ctrl+S')
-        togglespectros_act.triggered.connect(self.browser.toggle_spectrograms)
+        togglespectros_act.triggered.connect(lambda x=0: self.browser().toggle_spectrograms())
 
         togglecbars_act = QAction('Toggle &color bars', self)
         togglecbars_act.setShortcut('Ctrl+C')
-        togglecbars_act.triggered.connect(self.browser.toggle_colorbars)
-
+        togglecbars_act.triggered.connect(lambda x=0: self.browser().toggle_colorbars())
+        """
         toggle_channel_acts = []
-        if self.browser.data.channels > 1:
-            for c in range(min(10, self.browser.data.channels)):
-                togglechannel_act = QAction(f'Toggle channel &{c}', self)
-                togglechannel_act.setShortcut(f'{c}')
-                togglechannel_act.triggered.connect(lambda x, c=c: self.browser.toggle_channel(c))
-                toggle_channel_acts.append(togglechannel_act)
-
+        for c in range(10):
+            togglechannel_act = QAction(f'Toggle channel &{c}', self)
+            togglechannel_act.setShortcut(f'{c}')
+            togglechannel_act.triggered.connect(lambda x=0: lambda x, c=c: self.browser().toggle_channel(c()))
+            toggle_channel_acts.append(togglechannel_act)
+        """
         grid_act = QAction('Toggle &grid', self)
         grid_act.setShortcut('g')
-        grid_act.triggered.connect(self.browser.toggle_grids)
+        grid_act.triggered.connect(lambda x=0: self.browser().toggle_grids())
 
         mouse_act = QAction('Toggle &zoom mode', self)
         mouse_act.setShortcut('o')
-        mouse_act.triggered.connect(self.browser.toggle_zoom_mode)
+        mouse_act.triggered.connect(lambda x=0: self.browser().toggle_zoom_mode())
 
         maximize_act = QAction('Toggle &maximize', self)
         maximize_act.setShortcut('Ctrl+M')
@@ -311,8 +322,8 @@ class MainWindow(QMainWindow):
         view_menu.addAction(toggletraces_act)
         view_menu.addAction(togglespectros_act)
         view_menu.addAction(togglecbars_act)
-        for act in toggle_channel_acts:
-            view_menu.addAction(act)
+        #for act in toggle_channel_acts:
+        #    view_menu.addAction(act)
         view_menu.addSeparator()
         view_menu.addAction(mouse_act)
         view_menu.addAction(grid_act)
@@ -327,14 +338,13 @@ class MainWindow(QMainWindow):
                 formats.remove(f)
                 formats.insert(0, f)
         filters = ['All files (*)'] + [f'{f} files (*.{f}, *.{f.lower()})' for f in formats]
-        path = '.' if self.file_path is None else os.path.dirname(self.file_path)
+        path = '.' if self.browser().file_path is None else os.path.dirname(self.browser().file_path)
         if len(path) == 0:
             path = '.'
         file_paths = QFileDialog.getOpenFileNames(self, directory=path, filter=';;'.join(filters))[0]
-        for file_path in reversed(file_paths):
-            main = MainWindow(file_path, self.channels)
-            main.show()
-            main_wins.append(main)
+        for file_path in file_paths:
+            browser = DataBrowser(file_path, self.channels, self.audio)
+            self.tabs.addTab(browser, os.path.basename(file_path))
 
 
     def toggle_maximize(self):
