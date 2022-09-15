@@ -44,6 +44,7 @@ class Audian(QMainWindow):
             browser = DataBrowser(file_path, self.channels, self.audio)
             self.tabs.addTab(browser, os.path.basename(file_path))
         if self.tabs.count() > 0:
+            self.tabs.setCurrentIndex(0)
             self.startup.setVisible(False)
             self.startup_active = False
             self.view_menu.setEnabled(True)
@@ -328,9 +329,13 @@ class Audian(QMainWindow):
         if len(path) == 0:
             path = '.'
         file_paths = QFileDialog.getOpenFileNames(self, directory=path, filter=';;'.join(filters))[0]
+        first = True
         for file_path in file_paths:
             browser = DataBrowser(file_path, self.channels, self.audio)
             self.tabs.addTab(browser, os.path.basename(file_path))
+            if first:
+                self.tabs.setCurrentWidget(browser)
+                first = False
         if self.startup_active and self.tabs.count() > 1:
             self.tabs.removeTab(0)
             self.startup.setVisible(False)

@@ -127,8 +127,8 @@ class DataBrowser(QWidget):
             axt.addItem(trace)
             axt.setLabel('left', f'channel {c}', color='black')
             axt.setLabel('bottom', 'Time', 's', color='black')
-            axt.getAxis('bottom').showLabel(c == self.data.channels-1)
-            axt.getAxis('bottom').setStyle(showValues=(c == self.data.channels-1))
+            axt.getAxis('bottom').showLabel(c == self.show_channels[-1])
+            axt.getAxis('bottom').setStyle(showValues=(c == self.show_channels[-1]))
             self.axts.append(axt)
             self.axys.append(axt)
             self.axgs.append(axt)
@@ -452,11 +452,13 @@ class DataBrowser(QWidget):
         for axt, axs, cb in zip(self.axtraces, self.axspecs, self.cbars):
             if axs.isVisible():
                 axt.setVisible(True)
-                if axt is self.axtraces[self.show_channels[-1]]:
-                    axt.getAxis('bottom').showLabel(True)
-                    axt.getAxis('bottom').setStyle(showValues=True)
             axs.setVisible(not axs.isVisible())
             if axs.isVisible():
+                if axt.isVisible():
+                    axs.getAxis('bottom').showLabel(False)
+                    axs.getAxis('bottom').setStyle(showValues=False)
+                    axt.getAxis('bottom').showLabel(axt is self.axtraces[self.show_channels[-1]])
+                    axt.getAxis('bottom').setStyle(showValues=(axt is self.axtraces[self.show_channels[-1]]))
                 cb.setVisible(self.show_cbars)
             else:
                 cb.setVisible(False)
