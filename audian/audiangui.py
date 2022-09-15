@@ -61,7 +61,7 @@ class Audian(QMainWindow):
 
         close_act = QAction('&Close', self)
         close_act.setShortcut(QKeySequence.Close)
-        close_act.triggered.connect(self.close)
+        close_act.triggered.connect(lambda x: self.close(None))
 
         quit_act = QAction('&Quit', self)
         quit_act.setShortcuts(QKeySequence.Quit)
@@ -242,14 +242,12 @@ class Audian(QMainWindow):
         togglecbars_act = QAction('Toggle &color bars', self)
         togglecbars_act.setShortcut('Ctrl+C')
         togglecbars_act.triggered.connect(lambda x=0: self.browser().toggle_colorbars())
-        """
         toggle_channel_acts = []
         for c in range(10):
             togglechannel_act = QAction(f'Toggle channel &{c}', self)
             togglechannel_act.setShortcut(f'{c}')
-            togglechannel_act.triggered.connect(lambda x=0: lambda x, c=c: self.browser().toggle_channel(c()))
+            togglechannel_act.triggered.connect(lambda x, channel=c: self.browser().toggle_channel(channel))
             toggle_channel_acts.append(togglechannel_act)
-        """
         grid_act = QAction('Toggle &grid', self)
         grid_act.setShortcut('g')
         grid_act.triggered.connect(lambda x=0: self.browser().toggle_grids())
@@ -270,8 +268,9 @@ class Audian(QMainWindow):
         view_menu.addAction(toggletraces_act)
         view_menu.addAction(togglespectros_act)
         view_menu.addAction(togglecbars_act)
-        #for act in toggle_channel_acts:
-        #    view_menu.addAction(act)
+        channel_menu = view_menu.addMenu('&Channels')
+        for act in toggle_channel_acts:
+            channel_menu.addAction(act)
         view_menu.addSeparator()
         view_menu.addAction(mouse_act)
         view_menu.addAction(grid_act)
