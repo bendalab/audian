@@ -106,12 +106,8 @@ class MainWindow(QMainWindow):
         self.open()
 
         # actions:
-        self.setup_file_actions()
-        self.setup_time_actions()
-        self.setup_amplitude_actions()
-        self.setup_frequency_actions()
-        self.setup_power_actions()
-        self.setup_view_actions()
+        self.setup_file_actions(self.menuBar())
+        self.setup_view_actions(self.menuBar())
 
 
     def __del__(self):
@@ -121,7 +117,7 @@ class MainWindow(QMainWindow):
             self.audio.close()
 
         
-    def setup_file_actions(self):
+    def setup_file_actions(self, menu):
         open_act = QAction('&Open', self)
         open_act.setShortcuts(QKeySequence.Open)
         open_act.triggered.connect(self.open_files)
@@ -134,14 +130,14 @@ class MainWindow(QMainWindow):
         quit_act.setShortcuts(QKeySequence.Quit)
         quit_act.triggered.connect(self.quit)
         
-        file_menu = self.menuBar().addMenu('&File')
+        file_menu = menu.addMenu('&File')
         file_menu.addAction(open_act)
         file_menu.addSeparator()
         file_menu.addAction(close_act)
         file_menu.addAction(quit_act)
 
 
-    def setup_time_actions(self):
+    def setup_time_actions(self, menu):
         play_act = QAction('&Play', self)
         play_act.setShortcut('P')
         play_act.triggered.connect(self.play_segment)
@@ -170,11 +166,11 @@ class MainWindow(QMainWindow):
         largeup_act.setShortcut('Ctrl+PgUp')
         largeup_act.triggered.connect(self.time_block_up)
 
-        datadown_act = QAction('Data down', self)
+        datadown_act = QAction('Trace down', self)
         datadown_act.setShortcuts(QKeySequence.MoveToNextLine)
         datadown_act.triggered.connect(self.time_down)
 
-        dataup_act = QAction('Data up', self)
+        dataup_act = QAction('Trace up', self)
         dataup_act.setShortcuts(QKeySequence.MoveToPreviousLine)
         dataup_act.triggered.connect(self.time_up)
 
@@ -186,7 +182,7 @@ class MainWindow(QMainWindow):
         datahome_act.setShortcuts([QKeySequence.MoveToStartOfLine, QKeySequence.MoveToStartOfDocument])
         datahome_act.triggered.connect(self.time_home)
 
-        time_menu = self.menuBar().addMenu('&Time')
+        time_menu = menu.addMenu('&Time')
         time_menu.addAction(play_act)
         time_menu.addAction(zoomxin_act)
         time_menu.addAction(zoomxout_act)
@@ -200,7 +196,7 @@ class MainWindow(QMainWindow):
         time_menu.addAction(datahome_act)
 
         
-    def setup_amplitude_actions(self):
+    def setup_amplitude_actions(self, menu):
         zoomyin_act = QAction('Zoom &in', self)
         zoomyin_act.setShortcut('Shift+Y')
         zoomyin_act.triggered.connect(self.zoom_ampl_in)
@@ -221,7 +217,7 @@ class MainWindow(QMainWindow):
         centery_act.setShortcut('C')
         centery_act.triggered.connect(self.center_ampl)
 
-        ampl_menu = self.menuBar().addMenu('&Amplitude')
+        ampl_menu = menu.addMenu('&Amplitude')
         ampl_menu.addAction(zoomyin_act)
         ampl_menu.addAction(zoomyout_act)
         ampl_menu.addAction(autoy_act)
@@ -229,7 +225,7 @@ class MainWindow(QMainWindow):
         ampl_menu.addAction(centery_act)
 
 
-    def setup_frequency_actions(self):
+    def setup_frequency_actions(self, menu):
         zoomfin_act = QAction('Zoom &in', self)
         zoomfin_act.setShortcut('Shift+F')
         zoomfin_act.triggered.connect(self.zoom_freq_in)
@@ -262,7 +258,7 @@ class MainWindow(QMainWindow):
         fresdown_act.setShortcut('R')
         fresdown_act.triggered.connect(self.freq_resolution_down)
         
-        freq_menu = self.menuBar().addMenu('Frequenc&y')
+        freq_menu = menu.addMenu('Frequenc&y')
         freq_menu.addAction(zoomfin_act)
         freq_menu.addAction(zoomfout_act)
         freq_menu.addAction(frequp_act)
@@ -273,7 +269,7 @@ class MainWindow(QMainWindow):
         freq_menu.addAction(fresdown_act)
 
 
-    def setup_power_actions(self):
+    def setup_power_actions(self, menu):
         powerup_act = QAction('Power &up', self)
         powerup_act.setShortcut('Shift+Z')
         powerup_act.triggered.connect(self.power_up)
@@ -298,7 +294,7 @@ class MainWindow(QMainWindow):
         minpowerdown_act.setShortcut('J')
         minpowerdown_act.triggered.connect(self.min_power_down)
         
-        power_menu = self.menuBar().addMenu('&Power')
+        power_menu = menu.addMenu('&Power')
         power_menu.addAction(powerup_act)
         power_menu.addAction(powerdown_act)
         power_menu.addAction(maxpowerup_act)
@@ -307,7 +303,7 @@ class MainWindow(QMainWindow):
         power_menu.addAction(minpowerdown_act)
 
 
-    def setup_view_actions(self):
+    def setup_view_actions(self, menu):
         toggletraces_act = QAction('Toggle &traces', self)
         toggletraces_act.setShortcut('Ctrl+T')
         toggletraces_act.triggered.connect(self.toggle_traces)
@@ -340,7 +336,11 @@ class MainWindow(QMainWindow):
         maximize_act.setShortcut('Ctrl+M')
         maximize_act.triggered.connect(self.toggle_maximize)
 
-        view_menu = self.menuBar().addMenu('&View')
+        view_menu = menu.addMenu('&View')
+        self.setup_time_actions(view_menu)
+        self.setup_amplitude_actions(view_menu)
+        self.setup_frequency_actions(view_menu)
+        self.setup_power_actions(view_menu)
         view_menu.addAction(toggletraces_act)
         view_menu.addAction(togglespectros_act)
         view_menu.addAction(togglecbars_act)
