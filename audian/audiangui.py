@@ -19,6 +19,7 @@ class Audian(QMainWindow):
 
         self.link_timezoom = True
         self.link_timescroll = False
+        self.link_power = True
         self.link_channels = True
         self.link_panels = True
 
@@ -134,8 +135,8 @@ class Audian(QMainWindow):
         self.link_timescroll = not self.link_timescroll
 
         
-    def scroll_time(self, movefunc):
-        getattr(self.browser(), movefunc)()
+    def scroll_time(self, scroolfunc):
+        getattr(self.browser(), scroolfunc)()
         if self.link_timescroll:
             for i in range(self.tabs.count()):
                 if i != self.tabs.currentIndex():
@@ -282,33 +283,52 @@ class Audian(QMainWindow):
         freq_menu.addAction(fresup_act)
         freq_menu.addAction(fresdown_act)
 
+        
+    def toggle_link_power(self):
+        self.link_power = not self.link_power
+
+        
+    def zoom_power(self, powerfunc):
+        getattr(self.browser(), powerfunc)()
+        if self.link_power:
+            for i in range(self.tabs.count()):
+                if i != self.tabs.currentIndex():
+                    self.tabs.widget(i).set_cbar_levels(self.browser().cbars[0])
+
 
     def setup_power_actions(self, menu):
+        linkpower_act = QAction('Link &power', self)
+        linkpower_act.setShortcut('Alt+P')
+        linkpower_act.setCheckable(True)
+        linkpower_act.setChecked(self.link_power)
+        linkpower_act.toggled.connect(self.toggle_link_power)
+        
         powerup_act = QAction('Power &up', self)
         powerup_act.setShortcut('Shift+Z')
-        powerup_act.triggered.connect(lambda x=0: self.browser().power_up())
+        powerup_act.triggered.connect(lambda x: self.zoom_power('power_up'))
 
         powerdown_act = QAction('Power &down', self)
         powerdown_act.setShortcut('Z')
-        powerdown_act.triggered.connect(lambda x=0: self.browser().power_down())
+        powerdown_act.triggered.connect(lambda x: self.zoom_power('power_down'))
 
         maxpowerup_act = QAction('Max up', self)
         maxpowerup_act.setShortcut('Shift+K')
-        maxpowerup_act.triggered.connect(lambda x=0: self.browser().max_power_up())
+        maxpowerup_act.triggered.connect(lambda x: self.zoom_power('max_power_up'))
 
         maxpowerdown_act = QAction('Max down', self)
         maxpowerdown_act.setShortcut('K')
-        maxpowerdown_act.triggered.connect(lambda x=0: self.browser().max_power_down())
+        maxpowerdown_act.triggered.connect(lambda x: self.zoom_power('max_power_down'))
 
         minpowerup_act = QAction('Min up', self)
         minpowerup_act.setShortcut('Shift+J')
-        minpowerup_act.triggered.connect(lambda x=0: self.browser().min_power_up())
+        minpowerup_act.triggered.connect(lambda x: self.zoom_power('min_power_up'))
 
         minpowerdown_act = QAction('Min down', self)
         minpowerdown_act.setShortcut('J')
-        minpowerdown_act.triggered.connect(lambda x=0: self.browser().min_power_down())
+        minpowerdown_act.triggered.connect(lambda x=0: self.zoom_power('min_power_down'))
         
         power_menu = menu.addMenu('&Power')
+        power_menu.addAction(linkpower_act)
         power_menu.addAction(powerup_act)
         power_menu.addAction(powerdown_act)
         power_menu.addAction(maxpowerup_act)
