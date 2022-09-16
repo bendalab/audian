@@ -220,10 +220,11 @@ class Audian(QMainWindow):
     def zoom_amplitude(self, amplitudefunc):
         getattr(self.browser(), amplitudefunc)()
         if self.link_amplitude:
+            cc = self.browser().current_channel
+            trace = self.browser().traces[cc]
             for i in range(self.tabs.count()):
                 if i != self.tabs.currentIndex():
-                    self.tabs.widget(i).set_amplitudes(self.browser().traces[0].ymin,
-                                                       self.browser().traces[0].ymax)
+                    self.tabs.widget(i).set_amplitudes(trace.ymin, trace.ymax)
 
         
     def setup_amplitude_actions(self, menu):
@@ -274,6 +275,15 @@ class Audian(QMainWindow):
                     self.tabs.widget(i).set_frequencies(self.browser().f0,
                                                         self.browser().f1)
 
+        
+    def frequency_resolution(self, resolutionfunc):
+        getattr(self.browser(), resolutionfunc)()
+        if self.link_frequency:
+            for i in range(self.tabs.count()):
+                if i != self.tabs.currentIndex():
+                    self.tabs.widget(i).set_NFFT(self.browser().nfft,
+                                                 self.browser().fresolution)
+
 
     def setup_frequency_actions(self, menu):
         linkfrequency_act = QAction('Link &frequency', self)
@@ -308,11 +318,11 @@ class Audian(QMainWindow):
 
         fresup_act = QAction('Increase &resolution', self)
         fresup_act.setShortcut('Shift+R')
-        fresup_act.triggered.connect(lambda x: self.zoom_frequency('freq_resolution_up'))
+        fresup_act.triggered.connect(lambda x: self.frequency_resolution('freq_resolution_up'))
 
         fresdown_act = QAction('De&crease resolution', self)
         fresdown_act.setShortcut('R')
-        fresdown_act.triggered.connect(lambda x: self.zoom_frequency('freq_resolution_down'))
+        fresdown_act.triggered.connect(lambda x: self.frequency_resolution('freq_resolution_down'))
         
         freq_menu = menu.addMenu('Frequenc&y')
         freq_menu.addAction(linkfrequency_act)
@@ -333,9 +343,11 @@ class Audian(QMainWindow):
     def zoom_power(self, powerfunc):
         getattr(self.browser(), powerfunc)()
         if self.link_power:
+            cc = self.browser().current_channel
+            cbar = self.browser().cbars[cc]
             for i in range(self.tabs.count()):
                 if i != self.tabs.currentIndex():
-                    self.tabs.widget(i).set_cbar_levels(self.browser().cbars[0])
+                    self.tabs.widget(i).set_cbar_levels(cbar)
 
 
     def setup_power_actions(self, menu):
@@ -391,6 +403,14 @@ class Audian(QMainWindow):
                     self.tabs.widget(i).set_channels(self.browser().show_channels)
 
         
+    def select_channels(self, selectfunc):
+        getattr(self.browser(), selectfunc)()
+        if self.link_channels:
+            for i in range(self.tabs.count()):
+                if i != self.tabs.currentIndex():
+                    self.tabs.widget(i).select_channels(self.browser().selected_channels)
+
+        
     def toggle_link_panels(self):
         self.link_panels = not self.link_panels
 
@@ -439,13 +459,17 @@ class Audian(QMainWindow):
             togglechannel_act.triggered.connect(lambda x, channel=c: self.toggle_channel(channel))
             self.toggle_channel_acts.append(togglechannel_act)
 
+        allchannel_act = QAction('Select &all channels', self)
+        allchannel_act.setShortcuts(QKeySequence.SelectAll)
+        allchannel_act.triggered.connect(lambda x: self.select_channels('all_channels'))
+
         nextchannel_act = QAction('Select &next channel', self)
         nextchannel_act.setShortcuts(QKeySequence.SelectNextLine)
-        nextchannel_act.triggered.connect(lambda x: self.browser().next_channel())
+        nextchannel_act.triggered.connect(lambda x: self.select_channels('next_channel'))
 
         previouschannel_act = QAction('Select &previous channel', self)
         previouschannel_act.setShortcuts(QKeySequence.SelectPreviousLine)
-        previouschannel_act.triggered.connect(lambda x: self.browser().previous_channel())
+        previouschannel_act.triggered.connect(lambda x: self.select_channels('previous_channel'))
 
         linkpanels_act = QAction('Link &panels', self)
         linkpanels_act.setShortcut('Alt+P')
@@ -486,6 +510,7 @@ class Audian(QMainWindow):
         channel_menu = self.view_menu.addMenu('&Channels')
         for act in self.toggle_channel_acts:
             channel_menu.addAction(act)
+        self.view_menu.addAction(allchannel_act)
         self.view_menu.addAction(nextchannel_act)
         self.view_menu.addAction(previouschannel_act)
         self.view_menu.addAction(linkpanels_act)
