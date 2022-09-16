@@ -473,9 +473,16 @@ class DataBrowser(QWidget):
     def set_channels(self, channels=None):
         if not channels is None:
             self.show_channels = [c for c in channels if c < len(self.figs)]
+        if not self.current_channel in self.show_channels:
+            for c in self.show_channels:
+                if c >= self.current_channel:
+                    break
+            self.current_channel = c
+            self.selected_channels = [self.current_channel]
         for c in range(len(self.figs)):
             self.figs[c].setVisible(c in self.show_channels)
             self.show_xticks(c, c == self.show_channels[-1])
+        self.update_borders()
             
             
     def toggle_channel(self, channel):
