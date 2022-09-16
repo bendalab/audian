@@ -102,7 +102,7 @@ class Audian(QMainWindow):
         open_act.triggered.connect(self.open_files)
 
         close_act = QAction('&Close', self)
-        close_act.setShortcut(QKeySequence.Close)
+        close_act.setShortcuts([QKeySequence.Close, 'Q'])
         close_act.triggered.connect(lambda x: self.close(None))
 
         quit_act = QAction('&Quit', self)
@@ -162,11 +162,11 @@ class Audian(QMainWindow):
         linktimezoom_act.toggled.connect(self.toggle_link_timezoom)
 
         zoomxin_act = QAction('Zoom &in', self)
-        zoomxin_act.setShortcuts(['+', '=', 'Shift+X']) # + QKeySequence.ZoomIn
+        zoomxin_act.setShortcuts([QKeySequence.ZoomIn, '+', '=', 'Shift+X'])
         zoomxin_act.triggered.connect(lambda x: self.zoom_time('zoom_time_in'))
         
         zoomxout_act = QAction('Zoom &out', self)
-        zoomxout_act.setShortcuts(['-', 'x']) # + QKeySequence.ZoomOut
+        zoomxout_act.setShortcuts([QKeySequence.ZoomOut, '-', 'x'])
         zoomxout_act.triggered.connect(lambda x: self.zoom_time('zoom_time_out'))
         
         linktimescroll_act = QAction('Link &time scroll', self)
@@ -493,7 +493,7 @@ class Audian(QMainWindow):
         if isinstance(browser, DataBrowser):
             for i, act in enumerate(self.toggle_channel_acts):
                 act.setVisible(i < browser.data.channels)
-        browser.update()
+            browser.update()
 
         
     def open_files(self):
