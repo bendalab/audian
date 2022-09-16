@@ -19,6 +19,7 @@ class Audian(QMainWindow):
 
         self.link_timezoom = True
         self.link_timescroll = False
+        self.link_frequency = True
         self.link_power = True
         self.link_channels = True
         self.link_panels = True
@@ -239,41 +240,60 @@ class Audian(QMainWindow):
         ampl_menu.addAction(resety_act)
         ampl_menu.addAction(centery_act)
 
+        
+    def toggle_link_frequency(self):
+        self.link_frequency = not self.link_frequency
+
+        
+    def zoom_frequency(self, frequencyfunc):
+        getattr(self.browser(), frequencyfunc)()
+        if self.link_frequency:
+            for i in range(self.tabs.count()):
+                if i != self.tabs.currentIndex():
+                    self.tabs.widget(i).set_frequencies(self.browser().f0, self.browser().f1)
+
 
     def setup_frequency_actions(self, menu):
+        linkfrequency_act = QAction('Link &frequency', self)
+        #linkfrequency_act.setShortcut('Alt+F')
+        linkfrequency_act.setCheckable(True)
+        linkfrequency_act.setChecked(self.link_frequency)
+        linkfrequency_act.toggled.connect(self.toggle_link_frequency)
+        
         zoomfin_act = QAction('Zoom &in', self)
         zoomfin_act.setShortcut('Shift+F')
-        zoomfin_act.triggered.connect(lambda x=0: self.browser().zoom_freq_in())
+        zoomfin_act.triggered.connect(lambda x: self.zoom_frequency('zoom_freq_in'))
 
         zoomfout_act = QAction('Zoom &out', self)
         zoomfout_act.setShortcut('F')
-        zoomfout_act.triggered.connect(lambda x=0: self.browser().zoom_freq_out())
+        zoomfout_act.triggered.connect(lambda x: self.zoom_frequency('zoom_freq_out'))
 
         frequp_act = QAction('Move &up', self)
         frequp_act.setShortcuts(QKeySequence.MoveToNextChar)
-        frequp_act.triggered.connect(lambda x=0: self.browser().freq_up())
+        frequp_act.triggered.connect(lambda x: self.zoom_frequency('freq_up'))
 
         freqdown_act = QAction('Move &down', self)
         freqdown_act.setShortcuts(QKeySequence.MoveToPreviousChar)
-        freqdown_act.triggered.connect(lambda x=0: self.browser().freq_down())
+        freqdown_act.triggered.connect(lambda x: self.zoom_frequency('freq_down'))
 
         freqhome_act = QAction('&Home', self)
         freqhome_act.setShortcuts(QKeySequence.MoveToPreviousWord)
-        freqhome_act.triggered.connect(lambda x=0: self.browser().freq_home())
+        freqhome_act.triggered.connect(lambda x: self.zoom_frequency('freq_home'))
 
         freqend_act = QAction('&End', self)
         freqend_act.setShortcuts(QKeySequence.MoveToNextWord)
-        freqend_act.triggered.connect(lambda x=0: self.browser().freq_end())
+        freqend_act.triggered.connect(lambda x: self.zoom_frequency('freq_end'))
 
         fresup_act = QAction('Increase &resolution', self)
         fresup_act.setShortcut('Shift+R')
-        fresup_act.triggered.connect(lambda x=0: self.browser().freq_resolution_up())
+        fresup_act.triggered.connect(lambda x: self.zoom_frequency('freq_resolution_up'))
 
         fresdown_act = QAction('De&crease resolution', self)
         fresdown_act.setShortcut('R')
-        fresdown_act.triggered.connect(lambda x=0: self.browser().freq_resolution_down())
+        fresdown_act.triggered.connect(lambda x: self.zoom_frequency('freq_resolution_down'))
         
         freq_menu = menu.addMenu('Frequenc&y')
+        freq_menu.addAction(linkfrequency_act)
         freq_menu.addAction(zoomfin_act)
         freq_menu.addAction(zoomfout_act)
         freq_menu.addAction(frequp_act)
@@ -325,7 +345,7 @@ class Audian(QMainWindow):
 
         minpowerdown_act = QAction('Min down', self)
         minpowerdown_act.setShortcut('J')
-        minpowerdown_act.triggered.connect(lambda x=0: self.zoom_power('min_power_down'))
+        minpowerdown_act.triggered.connect(lambda x: self.zoom_power('min_power_down'))
         
         power_menu = menu.addMenu('&Power')
         power_menu.addAction(linkpower_act)
@@ -417,11 +437,11 @@ class Audian(QMainWindow):
             
         grid_act = QAction('Toggle &grid', self)
         grid_act.setShortcut('g')
-        grid_act.triggered.connect(lambda x=0: self.browser().toggle_grids())
+        grid_act.triggered.connect(lambda x: self.browser().toggle_grids())
 
         mouse_act = QAction('Toggle &zoom mode', self)
         mouse_act.setShortcut('o')
-        mouse_act.triggered.connect(lambda x=0: self.browser().toggle_zoom_mode())
+        mouse_act.triggered.connect(lambda x: self.browser().toggle_zoom_mode())
 
         maximize_act = QAction('Toggle &maximize', self)
         maximize_act.setShortcut('Ctrl+M')

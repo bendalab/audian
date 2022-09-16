@@ -287,7 +287,11 @@ class DataBrowser(QWidget):
             ax.setYRange(trace.ymin, trace.ymax)
 
 
-    def set_freq_ranges(self):
+    def set_frequencies(self, f0=None, f1=None):
+        if not f0 is None:
+            self.f0 = f0
+        if not f1 is None:
+            self.f1 = f1
         for ax in self.axfys:
             ax.setYRange(self.f0, self.f1)
         for ax in self.axfxs:
@@ -297,7 +301,7 @@ class DataBrowser(QWidget):
     def set_frange(self, viewbox, frange):
         self.f0 = frange[0]
         self.f1 = frange[1]
-        self.set_freq_ranges()
+        self.set_frequencies()
         
             
     def zoom_freq_in(self):
@@ -305,7 +309,7 @@ class DataBrowser(QWidget):
         if df > 0.1:
             df *= 0.5
             self.f1 = self.f0 + df
-            self.set_freq_ranges()
+            self.set_frequencies()
             
         
     def zoom_freq_out(self):
@@ -321,7 +325,7 @@ class DataBrowser(QWidget):
             if self.f0 < 0:
                 self.f0 = 0
                 self.f1 = df
-            self.set_freq_ranges()
+            self.set_frequencies()
                 
         
     def freq_down(self):
@@ -332,7 +336,7 @@ class DataBrowser(QWidget):
             if self.f0 < 0.0:
                 self.f0 = 0.0
                 self.f1 = df
-            self.set_freq_ranges()
+            self.set_frequencies()
 
             
     def freq_up(self):
@@ -340,7 +344,7 @@ class DataBrowser(QWidget):
             df = self.f1 - self.f0
             self.f0 += 0.5*df
             self.f1 += 0.5*df
-            self.set_freq_ranges()
+            self.set_frequencies()
 
 
     def freq_home(self):
@@ -348,7 +352,7 @@ class DataBrowser(QWidget):
             df = self.f1 - self.f0
             self.f0 = 0.0
             self.f1 = df
-            self.set_freq_ranges()
+            self.set_frequencies()
 
             
     def freq_end(self):
@@ -359,7 +363,7 @@ class DataBrowser(QWidget):
             if self.f0 < 0.0:
                 self.f0 = 0.0
                 self.f1 = df
-            self.set_freq_ranges()
+            self.set_frequencies()
 
         
     def freq_resolution_down(self):
