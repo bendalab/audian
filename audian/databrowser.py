@@ -257,6 +257,13 @@ class DataBrowser(QWidget):
             self.set_times()
 
 
+    def set_amplitudes(self, ymin, ymax):
+        for ax, trace in zip(self.axys, self.traces):
+            trace.ymin = ymin
+            trace.ymax = ymax
+            ax.setYRange(trace.ymin, trace.ymax)
+
+
     def zoom_ampl_in(self):
         for ax, trace in zip(self.axys, self.traces):
             trace.zoom_ampl_in()

@@ -19,6 +19,7 @@ class Audian(QMainWindow):
 
         self.link_timezoom = True
         self.link_timescroll = False
+        self.link_amplitude = True
         self.link_frequency = True
         self.link_power = True
         self.link_channels = True
@@ -212,28 +213,48 @@ class Audian(QMainWindow):
         time_menu.addAction(datahome_act)
 
         
+    def toggle_link_amplitude(self):
+        self.link_amplitude = not self.link_amplitude
+
+        
+    def zoom_amplitude(self, amplitudefunc):
+        getattr(self.browser(), amplitudefunc)()
+        if self.link_amplitude:
+            for i in range(self.tabs.count()):
+                if i != self.tabs.currentIndex():
+                    self.tabs.widget(i).set_amplitudes(self.browser().traces[0].ymin,
+                                                       self.browser().traces[0].ymax)
+
+        
     def setup_amplitude_actions(self, menu):
+        linkamplitude_act = QAction('Link &amplitude', self)
+        linkamplitude_act.setShortcut('Alt+A')
+        linkamplitude_act.setCheckable(True)
+        linkamplitude_act.setChecked(self.link_amplitude)
+        linkamplitude_act.toggled.connect(self.toggle_link_amplitude)
+        
         zoomyin_act = QAction('Zoom &in', self)
         zoomyin_act.setShortcut('Shift+Y')
-        zoomyin_act.triggered.connect(lambda x=0: self.browser().zoom_ampl_in())
+        zoomyin_act.triggered.connect(lambda x: self.zoom_amplitude('zoom_ampl_in'))
 
         zoomyout_act = QAction('Zoom &out', self)
         zoomyout_act.setShortcut('Y')
-        zoomyout_act.triggered.connect(lambda x=0: self.browser().zoom_ampl_out())
+        zoomyout_act.triggered.connect(lambda x: self.zoom_amplitude('zoom_ampl_out'))
 
         autoy_act = QAction('&Auto scale', self)
         autoy_act.setShortcut('v')
-        autoy_act.triggered.connect(lambda x=0: self.browser().auto_ampl())
+        autoy_act.triggered.connect(lambda x: self.zoom_amplitude('auto_ampl'))
 
         resety_act = QAction('&Reset', self)
         resety_act.setShortcut('Shift+V')
-        resety_act.triggered.connect(lambda x=0: self.browser().reset_ampl())
+        resety_act.triggered.connect(lambda x: self.zoom_amplitude('reset_ampl'))
 
         centery_act = QAction('&Center', self)
         centery_act.setShortcut('C')
-        centery_act.triggered.connect(lambda x=0: self.browser().center_ampl())
+        centery_act.triggered.connect(lambda x: self.zoom_amplitude('center_ampl'))
 
         ampl_menu = menu.addMenu('&Amplitude')
+        ampl_menu.addAction(linkamplitude_act)
         ampl_menu.addAction(zoomyin_act)
         ampl_menu.addAction(zoomyout_act)
         ampl_menu.addAction(autoy_act)
@@ -250,7 +271,8 @@ class Audian(QMainWindow):
         if self.link_frequency:
             for i in range(self.tabs.count()):
                 if i != self.tabs.currentIndex():
-                    self.tabs.widget(i).set_frequencies(self.browser().f0, self.browser().f1)
+                    self.tabs.widget(i).set_frequencies(self.browser().f0,
+                                                        self.browser().f1)
 
 
     def setup_frequency_actions(self, menu):
