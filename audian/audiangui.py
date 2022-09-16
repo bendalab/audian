@@ -17,6 +17,8 @@ class Audian(QMainWindow):
         self.channels = channels
         self.audio = PlayAudio()
 
+        self.link_timezoom = True
+        self.link_timescroll = False
         self.link_channels = True
         self.link_panels = True
 
@@ -110,48 +112,96 @@ class Audian(QMainWindow):
         file_menu.addAction(close_act)
         file_menu.addAction(quit_act)
 
+        
+    def toggle_link_timezoom(self):
+        self.link_timezoom = not self.link_timezoom
+
+        
+    def zoom_time(self, zoomfunc):
+        getattr(self.browser(), zoomfunc)()
+        if self.link_timezoom:
+            for i in range(self.tabs.count()):
+                if i != self.tabs.currentIndex():
+                    if self.link_timescroll:
+                        self.tabs.widget(i).set_times(self.browser().toffset,
+                                                      self.browser().twindow)
+                    else:
+                        self.tabs.widget(i).set_times(None,
+                                                      self.browser().twindow)
+
+        
+    def toggle_link_timescroll(self):
+        self.link_timescroll = not self.link_timescroll
+
+        
+    def scroll_time(self, movefunc):
+        getattr(self.browser(), movefunc)()
+        if self.link_timescroll:
+            for i in range(self.tabs.count()):
+                if i != self.tabs.currentIndex():
+                    if self.link_timezoom:
+                        self.tabs.widget(i).set_times(self.browser().toffset,
+                                                      self.browser().twindow)
+                    else:
+                        self.tabs.widget(i).set_times(self.browser().toffset,
+                                                      None)
+
 
     def setup_time_actions(self, menu):
         play_act = QAction('&Play', self)
         play_act.setShortcut('P')
         play_act.triggered.connect(lambda x=0: self.browser().play_segment())
         
+        linktimezoom_act = QAction('Link time &zoom', self)
+        linktimezoom_act.setShortcut('Alt+Z')
+        linktimezoom_act.setCheckable(True)
+        linktimezoom_act.setChecked(self.link_timezoom)
+        linktimezoom_act.toggled.connect(self.toggle_link_timezoom)
+
         zoomxin_act = QAction('Zoom &in', self)
         zoomxin_act.setShortcuts(['+', '=', 'Shift+X']) # + QKeySequence.ZoomIn
-        zoomxin_act.triggered.connect(lambda x=0: self.browser().zoom_time_in())
+        zoomxin_act.triggered.connect(lambda x: self.zoom_time('zoom_time_in'))
         
         zoomxout_act = QAction('Zoom &out', self)
         zoomxout_act.setShortcuts(['-', 'x']) # + QKeySequence.ZoomOut
-        zoomxout_act.triggered.connect(lambda x=0: self.browser().zoom_time_out())
+        zoomxout_act.triggered.connect(lambda x: self.zoom_time('zoom_time_out'))
+        
+        linktimescroll_act = QAction('Link &time scroll', self)
+        linktimescroll_act.setShortcut('Alt+T')
+        linktimescroll_act.setCheckable(True)
+        linktimescroll_act.setChecked(self.link_timescroll)
+        linktimescroll_act.toggled.connect(self.toggle_link_timescroll)
 
         pagedown_act = QAction('Page &down', self)
         pagedown_act.setShortcuts(QKeySequence.MoveToNextPage)
-        pagedown_act.triggered.connect(lambda x=0: self.browser().time_page_down())
+        pagedown_act.triggered.connect(lambda x=0: self.scroll_time('time_page_down'))
 
         pageup_act = QAction('Page &up', self)
         pageup_act.setShortcuts(QKeySequence.MoveToPreviousPage)
-        pageup_act.triggered.connect(lambda x=0: self.browser().time_page_up())
+        pageup_act.triggered.connect(lambda x=0: self.scroll_time('time_page_up'))
 
         datadown_act = QAction('Trace down', self)
         datadown_act.setShortcuts(QKeySequence.MoveToNextLine)
-        datadown_act.triggered.connect(lambda x=0: self.browser().time_down())
+        datadown_act.triggered.connect(lambda x=0: self.scroll_time('time_down'))
 
         dataup_act = QAction('Trace up', self)
         dataup_act.setShortcuts(QKeySequence.MoveToPreviousLine)
-        dataup_act.triggered.connect(lambda x=0: self.browser().time_up())
+        dataup_act.triggered.connect(lambda x=0: self.scroll_time('time_up'))
 
         dataend_act = QAction('&End', self)
         dataend_act.setShortcuts([QKeySequence.MoveToEndOfLine, QKeySequence.MoveToEndOfDocument])
-        dataend_act.triggered.connect(lambda x=0: self.browser().time_end())
+        dataend_act.triggered.connect(lambda x=0: self.scroll_time('time_end'))
 
         datahome_act = QAction('&Home', self)
         datahome_act.setShortcuts([QKeySequence.MoveToStartOfLine, QKeySequence.MoveToStartOfDocument])
-        datahome_act.triggered.connect(lambda x=0: self.browser().time_home())
+        datahome_act.triggered.connect(lambda x=0: self.scroll_time('time_home'))
 
         time_menu = menu.addMenu('&Time')
         time_menu.addAction(play_act)
+        time_menu.addAction(linktimezoom_act)
         time_menu.addAction(zoomxin_act)
         time_menu.addAction(zoomxout_act)
+        time_menu.addAction(linktimescroll_act)
         time_menu.addAction(pagedown_act)
         time_menu.addAction(pageup_act)
         time_menu.addAction(datadown_act)

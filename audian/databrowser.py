@@ -189,10 +189,14 @@ class DataBrowser(QWidget):
     def set_xrange(self, viewbox, xrange):
         self.toffset = xrange[0]
         self.twindow = xrange[1] - xrange[0]
-        self.set_traces_xrange()
+        self.set_times()
         
 
-    def set_traces_xrange(self):
+    def set_times(self, toffset=None, twindow=None):
+        if not toffset is None:
+            self.toffset = toffset
+        if not twindow is None:
+            self.twindow = twindow
         for ax in self.axts:
             ax.getViewBox().setLimits(xMax=max(self.tmax,
                                                self.toffset + self.twindow))
@@ -202,19 +206,19 @@ class DataBrowser(QWidget):
     def zoom_time_in(self):
         if self.twindow * self.rate >= 20:
             self.twindow *= 0.5
-            self.set_traces_xrange()
+            self.set_times()
         
         
     def zoom_time_out(self):
         if self.toffset + self.twindow < self.tmax:
             self.twindow *= 2.0
-            self.set_traces_xrange()
+            self.set_times()
 
                 
     def time_page_down(self):
         if self.toffset + self.twindow < self.tmax:
             self.toffset += 0.5*self.twindow
-            self.set_traces_xrange()
+            self.set_times()
 
             
     def time_page_up(self):
@@ -222,13 +226,13 @@ class DataBrowser(QWidget):
             self.toffset -= 0.5*self.twindow
             if self.toffset < 0.0:
                 self.toffset = 0.0
-            self.set_traces_xrange()
+            self.set_times()
 
                 
     def time_down(self):
         if self.toffset + self.twindow < self.tmax:
             self.toffset += 0.05*self.twindow
-            self.set_traces_xrange()
+            self.set_times()
 
                 
     def time_up(self):
@@ -236,13 +240,13 @@ class DataBrowser(QWidget):
             self.toffset -= 0.05*self.twindow
             if self.toffset < 0.0:
                 self.toffset = 0.0
-            self.set_traces_xrange()
+            self.set_times()
 
                 
     def time_home(self):
         if self.toffset > 0.0:
             self.toffset = 0.0
-            self.set_traces_xrange()
+            self.set_times()
 
                 
     def time_end(self):
@@ -250,7 +254,7 @@ class DataBrowser(QWidget):
         toffs = max(0, n2-1)  * 0.5*self.twindow
         if self.toffset < toffs:
             self.toffset = toffs
-            self.set_traces_xrange()
+            self.set_times()
 
 
     def zoom_ampl_in(self):
