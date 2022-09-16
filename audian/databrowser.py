@@ -1,5 +1,5 @@
 import numpy as np
-from PyQt5.QtWidgets import QWidget, QVBoxLayout
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGraphicsRectItem
 import pyqtgraph as pg
 from audioio import AudioLoader, available_formats, write_audio
 from audioio import fade
@@ -19,6 +19,10 @@ class DataBrowser(QWidget):
         self.rate = None
         self.tmax = 0.0
 
+        self.show_channels = []
+        self.current_channel = 0
+        self.selected_channels = []
+        
         # view:
         self.toffset = 0.0
         self.twindow = 2.0
@@ -74,11 +78,14 @@ class DataBrowser(QWidget):
             self.show_channels = list(range(self.data.channels))
         else:
             self.show_channels = [c for c in self.channels if c < self.data.channels]
+        self.current_channel = self.show_channels[0]
+        self.selected_channels = [self.current_channel]
 
         # load data:
         self.data[0,:]
 
         self.figs = []     # all GraphicsLayoutWidgets - one for each channel
+        self.borders = []
         self.axs  = []     # all plots
         self.axts = []     # plots with time axis
         self.axys = []     # plots with amplitude axis
@@ -98,6 +105,13 @@ class DataBrowser(QWidget):
             fig.setVisible(c in self.show_channels)
             self.vbox.addWidget(fig, 1)
             self.figs.append(fig)
+            # border:
+            border = QGraphicsRectItem()
+            border.setZValue(-1000)
+            border.setPen(pg.mkPen('#aaaaaa', width=10))
+            fig.scene().addItem(border)
+            fig.sigDeviceRangeChanged.connect(self.update_borders)
+            self.borders.append(border)
             # spectrograms:
             spec = SpecItem(self.data, self.rate, c, self.nfft)
             self.fmax = spec.fmax
@@ -136,7 +150,13 @@ class DataBrowser(QWidget):
             self.axgs.append(axt)
             self.axtraces.append(axt)
             self.axs.append(axt)
-            
+
+
+    def update_borders(self, rect=None):
+        for c in range(len(self.figs)):
+            self.borders[c].setRect(0, 0, self.figs[c].size().width(),
+                                    self.figs[c].size().height())
+            self.borders[c].setVisible(c in self.selected_channels)
 
 
     def setup_trace_plot(self, ax, c):
@@ -432,6 +452,22 @@ class DataBrowser(QWidget):
         zmax = cbar.levels()[1]
         for s in self.specs:
             s.setCBarLevels(zmin, zmax)
+
+
+    def next_channel(self):
+        idx = self.show_channels.index(self.current_channel)
+        if idx + 1 < len(self.show_channels):
+            self.current_channel = self.show_channels[idx + 1]
+            self.selected_channels = [self.current_channel]
+            self.update_borders()
+
+
+    def previous_channel(self):
+        idx = self.show_channels.index(self.current_channel)
+        if idx > 0:
+            self.current_channel = self.show_channels[idx - 1]
+            self.selected_channels = [self.current_channel]
+            self.update_borders()
 
             
     def set_channels(self, channels=None):

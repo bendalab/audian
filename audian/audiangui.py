@@ -439,6 +439,14 @@ class Audian(QMainWindow):
             togglechannel_act.triggered.connect(lambda x, channel=c: self.toggle_channel(channel))
             self.toggle_channel_acts.append(togglechannel_act)
 
+        nextchannel_act = QAction('Select &next channel', self)
+        nextchannel_act.setShortcuts(QKeySequence.SelectNextLine)
+        nextchannel_act.triggered.connect(lambda x: self.browser().next_channel())
+
+        previouschannel_act = QAction('Select &previous channel', self)
+        previouschannel_act.setShortcuts(QKeySequence.SelectPreviousLine)
+        previouschannel_act.triggered.connect(lambda x: self.browser().previous_channel())
+
         linkpanels_act = QAction('Link &panels', self)
         linkpanels_act.setShortcut('Alt+P')
         linkpanels_act.setCheckable(True)
@@ -478,6 +486,8 @@ class Audian(QMainWindow):
         channel_menu = self.view_menu.addMenu('&Channels')
         for act in self.toggle_channel_acts:
             channel_menu.addAction(act)
+        self.view_menu.addAction(nextchannel_act)
+        self.view_menu.addAction(previouschannel_act)
         self.view_menu.addAction(linkpanels_act)
         self.view_menu.addAction(toggletraces_act)
         self.view_menu.addAction(togglespectros_act)
