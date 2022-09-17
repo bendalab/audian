@@ -504,13 +504,19 @@ class DataBrowser(QWidget):
 
 
     def select_next_channel(self):
-        # shift PgDown!
-        pass
+        idx = self.show_channels.index(self.current_channel)
+        if idx + 1 < len(self.show_channels):
+            self.current_channel = self.show_channels[idx + 1]
+        self.selected_channels.append(self.current_channel)
+        self.update_borders()
 
 
     def select_previous_channel(self):
-        # shift PgDown!
-        pass
+        idx = self.show_channels.index(self.current_channel)
+        if idx > 0:
+            self.current_channel = self.show_channels[idx - 1]
+        self.selected_channels.append(self.current_channel)
+        self.update_borders()
 
             
     def select_channels(self, channels):
