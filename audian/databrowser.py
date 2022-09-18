@@ -13,7 +13,7 @@ class DataBrowser(QWidget):
         super().__init__(*args, **kwargs)
 
         # data:
-        self.file_path = file_path if file_path else None
+        self.file_path = file_path
         self.channels = channels
         self.data = None
         self.rate = None
@@ -46,8 +46,6 @@ class DataBrowser(QWidget):
         self.vbox = QVBoxLayout(self)
         self.vbox.setSpacing(0)
 
-        self.open()
-
 
     def __del__(self):
         if not self.data is None:
@@ -55,8 +53,6 @@ class DataBrowser(QWidget):
 
         
     def open(self):
-        if not self.file_path:
-            return
         if not self.data is None:
             self.data.close()
         self.data = AudioLoader(self.file_path, 60.0, 10.0)
@@ -158,6 +154,8 @@ class DataBrowser(QWidget):
             self.axgs[-1].append(axt)
             self.axs[-1].append(axt)
             self.axtraces.append(axt)
+        if self.isVisible():
+            self.update()
 
 
     def update_borders(self, rect=None):
@@ -204,6 +202,8 @@ class DataBrowser(QWidget):
 
 
     def showEvent(self, event):
+        if self.data is None:
+            return
         for c in range(self.data.channels):
             # update time ranges:
             for ax in self.axts[c]:

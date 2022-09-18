@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTabWidget
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel
 from PyQt5.QtWidgets import QAction, QPushButton, QFileDialog
 from PyQt5.QtGui import QKeySequence
+from PyQt5.QtCore import QTimer
 from audioio import available_formats, PlayAudio
 from .version import __version__, __year__
 from .databrowser import DataBrowser
@@ -46,12 +47,14 @@ class Audian(QMainWindow):
         
         # default widget:
         self.setup_startup()
-
+        self.startup_active = False
+        
         # data:
-        for file_path in file_paths:
-            browser = DataBrowser(file_path, self.channels, self.audio)
-            self.tabs.addTab(browser, os.path.basename(file_path))
-        if self.tabs.count() > 0:
+        self.browsers = []
+        self.open_files(file_paths)
+
+        # init widgets to show:
+        if len(self.browsers) > 0:
             self.tabs.setCurrentIndex(0)
             self.startup.setVisible(False)
             self.startup_active = False
@@ -445,6 +448,18 @@ class Audian(QMainWindow):
                                                    self.browser().show_cbars)
 
 
+    def next_tab(self):
+        idx = self.tabs.currentIndex()
+        if idx + 1 < self.tabs.count():
+            self.tabs.setCurrentIndex(idx + 1)
+
+
+    def previous_tab(self):
+        idx = self.tabs.currentIndex()
+        if idx > 0:
+            self.tabs.setCurrentIndex(idx - 1)
+
+
     def setup_view_actions(self, menu):
         linkchannels_act = QAction('Link &channels', self)
         linkchannels_act.setShortcut('Alt+C')
@@ -505,6 +520,14 @@ class Audian(QMainWindow):
         mouse_act.setShortcut('o')
         mouse_act.triggered.connect(lambda x: self.browser().toggle_zoom_mode())
 
+        nexttab_act = QAction('Next tab', self)
+        nexttab_act.setShortcut('Ctrl+PgDown')
+        nexttab_act.triggered.connect(self.next_tab)
+
+        previoustab_act = QAction('Previous tab', self)
+        previoustab_act.setShortcut('Ctrl+PgUp')
+        previoustab_act.triggered.connect(self.previous_tab)
+
         maximize_act = QAction('Toggle &maximize', self)
         maximize_act.setShortcut('Ctrl+M')
         maximize_act.triggered.connect(self.toggle_maximize)
@@ -531,39 +554,56 @@ class Audian(QMainWindow):
         self.view_menu.addAction(mouse_act)
         self.view_menu.addAction(grid_act)
         self.view_menu.addAction(maximize_act)
+        self.addAction(nexttab_act)
+        self.addAction(previoustab_act)
 
 
     def adapt_menu(self, index):
         browser = self.tabs.widget(index)
-        if isinstance(browser, DataBrowser):
+        if isinstance(browser, DataBrowser) and not browser.data is None:
             for i, act in enumerate(self.toggle_channel_acts):
                 act.setVisible(i < browser.data.channels)
             browser.update()
 
         
-    def open_files(self):
-        formats = available_formats()
-        for f in ['MP3', 'OGG', 'WAV']:
-            if 'WAV' in formats:
-                formats.remove(f)
-                formats.insert(0, f)
-        filters = ['All files (*)'] + [f'{f} files (*.{f}, *.{f.lower()})' for f in formats]
-        path = '.' if self.startup_active else os.path.dirname(self.browser().file_path)
-        if len(path) == 0:
-            path = '.'
-        file_paths = QFileDialog.getOpenFileNames(self, directory=path, filter=';;'.join(filters))[0]
+    def open_files(self, file_paths=None):
+        if file_paths is None or len(file_paths) == 0:
+            formats = available_formats()
+            for f in ['MP3', 'OGG', 'WAV']:
+                if 'WAV' in formats:
+                    formats.remove(f)
+                    formats.insert(0, f)
+            filters = ['All files (*)'] + [f'{f} files (*.{f}, *.{f.lower()})' for f in formats]
+            path = '.' if self.startup_active else os.path.dirname(self.browser().file_path)
+            if len(path) == 0:
+                path = '.'
+            file_paths = QFileDialog.getOpenFileNames(self, directory=path, filter=';;'.join(filters))[0]
+
+        # prepare open files:
         first = True
         for file_path in file_paths:
             browser = DataBrowser(file_path, self.channels, self.audio)
             self.tabs.addTab(browser, os.path.basename(file_path))
+            self.browsers.append(browser)
             if first:
                 self.tabs.setCurrentWidget(browser)
                 first = False
+        QTimer.singleShot(100, self.load_data)
+            
+        # disable startup widget:
         if self.startup_active and self.tabs.count() > 1:
             self.tabs.removeTab(0)
             self.startup.setVisible(False)
             self.startup_active = False
             self.view_menu.setEnabled(True)
+
+
+    def load_data(self):
+        for browser in self.browsers:
+            if browser.data is None:
+                browser.open()
+                QTimer.singleShot(100, self.load_data)
+                break
 
 
     def toggle_maximize(self):
@@ -577,6 +617,7 @@ class Audian(QMainWindow):
         if self.tabs.count() > 0:
             if index is None:
                 index = self.tabs.currentIndex()
+            self.browsers.remove(self.tabs.widget(index))
             self.tabs.removeTab(index)
         if self.tabs.count() == 0:
             self.tabs.addTab(self.startup, 'Startup')
