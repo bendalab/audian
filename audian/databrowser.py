@@ -1,5 +1,6 @@
 import numpy as np
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGraphicsRectItem
+from PyQt5.QtGui import QFontMetrics
 import pyqtgraph as pg
 from audioio import AudioLoader, available_formats, write_audio
 from audioio import fade
@@ -128,6 +129,7 @@ class DataBrowser(QWidget):
                                    rounding=1, limits=(-200, 20))
             cbar.setLabel('right', 'Power (dB)')
             cbar.getAxis('right').setTextPen('black')
+            cbar.getAxis('right').setWidth(6*self.fontMetrics().averageCharWidth())
             cbar.setLevels([spec.zmin, spec.zmax])
             cbar.setImageItem(spec)
             cbar.sigLevelsChanged.connect(self.set_cbar_levels)
@@ -176,7 +178,7 @@ class DataBrowser(QWidget):
                      maxYRange=self.traces[c].ymax - self.traces[c].ymin)
         ax.getAxis('bottom').setTextPen('black')
         ax.getAxis('left').setTextPen('black')
-        ax.getAxis('left').setWidth(80)
+        ax.getAxis('left').setWidth(8*self.fontMetrics().averageCharWidth())
         ax.enableAutoRange(False, False)
         ax.setXRange(self.toffset, self.toffset + self.twindow)
         ax.sigXRangeChanged.connect(self.set_xrange)
@@ -195,7 +197,7 @@ class DataBrowser(QWidget):
         ax.getAxis('bottom').setStyle(showValues=False)
         ax.getAxis('bottom').setTextPen('black')
         ax.getAxis('left').setTextPen('black')
-        ax.getAxis('left').setWidth(80)
+        ax.getAxis('left').setWidth(8*self.fontMetrics().averageCharWidth())
         ax.enableAutoRange(False, False)
         ax.setXRange(self.toffset, self.toffset + self.twindow)
         ax.sigXRangeChanged.connect(self.set_xrange)
