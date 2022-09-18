@@ -154,6 +154,7 @@ class DataBrowser(QWidget):
             self.axgs[-1].append(axt)
             self.axs[-1].append(axt)
             self.axtraces.append(axt)
+        self.set_times()
         if self.isVisible():
             self.update()
 
@@ -168,8 +169,7 @@ class DataBrowser(QWidget):
     def setup_trace_plot(self, ax, c):
         ax.getViewBox().setBackgroundColor('black')
         ax.getViewBox().setDefaultPadding(padding=0.0)
-        ax.setLimits(xMin=0,
-                     xMax=max(self.tmax, self.toffset + self.twindow),
+        ax.setLimits(xMin=0, xMax=self.tmax,
                      yMin=self.traces[c].ymin, yMax=self.traces[c].ymax,
                      minXRange=10/self.rate, maxXRange=self.tmax,
                      minYRange=1/2**16,
@@ -186,7 +186,9 @@ class DataBrowser(QWidget):
     def setup_spec_plot(self, ax, c):
         ax.getViewBox().setBackgroundColor('black')
         ax.getViewBox().setDefaultPadding(padding=0.0)
-        ax.setLimits(xMin=0, xMax=self.tmax, yMin=0.0, yMax=self.fmax)
+        ax.setLimits(xMin=0, xMax=self.tmax, yMin=0.0, yMax=self.fmax,
+                     minXRange=10/self.rate, maxXRange=self.tmax,
+                     minYRange=0.1, maxYRange=self.fmax)
         ax.setLabel('left', 'Frequency', 'Hz', color='black')
         ax.setLabel('bottom', 'Time', 's', color='black')
         ax.getAxis('bottom').showLabel(False)
@@ -240,10 +242,11 @@ class DataBrowser(QWidget):
             self.toffset = toffset
         if not twindow is None:
             self.twindow = twindow
+        n2 = np.ceil(self.tmax / (0.5*self.twindow))
+        ttmax = max(self.twindow, n2*0.5*self.twindow)
         for axs in self.axts:
             for ax in axs:
-                ax.setLimits(xMax=max(self.tmax,
-                                      self.toffset + self.twindow))
+                ax.setLimits(xMax=ttmax, maxXRange=ttmax)
                 if self.isVisible():
                     ax.setXRange(self.toffset, self.toffset + self.twindow)
 
