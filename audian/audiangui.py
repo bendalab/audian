@@ -126,14 +126,13 @@ class Audian(QMainWindow):
     def zoom_time(self, zoomfunc):
         getattr(self.browser(), zoomfunc)()
         if self.link_timezoom:
-            for i in range(self.tabs.count()):
-                if i != self.tabs.currentIndex():
+            for b in self.browsers:
+                if not b is self.tabs.currentWidget():
                     if self.link_timescroll:
-                        self.tabs.widget(i).set_times(self.browser().toffset,
-                                                      self.browser().twindow)
+                        b.set_times(self.browser().toffset,
+                                    self.browser().twindow)
                     else:
-                        self.tabs.widget(i).set_times(None,
-                                                      self.browser().twindow)
+                        b.set_times(None, self.browser().twindow)
 
         
     def toggle_link_timescroll(self):
@@ -143,14 +142,13 @@ class Audian(QMainWindow):
     def scroll_time(self, scroolfunc):
         getattr(self.browser(), scroolfunc)()
         if self.link_timescroll:
-            for i in range(self.tabs.count()):
-                if i != self.tabs.currentIndex():
+            for b in self.browsers:
+                if not b is self.tabs.currentWidget():
                     if self.link_timezoom:
-                        self.tabs.widget(i).set_times(self.browser().toffset,
-                                                      self.browser().twindow)
+                        b.set_times(self.browser().toffset,
+                                    self.browser().twindow)
                     else:
-                        self.tabs.widget(i).set_times(self.browser().toffset,
-                                                      None)
+                        b.set_times(self.browser().toffset, None)
 
 
     def setup_time_actions(self, menu):
@@ -225,9 +223,9 @@ class Audian(QMainWindow):
         if self.link_amplitude:
             cc = self.browser().current_channel
             trace = self.browser().traces[cc]
-            for i in range(self.tabs.count()):
-                if i != self.tabs.currentIndex():
-                    self.tabs.widget(i).set_amplitudes(trace.ymin, trace.ymax)
+            for b in self.browsers:
+                if not b is self.tabs.currentWidget():
+                    b.set_amplitudes(trace.ymin, trace.ymax)
 
         
     def setup_amplitude_actions(self, menu):
@@ -273,19 +271,19 @@ class Audian(QMainWindow):
     def zoom_frequency(self, frequencyfunc):
         getattr(self.browser(), frequencyfunc)()
         if self.link_frequency:
-            for i in range(self.tabs.count()):
-                if i != self.tabs.currentIndex():
-                    self.tabs.widget(i).set_frequencies(self.browser().f0,
-                                                        self.browser().f1)
+            for b in self.browsers:
+                if not b is self.tabs.currentWidget():
+                    b.set_frequencies(self.browser().f0,
+                                      self.browser().f1)
 
         
     def frequency_resolution(self, resolutionfunc):
         getattr(self.browser(), resolutionfunc)()
         if self.link_frequency:
-            for i in range(self.tabs.count()):
-                if i != self.tabs.currentIndex():
-                    self.tabs.widget(i).set_NFFT(self.browser().nfft,
-                                                 self.browser().fresolution)
+            for b in self.browsers:
+                if not b is self.tabs.currentWidget():
+                    b.set_NFFT(self.browser().nfft,
+                               self.browser().fresolution)
 
 
     def setup_frequency_actions(self, menu):
@@ -348,9 +346,9 @@ class Audian(QMainWindow):
         if self.link_power:
             cc = self.browser().current_channel
             cbar = self.browser().cbars[cc]
-            for i in range(self.tabs.count()):
-                if i != self.tabs.currentIndex():
-                    self.tabs.widget(i).set_cbar_levels(cbar)
+            for b in self.browsers:
+                if not b is self.tabs.currentWidget():
+                    b.set_cbar_levels(cbar)
 
 
     def setup_power_actions(self, menu):
@@ -401,17 +399,17 @@ class Audian(QMainWindow):
     def toggle_channel(self, channel):
         self.browser().toggle_channel(channel)
         if self.link_channels:
-            for i in range(self.tabs.count()):
-                if i != self.tabs.currentIndex():
-                    self.tabs.widget(i).set_channels(self.browser().show_channels)
+            for b in self.browsers:
+                if not b is self.tabs.currentWidget():
+                    b.set_channels(self.browser().show_channels)
 
         
     def select_channels(self, selectfunc):
         getattr(self.browser(), selectfunc)()
         if self.link_channels:
-            for i in range(self.tabs.count()):
-                if i != self.tabs.currentIndex():
-                    self.tabs.widget(i).select_channels(self.browser().selected_channels)
+            for b in self.browsers:
+                if not b is self.tabs.currentWidget():
+                    b.select_channels(self.browser().selected_channels)
 
         
     def toggle_link_panels(self):
@@ -421,31 +419,31 @@ class Audian(QMainWindow):
     def toggle_traces(self):
         self.browser().toggle_traces()
         if self.link_panels:
-            for i in range(self.tabs.count()):
-                if i != self.tabs.currentIndex():
-                    self.tabs.widget(i).set_panels(self.browser().show_traces,
-                                                   self.browser().show_specs,
-                                                   self.browser().show_cbars)
+            for b in self.browsers:
+                if not b is self.tabs.currentWidget():
+                    b.set_panels(self.browser().show_traces,
+                                 self.browser().show_specs,
+                                 self.browser().show_cbars)
 
         
     def toggle_spectrograms(self):
         self.browser().toggle_spectrograms()
         if self.link_panels:
-            for i in range(self.tabs.count()):
-                if i != self.tabs.currentIndex():
-                    self.tabs.widget(i).set_panels(self.browser().show_traces,
-                                                   self.browser().show_specs,
-                                                   self.browser().show_cbars)
+            for b in self.browsers:
+                if not b is self.tabs.currentWidget():
+                    b.set_panels(self.browser().show_traces,
+                                 self.browser().show_specs,
+                                 self.browser().show_cbars)
 
         
     def toggle_colorbars(self):
         self.browser().toggle_colorbars()
         if self.link_panels:
-            for i in range(self.tabs.count()):
-                if i != self.tabs.currentIndex():
-                    self.tabs.widget(i).set_panels(self.browser().show_traces,
-                                                   self.browser().show_specs,
-                                                   self.browser().show_cbars)
+            for b in self.browsers:
+                if not b is self.tabs.currentWidget():
+                    b.set_panels(self.browser().show_traces,
+                                 self.browser().show_specs,
+                                 self.browser().show_cbars)
 
 
     def next_tab(self):
@@ -602,6 +600,8 @@ class Audian(QMainWindow):
         for browser in self.browsers:
             if browser.data is None:
                 browser.open()
+                if self.tabs.currentWidget() is browser:
+                    self.adapt_menu(self.tabs.currentIndex())
                 QTimer.singleShot(100, self.load_data)
                 break
 

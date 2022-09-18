@@ -550,6 +550,9 @@ class DataBrowser(QWidget):
             
     def set_channels(self, channels=None):
         if not channels is None:
+            if self.data is None:
+                self.channels = channels
+                return
             self.show_channels = [c for c in channels if c < len(self.figs)]
             self.selected_channels = [c for c in self.selected_channels if c in self.show_channels]
         if not self.current_channel in self.selected_channels:
