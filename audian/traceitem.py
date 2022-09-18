@@ -1,7 +1,26 @@
 import numpy as np
 import pyqtgraph as pg
 
+has_numba = False
+try:
+    from numba import jit
+    has_numba = True
+except ImportError:
+    def jit(*args, **kwargs):
+        def decorator_jit(func):
+            return func
+        return decorator_jit
 
+
+@jit(nopython=True)
+def down_sample_peak(data, n, step):
+    ddata = np.zeros(2*n)
+    for k in range(n):
+        ddata[2*k] = np.min(data[k*step:(k+1)*step])
+        ddata[2*k+1] = np.max(data[k*step:(k+1)*step])
+    return ddata
+
+    
 class TraceItem(pg.PlotDataItem):
     
     def __init__(self, data, rate, channel, *args, **kwargs):
@@ -41,13 +60,18 @@ class TraceItem(pg.PlotDataItem):
         stop = min(len(self.data), int(trange[1]*self.rate+1))
         step = max(1, (stop - start)//10000)
         if step > 1:
+            self.setPen(dict(color='#00ff00', width=1.1))
             # min - max: (good but a bit slow - let numba do it!)
             step2 = step//2
             step = step2*2
             n = (stop-start)//step
-            data = np.array([(np.min(self.data[start+k*step:start+(k+1)*step, self.channel]), np.max(self.data[start+k*step:start+(k+1)*step, self.channel])) for k in range(n)]).reshape((-1))
-            self.setData(np.arange(start, start + len(data)*step2, step2)/self.rate, data)
-            self.setPen(dict(color='#00ff00', width=1.1))
+            if has_numba:
+                data = down_sample_peak(self.data[start:stop, self.channel],
+                                        n, step)
+            else:
+                data = np.array([(np.min(self.data[start+k*step:start+(k+1)*step, self.channel]), np.max(self.data[start+k*step:start+(k+1)*step, self.channel])) for k in range(n)]).reshape((-1))
+            time = np.arange(start, start + len(data)*step2, step2)/self.rate
+            self.setData(time, data) #, connect='pairs')???
         elif step > 1:  # TODO: not used
             # subsample:
             self.setData(np.arange(start, stop, step)/self.rate,

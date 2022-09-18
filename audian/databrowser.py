@@ -203,6 +203,21 @@ class DataBrowser(QWidget):
         ax.sigYRangeChanged.connect(self.set_frange)
 
 
+    def showEvent(self, event):
+        for c in range(self.data.channels):
+            # update time ranges:
+            for ax in self.axts[c]:
+                ax.setXRange(self.toffset, self.toffset + self.twindow)
+            # update amplitude ranges:
+            for ax in self.axys[c]:
+                ax.setYRange(self.traces[c].ymin, self.traces[c].ymax)
+            # update frequency ranges:
+            for ax in self.axfys[c]:
+                ax.setYRange(self.f0, self.f1)
+            for ax in self.axfxs[c]:
+                ax.setXRange(self.f0, self.f1)
+
+
     def show_xticks(self, channel, show_ticks):
         if self.axtraces[channel].isVisible():
             self.axtraces[channel].getAxis('bottom').showLabel(show_ticks)
@@ -227,9 +242,10 @@ class DataBrowser(QWidget):
             self.twindow = twindow
         for axs in self.axts:
             for ax in axs:
-                ax.getViewBox().setLimits(xMax=max(self.tmax,
-                                                   self.toffset + self.twindow))
-                ax.setXRange(self.toffset, self.toffset + self.twindow)
+                ax.setLimits(xMax=max(self.tmax,
+                                      self.toffset + self.twindow))
+                if self.isVisible():
+                    ax.setXRange(self.toffset, self.toffset + self.twindow)
 
         
     def zoom_time_in(self):
@@ -292,7 +308,9 @@ class DataBrowser(QWidget):
                 self.traces[c].ymin = ymin
             if not ymax is None:
                 self.traces[c].ymax = ymax
-            self.axtraces[c].setYRange(self.traces[c].ymin, self.traces[c].ymax)
+            if self.isVisible():
+                for ax in self.axys[c]:
+                    ax.setYRange(self.traces[c].ymin, self.traces[c].ymax)
 
 
     def zoom_ampl_in(self):
@@ -330,11 +348,12 @@ class DataBrowser(QWidget):
             self.f0 = f0
         if not f1 is None:
             self.f1 = f1
-        for c in self.selected_channels:
-            for ax in self.axfys[c]:
-                ax.setYRange(self.f0, self.f1)
-            for ax in self.axfxs[c]:
-                ax.setXRange(self.f0, self.f1)
+        if self.isVisible():
+            for c in self.selected_channels:
+                for ax in self.axfys[c]:
+                    ax.setYRange(self.f0, self.f1)
+                for ax in self.axfxs[c]:
+                    ax.setXRange(self.f0, self.f1)
 
             
     def set_frange(self, viewbox, frange):
