@@ -586,6 +586,8 @@ class DataBrowser(QWidget):
             else:
                 self.show_channels.append(channel)
                 self.show_channels.sort()
+                self.selected_channels.append(channel)
+                self.selected_channels.sort()
             self.set_channels()
 
 
