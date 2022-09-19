@@ -10,7 +10,8 @@ from .specitem import SpecItem
 
 
 class DataBrowser(QWidget):
-    def __init__(self, file_path, channels, audio, *args, **kwargs):
+    def __init__(self, file_path, channels, show_channels, audio,
+                 *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # data:
@@ -20,7 +21,7 @@ class DataBrowser(QWidget):
         self.rate = None
         self.tmax = 0.0
 
-        self.show_channels = []
+        self.show_channels = show_channels
         self.current_channel = 0
         self.selected_channels = []
         
@@ -70,11 +71,17 @@ class DataBrowser(QWidget):
         self.f1 = self.fmax
         self.nfft = 256
         self.fresolution = self.rate/self.nfft
-        
-        if len(self.channels) == 0:
-            self.show_channels = list(range(self.data.channels))
+
+        if self.show_channels is None:
+            if len(self.channels) == 0:
+                self.show_channels = list(range(self.data.channels))
+            else:
+                self.show_channels = [c for c in self.channels if c < self.data.channels]
         else:
-            self.show_channels = [c for c in self.channels if c < self.data.channels]
+            self.show_channels = [c for c in self.show_channels if c < self.data.channels]
+        if len(self.show_channels) == 0:
+            self.show_channels = [0]
+        
         self.current_channel = self.show_channels[0]
         self.selected_channels = list(self.show_channels)
 

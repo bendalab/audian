@@ -51,7 +51,7 @@ class Audian(QMainWindow):
         
         # data:
         self.browsers = []
-        self.open_files(file_paths)
+        self.load_files(file_paths)
 
         # init widgets to show:
         if len(self.browsers) > 0:
@@ -564,29 +564,19 @@ class Audian(QMainWindow):
             browser.update()
 
         
-    def open_files(self, file_paths=None):
-        if file_paths is None or len(file_paths) == 0:
-            formats = available_formats()
-            for f in ['MP3', 'OGG', 'WAV']:
-                if 'WAV' in formats:
-                    formats.remove(f)
-                    formats.insert(0, f)
-            filters = ['All files (*)'] + [f'{f} files (*.{f}, *.{f.lower()})' for f in formats]
-            path = '.' if self.startup_active else os.path.dirname(self.browser().file_path)
-            if len(path) == 0:
-                path = '.'
-            file_paths = QFileDialog.getOpenFileNames(self, directory=path, filter=';;'.join(filters))[0]
+    def open_files(self):
+        formats = available_formats()
+        for f in ['MP3', 'OGG', 'WAV']:
+            if 'WAV' in formats:
+                formats.remove(f)
+                formats.insert(0, f)
+        filters = ['All files (*)'] + [f'{f} files (*.{f}, *.{f.lower()})' for f in formats]
+        path = '.' if self.startup_active else os.path.dirname(self.browser().file_path)
+        if len(path) == 0:
+            path = '.'
+        file_paths = QFileDialog.getOpenFileNames(self, directory=path, filter=';;'.join(filters))[0]
 
-        # prepare open files:
-        first = True
-        for file_path in file_paths:
-            browser = DataBrowser(file_path, self.channels, self.audio)
-            self.tabs.addTab(browser, os.path.basename(file_path))
-            self.browsers.append(browser)
-            if first:
-                self.tabs.setCurrentWidget(browser)
-                first = False
-        QTimer.singleShot(100, self.load_data)
+        self.load_files(file_paths)
             
         # disable startup widget:
         if self.startup_active and self.tabs.count() > 1:
@@ -596,6 +586,23 @@ class Audian(QMainWindow):
             self.view_menu.setEnabled(True)
 
 
+    def load_files(self, file_paths):
+        # prepare open files:
+        show_channels = None
+        if self.link_channels and len(self.browsers) > 0:
+            show_channels = self.browser().show_channels
+        first = True
+        for file_path in file_paths:
+            browser = DataBrowser(file_path, self.channels,
+                                  show_channels, self.audio)
+            self.tabs.addTab(browser, os.path.basename(file_path))
+            self.browsers.append(browser)
+            if first:
+                self.tabs.setCurrentWidget(browser)
+                first = False
+        QTimer.singleShot(100, self.load_data)
+
+            
     def load_data(self):
         for browser in self.browsers:
             if browser.data is None:
