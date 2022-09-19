@@ -1,6 +1,5 @@
 import numpy as np
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGraphicsRectItem
-from PyQt5.QtGui import QFontMetrics
 import pyqtgraph as pg
 from audioio import AudioLoader, available_formats, write_audio
 from audioio import fade
@@ -24,6 +23,8 @@ class DataBrowser(QWidget):
         self.show_channels = show_channels
         self.current_channel = 0
         self.selected_channels = []
+
+        self.trace_frac = 0.5
         
         # view:
         self.toffset = 0.0
@@ -46,7 +47,9 @@ class DataBrowser(QWidget):
 
         # window:
         self.vbox = QVBoxLayout(self)
+        self.vbox.setContentsMargins(0, 0, 0, 0)
         self.vbox.setSpacing(0)
+        self.setEnabled(False)
 
 
     def __del__(self):
@@ -91,19 +94,23 @@ class DataBrowser(QWidget):
         self.figs = []     # all GraphicsLayoutWidgets - one for each channel
         self.borders = []
         # nested lists (channel, panel):
-        self.axs  = []     # all plots
-        self.axts = []     # plots with time axis
-        self.axys = []     # plots with amplitude axis
-        self.axfxs = []    # plots with x-frequency axis
-        self.axfys = []    # plots with y-frequency axis
-        self.axgs = []     # plots with grids
+        self.axs  = []      # all plots
+        self.axts = []      # plots with time axis
+        self.axys = []      # plots with amplitude axis
+        self.axfxs = []     # plots with x-frequency axis
+        self.axfys = []     # plots with y-frequency axis
+        self.axgs = []      # plots with grids
         # lists with one plot per channel:
-        self.axtraces = [] # all trace plots
-        self.axspecs = []  # all spectrogram plots
-        self.traces = []   # all traces
-        self.specs = []    # all spectrograms
-        self.cbars = []    # all color bars
-        self.psds = []     # all power spectra
+        self.axtraces = []  # trace plots
+        self.axspacers = [] # spacer between trace and spectrogram
+        self.axspecs = []   # spectrogram plots
+        self.traces = []    # traces
+        self.specs = []     # spectrograms
+        self.cbars = []     # color bars
+        self.psds = []      # power spectra
+        # font size:
+        xwidth = self.fontMetrics().averageCharWidth()
+        xwidth2 = xwidth/2
         for c in range(self.data.channels):
             self.axs.append([])
             self.axts.append([])
@@ -114,13 +121,16 @@ class DataBrowser(QWidget):
             # one figure per channel:
             fig = pg.GraphicsLayoutWidget()
             fig.setBackground(None)
+            fig.ci.layout.setContentsMargins(xwidth2, xwidth2, xwidth2, xwidth2)
+            fig.ci.layout.setVerticalSpacing(0)
+            fig.ci.layout.setHorizontalSpacing(xwidth)
             fig.setVisible(c in self.show_channels)
-            self.vbox.addWidget(fig, 1)
+            self.vbox.addWidget(fig)
             self.figs.append(fig)
             # border:
             border = QGraphicsRectItem()
             border.setZValue(-1000)
-            border.setPen(pg.mkPen('#aaaaaa', width=10))
+            border.setPen(pg.mkPen('#aaaaaa', width=xwidth+1))
             fig.scene().addItem(border)
             fig.sigDeviceRangeChanged.connect(self.update_borders)
             self.borders.append(border)
@@ -136,7 +146,7 @@ class DataBrowser(QWidget):
                                    rounding=1, limits=(-200, 20))
             cbar.setLabel('right', 'Power (dB)')
             cbar.getAxis('right').setTextPen('black')
-            cbar.getAxis('right').setWidth(6*self.fontMetrics().averageCharWidth())
+            cbar.getAxis('right').setWidth(6*xwidth)
             cbar.setLevels([spec.zmin, spec.zmax])
             cbar.setImageItem(spec)
             cbar.sigLevelsChanged.connect(self.set_cbar_levels)
@@ -148,8 +158,12 @@ class DataBrowser(QWidget):
             self.axfys[-1].append(axs)
             self.axs[-1].append(axs)
             self.axspecs.append(axs)
+            # spacer:
+            axsp = fig.addLayout(row=1, col=0)
+            axsp.setContentsMargins(0, 0, 0, 0)
+            self.axspacers.append(axsp)
             # trace plot:
-            axt = fig.addPlot(row=1, col=0)
+            axt = fig.addPlot(row=2, col=0)
             trace = TraceItem(self.data, self.rate, c)
             self.traces.append(trace)
             self.setup_trace_plot(axt, c)
@@ -164,9 +178,8 @@ class DataBrowser(QWidget):
             self.axs[-1].append(axt)
             self.axtraces.append(axt)
         self.set_times()
-        self.set_stretch(self.height())
-        if self.isVisible():
-            self.update()
+        self.setEnabled(True)
+        self.adjust_layout(self.height())
 
 
     def update_borders(self, rect=None):
@@ -233,30 +246,37 @@ class DataBrowser(QWidget):
     def resizeEvent(self, event):
         if self.show_channels is None or len(self.show_channels) == 0:
             return
-        self.set_stretch(event.size().height())
+        self.adjust_layout(event.size().height())
         
 
-    def set_stretch(self, height):
-        axis_height = None
-        if self.axtraces[self.show_channels[-1]].isVisible():
-            axis_height = self.axtraces[self.show_channels[-1]].getAxis('bottom').height()
-        elif self.axspecs[self.show_channels[-1]].isVisible():
-            axis_height = self.axspecs[self.show_channels[-1]].getAxis('bottom').height()
-        channel_height = (height - (len(self.show_channels)-1)*10 - axis_height)/len(self.show_channels) - 10
+    def adjust_layout(self, height):
+        bottom_channel = self.show_channels[-1]
+        xwidth = self.fontMetrics().averageCharWidth()
+        #axis_height = None
+        #if self.axtraces[bottom_channel].isVisible():
+        #    axis_height = self.axtraces[bottom_channel].getAxis('bottom').height()
+        #elif self.axspecs[bottom_channel].isVisible():
+        #    axis_height = self.axspecs[bottom_channel].getAxis('bottom').height()
+        axis_height = 5*xwidth
+        ntraces = []
+        nspecs = []
         for c in self.show_channels:
-            self.vbox.setStretch(c, int(channel_height))
-            #self.figs[c].ci.layout.setRowStretchFactor(0, int(channel_height/2))
-            #self.figs[c].ci.layout.setRowStretchFactor(1, int(channel_height/2))
-            self.axspecs[c].setFixedHeight(int(channel_height/2))
-            self.axtraces[c].setFixedHeight(int(channel_height/2 + axis_height))
-        self.vbox.setStretch(self.show_channels[-1], int(channel_height + axis_height))
-        if self.axtraces[self.show_channels[-1]].isVisible() and self.axspecs[self.show_channels[-1]].isVisible():
-            #self.figs[self.show_channels[-1]].ci.layout.setRowStretchFactor(0, int(channel_height/2))
-            #self.figs[self.show_channels[-1]].ci.layout.setRowStretchFactor(1, int(channel_height/2 + axis_height))
-            self.axspecs[self.show_channels[-1]].setFixedHeight(int(channel_height/2))
-            self.axtraces[self.show_channels[-1]].setFixedHeight(int(channel_height/2 + axis_height))
-            #self.figs[self.show_channels[-1]].setFrameRect/Shape/Style
-
+            nspecs.append(int(self.axspecs[c].isVisible()))
+            ntraces.append(int(self.axtraces[c].isVisible()))
+        spec_height = (height - axis_height)/(np.sum(nspecs) + self.trace_frac*np.sum(ntraces))
+        for c, ns, nt in zip(self.show_channels, nspecs, ntraces):
+            add_height = axis_height if c == bottom_channel else 0
+            self.vbox.setStretch(c, int(ns*spec_height +
+                                        nt*self.trace_frac*spec_height +
+                                        add_height))
+            t_height = max(0, int(nt*(self.trace_frac*spec_height + add_height) - xwidth))
+            self.figs[c].ci.layout.setRowFixedHeight(2, t_height)
+            self.figs[c].ci.layout.setRowFixedHeight(1, (nt+ns-1)*xwidth)
+            s_height = max(0, int(ns*spec_height + (1-nt)*add_height - xwidth))
+            self.figs[c].ci.layout.setRowFixedHeight(0, s_height)
+        for c in self.show_channels:
+            self.figs[c].update()
+        
             
     def show_xticks(self, channel, show_ticks):
         if self.axtraces[channel].isVisible():
@@ -604,6 +624,7 @@ class DataBrowser(QWidget):
         for c in range(len(self.figs)):
             self.figs[c].setVisible(c in self.show_channels)
             self.show_xticks(c, c == self.show_channels[-1])
+        self.adjust_layout(self.height())
         self.update_borders()
             
             
@@ -636,6 +657,7 @@ class DataBrowser(QWidget):
                 axs.getAxis('bottom').setStyle(showValues=not self.show_traces)
                 axt.getAxis('bottom').showLabel(self.show_traces)
                 axt.getAxis('bottom').setStyle(showValues=self.show_traces)
+        self.adjust_layout(self.height())
             
 
     def toggle_traces(self):
