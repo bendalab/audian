@@ -164,6 +164,7 @@ class DataBrowser(QWidget):
             self.axs[-1].append(axt)
             self.axtraces.append(axt)
         self.set_times()
+        self.set_stretch(self.height())
         if self.isVisible():
             self.update()
 
@@ -228,7 +229,35 @@ class DataBrowser(QWidget):
             for ax in self.axfxs[c]:
                 ax.setXRange(self.f0, self.f1)
 
+                
+    def resizeEvent(self, event):
+        if self.show_channels is None or len(self.show_channels) == 0:
+            return
+        self.set_stretch(event.size().height())
+        
 
+    def set_stretch(self, height):
+        axis_height = None
+        if self.axtraces[self.show_channels[-1]].isVisible():
+            axis_height = self.axtraces[self.show_channels[-1]].getAxis('bottom').height()
+        elif self.axspecs[self.show_channels[-1]].isVisible():
+            axis_height = self.axspecs[self.show_channels[-1]].getAxis('bottom').height()
+        channel_height = (height - (len(self.show_channels)-1)*10 - axis_height)/len(self.show_channels) - 10
+        for c in self.show_channels:
+            self.vbox.setStretch(c, int(channel_height))
+            #self.figs[c].ci.layout.setRowStretchFactor(0, int(channel_height/2))
+            #self.figs[c].ci.layout.setRowStretchFactor(1, int(channel_height/2))
+            self.axspecs[c].setFixedHeight(int(channel_height/2))
+            self.axtraces[c].setFixedHeight(int(channel_height/2 + axis_height))
+        self.vbox.setStretch(self.show_channels[-1], int(channel_height + axis_height))
+        if self.axtraces[self.show_channels[-1]].isVisible() and self.axspecs[self.show_channels[-1]].isVisible():
+            #self.figs[self.show_channels[-1]].ci.layout.setRowStretchFactor(0, int(channel_height/2))
+            #self.figs[self.show_channels[-1]].ci.layout.setRowStretchFactor(1, int(channel_height/2 + axis_height))
+            self.axspecs[self.show_channels[-1]].setFixedHeight(int(channel_height/2))
+            self.axtraces[self.show_channels[-1]].setFixedHeight(int(channel_height/2 + axis_height))
+            #self.figs[self.show_channels[-1]].setFrameRect/Shape/Style
+
+            
     def show_xticks(self, channel, show_ticks):
         if self.axtraces[channel].isVisible():
             self.axtraces[channel].getAxis('bottom').showLabel(show_ticks)
