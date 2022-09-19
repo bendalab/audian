@@ -3,7 +3,7 @@ import sys
 import argparse
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTabWidget
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel
-from PyQt5.QtWidgets import QAction, QPushButton, QFileDialog
+from PyQt5.QtWidgets import QAction, QPushButton, QFileDialog, QMessageBox
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtCore import QTimer
 from audioio import available_formats, PlayAudio
@@ -44,6 +44,7 @@ class Audian(QMainWindow):
         # actions:
         self.setup_file_actions(self.menuBar())
         self.setup_view_actions(self.menuBar())
+        self.setup_help_actions(self.menuBar())
         
         # default widget:
         self.setup_startup()
@@ -556,6 +557,14 @@ class Audian(QMainWindow):
         self.addAction(previoustab_act)
 
 
+    def setup_help_actions(self, menu):
+        about_act = QAction('&About Audian', self)
+        about_act.triggered.connect(self.about)
+        
+        help_menu = menu.addMenu('&Help')
+        help_menu.addAction(about_act)
+        
+
     def adapt_menu(self, index):
         browser = self.tabs.widget(index)
         if isinstance(browser, DataBrowser) and not browser.data is None:
@@ -618,6 +627,11 @@ class Audian(QMainWindow):
             self.showNormal()
         else:
             self.showMaximized()
+
+
+    def about(self):
+        QMessageBox.about(self, 'About Audian', f'''
+<b>Audian</b>, version {__version__}<br>(c) {__year__}''')
 
             
     def close(self, index=None):
