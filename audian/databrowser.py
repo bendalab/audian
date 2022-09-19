@@ -190,6 +190,7 @@ class DataBrowser(QWidget):
 
 
     def setup_trace_plot(self, ax, c):
+        xwidth = self.fontMetrics().averageCharWidth()
         ax.getViewBox().setBackgroundColor('black')
         ax.getViewBox().setDefaultPadding(padding=0.0)
         ax.setLimits(xMin=0, xMax=self.tmax,
@@ -197,9 +198,11 @@ class DataBrowser(QWidget):
                      minXRange=10/self.rate, maxXRange=self.tmax,
                      minYRange=1/2**16,
                      maxYRange=self.traces[c].ymax - self.traces[c].ymin)
+        ax.getAxis('bottom').setPen('white')
         ax.getAxis('bottom').setTextPen('black')
+        ax.getAxis('left').setPen('white')
         ax.getAxis('left').setTextPen('black')
-        ax.getAxis('left').setWidth(8*self.fontMetrics().averageCharWidth())
+        ax.getAxis('left').setWidth(8*xwidth)
         ax.enableAutoRange(False, False)
         ax.setXRange(self.toffset, self.toffset + self.twindow)
         ax.sigXRangeChanged.connect(self.set_xrange)
@@ -207,6 +210,7 @@ class DataBrowser(QWidget):
 
 
     def setup_spec_plot(self, ax, c):
+        xwidth = self.fontMetrics().averageCharWidth()
         ax.getViewBox().setBackgroundColor('black')
         ax.getViewBox().setDefaultPadding(padding=0.0)
         ax.setLimits(xMin=0, xMax=self.tmax, yMin=0.0, yMax=self.fmax,
@@ -216,9 +220,11 @@ class DataBrowser(QWidget):
         ax.setLabel('bottom', 'Time', 's', color='black')
         ax.getAxis('bottom').showLabel(False)
         ax.getAxis('bottom').setStyle(showValues=False)
+        ax.getAxis('left').setWidth(8*xwidth)
+        ax.getAxis('bottom').setPen('white')
         ax.getAxis('bottom').setTextPen('black')
+        ax.getAxis('left').setPen('white')
         ax.getAxis('left').setTextPen('black')
-        ax.getAxis('left').setWidth(8*self.fontMetrics().averageCharWidth())
         ax.enableAutoRange(False, False)
         ax.setXRange(self.toffset, self.toffset + self.twindow)
         ax.sigXRangeChanged.connect(self.set_xrange)
