@@ -42,9 +42,12 @@ class Audian(QMainWindow):
         self.setCentralWidget(self.tabs)
 
         # actions:
-        self.setup_file_actions(self.menuBar())
-        self.setup_view_actions(self.menuBar())
-        self.setup_help_actions(self.menuBar())
+        file_menu = self.setup_file_actions(self.menuBar())
+        view_menu = self.setup_view_actions(self.menuBar())
+        help_menu = self.setup_help_actions(self.menuBar())
+        self.keys = '<h1>Audian key shortcuts</h1>\n'
+        for menu in [file_menu, view_menu, help_menu]:
+            self.menu_shortcuts(menu)
         
         # default widget:
         self.setup_startup()
@@ -99,6 +102,22 @@ class Audian(QMainWindow):
     def browser(self):
         return self.tabs.currentWidget()
 
+
+    def menu_shortcuts(self, menu):
+        for act in menu.actions():
+            if act.menu():
+                self.menu_shortcuts(act.menu())
+        title = menu.title().replace('&', '')
+        self.keys += f'<h2>{title}</h2>\n'
+        self.keys += '<table>'
+        for act in menu.actions():
+            if not act.menu():
+                name = act.text().replace('&', '')
+                keys = ', '.join([key.toString() for key in act.shortcuts()])
+                if name and keys:
+                    self.keys += f'<tr><td>{name:20s}</td><td>{keys}</td></tr>\n'
+        self.keys += '</table>'
+
         
     def setup_file_actions(self, menu):
         open_act = QAction('&Open', self)
@@ -118,6 +137,7 @@ class Audian(QMainWindow):
         file_menu.addSeparator()
         file_menu.addAction(close_act)
         file_menu.addAction(quit_act)
+        return file_menu
 
         
     def toggle_link_timezoom(self):
@@ -213,6 +233,7 @@ class Audian(QMainWindow):
         time_menu.addAction(dataup_act)
         time_menu.addAction(dataend_act)
         time_menu.addAction(datahome_act)
+        return time_menu
 
         
     def toggle_link_amplitude(self):
@@ -263,6 +284,7 @@ class Audian(QMainWindow):
         ampl_menu.addAction(autoy_act)
         ampl_menu.addAction(resety_act)
         ampl_menu.addAction(centery_act)
+        return ampl_menu
 
         
     def toggle_link_frequency(self):
@@ -336,6 +358,7 @@ class Audian(QMainWindow):
         freq_menu.addAction(freqend_act)
         freq_menu.addAction(fresup_act)
         freq_menu.addAction(fresdown_act)
+        return freq_menu
 
         
     def toggle_link_power(self):
@@ -391,6 +414,7 @@ class Audian(QMainWindow):
         power_menu.addAction(maxpowerdown_act)
         power_menu.addAction(minpowerup_act)
         power_menu.addAction(minpowerdown_act)
+        return power_menu
 
         
     def toggle_link_channels(self):
@@ -555,14 +579,20 @@ class Audian(QMainWindow):
         self.view_menu.addAction(maximize_act)
         self.addAction(nexttab_act)
         self.addAction(previoustab_act)
+        return self.view_menu
 
 
     def setup_help_actions(self, menu):
+        shortcuts_act = QAction('&Key shortcuts', self)
+        shortcuts_act.triggered.connect(self.shortcuts)
+        
         about_act = QAction('&About Audian', self)
         about_act.triggered.connect(self.about)
         
         help_menu = menu.addMenu('&Help')
+        help_menu.addAction(shortcuts_act)
         help_menu.addAction(about_act)
+        return help_menu
         
 
     def adapt_menu(self, index):
@@ -627,6 +657,10 @@ class Audian(QMainWindow):
             self.showNormal()
         else:
             self.showMaximized()
+
+
+    def shortcuts(self):
+        QMessageBox.information(self, 'Audian Key Shortcuts', self.keys)
 
 
     def about(self):
