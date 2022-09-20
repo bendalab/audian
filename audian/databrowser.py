@@ -1,4 +1,5 @@
 import numpy as np
+from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGraphicsRectItem
 import pyqtgraph as pg
 from audioio import AudioLoader, available_formats, write_audio
@@ -44,6 +45,10 @@ class DataBrowser(QWidget):
 
         # audio:
         self.audio = audio
+        self.audio_timer = QTimer(self)
+        self.audio_timer.timeout.connect(self.mark_audio)
+        self.audio_time = 0.0
+        self.audio_markers = []
 
         # window:
         self.vbox = QVBoxLayout(self)
@@ -108,6 +113,7 @@ class DataBrowser(QWidget):
         self.specs = []     # spectrograms
         self.cbars = []     # color bars
         self.psds = []      # power spectra
+        self.audio_markers = [] # vertical line showing position while playing
         # font size:
         xwidth = self.fontMetrics().averageCharWidth()
         xwidth2 = xwidth/2
@@ -141,6 +147,11 @@ class DataBrowser(QWidget):
             self.specs.append(spec)
             axs = fig.addPlot(row=0, col=0)
             axs.addItem(spec)
+            vmarker = pg.InfiniteLine(angle=90, movable=False)
+            vmarker.setPen(pg.mkPen('white', width=2))
+            vmarker.setZValue(100)
+            self.audio_markers.append(vmarker)
+            axs.addItem(vmarker, ignoreBounds=True)
             self.setup_spec_plot(axs, c)
             cbar = pg.ColorBarItem(colorMap='CET-R4', interactive=True,
                                    rounding=1, limits=(-200, 20))
@@ -168,6 +179,11 @@ class DataBrowser(QWidget):
             self.traces.append(trace)
             self.setup_trace_plot(axt, c)
             axt.addItem(trace)
+            vmarker = pg.InfiniteLine(angle=90, movable=False)
+            vmarker.setPen(pg.mkPen('white', width=2))
+            vmarker.setZValue(100)
+            self.audio_markers.append(vmarker)
+            axt.addItem(vmarker, ignoreBounds=True)
             axt.setLabel('left', f'channel {c}', color='black')
             axt.setLabel('bottom', 'Time', 's', color='black')
             axt.getAxis('bottom').showLabel(c == self.show_channels[-1])
@@ -719,4 +735,15 @@ class DataBrowser(QWidget):
         playdata = 1.0*self.data[t0:t1,:]
         fade(playdata, self.rate, 0.1)
         self.audio.play(playdata, self.rate, blocking=False)
+        self.audio_time = self.toffset
+        self.audio_timer.start(50)
+
         
+    def mark_audio(self):
+        self.audio_time += 0.05
+        for vmarker in self.audio_markers:
+            vmarker.setPos(self.audio_time)
+        if self.audio_time > self.toffset + self.twindow:
+            self.audio_timer.stop()
+            for vmarker in self.audio_markers:
+                vmarker.setPos(-1)

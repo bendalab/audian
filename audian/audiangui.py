@@ -1,11 +1,11 @@
 import os
 import sys
 import argparse
+from PyQt5.QtCore import QTimer
+from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTabWidget
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel
 from PyQt5.QtWidgets import QAction, QPushButton, QFileDialog, QMessageBox
-from PyQt5.QtGui import QKeySequence
-from PyQt5.QtCore import QTimer
 from audioio import available_formats, PlayAudio
 from .version import __version__, __year__
 from .databrowser import DataBrowser
