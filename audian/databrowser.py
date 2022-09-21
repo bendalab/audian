@@ -48,6 +48,7 @@ class DataBrowser(QWidget):
         self.audio_timer = QTimer(self)
         self.audio_timer.timeout.connect(self.mark_audio)
         self.audio_time = 0.0
+        self.audio_tmax = 0.0
         self.audio_markers = []
 
         # window:
@@ -729,13 +730,14 @@ class DataBrowser(QWidget):
                     ax.getAxis(axis).setStyle(showValues=False)
 
 
-    def play_segment(self):
+    def play_window(self):
         t0 = int(np.round(self.toffset*self.rate))
-        t1 = int(np.round((self.toffset+self.twindow)*self.rate))
-        playdata = 1.0*self.data[t0:t1,:]
+        t1 = int(np.round((self.toffset + self.twindow)*self.rate))
+        playdata = 1.0*self.data[t0:t1, self.selected_channels]
         fade(playdata, self.rate, 0.1)
         self.audio.play(playdata, self.rate, blocking=False)
         self.audio_time = self.toffset
+        self.audio_tmax = self.toffset + self.twindow
         self.audio_timer.start(50)
 
         
@@ -743,7 +745,7 @@ class DataBrowser(QWidget):
         self.audio_time += 0.05
         for vmarker in self.audio_markers:
             vmarker.setPos(self.audio_time)
-        if self.audio_time > self.toffset + self.twindow:
+        if self.audio_time > self.audio_tmax:
             self.audio_timer.stop()
             for vmarker in self.audio_markers:
                 vmarker.setPos(-1)
