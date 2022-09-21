@@ -1,11 +1,12 @@
 import os
 import sys
 import argparse
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTabWidget
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel
-from PyQt5.QtWidgets import QAction, QPushButton, QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QAction, QPushButton
+from PyQt5.QtWidgets import QDialog, QFileDialog
 from audioio import available_formats, PlayAudio
 from .version import __version__, __year__
 from .databrowser import DataBrowser
@@ -45,7 +46,7 @@ class Audian(QMainWindow):
         file_menu = self.setup_file_actions(self.menuBar())
         view_menu = self.setup_view_actions(self.menuBar())
         help_menu = self.setup_help_actions(self.menuBar())
-        self.keys = '<h1>Audian key shortcuts</h1>\n'
+        self.keys = ['<h1>Audian key shortcuts</h1>']
         for menu in [file_menu, view_menu, help_menu]:
             self.menu_shortcuts(menu)
         
@@ -108,15 +109,19 @@ class Audian(QMainWindow):
             if act.menu():
                 self.menu_shortcuts(act.menu())
         title = menu.title().replace('&', '')
-        self.keys += f'<h2>{title}</h2>\n'
-        self.keys += '<table>'
+        s = ''
         for act in menu.actions():
             if not act.menu():
                 name = act.text().replace('&', '')
                 keys = ', '.join([key.toString() for key in act.shortcuts()])
                 if name and keys:
-                    self.keys += f'<tr><td>{name:20s}</td><td>{keys}</td></tr>\n'
-        self.keys += '</table>'
+                    s += f'<tr><td>{name:20s}</td><td>{keys}</td></tr>\n'
+        if len(s) > 0:
+            ks = f'<h2>{title}</h2>\n'
+            ks += '<table>\n'
+            ks += s
+            ks += '</table>\n'
+            self.keys.append(ks)
 
         
     def setup_file_actions(self, menu):
@@ -660,7 +665,25 @@ class Audian(QMainWindow):
 
 
     def shortcuts(self):
-        QMessageBox.information(self, 'Audian Key Shortcuts', self.keys)
+        dialog = QDialog(self)
+        dialog.setWindowTitle('Audian Key Shortcuts')
+        vbox = QVBoxLayout(dialog)
+        vbox.addWidget(QLabel(self.keys[0]))
+        hbox = QHBoxLayout()
+        hbox.setSpacing(4*self.fontMetrics().averageCharWidth())
+        vbox.addLayout(hbox)
+        n = 2
+        for ks in self.keys[1:]:
+            if n == 2:
+                vbox = QVBoxLayout()
+                hbox.addLayout(vbox)
+                n = 0
+            valign = Qt.AlignTop if n == 0 else Qt.AlignBottom
+            vbox.addWidget(QLabel(ks), 1, Qt.AlignLeft | valign)
+            n += 1
+        dialog.show()
+        dialog.raise_()
+        dialog.activateWindow()
 
 
     def about(self):
