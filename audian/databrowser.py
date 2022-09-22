@@ -125,6 +125,7 @@ class DataBrowser(QWidget):
             self.axfxs.append([])
             self.axfys.append([])
             self.axgs.append([])
+            self.audio_markers.append([])
             # one figure per channel:
             fig = pg.GraphicsLayoutWidget()
             fig.setBackground(None)
@@ -151,7 +152,7 @@ class DataBrowser(QWidget):
             vmarker = pg.InfiniteLine(angle=90, movable=False)
             vmarker.setPen(pg.mkPen('white', width=2))
             vmarker.setZValue(100)
-            self.audio_markers.append(vmarker)
+            self.audio_markers[-1].append(vmarker)
             axs.addItem(vmarker, ignoreBounds=True)
             self.setup_spec_plot(axs, c)
             cbar = pg.ColorBarItem(colorMap='CET-R4', interactive=True,
@@ -183,7 +184,7 @@ class DataBrowser(QWidget):
             vmarker = pg.InfiniteLine(angle=90, movable=False)
             vmarker.setPen(pg.mkPen('white', width=2))
             vmarker.setZValue(100)
-            self.audio_markers.append(vmarker)
+            self.audio_markers[-1].append(vmarker)
             axt.addItem(vmarker, ignoreBounds=True)
             axt.setLabel('left', f'channel {c}', color='black')
             axt.setLabel('bottom', 'Time', 's', color='black')
@@ -739,13 +740,20 @@ class DataBrowser(QWidget):
         self.audio_time = self.toffset
         self.audio_tmax = self.toffset + self.twindow
         self.audio_timer.start(50)
+        for c in range(self.data.channels):
+            atime = self.audio_time if c in self.selected_channels else -1
+            for vmarker in self.audio_markers[c]:
+                vmarker.setValue(atime)
 
         
     def mark_audio(self):
         self.audio_time += 0.05
-        for vmarker in self.audio_markers:
-            vmarker.setPos(self.audio_time)
+        for amarkers in self.audio_markers:
+            for vmarker in amarkers:
+                if vmarker.value() >= 0:
+                    vmarker.setValue(self.audio_time)
         if self.audio_time > self.audio_tmax:
             self.audio_timer.stop()
-            for vmarker in self.audio_markers:
-                vmarker.setPos(-1)
+            for amarkers in self.audio_markers:
+                for vmarker in amarkers:
+                    vmarker.setValue(-1)
