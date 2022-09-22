@@ -113,7 +113,6 @@ class DataBrowser(QWidget):
         self.traces = []    # traces
         self.specs = []     # spectrograms
         self.cbars = []     # color bars
-        self.psds = []      # power spectra
         self.audio_markers = [] # vertical line showing position while playing
         # font size:
         xwidth = self.fontMetrics().averageCharWidth()
@@ -265,6 +264,8 @@ class DataBrowser(QWidget):
                 ax.setYRange(self.f0, self.f1)
             for ax in self.axfxs[c]:
                 ax.setXRange(self.f0, self.f1)
+            # update spectrograms:
+            self.specs[c].updateSpec()
 
                 
     def resizeEvent(self, event):
@@ -516,9 +517,7 @@ class DataBrowser(QWidget):
             self.fresolution = fresolution
         for c in self.selected_channels:
             if c < len(self.specs):
-                self.specs[c].setNFFT(self.nfft)
-            if c < len(self.psds):
-                self.psds[c].setNFFT(self.nfft)
+                self.specs[c].setNFFT(self.nfft, self.isVisible())
 
         
     def freq_resolution_down(self):

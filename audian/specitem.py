@@ -50,15 +50,17 @@ class SpecItem(pg.ImageItem):
         self.data = data
         self.rate = rate
         self.channel = channel
-        self.offset = 0
+        self.offset = -1
+        self.current_nfft = 1
         self.fmax = 0.5/self.rate
-        self.zmin, self.zmax = self.setNFFT(nfft)
+        self.zmin, self.zmax = self.setNFFT(nfft, True)
         self.cbar = None
 
 
-    def setNFFT(self, nfft):
+    def setNFFT(self, nfft, update):
         self.nfft = nfft
-        return self.updateSpec()
+        if update:
+            return self.updateSpec()
 
 
     def setCBar(self, cbar):
@@ -91,6 +93,8 @@ class SpecItem(pg.ImageItem):
     def updateSpec(self):
         if len(self.data.buffer) == 0:
             return 0, 1
+        if self.offset == self.data.offset and self.current_nfft == self.nfft:
+            return
         
         freq, time, Sxx = spectrogram(self.data.buffer[:, self.channel],
                                       self.rate, nperseg=self.nfft,
@@ -108,4 +112,5 @@ class SpecItem(pg.ImageItem):
         self.translate(self.data.offset/self.rate, 0)
         self.scale(time[-1]/len(time), freq[-1]/len(freq))
         self.offset = self.data.offset
+        self.current_nfft = self.nfft
         return zmin, zmax
