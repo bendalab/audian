@@ -5,6 +5,7 @@ import pyqtgraph as pg
 from audioio import AudioLoader, available_formats, write_audio
 from audioio import fade
 from .version import __version__, __year__
+from .timeaxisitem import TimeAxisItem
 from .traceitem import TraceItem
 from .specitem import SpecItem
 
@@ -177,7 +178,8 @@ class DataBrowser(QWidget):
             axsp.setContentsMargins(0, 0, 0, 0)
             self.axspacers.append(axsp)
             # trace plot:
-            axt = fig.addPlot(row=2, col=0)
+            time_axis = TimeAxisItem(orientation='bottom')
+            axt = fig.addPlot(row=2, col=0, axisItems={'bottom': time_axis})
             trace = TraceItem(self.data, self.rate, c)
             self.traces.append(trace)
             self.setup_trace_plot(axt, c)
