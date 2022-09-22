@@ -36,6 +36,7 @@ class DataBrowser(QWidget):
         self.fmax = 1000.0
         self.fresolution = 500.0
         self.nfft = 256
+        self.step_frac = 0.5
         
         self.mouse_mode = pg.ViewBox.PanMode
         self.grids = 0
@@ -80,6 +81,7 @@ class DataBrowser(QWidget):
         self.f1 = self.fmax
         self.nfft = 256
         self.fresolution = self.rate/self.nfft
+        self.step_frac = 0.5
 
         if self.show_channels is None:
             if len(self.channels) == 0:
@@ -142,7 +144,7 @@ class DataBrowser(QWidget):
             fig.sigDeviceRangeChanged.connect(self.update_borders)
             self.borders.append(border)
             # spectrograms:
-            spec = SpecItem(self.data, self.rate, c, self.nfft)
+            spec = SpecItem(self.data, self.rate, c, self.nfft, self.step_frac)
             self.fmax = spec.fmax
             self.f1 = self.fmax
             self.specs.append(spec)
@@ -510,14 +512,17 @@ class DataBrowser(QWidget):
             self.set_frequencies()
 
 
-    def set_NFFT(self, nfft=None, fresolution=None):
+    def set_NFFT(self, nfft=None, fresolution=None, step_frac=None):
         if not nfft is None:
             self.nfft = nfft
         if not fresolution is None:
             self.fresolution = fresolution
+        if not step_frac is None:
+            self.step_frac = step_frac
         for c in self.selected_channels:
             if c < len(self.specs):
-                self.specs[c].setNFFT(self.nfft, self.isVisible())
+                self.specs[c].setNFFT(self.nfft, self.step_frac,
+                                      self.isVisible())
 
         
     def freq_resolution_down(self):
@@ -531,6 +536,20 @@ class DataBrowser(QWidget):
         if self.nfft*2 < len(self.data):
             self.fresolution *= 0.5
             self.nfft = int(np.round(2**(np.floor(np.log(self.rate/self.fresolution) / np.log(2.0)))))
+            self.set_NFFT()
+
+
+    def step_frac_down(self):
+        if 0.5 * self.step_frac * self.nfft >= 1:
+            self.step_frac *= 0.5
+            self.set_NFFT()
+
+
+    def step_frac_up(self):
+        if self.step_frac < 1.0:
+            self.step_frac *= 2
+            if self.step_frac > 1.0:
+                self.step_frac = 1.0
             self.set_NFFT()
 
 

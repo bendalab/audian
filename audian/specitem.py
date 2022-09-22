@@ -52,13 +52,17 @@ class SpecItem(pg.ImageItem):
         self.channel = channel
         self.offset = -1
         self.current_nfft = 1
+        self.current_step = 1
         self.fmax = 0.5/self.rate
-        self.zmin, self.zmax = self.setNFFT(nfft, True)
+        self.zmin, self.zmax = self.setNFFT(nfft, 0.5, True)
         self.cbar = None
 
 
-    def setNFFT(self, nfft, update):
+    def setNFFT(self, nfft, step_frac, update):
         self.nfft = nfft
+        self.step = int(np.round(step_frac * self.nfft))
+        if self.step < 1:
+            self.step = 1
         if update:
             return self.updateSpec()
 
@@ -93,12 +97,14 @@ class SpecItem(pg.ImageItem):
     def updateSpec(self):
         if len(self.data.buffer) == 0:
             return 0, 1
-        if self.offset == self.data.offset and self.current_nfft == self.nfft:
+        if self.offset == self.data.offset and \
+           self.current_nfft == self.nfft and \
+           self.current_step == self.step:
             return
         
         freq, time, Sxx = spectrogram(self.data.buffer[:, self.channel],
                                       self.rate, nperseg=self.nfft,
-                                      noverlap=self.nfft-self.nfft//2)
+                                      noverlap=self.nfft-self.step)
         self.fresolution = freq[1] - freq[0]
         Sxx = decibel(Sxx)
         #print(np.max(Sxx))
@@ -113,4 +119,5 @@ class SpecItem(pg.ImageItem):
         self.scale(time[-1]/len(time), freq[-1]/len(freq))
         self.offset = self.data.offset
         self.current_nfft = self.nfft
+        self.current_step = self.step
         return zmin, zmax

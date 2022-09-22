@@ -311,7 +311,8 @@ class Audian(QMainWindow):
             for b in self.browsers:
                 if not b is self.tabs.currentWidget():
                     b.set_NFFT(self.browser().nfft,
-                               self.browser().fresolution)
+                               self.browser().fresolution,
+                               self.browser().step_frac)
 
 
     def setup_frequency_actions(self, menu):
@@ -352,6 +353,14 @@ class Audian(QMainWindow):
         fresdown_act = QAction('De&crease resolution', self)
         fresdown_act.setShortcut('R')
         fresdown_act.triggered.connect(lambda x: self.frequency_resolution('freq_resolution_down'))
+
+        stepdown_act = QAction('Increase overlap', self)
+        stepdown_act.setShortcut('Shift+O')
+        stepdown_act.triggered.connect(lambda x: self.frequency_resolution('step_frac_down'))
+
+        stepup_act = QAction('Decrease &overlap', self)
+        stepup_act.setShortcut('O')
+        stepup_act.triggered.connect(lambda x: self.frequency_resolution('step_frac_up'))
         
         freq_menu = menu.addMenu('Frequenc&y')
         freq_menu.addAction(linkfrequency_act)
@@ -363,6 +372,8 @@ class Audian(QMainWindow):
         freq_menu.addAction(freqend_act)
         freq_menu.addAction(fresup_act)
         freq_menu.addAction(fresdown_act)
+        freq_menu.addAction(stepdown_act)
+        freq_menu.addAction(stepup_act)
         return freq_menu
 
         
@@ -545,7 +556,7 @@ class Audian(QMainWindow):
         grid_act.triggered.connect(lambda x: self.browser().toggle_grids())
 
         mouse_act = QAction('Toggle &zoom mode', self)
-        mouse_act.setShortcut('o')
+        mouse_act.setShortcut('Ctrl+z')
         mouse_act.triggered.connect(lambda x: self.browser().toggle_zoom_mode())
 
         nexttab_act = QAction('Next tab', self)
