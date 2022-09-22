@@ -248,11 +248,9 @@ class Audian(QMainWindow):
     def zoom_amplitude(self, amplitudefunc):
         getattr(self.browser(), amplitudefunc)()
         if self.link_amplitude:
-            cc = self.browser().current_channel
-            trace = self.browser().traces[cc]
             for b in self.browsers:
                 if not b is self.tabs.currentWidget():
-                    b.set_amplitudes(trace.ymin, trace.ymax)
+                    getattr(b, amplitudefunc)()
 
         
     def setup_amplitude_actions(self, menu):
