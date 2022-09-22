@@ -149,7 +149,8 @@ class DataBrowser(QWidget):
             self.fmax = spec.fmax
             self.f1 = self.fmax
             self.specs.append(spec)
-            axs = fig.addPlot(row=0, col=0)
+            time_axis = TimeAxisItem(orientation='bottom')
+            axs = fig.addPlot(row=0, col=0, axisItems={'bottom': time_axis})
             axs.addItem(spec)
             vmarker = pg.InfiniteLine(angle=90, movable=False)
             vmarker.setPen(pg.mkPen('white', width=2))
