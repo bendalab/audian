@@ -51,6 +51,7 @@ class SpecItem(pg.ImageItem):
         self.rate = rate
         self.channel = channel
         self.offset = -1
+        self.buffer_size = 0
         self.current_nfft = 1
         self.current_step = 1
         self.fmax = 0.5/self.rate
@@ -90,14 +91,14 @@ class SpecItem(pg.ImageItem):
         stop = min(len(self.data), int(trange[1]*self.rate+1))
         if start < self.data.offset or stop >= self.data.offset + len(self.data.buffer):
             self.data.update_buffer(start, stop)
-        if self.offset != self.data.offset:
-            self.updateSpec()
+        self.updateSpec()
     
 
     def updateSpec(self):
         if len(self.data.buffer) == 0:
             return 0, 1
         if self.offset == self.data.offset and \
+           self.buffer_size == len(self.data.buffer) and \
            self.current_nfft == self.nfft and \
            self.current_step == self.step:
             return
@@ -118,6 +119,7 @@ class SpecItem(pg.ImageItem):
         self.translate(self.data.offset/self.rate, 0)
         self.scale(time[-1]/len(time), freq[-1]/len(freq))
         self.offset = self.data.offset
+        self.buffer_size = len(self.data.buffer)
         self.current_nfft = self.nfft
         self.current_step = self.step
         return zmin, zmax
