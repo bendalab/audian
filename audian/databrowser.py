@@ -6,6 +6,7 @@ from audioio import AudioLoader, available_formats, write_audio
 from audioio import fade
 from .version import __version__, __year__
 from .timeaxisitem import TimeAxisItem
+from .yaxisitem import YAxisItem
 from .traceitem import TraceItem
 from .specitem import SpecItem
 
@@ -151,9 +152,13 @@ class DataBrowser(QWidget):
             self.specs.append(spec)
             bottom_axis = TimeAxisItem(orientation='bottom', showValues=True)
             top_axis = TimeAxisItem(orientation='top', showValues=False)
+            left_axis = YAxisItem(orientation='left', showValues=True)
+            right_axis = YAxisItem(orientation='right', showValues=False)
             axs = fig.addPlot(row=0, col=0,
                               axisItems={'bottom': bottom_axis,
-                                         'top': top_axis})
+                                         'top': top_axis,
+                                         'left': left_axis,
+                                         'right': right_axis})
             axs.addItem(spec)
             vmarker = pg.InfiniteLine(angle=90, movable=False)
             vmarker.setPen(pg.mkPen('white', width=2))
@@ -175,6 +180,7 @@ class DataBrowser(QWidget):
             spec.setCBar(cbar)
             self.axts[-1].append(axs)
             self.axfys[-1].append(axs)
+            self.axgs[-1].append(axs)
             self.axs[-1].append(axs)
             self.axspecs.append(axs)
             # spacer:
@@ -184,9 +190,13 @@ class DataBrowser(QWidget):
             # trace plot:
             bottom_axis = TimeAxisItem(orientation='bottom', showValues=True)
             top_axis = TimeAxisItem(orientation='top', showValues=False)
+            left_axis = YAxisItem(orientation='left', showValues=True)
+            right_axis = YAxisItem(orientation='right', showValues=False)
             axt = fig.addPlot(row=2, col=0,
                               axisItems={'bottom': bottom_axis,
-                                         'top': top_axis})
+                                         'top': top_axis,
+                                         'left': left_axis,
+                                         'right': right_axis})
             trace = TraceItem(self.data, self.rate, c)
             self.traces.append(trace)
             self.setup_trace_plot(axt, c)
