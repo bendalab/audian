@@ -226,6 +226,10 @@ class Audian(QMainWindow):
         datahome_act.setShortcuts([QKeySequence.MoveToStartOfLine, QKeySequence.MoveToStartOfDocument])
         datahome_act.triggered.connect(lambda x=0: self.scroll_time('time_home'))
 
+        snaptime_act = QAction('&Snap', self)
+        snaptime_act.setShortcut('.')
+        snaptime_act.triggered.connect(lambda x=0: self.zoom_time('snap_time'))
+
         time_menu = menu.addMenu('&Time')
         time_menu.addAction(play_act)
         time_menu.addAction(linktimezoom_act)
@@ -238,6 +242,7 @@ class Audian(QMainWindow):
         time_menu.addAction(dataup_act)
         time_menu.addAction(dataend_act)
         time_menu.addAction(datahome_act)
+        time_menu.addAction(snaptime_act)
         return time_menu
 
         

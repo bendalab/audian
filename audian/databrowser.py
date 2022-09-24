@@ -1,3 +1,4 @@
+from math import ceil, floor, log
 import numpy as np
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGraphicsRectItem
@@ -76,7 +77,7 @@ class DataBrowser(QWidget):
         self.twindow = 10.0
         self.tmax = len(self.data)/self.rate
         if self.twindow > self.tmax:
-            self.twindow = np.round(2**(np.floor(np.log(self.tmax) / np.log(2.0)) + 1.0))
+            self.twindow = np.round(2**(floor(log(self.tmax) / log(2.0)) + 1.0))
 
         self.fmax = 0.5*self.rate
         self.f0 = 0.0
@@ -346,7 +347,7 @@ class DataBrowser(QWidget):
             self.toffset = toffset
         if not twindow is None:
             self.twindow = twindow
-        n2 = np.ceil(self.tmax / (0.5*self.twindow))
+        n2 = ceil(self.tmax / (0.5*self.twindow))
         ttmax = max(self.twindow, n2*0.5*self.twindow)
         for axs in self.axts:
             for ax in axs:
@@ -407,6 +408,13 @@ class DataBrowser(QWidget):
         if self.toffset < toffs:
             self.toffset = toffs
             self.set_times()
+
+                
+    def snap_time(self):
+        twindow = 10.0 * 2**np.round(log(self.twindow/10.0)/log(2.0))
+        toffset = np.round(self.toffset / (0.5*twindow)) * (0.5*twindow)
+        if twindow != self.twindow or toffset != self.toffset:
+            self.set_times(toffset, twindow)
 
 
     def set_amplitudes(self, ymin=None, ymax=None):
@@ -523,7 +531,7 @@ class DataBrowser(QWidget):
     def freq_end(self):
         if self.f1 < self.fmax:
             df = self.f1 - self.f0
-            self.f1 = np.ceil(self.fmax/(0.5*df))*(0.5*df)
+            self.f1 = ceil(self.fmax/(0.5*df))*(0.5*df)
             self.f0 = self.f1 - df
             if self.f0 < 0.0:
                 self.f0 = 0.0
@@ -547,14 +555,14 @@ class DataBrowser(QWidget):
     def freq_resolution_down(self):
         if self.fresolution < 10000.0 and self.nfft > 16:
             self.fresolution *= 2.0
-            self.nfft = int(np.round(2**(np.floor(np.log(self.rate/self.fresolution) / np.log(2.0)))))
+            self.nfft = int(np.round(2**(floor(log(self.rate/self.fresolution) / log(2.0)))))
             self.set_NFFT()
 
         
     def freq_resolution_up(self):
         if self.nfft*2 < len(self.data):
             self.fresolution *= 0.5
-            self.nfft = int(np.round(2**(np.floor(np.log(self.rate/self.fresolution) / np.log(2.0)))))
+            self.nfft = int(np.round(2**(floor(log(self.rate/self.fresolution) / log(2.0)))))
             self.set_NFFT()
 
 
@@ -680,8 +688,10 @@ class DataBrowser(QWidget):
         if not self.current_channel in self.selected_channels:
             for c in self.selected_channels:
                 if c >= self.current_channel:
+                    self.current_channel = c
                     break
-            self.current_channel = c
+                if not self.current_channel in self.selected_channels:
+                    self.current_channel = self.selected_channels
         for c in range(len(self.figs)):
             self.figs[c].setVisible(c in self.show_channels)
             self.show_xticks(c, c == self.show_channels[-1])
