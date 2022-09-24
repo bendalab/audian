@@ -47,11 +47,21 @@ class TimeAxisItem(pg.AxisItem):
         min_spacing = diff / max_ticks
         p10unit = 10 ** floor(log10(min_spacing))
 
-        intervals = np.array([1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0]) * p10unit
-        for spacing in intervals:
+        # major ticks:
+        factors = [1.0, 2.0, 5.0, 10.0, 20.0, 50.0, 100.0]
+        for fac in factors:
+            spacing = fac * p10unit
             if spacing >= min_spacing:
                 break
-        return [(spacing, 0)]
+
+        # minor ticks:
+        factors = [100.0, 10.0, 1.0, 0.1]
+        for fac in factors:
+            minor_spacing = fac * p10unit
+            if minor_spacing < spacing:
+                break
+            
+        return [(spacing, 0), (minor_spacing, 0)]
 
     
     def tickStrings(self, values, scale, spacing):
