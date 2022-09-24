@@ -1,6 +1,6 @@
 from math import ceil, floor, log
 import numpy as np
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import Signal, QTimer
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGraphicsRectItem
 import pyqtgraph as pg
 from audioio import AudioLoader, available_formats, write_audio
@@ -13,6 +13,15 @@ from .specitem import SpecItem
 
 
 class DataBrowser(QWidget):
+
+    
+    sigTimesChanged = Signal(object, object)
+    sigAmplitudesChanged = Signal(object, object)
+    sigFrequenciesChanged = Signal(object, object)
+    sigResolutionChanged = Signal(object, object, object)
+    sigPowerChanged = Signal(object, object)
+
+    
     def __init__(self, file_path, channels, show_channels, audio,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -40,6 +49,8 @@ class DataBrowser(QWidget):
         self.fresolution = 500.0
         self.nfft = 256
         self.step_frac = 0.5
+
+        self.setting = False
         
         self.mouse_mode = pg.ViewBox.PanMode
         self.grids = 0
@@ -336,14 +347,9 @@ class DataBrowser(QWidget):
             self.axspecs[channel].getAxis('bottom').showLabel(show_ticks)
             self.axspecs[channel].getAxis('bottom').setStyle(showValues=show_ticks)
 
-            
-    def update_times(self, viewbox, trange):
-        self.toffset = trange[0]
-        self.twindow = trange[1] - trange[0]
-        self.set_times()
-        
 
-    def set_times(self, toffset=None, twindow=None):
+    def set_times(self, toffset=None, twindow=None, dispatch=True):
+        self.setting = True
         if not toffset is None:
             self.toffset = toffset
         if not twindow is None:
@@ -355,7 +361,18 @@ class DataBrowser(QWidget):
                 ax.setLimits(xMax=ttmax, maxXRange=ttmax)
                 if self.isVisible():
                     ax.setXRange(self.toffset, self.toffset + self.twindow)
+        self.setting = False
+        if dispatch:
+            self.sigTimesChanged.emit(self.toffset, self.twindow)
 
+            
+    def update_times(self, viewbox, trange):
+        if self.setting:
+            return
+        self.toffset = trange[0]
+        self.twindow = trange[1] - trange[0]
+        self.set_times()
+        
         
     def zoom_time_in(self):
         if self.twindow * self.rate >= 20:
@@ -418,7 +435,8 @@ class DataBrowser(QWidget):
             self.set_times(toffset, twindow)
 
 
-    def set_amplitudes(self, ymin=None, ymax=None):
+    def set_amplitudes(self, ymin=None, ymax=None, dispatch=True):
+        self.setting = True
         for c in self.selected_channels:
             if not ymin is None:
                 self.traces[c].ymin = ymin
@@ -427,9 +445,14 @@ class DataBrowser(QWidget):
             if self.isVisible():
                 for ax in self.axys[c]:
                     ax.setYRange(self.traces[c].ymin, self.traces[c].ymax)
+        self.setting = False
+        if dispatch:
+            self.sigAmplitudesChanged.emit(ymin, ymax)
 
             
     def update_amplitudes(self, viewbox, arange):
+        if self.setting:
+            return
         self.set_amplitudes(arange[0], arange[1])
         
 
@@ -463,7 +486,8 @@ class DataBrowser(QWidget):
         self.set_amplitudes()
 
 
-    def set_frequencies(self, f0=None, f1=None):
+    def set_frequencies(self, f0=None, f1=None, dispatch=True):
+        self.setting = True
         if not f0 is None:
             self.f0 = f0
         if not f1 is None:
@@ -474,9 +498,14 @@ class DataBrowser(QWidget):
                     ax.setYRange(self.f0, self.f1)
                 for ax in self.axfxs[c]:
                     ax.setXRange(self.f0, self.f1)
+        self.setting = False
+        if dispatch:
+            self.sigFrequenciesChanged.emit(self.f0, self.f1)
 
             
     def update_frequencies(self, viewbox, frange):
+        if self.setting:
+            return
         self.set_frequencies(frange[0], frange[1])
         
             
@@ -542,7 +571,9 @@ class DataBrowser(QWidget):
             self.set_frequencies()
 
 
-    def set_NFFT(self, nfft=None, fresolution=None, step_frac=None):
+    def set_resolution(self, nfft=None, fresolution=None, step_frac=None,
+                       dispatch=True):
+        self.setting = True
         if not nfft is None:
             self.nfft = nfft
         if not fresolution is None:
@@ -553,26 +584,30 @@ class DataBrowser(QWidget):
             if c < len(self.specs):
                 self.specs[c].setNFFT(self.nfft, self.step_frac,
                                       self.isVisible())
+        self.setting = False
+        if dispatch:
+            self.sigResolutionChanged.emit(self.nfft, self.fresolution,
+                                           self.step_frac)
 
         
     def freq_resolution_down(self):
         if self.fresolution < 10000.0 and self.nfft > 16:
             self.fresolution *= 2.0
             self.nfft = int(np.round(2**(floor(log(self.rate/self.fresolution) / log(2.0)))))
-            self.set_NFFT()
+            self.set_resolution()
 
         
     def freq_resolution_up(self):
         if self.nfft*2 < len(self.data):
             self.fresolution *= 0.5
             self.nfft = int(np.round(2**(floor(log(self.rate/self.fresolution) / log(2.0)))))
-            self.set_NFFT()
+            self.set_resolution()
 
 
     def step_frac_down(self):
         if 0.5 * self.step_frac * self.nfft >= 1:
             self.step_frac *= 0.5
-            self.set_NFFT()
+            self.set_resolution()
 
 
     def step_frac_up(self):
@@ -580,7 +615,7 @@ class DataBrowser(QWidget):
             self.step_frac *= 2
             if self.step_frac > 1.0:
                 self.step_frac = 1.0
-            self.set_NFFT()
+            self.set_resolution()
 
 
     def power_up(self):
@@ -627,12 +662,18 @@ class DataBrowser(QWidget):
                                         self.specs[c].zmax)
 
 
-    def set_power(self, zmin, zmax):
+    def set_power(self, zmin, zmax, dispatch=True):
+        self.setting = True
         for c in self.selected_channels:
             self.specs[c].setCBarLevels(zmin, zmax)
+        self.setting = False
+        if dispatch:
+            self.sigPowerChanged.emit(zmin, zmax)
 
 
     def update_power(self, cbar):
+        if self.setting:
+            return
         zmin = cbar.levels()[0]
         zmax = cbar.levels()[1]
         self.set_power(cbar.levels()[0], cbar.levels()[1])

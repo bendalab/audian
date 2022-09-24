@@ -149,26 +149,18 @@ class Audian(QMainWindow):
         self.link_timezoom = not self.link_timezoom
 
         
-    def zoom_time(self, zoomfunc):
-        getattr(self.browser(), zoomfunc)()
-        self.dispatch_time()
-
-        
     def toggle_link_timescroll(self):
         self.link_timescroll = not self.link_timescroll
 
-        
-    def scroll_time(self, scrollfunc):
-        getattr(self.browser(), scrollfunc)()
-        self.dispatch_time()
 
-
-    def dispatch_time(self):
-        toffset = self.browser().toffset if self.link_timescroll else None
-        twindow = self.browser().twindow if self.link_timezoom else None
+    def dispatch_times(self, toffset, twindow):
+        if not self.link_timescroll:
+            toffset = None
+        if not self.link_timezoom:
+            twindow = None
         for b in self.browsers:
             if not b is self.tabs.currentWidget():
-                b.set_times(toffset, twindow)
+                b.set_times(toffset, twindow, False)
 
 
     def setup_time_actions(self, menu):
@@ -184,11 +176,11 @@ class Audian(QMainWindow):
 
         zoomxin_act = QAction('Zoom &in', self)
         zoomxin_act.setShortcuts([QKeySequence.ZoomIn, '+', '=', 'Shift+X'])
-        zoomxin_act.triggered.connect(lambda x: self.zoom_time('zoom_time_in'))
+        zoomxin_act.triggered.connect(lambda x: self.browser().zoom_time_in())
         
         zoomxout_act = QAction('Zoom &out', self)
         zoomxout_act.setShortcuts([QKeySequence.ZoomOut, '-', 'x'])
-        zoomxout_act.triggered.connect(lambda x: self.zoom_time('zoom_time_out'))
+        zoomxout_act.triggered.connect(lambda x: self.browser().zoom_time_out())
         
         linktimescroll_act = QAction('Link &time scroll', self)
         linktimescroll_act.setShortcut('Alt+T')
@@ -198,31 +190,31 @@ class Audian(QMainWindow):
 
         pagedown_act = QAction('Page &down', self)
         pagedown_act.setShortcuts(QKeySequence.MoveToNextPage)
-        pagedown_act.triggered.connect(lambda x=0: self.scroll_time('time_page_down'))
+        pagedown_act.triggered.connect(lambda x=0: self.browser().time_page_down())
 
         pageup_act = QAction('Page &up', self)
         pageup_act.setShortcuts(QKeySequence.MoveToPreviousPage)
-        pageup_act.triggered.connect(lambda x=0: self.scroll_time('time_page_up'))
+        pageup_act.triggered.connect(lambda x=0: self.browser().time_page_up())
 
         datadown_act = QAction('Trace down', self)
         datadown_act.setShortcuts(QKeySequence.MoveToNextLine)
-        datadown_act.triggered.connect(lambda x=0: self.scroll_time('time_down'))
+        datadown_act.triggered.connect(lambda x=0: self.browser().time_down())
 
         dataup_act = QAction('Trace up', self)
         dataup_act.setShortcuts(QKeySequence.MoveToPreviousLine)
-        dataup_act.triggered.connect(lambda x=0: self.scroll_time('time_up'))
+        dataup_act.triggered.connect(lambda x=0: self.browser().time_up())
 
         dataend_act = QAction('&End', self)
         dataend_act.setShortcuts([QKeySequence.MoveToEndOfLine, QKeySequence.MoveToEndOfDocument])
-        dataend_act.triggered.connect(lambda x=0: self.scroll_time('time_end'))
+        dataend_act.triggered.connect(lambda x=0: self.browser().time_end())
 
         datahome_act = QAction('&Home', self)
         datahome_act.setShortcuts([QKeySequence.MoveToStartOfLine, QKeySequence.MoveToStartOfDocument])
-        datahome_act.triggered.connect(lambda x=0: self.scroll_time('time_home'))
+        datahome_act.triggered.connect(lambda x=0: self.browser().time_home())
 
         snaptime_act = QAction('&Snap', self)
         snaptime_act.setShortcut('.')
-        snaptime_act.triggered.connect(lambda x=0: self.zoom_time('snap_time'))
+        snaptime_act.triggered.connect(lambda x=0: self.browser().snap_time())
 
         time_menu = menu.addMenu('&Time')
         time_menu.addAction(play_act)
@@ -243,20 +235,12 @@ class Audian(QMainWindow):
     def toggle_link_amplitude(self):
         self.link_amplitude = not self.link_amplitude
 
-        
-    def zoom_amplitude(self, amplitudefunc):
-        getattr(self.browser(), amplitudefunc)()
-        if self.link_amplitude:
-            for b in self.browsers:
-                if not b is self.tabs.currentWidget():
-                    getattr(b, amplitudefunc)()
-
 
     def dispatch_amplitudes(self, ymin, ymax):
         if self.link_amplitude:
             for b in self.browsers:
                 if not b is self.tabs.currentWidget():
-                    b.set_amplitudes(ymin, ymax)
+                    b.set_amplitudes(ymin, ymax, False)
 
         
     def setup_amplitude_actions(self, menu):
@@ -268,23 +252,23 @@ class Audian(QMainWindow):
         
         zoomyin_act = QAction('Zoom &in', self)
         zoomyin_act.setShortcut('Shift+Y')
-        zoomyin_act.triggered.connect(lambda x: self.zoom_amplitude('zoom_ampl_in'))
+        zoomyin_act.triggered.connect(lambda x: self.browser().zoom_ampl_in())
 
         zoomyout_act = QAction('Zoom &out', self)
         zoomyout_act.setShortcut('Y')
-        zoomyout_act.triggered.connect(lambda x: self.zoom_amplitude('zoom_ampl_out'))
+        zoomyout_act.triggered.connect(lambda x: self.browser().zoom_ampl_out())
 
         autoy_act = QAction('&Auto scale', self)
         autoy_act.setShortcut('v')
-        autoy_act.triggered.connect(lambda x: self.zoom_amplitude('auto_ampl'))
+        autoy_act.triggered.connect(lambda x: self.browser().auto_ampl())
 
         resety_act = QAction('&Reset', self)
         resety_act.setShortcut('Shift+V')
-        resety_act.triggered.connect(lambda x: self.zoom_amplitude('reset_ampl'))
+        resety_act.triggered.connect(lambda x: self.browser().reset_ampl())
 
         centery_act = QAction('&Center', self)
         centery_act.setShortcut('C')
-        centery_act.triggered.connect(lambda x: self.zoom_amplitude('center_ampl'))
+        centery_act.triggered.connect(lambda x: self.browser().center_ampl())
 
         ampl_menu = menu.addMenu('&Amplitude')
         ampl_menu.addAction(linkamplitude_act)
@@ -299,28 +283,19 @@ class Audian(QMainWindow):
     def toggle_link_frequency(self):
         self.link_frequency = not self.link_frequency
 
-        
-    def zoom_frequency(self, frequencyfunc):
-        getattr(self.browser(), frequencyfunc)()
-        self.dispatch_frequencies()
 
-
-    def dispatch_frequencies(self):
+    def dispatch_frequencies(self, f0, f1):
         if self.link_frequency:
             for b in self.browsers:
                 if not b is self.tabs.currentWidget():
-                    b.set_frequencies(self.browser().f0,
-                                      self.browser().f1)
+                    b.set_frequencies(f0, f1, False)
 
         
-    def frequency_resolution(self, resolutionfunc):
-        getattr(self.browser(), resolutionfunc)()
+    def dispatch_resolution(self, nfft, fresolution, step_frac):
         if self.link_frequency:
             for b in self.browsers:
                 if not b is self.tabs.currentWidget():
-                    b.set_NFFT(self.browser().nfft,
-                               self.browser().fresolution,
-                               self.browser().step_frac)
+                    b.set_resolution(nfft, fresolution, step_frac, False)
 
 
     def setup_frequency_actions(self, menu):
@@ -332,43 +307,43 @@ class Audian(QMainWindow):
         
         zoomfin_act = QAction('Zoom &in', self)
         zoomfin_act.setShortcut('Shift+F')
-        zoomfin_act.triggered.connect(lambda x: self.zoom_frequency('zoom_freq_in'))
+        zoomfin_act.triggered.connect(lambda x: self.browser().zoom_freq_in())
 
         zoomfout_act = QAction('Zoom &out', self)
         zoomfout_act.setShortcut('F')
-        zoomfout_act.triggered.connect(lambda x: self.zoom_frequency('zoom_freq_out'))
+        zoomfout_act.triggered.connect(lambda x: self.browser().zoom_freq_out())
 
         frequp_act = QAction('Move &up', self)
         frequp_act.setShortcuts(QKeySequence.MoveToNextChar)
-        frequp_act.triggered.connect(lambda x: self.zoom_frequency('freq_up'))
+        frequp_act.triggered.connect(lambda x: self.browser().freq_up())
 
         freqdown_act = QAction('Move &down', self)
         freqdown_act.setShortcuts(QKeySequence.MoveToPreviousChar)
-        freqdown_act.triggered.connect(lambda x: self.zoom_frequency('freq_down'))
+        freqdown_act.triggered.connect(lambda x: self.browser().freq_down())
 
         freqhome_act = QAction('&Home', self)
         freqhome_act.setShortcuts(QKeySequence.MoveToPreviousWord)
-        freqhome_act.triggered.connect(lambda x: self.zoom_frequency('freq_home'))
+        freqhome_act.triggered.connect(lambda x: self.browser().freq_home())
 
         freqend_act = QAction('&End', self)
         freqend_act.setShortcuts(QKeySequence.MoveToNextWord)
-        freqend_act.triggered.connect(lambda x: self.zoom_frequency('freq_end'))
+        freqend_act.triggered.connect(lambda x: self.browser().freq_end())
 
         fresup_act = QAction('Increase &resolution', self)
         fresup_act.setShortcut('Shift+R')
-        fresup_act.triggered.connect(lambda x: self.frequency_resolution('freq_resolution_up'))
+        fresup_act.triggered.connect(lambda x: self.browser().freq_resolution_up())
 
         fresdown_act = QAction('De&crease resolution', self)
         fresdown_act.setShortcut('R')
-        fresdown_act.triggered.connect(lambda x: self.frequency_resolution('freq_resolution_down'))
+        fresdown_act.triggered.connect(lambda x: self.browser().freq_resolution_down())
 
         stepdown_act = QAction('Increase overlap', self)
         stepdown_act.setShortcut('Shift+O')
-        stepdown_act.triggered.connect(lambda x: self.frequency_resolution('step_frac_down'))
+        stepdown_act.triggered.connect(lambda x: self.browser().step_frac_down())
 
         stepup_act = QAction('Decrease &overlap', self)
         stepup_act.setShortcut('O')
-        stepup_act.triggered.connect(lambda x: self.frequency_resolution('step_frac_up'))
+        stepup_act.triggered.connect(lambda x: self.browser().step_frac_up())
         
         freq_menu = menu.addMenu('Frequenc&y')
         freq_menu.addAction(linkfrequency_act)
@@ -388,15 +363,12 @@ class Audian(QMainWindow):
     def toggle_link_power(self):
         self.link_power = not self.link_power
 
-        
-    def zoom_power(self, powerfunc):
-        getattr(self.browser(), powerfunc)()
+
+    def dispatch_power(self, zmin, zmax):
         if self.link_power:
-            cc = self.browser().current_channel
-            cbar = self.browser().cbars[cc]
             for b in self.browsers:
                 if not b is self.tabs.currentWidget():
-                    b.update_power(cbar)
+                    b.set_power(zmin, zmax, False)
 
 
     def setup_power_actions(self, menu):
@@ -408,27 +380,27 @@ class Audian(QMainWindow):
         
         powerup_act = QAction('Power &up', self)
         powerup_act.setShortcut('Shift+Z')
-        powerup_act.triggered.connect(lambda x: self.zoom_power('power_up'))
+        powerup_act.triggered.connect(lambda x: self.browser().power_up())
 
         powerdown_act = QAction('Power &down', self)
         powerdown_act.setShortcut('Z')
-        powerdown_act.triggered.connect(lambda x: self.zoom_power('power_down'))
+        powerdown_act.triggered.connect(lambda x: self.browser().power_down())
 
         maxpowerup_act = QAction('Max up', self)
         maxpowerup_act.setShortcut('Shift+K')
-        maxpowerup_act.triggered.connect(lambda x: self.zoom_power('max_power_up'))
+        maxpowerup_act.triggered.connect(lambda x: self.browser().max_power_up())
 
         maxpowerdown_act = QAction('Max down', self)
         maxpowerdown_act.setShortcut('K')
-        maxpowerdown_act.triggered.connect(lambda x: self.zoom_power('max_power_down'))
+        maxpowerdown_act.triggered.connect(lambda x: self.browser().max_power_down())
 
         minpowerup_act = QAction('Min up', self)
         minpowerup_act.setShortcut('Shift+J')
-        minpowerup_act.triggered.connect(lambda x: self.zoom_power('min_power_up'))
+        minpowerup_act.triggered.connect(lambda x: self.browser().min_power_up())
 
         minpowerdown_act = QAction('Min down', self)
         minpowerdown_act.setShortcut('J')
-        minpowerdown_act.triggered.connect(lambda x: self.zoom_power('min_power_down'))
+        minpowerdown_act.triggered.connect(lambda x: self.browser().min_power_down())
         
         power_menu = menu.addMenu('&Power')
         power_menu.addAction(linkpower_act)
@@ -672,6 +644,11 @@ class Audian(QMainWindow):
                 browser.open()
                 if self.tabs.currentWidget() is browser:
                     self.adapt_menu(self.tabs.currentIndex())
+                browser.sigTimesChanged.connect(self.dispatch_times)
+                # TODO not working, dispatch needs to propagate functions! browser.sigAmplitudesChanged.connect(self.dispatch_amplitudes)
+                browser.sigFrequenciesChanged.connect(self.dispatch_frequencies)
+                browser.sigResolutionChanged.connect(self.dispatch_resolution)
+                # TODO needs to be checked browser.sigPowerChanged.connect(self.dispatch_power)
                 QTimer.singleShot(100, self.load_data)
                 break
 
