@@ -149,8 +149,11 @@ class DataBrowser(QWidget):
             self.fmax = spec.fmax
             self.f1 = self.fmax
             self.specs.append(spec)
-            time_axis = TimeAxisItem(orientation='bottom')
-            axs = fig.addPlot(row=0, col=0, axisItems={'bottom': time_axis})
+            bottom_axis = TimeAxisItem(orientation='bottom', showValues=True)
+            top_axis = TimeAxisItem(orientation='top', showValues=False)
+            axs = fig.addPlot(row=0, col=0,
+                              axisItems={'bottom': bottom_axis,
+                                         'top': top_axis})
             axs.addItem(spec)
             vmarker = pg.InfiniteLine(angle=90, movable=False)
             vmarker.setPen(pg.mkPen('white', width=2))
@@ -179,8 +182,11 @@ class DataBrowser(QWidget):
             axsp.setContentsMargins(0, 0, 0, 0)
             self.axspacers.append(axsp)
             # trace plot:
-            time_axis = TimeAxisItem(orientation='bottom')
-            axt = fig.addPlot(row=2, col=0, axisItems={'bottom': time_axis})
+            bottom_axis = TimeAxisItem(orientation='bottom', showValues=True)
+            top_axis = TimeAxisItem(orientation='top', showValues=False)
+            axt = fig.addPlot(row=2, col=0,
+                              axisItems={'bottom': bottom_axis,
+                                         'top': top_axis})
             trace = TraceItem(self.data, self.rate, c)
             self.traces.append(trace)
             self.setup_trace_plot(axt, c)
