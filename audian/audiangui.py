@@ -151,30 +151,24 @@ class Audian(QMainWindow):
         
     def zoom_time(self, zoomfunc):
         getattr(self.browser(), zoomfunc)()
-        if self.link_timezoom:
-            for b in self.browsers:
-                if not b is self.tabs.currentWidget():
-                    if self.link_timescroll:
-                        b.set_times(self.browser().toffset,
-                                    self.browser().twindow)
-                    else:
-                        b.set_times(None, self.browser().twindow)
+        self.dispatch_time()
 
         
     def toggle_link_timescroll(self):
         self.link_timescroll = not self.link_timescroll
 
         
-    def scroll_time(self, scroolfunc):
-        getattr(self.browser(), scroolfunc)()
-        if self.link_timescroll:
-            for b in self.browsers:
-                if not b is self.tabs.currentWidget():
-                    if self.link_timezoom:
-                        b.set_times(self.browser().toffset,
-                                    self.browser().twindow)
-                    else:
-                        b.set_times(self.browser().toffset, None)
+    def scroll_time(self, scrollfunc):
+        getattr(self.browser(), scrollfunc)()
+        self.dispatch_time()
+
+
+    def dispatch_time(self):
+        toffset = self.browser().toffset if self.link_timescroll else None
+        twindow = self.browser().twindow if self.link_timezoom else None
+        for b in self.browsers:
+            if not b is self.tabs.currentWidget():
+                b.set_times(toffset, twindow)
 
 
     def setup_time_actions(self, menu):
@@ -257,6 +251,13 @@ class Audian(QMainWindow):
                 if not b is self.tabs.currentWidget():
                     getattr(b, amplitudefunc)()
 
+
+    def dispatch_amplitudes(self, ymin, ymax):
+        if self.link_amplitude:
+            for b in self.browsers:
+                if not b is self.tabs.currentWidget():
+                    b.set_amplitudes(ymin, ymax)
+
         
     def setup_amplitude_actions(self, menu):
         linkamplitude_act = QAction('Link &amplitude', self)
@@ -301,6 +302,10 @@ class Audian(QMainWindow):
         
     def zoom_frequency(self, frequencyfunc):
         getattr(self.browser(), frequencyfunc)()
+        self.dispatch_frequencies()
+
+
+    def dispatch_frequencies(self):
         if self.link_frequency:
             for b in self.browsers:
                 if not b is self.tabs.currentWidget():
@@ -391,7 +396,7 @@ class Audian(QMainWindow):
             cbar = self.browser().cbars[cc]
             for b in self.browsers:
                 if not b is self.tabs.currentWidget():
-                    b.set_cbar_levels(cbar)
+                    b.update_power(cbar)
 
 
     def setup_power_actions(self, menu):

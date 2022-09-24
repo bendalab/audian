@@ -174,7 +174,7 @@ class DataBrowser(QWidget):
             cbar.getAxis('right').setWidth(6*xwidth)
             cbar.setLevels([spec.zmin, spec.zmax])
             cbar.setImageItem(spec)
-            cbar.sigLevelsChanged.connect(self.set_cbar_levels)
+            cbar.sigLevelsChanged.connect(self.update_power)
             cbar.setVisible(self.show_cbars)
             self.cbars.append(cbar)
             fig.addItem(cbar, row=0, col=1)
@@ -244,8 +244,9 @@ class DataBrowser(QWidget):
         ax.getAxis('left').setWidth(8*xwidth)
         ax.enableAutoRange(False, False)
         ax.setXRange(self.toffset, self.toffset + self.twindow)
-        ax.sigXRangeChanged.connect(self.set_xrange)
+        ax.sigXRangeChanged.connect(self.update_times)
         ax.setYRange(self.traces[c].ymin, self.traces[c].ymax)
+        ax.sigYRangeChanged.connect(self.update_amplitudes)
 
 
     def setup_spec_plot(self, ax, c):
@@ -266,9 +267,9 @@ class DataBrowser(QWidget):
         ax.getAxis('left').setTextPen('black')
         ax.enableAutoRange(False, False)
         ax.setXRange(self.toffset, self.toffset + self.twindow)
-        ax.sigXRangeChanged.connect(self.set_xrange)
+        ax.sigXRangeChanged.connect(self.update_times)
         ax.setYRange(self.f0, self.f1)
-        ax.sigYRangeChanged.connect(self.set_frange)
+        ax.sigYRangeChanged.connect(self.update_frequencies)
 
 
     def showEvent(self, event):
@@ -336,9 +337,9 @@ class DataBrowser(QWidget):
             self.axspecs[channel].getAxis('bottom').setStyle(showValues=show_ticks)
 
             
-    def set_xrange(self, viewbox, xrange):
-        self.toffset = xrange[0]
-        self.twindow = xrange[1] - xrange[0]
+    def update_times(self, viewbox, trange):
+        self.toffset = trange[0]
+        self.twindow = trange[1] - trange[0]
         self.set_times()
         
 
@@ -427,6 +428,10 @@ class DataBrowser(QWidget):
                 for ax in self.axys[c]:
                     ax.setYRange(self.traces[c].ymin, self.traces[c].ymax)
 
+            
+    def update_amplitudes(self, viewbox, arange):
+        self.set_amplitudes(arange[0], arange[1])
+        
 
     def zoom_ampl_in(self):
         for c in self.selected_channels:
@@ -471,10 +476,8 @@ class DataBrowser(QWidget):
                     ax.setXRange(self.f0, self.f1)
 
             
-    def set_frange(self, viewbox, frange):
-        self.f0 = frange[0]
-        self.f1 = frange[1]
-        self.set_frequencies()
+    def update_frequencies(self, viewbox, frange):
+        self.set_frequencies(frange[0], frange[1])
         
             
     def zoom_freq_in(self):
@@ -624,11 +627,15 @@ class DataBrowser(QWidget):
                                         self.specs[c].zmax)
 
 
-    def set_cbar_levels(self, cbar):
-        zmin = cbar.levels()[0]
-        zmax = cbar.levels()[1]
+    def set_power(self, zmin, zmax):
         for c in self.selected_channels:
             self.specs[c].setCBarLevels(zmin, zmax)
+
+
+    def update_power(self, cbar):
+        zmin = cbar.levels()[0]
+        zmax = cbar.levels()[1]
+        self.set_power(cbar.levels()[0], cbar.levels()[1])
 
 
     def all_channels(self):
