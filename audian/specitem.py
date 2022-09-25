@@ -52,16 +52,27 @@ class SpecItem(pg.ImageItem):
         self.channel = channel
         self.offset = -1
         self.buffer_size = 0
+        self.nfft = nfft
+        self.fresolution = self.rate/self.nfft
+        self.step_frac = 0.5
         self.current_nfft = 1
         self.current_step = 1
         self.fmax = 0.5/self.rate
-        self.zmin, self.zmax = self.setNFFT(nfft, 0.5, True)
+        self.zmin, self.zmax = self.set_resolution(nfft, 0.5, True)
+        self.f0 = 0.0
+        self.f1 = self.fmax
         self.cbar = None
 
 
-    def setNFFT(self, nfft, step_frac, update):
-        self.nfft = nfft
-        self.step = int(np.round(step_frac * self.nfft))
+    def set_resolution(self, nfft=None, step_frac=None, update=True):
+        if not nfft is None:
+            self.nfft = nfft
+        self.fresolution = self.rate/self.nfft
+        if not step_frac is None:
+            self.step_frac = step_frac
+            if self.step_frac > 1.0:
+                self.step_frac = 1.0
+        self.step = int(np.round(self.step_frac * self.nfft))
         if self.step < 1:
             self.step = 1
         if update:
@@ -124,3 +135,80 @@ class SpecItem(pg.ImageItem):
         self.current_nfft = self.nfft
         self.current_step = self.step
         return zmin, zmax
+
+                
+    def zoom_freq_in(self):
+        df = self.f1 - self.f0
+        if df > 0.1:
+            df *= 0.5
+            self.f1 = self.f0 + df
+            
+        
+    def zoom_freq_out(self):
+        if self.f1 - self.f0 < self.fmax:
+            df = self.f1 - self.f0
+            df *= 2.0
+            if df > self.fmax:
+                df = self.fmax
+            self.f1 = self.f0 + df
+            if self.f1 > self.fmax:
+                self.f1 = self.fmax
+                self.f0 = self.fmax - df
+            if self.f0 < 0:
+                self.f0 = 0
+                self.f1 = df
+                
+        
+    def freq_down(self):
+        if self.f0 > 0.0:
+            df = self.f1 - self.f0
+            self.f0 -= 0.5*df
+            self.f1 -= 0.5*df
+            if self.f0 < 0.0:
+                self.f0 = 0.0
+                self.f1 = df
+
+            
+    def freq_up(self):
+        if self.f1 < self.fmax:
+            df = self.f1 - self.f0
+            self.f0 += 0.5*df
+            self.f1 += 0.5*df
+
+
+    def freq_home(self):
+        if self.f0 > 0.0:
+            df = self.f1 - self.f0
+            self.f0 = 0.0
+            self.f1 = df
+
+            
+    def freq_end(self):
+        if self.f1 < self.fmax:
+            df = self.f1 - self.f0
+            self.f1 = ceil(self.fmax/(0.5*df))*(0.5*df)
+            self.f0 = self.f1 - df
+            if self.f0 < 0.0:
+                self.f0 = 0.0
+                self.f1 = df
+
+        
+    def freq_resolution_down(self):
+        if self.nfft > 16:
+            self.set_resolution(nfft=self.nfft//2)
+
+        
+    def freq_resolution_up(self):
+        if self.nfft*2 < len(self.data):
+            self.set_resolution(nfft=self.nfft*2)
+
+
+    def step_frac_down(self):
+        if 0.5 * self.step_frac * self.nfft >= 1:
+            self.set_resolution(step_frac=self.step_frac*0.5)
+
+
+    def step_frac_up(self):
+        if self.step_frac < 1.0:
+            self.set_resolution(step_frac=self.step_frac*2.0)
+

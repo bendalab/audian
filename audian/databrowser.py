@@ -18,7 +18,7 @@ class DataBrowser(QWidget):
     sigTimesChanged = Signal(object, object)
     sigAmplitudesChanged = Signal(object, object)
     sigFrequenciesChanged = Signal(object, object)
-    sigResolutionChanged = Signal(object, object, object)
+    sigResolutionChanged = Signal()
     sigPowerChanged = Signal()
 
     
@@ -42,13 +42,6 @@ class DataBrowser(QWidget):
         # view:
         self.toffset = 0.0
         self.twindow = 2.0
-
-        self.f0 = 0.0
-        self.f1 = 1000.0
-        self.fmax = 1000.0
-        self.fresolution = 500.0
-        self.nfft = 256
-        self.step_frac = 0.5
 
         self.setting = False
         
@@ -90,9 +83,6 @@ class DataBrowser(QWidget):
         if self.twindow > self.tmax:
             self.twindow = np.round(2**(floor(log(self.tmax) / log(2.0)) + 1.0))
 
-        self.fmax = 0.5*self.rate
-        self.f0 = 0.0
-        self.f1 = self.fmax
         self.nfft = 256
         self.fresolution = self.rate/self.nfft
         self.step_frac = 0.5
@@ -159,8 +149,6 @@ class DataBrowser(QWidget):
             self.borders.append(border)
             # spectrograms:
             spec = SpecItem(self.data, self.rate, c, self.nfft, self.step_frac)
-            self.fmax = spec.fmax
-            self.f1 = self.fmax
             self.specs.append(spec)
             bottom_axis = TimeAxisItem(orientation='bottom', showValues=True)
             top_axis = TimeAxisItem(orientation='top', showValues=False)
@@ -264,9 +252,9 @@ class DataBrowser(QWidget):
         xwidth = self.fontMetrics().averageCharWidth()
         ax.getViewBox().setBackgroundColor('black')
         ax.getViewBox().setDefaultPadding(padding=0.0)
-        ax.setLimits(xMin=0, xMax=self.tmax, yMin=0.0, yMax=self.fmax,
+        ax.setLimits(xMin=0, xMax=self.tmax, yMin=0.0, yMax=self.specs[c].fmax,
                      minXRange=10/self.rate, maxXRange=self.tmax,
-                     minYRange=0.1, maxYRange=self.fmax)
+                     minYRange=0.1, maxYRange=self.specs[c].fmax)
         ax.setLabel('left', 'Frequency', 'Hz', color='black')
         ax.setLabel('bottom', 'Time', 's', color='black')
         ax.getAxis('bottom').showLabel(False)
@@ -279,7 +267,7 @@ class DataBrowser(QWidget):
         ax.enableAutoRange(False, False)
         ax.setXRange(self.toffset, self.toffset + self.twindow)
         ax.sigXRangeChanged.connect(self.update_times)
-        ax.setYRange(self.f0, self.f1)
+        ax.setYRange(self.specs[c].f0, self.specs[c].f1)
         ax.sigYRangeChanged.connect(self.update_frequencies)
 
 
@@ -296,9 +284,9 @@ class DataBrowser(QWidget):
                 ax.setYRange(self.traces[c].ymin, self.traces[c].ymax)
             # update frequency ranges:
             for ax in self.axfys[c]:
-                ax.setYRange(self.f0, self.f1)
+                ax.setYRange(self.specs[c].f0, self.specs[c].f1)
             for ax in self.axfxs[c]:
-                ax.setXRange(self.f0, self.f1)
+                ax.setXRange(self.specs[c].f0, self.specs[c].f1)
             # update spectrograms:
             self.specs[c].updateSpec()
         self.setting = False
@@ -487,136 +475,100 @@ class DataBrowser(QWidget):
         self.set_amplitudes()
 
 
-    def set_frequencies(self, f0=None, f1=None, dispatch=True):
+    def set_frequencies(self, f0=None, f1=None):
         self.setting = True
-        if not f0 is None:
-            self.f0 = f0
-        if not f1 is None:
-            self.f1 = f1
-        if self.isVisible():
-            for c in self.selected_channels:
+        for c in self.selected_channels:
+            if not f0 is None:
+                self.specs[c].f0 = f0
+            if not f1 is None:
+                self.specs[c].f1 = f1
+            if self.isVisible():
                 for ax in self.axfys[c]:
-                    ax.setYRange(self.f0, self.f1)
+                    ax.setYRange(self.specs[c].f0, self.specs[c].f1)
                 for ax in self.axfxs[c]:
-                    ax.setXRange(self.f0, self.f1)
+                    ax.setXRange(self.specs[c].f0, self.specs[c].f1)
         self.setting = False
-        if dispatch:
-            self.sigFrequenciesChanged.emit(self.f0, self.f1)
 
             
     def update_frequencies(self, viewbox, frange):
         if self.setting:
             return
         self.set_frequencies(frange[0], frange[1])
+        self.sigFrequenciesChanged.emit(frange[0], frange[1])
         
-            
+                
     def zoom_freq_in(self):
-        df = self.f1 - self.f0
-        if df > 0.1:
-            df *= 0.5
-            self.f1 = self.f0 + df
-            self.set_frequencies()
+        for c in self.selected_channels:
+            self.specs[c].zoom_freq_in()
+        self.set_frequencies()
             
         
     def zoom_freq_out(self):
-        if self.f1 - self.f0 < self.fmax:
-            df = self.f1 - self.f0
-            df *= 2.0
-            if df > self.fmax:
-                df = self.fmax
-            self.f1 = self.f0 + df
-            if self.f1 > self.fmax:
-                self.f1 = self.fmax
-                self.f0 = self.fmax - df
-            if self.f0 < 0:
-                self.f0 = 0
-                self.f1 = df
-            self.set_frequencies()
+        for c in self.selected_channels:
+            self.specs[c].zoom_freq_out()
+        self.set_frequencies()
                 
         
     def freq_down(self):
-        if self.f0 > 0.0:
-            df = self.f1 - self.f0
-            self.f0 -= 0.5*df
-            self.f1 -= 0.5*df
-            if self.f0 < 0.0:
-                self.f0 = 0.0
-                self.f1 = df
-            self.set_frequencies()
+        for c in self.selected_channels:
+            self.specs[c].freq_down()
+        self.set_frequencies()
 
             
     def freq_up(self):
-        if self.f1 < self.fmax:
-            df = self.f1 - self.f0
-            self.f0 += 0.5*df
-            self.f1 += 0.5*df
-            self.set_frequencies()
+        for c in self.selected_channels:
+            self.specs[c].freq_up()
+        self.set_frequencies()
 
 
     def freq_home(self):
-        if self.f0 > 0.0:
-            df = self.f1 - self.f0
-            self.f0 = 0.0
-            self.f1 = df
-            self.set_frequencies()
+        for c in self.selected_channels:
+            self.specs[c].freq_home()
+        self.set_frequencies()
 
             
     def freq_end(self):
-        if self.f1 < self.fmax:
-            df = self.f1 - self.f0
-            self.f1 = ceil(self.fmax/(0.5*df))*(0.5*df)
-            self.f0 = self.f1 - df
-            if self.f0 < 0.0:
-                self.f0 = 0.0
-                self.f1 = df
-            self.set_frequencies()
-
-
-    def set_resolution(self, nfft=None, fresolution=None, step_frac=None,
-                       dispatch=True):
-        self.setting = True
-        if not nfft is None:
-            self.nfft = nfft
-        if not fresolution is None:
-            self.fresolution = fresolution
-        if not step_frac is None:
-            self.step_frac = step_frac
         for c in self.selected_channels:
-            if c < len(self.specs):
-                self.specs[c].setNFFT(self.nfft, self.step_frac,
-                                      self.isVisible())
+            self.specs[c].freq_end()
+        self.set_frequencies()
+
+
+    def set_resolution(self, nfft=None, step_frac=None, dispatch=True):
+        self.setting = True
+        if not isinstance(nfft, list):
+            nfft = [nfft] * (np.max(self.selected_channels) + 1)
+        if not isinstance(step_frac, list):
+            step_frac = [step_frac] * (np.max(self.selected_channels) + 1)
+        for c in self.selected_channels:
+            self.specs[c].set_resolution(nfft[c], step_frac[c],
+                                         self.isVisible())
         self.setting = False
         if dispatch:
-            self.sigResolutionChanged.emit(self.nfft, self.fresolution,
-                                           self.step_frac)
+            self.sigResolutionChanged.emit()
 
         
     def freq_resolution_down(self):
-        if self.fresolution < 10000.0 and self.nfft > 16:
-            self.fresolution *= 2.0
-            self.nfft = int(np.round(2**(floor(log(self.rate/self.fresolution) / log(2.0)))))
-            self.set_resolution()
+        for c in self.selected_channels:
+            self.specs[c].freq_resolution_down()
+        self.set_resolution()
 
         
     def freq_resolution_up(self):
-        if self.nfft*2 < len(self.data):
-            self.fresolution *= 0.5
-            self.nfft = int(np.round(2**(floor(log(self.rate/self.fresolution) / log(2.0)))))
-            self.set_resolution()
+        for c in self.selected_channels:
+            self.specs[c].freq_resolution_up()
+        self.set_resolution()
 
 
     def step_frac_down(self):
-        if 0.5 * self.step_frac * self.nfft >= 1:
-            self.step_frac *= 0.5
-            self.set_resolution()
+        for c in self.selected_channels:
+            self.specs[c].step_frac_down()
+        self.set_resolution()
 
 
     def step_frac_up(self):
-        if self.step_frac < 1.0:
-            self.step_frac *= 2
-            if self.step_frac > 1.0:
-                self.step_frac = 1.0
-            self.set_resolution()
+        for c in self.selected_channels:
+            self.specs[c].step_frac_up()
+        self.set_resolution()
 
 
     def set_power(self, zmin=None, zmax=None, dispatch=True):

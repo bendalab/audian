@@ -292,18 +292,28 @@ class Audian(QMainWindow):
         self.link_frequency = not self.link_frequency
 
 
+    def apply_frequencies(self, frequencyfunc):
+        getattr(self.browser(), frequencyfunc)()
+        if self.link_frequency:
+            for b in self.browsers:
+                if not b is self.tabs.currentWidget():
+                    getattr(b, frequencyfunc)()
+
+
     def dispatch_frequencies(self, f0, f1):
         if self.link_frequency:
             for b in self.browsers:
                 if not b is self.tabs.currentWidget():
-                    b.set_frequencies(f0, f1, False)
+                    b.set_frequencies(f0, f1)
 
         
-    def dispatch_resolution(self, nfft, fresolution, step_frac):
+    def dispatch_resolution(self):
         if self.link_frequency:
+            nfft = [s.nfft for s in self.browser().specs]
+            sfrac = [s.step_frac for s in self.browser().specs]
             for b in self.browsers:
                 if not b is self.tabs.currentWidget():
-                    b.set_resolution(nfft, fresolution, step_frac, False)
+                    b.set_resolution(nfft, sfrac, False)
 
 
     def setup_frequency_actions(self, menu):
@@ -315,27 +325,27 @@ class Audian(QMainWindow):
         
         zoomfin_act = QAction('Zoom &in', self)
         zoomfin_act.setShortcut('Shift+F')
-        zoomfin_act.triggered.connect(lambda x: self.browser().zoom_freq_in())
+        zoomfin_act.triggered.connect(lambda x: self.apply_frequencies('zoom_freq_in'))
 
         zoomfout_act = QAction('Zoom &out', self)
         zoomfout_act.setShortcut('F')
-        zoomfout_act.triggered.connect(lambda x: self.browser().zoom_freq_out())
+        zoomfout_act.triggered.connect(lambda x: self.apply_frequencies('zoom_freq_out'))
 
         frequp_act = QAction('Move &up', self)
         frequp_act.setShortcuts(QKeySequence.MoveToNextChar)
-        frequp_act.triggered.connect(lambda x: self.browser().freq_up())
+        frequp_act.triggered.connect(lambda x: self.apply_frequencies('freq_up'))
 
         freqdown_act = QAction('Move &down', self)
         freqdown_act.setShortcuts(QKeySequence.MoveToPreviousChar)
-        freqdown_act.triggered.connect(lambda x: self.browser().freq_down())
+        freqdown_act.triggered.connect(lambda x: self.apply_frequencies('freq_down'))
 
         freqhome_act = QAction('&Home', self)
         freqhome_act.setShortcuts(QKeySequence.MoveToPreviousWord)
-        freqhome_act.triggered.connect(lambda x: self.browser().freq_home())
+        freqhome_act.triggered.connect(lambda x: self.apply_frequencies('freq_home'))
 
         freqend_act = QAction('&End', self)
         freqend_act.setShortcuts(QKeySequence.MoveToNextWord)
-        freqend_act.triggered.connect(lambda x: self.browser().freq_end())
+        freqend_act.triggered.connect(lambda x: self.apply_frequencies('freq_end'))
 
         fresup_act = QAction('Increase &resolution', self)
         fresup_act.setShortcut('Shift+R')
