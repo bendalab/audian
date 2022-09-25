@@ -19,7 +19,7 @@ class DataBrowser(QWidget):
     sigAmplitudesChanged = Signal(object, object)
     sigFrequenciesChanged = Signal(object, object)
     sigResolutionChanged = Signal(object, object, object)
-    sigPowerChanged = Signal(object, object)
+    sigPowerChanged = Signal()
 
     
     def __init__(self, file_path, channels, show_channels, audio,
@@ -619,65 +619,61 @@ class DataBrowser(QWidget):
             self.set_resolution()
 
 
+    def set_power(self, zmin=None, zmax=None, dispatch=True):
+        self.setting = True
+        if not isinstance(zmin, list):
+            zmin = [zmin] * (np.max(self.selected_channels) + 1)
+        if not isinstance(zmax, list):
+            zmax = [zmax] * (np.max(self.selected_channels) + 1)
+        for c in self.selected_channels:
+            self.specs[c].set_power(zmin[c], zmax[c])
+        self.setting = False
+        if dispatch:
+            self.sigPowerChanged.emit()
+
+
+    def update_power(self, cbar):
+        if self.setting:
+            return
+        self.set_power(cbar.levels()[0], cbar.levels()[1])
+
+
     def power_up(self):
         for c in self.selected_channels:
             self.specs[c].zmax += 5.0
             self.specs[c].zmin += 5.0
-            self.specs[c].setCBarLevels(self.specs[c].zmin,
-                                        self.specs[c].zmax)
+        self.set_power()
 
 
     def power_down(self):
         for c in self.selected_channels:
             self.specs[c].zmax -= 5.0
             self.specs[c].zmin -= 5.0
-            self.specs[c].setCBarLevels(self.specs[c].zmin,
-                                        self.specs[c].zmax)
+        self.set_power()
 
 
     def max_power_up(self):
         for c in self.selected_channels:
             self.specs[c].zmax += 5.0
-            self.specs[c].setCBarLevels(self.specs[c].zmin,
-                                        self.specs[c].zmax)
+        self.set_power()
 
 
     def max_power_down(self):
         for c in self.selected_channels:
             self.specs[c].zmax -= 5.0
-            self.specs[c].setCBarLevels(self.specs[c].zmin,
-                                        self.specs[c].zmax)
+        self.set_power()
 
 
     def min_power_up(self):
         for c in self.selected_channels:
             self.specs[c].zmin += 5.0
-            self.specs[c].setCBarLevels(self.specs[c].zmin,
-                                        self.specs[c].zmax)
+        self.set_power()
 
 
     def min_power_down(self):
         for c in self.selected_channels:
             self.specs[c].zmin -= 5.0
-            self.specs[c].setCBarLevels(self.specs[c].zmin,
-                                        self.specs[c].zmax)
-
-
-    def set_power(self, zmin, zmax, dispatch=True):
-        self.setting = True
-        for c in self.selected_channels:
-            self.specs[c].setCBarLevels(zmin, zmax)
-        self.setting = False
-        if dispatch:
-            self.sigPowerChanged.emit(zmin, zmax)
-
-
-    def update_power(self, cbar):
-        if self.setting:
-            return
-        zmin = cbar.levels()[0]
-        zmax = cbar.levels()[1]
-        self.set_power(cbar.levels()[0], cbar.levels()[1])
+        self.set_power()
 
 
     def all_channels(self):

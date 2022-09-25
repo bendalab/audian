@@ -72,13 +72,14 @@ class SpecItem(pg.ImageItem):
         self.cbar = cbar
 
 
-    def setCBarLevels(self, zmin, zmax):
-        self.zmin = zmin
-        self.zmax = zmax
+    def set_power(self, zmin, zmax):
+        if not zmin is None:
+            self.zmin = zmin
+        if not zmax is None:
+            self.zmax = zmax
         self.setLevels((self.zmin, self.zmax), update=True)
         if not self.cbar is None:
             self.cbar.setLevels((self.zmin, self.zmax))
-        self.update()
 
         
     def viewRangeChanged(self):

@@ -236,7 +236,7 @@ class Audian(QMainWindow):
         self.link_amplitude = not self.link_amplitude
 
 
-    def apply_aplitude(self, amplitudefunc):
+    def apply_amplitude(self, amplitudefunc):
         getattr(self.browser(), amplitudefunc)()
         if self.link_amplitude:
             for b in self.browsers:
@@ -260,23 +260,23 @@ class Audian(QMainWindow):
         
         zoomyin_act = QAction('Zoom &in', self)
         zoomyin_act.setShortcut('Shift+Y')
-        zoomyin_act.triggered.connect(lambda x: self.apply_aplitude('zoom_ampl_in'))
+        zoomyin_act.triggered.connect(lambda x: self.apply_amplitude('zoom_ampl_in'))
 
         zoomyout_act = QAction('Zoom &out', self)
         zoomyout_act.setShortcut('Y')
-        zoomyout_act.triggered.connect(lambda x: self.apply_aplitude('zoom_ampl_out'))
+        zoomyout_act.triggered.connect(lambda x: self.apply_amplitude('zoom_ampl_out'))
 
         autoy_act = QAction('&Auto scale', self)
         autoy_act.setShortcut('v')
-        autoy_act.triggered.connect(lambda x: self.apply_aplitude('auto_ampl'))
+        autoy_act.triggered.connect(lambda x: self.apply_amplitude('auto_ampl'))
 
         resety_act = QAction('&Reset', self)
         resety_act.setShortcut('Shift+V')
-        resety_act.triggered.connect(lambda x: self.apply_aplitude('reset_ampl'))
+        resety_act.triggered.connect(lambda x: self.apply_amplitude('reset_ampl'))
 
         centery_act = QAction('&Center', self)
         centery_act.setShortcut('C')
-        centery_act.triggered.connect(lambda x: self.apply_aplitude('center_ampl'))
+        centery_act.triggered.connect(lambda x: self.apply_amplitude('center_ampl'))
 
         ampl_menu = menu.addMenu('&Amplitude')
         ampl_menu.addAction(linkamplitude_act)
@@ -372,8 +372,10 @@ class Audian(QMainWindow):
         self.link_power = not self.link_power
 
 
-    def dispatch_power(self, zmin, zmax):
+    def dispatch_power(self):
         if self.link_power:
+            zmin = [s.zmin for s in self.browser().specs]
+            zmax = [s.zmax for s in self.browser().specs]
             for b in self.browsers:
                 if not b is self.tabs.currentWidget():
                     b.set_power(zmin, zmax, False)
@@ -656,7 +658,7 @@ class Audian(QMainWindow):
                 browser.sigAmplitudesChanged.connect(self.dispatch_amplitudes)
                 browser.sigFrequenciesChanged.connect(self.dispatch_frequencies)
                 browser.sigResolutionChanged.connect(self.dispatch_resolution)
-                # TODO needs to be checked browser.sigPowerChanged.connect(self.dispatch_power)
+                browser.sigPowerChanged.connect(self.dispatch_power)
                 QTimer.singleShot(100, self.load_data)
                 break
 
