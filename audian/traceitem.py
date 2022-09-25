@@ -49,11 +49,6 @@ class TraceItem(pg.PlotDataItem):
         if not isinstance(vb, pg.ViewBox):
             return
 
-        # amplitude:
-        yrange = vb.viewRange()[1]
-        self.ymin = yrange[0]
-        self.ymax = yrange[1]
-
         # time:
         trange = vb.viewRange()[0]
         start = max(0, int(trange[0]*self.rate))
@@ -91,8 +86,9 @@ class TraceItem(pg.PlotDataItem):
     def zoom_ampl_in(self):
         h = 0.25*(self.ymax - self.ymin)
         c = 0.5*(self.ymax + self.ymin)
-        self.ymin = c - h
-        self.ymax = c + h
+        if h > 1/2**16:
+            self.ymin = c - h
+            self.ymax = c + h
 
         
     def zoom_ampl_out(self):
@@ -113,7 +109,10 @@ class TraceItem(pg.PlotDataItem):
         ymin = np.min(self.data[t0:t1, self.channel])
         ymax = np.max(self.data[t0:t1, self.channel])
         h = 0.5*(ymax - ymin)
+        
         c = 0.5*(ymax + ymin)
+        if h < 1/2**16:
+            h = 1/2**16
         self.ymin = c - h
         self.ymax = c + h
 

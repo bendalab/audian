@@ -286,6 +286,7 @@ class DataBrowser(QWidget):
     def showEvent(self, event):
         if self.data is None:
             return
+        self.setting = True
         for c in range(self.data.channels):
             # update time ranges:
             for ax in self.axts[c]:
@@ -300,6 +301,7 @@ class DataBrowser(QWidget):
                 ax.setXRange(self.f0, self.f1)
             # update spectrograms:
             self.specs[c].updateSpec()
+        self.setting = False
 
                 
     def resizeEvent(self, event):
@@ -435,7 +437,7 @@ class DataBrowser(QWidget):
             self.set_times(toffset, twindow)
 
 
-    def set_amplitudes(self, ymin=None, ymax=None, dispatch=True):
+    def set_amplitudes(self, ymin=None, ymax=None):
         self.setting = True
         for c in self.selected_channels:
             if not ymin is None:
@@ -446,14 +448,13 @@ class DataBrowser(QWidget):
                 for ax in self.axys[c]:
                     ax.setYRange(self.traces[c].ymin, self.traces[c].ymax)
         self.setting = False
-        if dispatch:
-            self.sigAmplitudesChanged.emit(ymin, ymax)
 
             
     def update_amplitudes(self, viewbox, arange):
         if self.setting:
             return
         self.set_amplitudes(arange[0], arange[1])
+        self.sigAmplitudesChanged.emit(arange[0], arange[1])
         
 
     def zoom_ampl_in(self):
@@ -752,6 +753,7 @@ class DataBrowser(QWidget):
            (len(self.show_channels) > 1 or channel != self.show_channels[0]):
             if channel in self.show_channels:
                 self.show_channels.remove(channel)
+                self.selected_channels.remove(channel)
             else:
                 self.show_channels.append(channel)
                 self.show_channels.sort()

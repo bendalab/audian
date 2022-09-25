@@ -236,11 +236,19 @@ class Audian(QMainWindow):
         self.link_amplitude = not self.link_amplitude
 
 
+    def apply_aplitude(self, amplitudefunc):
+        getattr(self.browser(), amplitudefunc)()
+        if self.link_amplitude:
+            for b in self.browsers:
+                if not b is self.tabs.currentWidget():
+                    getattr(b, amplitudefunc)()
+
+
     def dispatch_amplitudes(self, ymin, ymax):
         if self.link_amplitude:
             for b in self.browsers:
                 if not b is self.tabs.currentWidget():
-                    b.set_amplitudes(ymin, ymax, False)
+                    b.set_amplitudes(ymin, ymax)
 
         
     def setup_amplitude_actions(self, menu):
@@ -252,23 +260,23 @@ class Audian(QMainWindow):
         
         zoomyin_act = QAction('Zoom &in', self)
         zoomyin_act.setShortcut('Shift+Y')
-        zoomyin_act.triggered.connect(lambda x: self.browser().zoom_ampl_in())
+        zoomyin_act.triggered.connect(lambda x: self.apply_aplitude('zoom_ampl_in'))
 
         zoomyout_act = QAction('Zoom &out', self)
         zoomyout_act.setShortcut('Y')
-        zoomyout_act.triggered.connect(lambda x: self.browser().zoom_ampl_out())
+        zoomyout_act.triggered.connect(lambda x: self.apply_aplitude('zoom_ampl_out'))
 
         autoy_act = QAction('&Auto scale', self)
         autoy_act.setShortcut('v')
-        autoy_act.triggered.connect(lambda x: self.browser().auto_ampl())
+        autoy_act.triggered.connect(lambda x: self.apply_aplitude('auto_ampl'))
 
         resety_act = QAction('&Reset', self)
         resety_act.setShortcut('Shift+V')
-        resety_act.triggered.connect(lambda x: self.browser().reset_ampl())
+        resety_act.triggered.connect(lambda x: self.apply_aplitude('reset_ampl'))
 
         centery_act = QAction('&Center', self)
         centery_act.setShortcut('C')
-        centery_act.triggered.connect(lambda x: self.browser().center_ampl())
+        centery_act.triggered.connect(lambda x: self.apply_aplitude('center_ampl'))
 
         ampl_menu = menu.addMenu('&Amplitude')
         ampl_menu.addAction(linkamplitude_act)
@@ -645,7 +653,7 @@ class Audian(QMainWindow):
                 if self.tabs.currentWidget() is browser:
                     self.adapt_menu(self.tabs.currentIndex())
                 browser.sigTimesChanged.connect(self.dispatch_times)
-                # TODO not working, dispatch needs to propagate functions! browser.sigAmplitudesChanged.connect(self.dispatch_amplitudes)
+                browser.sigAmplitudesChanged.connect(self.dispatch_amplitudes)
                 browser.sigFrequenciesChanged.connect(self.dispatch_frequencies)
                 browser.sigResolutionChanged.connect(self.dispatch_resolution)
                 # TODO needs to be checked browser.sigPowerChanged.connect(self.dispatch_power)
