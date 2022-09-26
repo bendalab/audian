@@ -229,6 +229,8 @@ class DataBrowser(QWidget):
 
     def setup_trace_plot(self, ax, c):
         xwidth = self.fontMetrics().averageCharWidth()
+        ax.hideButtons()
+        ax.setMenuEnabled(False)
         ax.getViewBox().setBackgroundColor('black')
         ax.getViewBox().setDefaultPadding(padding=0.0)
         ax.setLimits(xMin=0, xMax=self.tmax,
@@ -250,6 +252,8 @@ class DataBrowser(QWidget):
 
     def setup_spec_plot(self, ax, c):
         xwidth = self.fontMetrics().averageCharWidth()
+        ax.hideButtons()
+        ax.setMenuEnabled(False)
         ax.getViewBox().setBackgroundColor('black')
         ax.getViewBox().setDefaultPadding(padding=0.0)
         ax.setLimits(xMin=0, xMax=self.tmax, yMin=0.0, yMax=self.specs[c].fmax,
