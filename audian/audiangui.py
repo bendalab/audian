@@ -129,6 +129,10 @@ class Audian(QMainWindow):
         open_act.setShortcuts(QKeySequence.Open)
         open_act.triggered.connect(self.open_files)
 
+        save_act = QAction('&Save as', self)
+        save_act.setShortcuts(QKeySequence.SaveAs)
+        save_act.triggered.connect(lambda x: self.browser().save_window())
+
         close_act = QAction('&Close', self)
         close_act.setShortcuts([QKeySequence.Close, 'Q'])
         close_act.triggered.connect(lambda x: self.close(None))
@@ -139,6 +143,7 @@ class Audian(QMainWindow):
         
         file_menu = menu.addMenu('&File')
         file_menu.addAction(open_act)
+        file_menu.addAction(save_act)
         file_menu.addSeparator()
         file_menu.addAction(close_act)
         file_menu.addAction(quit_act)

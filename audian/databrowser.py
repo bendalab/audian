@@ -1,14 +1,16 @@
+import os
 from math import ceil, floor, log
 import numpy as np
 from PyQt5.QtCore import Signal, QTimer
+from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGraphicsRectItem
+from PyQt5.QtWidgets import QMenu, QAction, QFileDialog
 import pyqtgraph as pg
 from audioio import AudioLoader, available_formats, write_audio
 from audioio import fade
 from .version import __version__, __year__
+from .oscillogramplot import OscillogramPlot
 from .spectrumplot import SpectrumPlot
-from .timeaxisitem import TimeAxisItem
-from .yaxisitem import YAxisItem
 from .traceitem import TraceItem
 from .specitem import SpecItem
 
@@ -159,6 +161,7 @@ class DataBrowser(QWidget):
             axs.sigXRangeChanged.connect(self.update_times)
             axs.setYRange(self.specs[c].f0, self.specs[c].f1)
             axs.sigYRangeChanged.connect(self.update_frequencies)
+            axs.sigSelectedRegion.connect(self.region_menu)
             self.audio_markers[-1].append(axs.vmarker)
             fig.addItem(axs, row=0, col=0)
             # color bar:
@@ -184,28 +187,26 @@ class DataBrowser(QWidget):
             axsp.setContentsMargins(0, 0, 0, 0)
             self.axspacers.append(axsp)
             # trace plot:
-            bottom_axis = TimeAxisItem(orientation='bottom', showValues=True)
-            top_axis = TimeAxisItem(orientation='top', showValues=False)
-            left_axis = YAxisItem(orientation='left', showValues=True)
-            right_axis = YAxisItem(orientation='right', showValues=False)
-            axt = fig.addPlot(row=2, col=0,
-                              axisItems={'bottom': bottom_axis,
-                                         'top': top_axis,
-                                         'left': left_axis,
-                                         'right': right_axis})
             trace = TraceItem(self.data, self.rate, c)
             self.traces.append(trace)
-            self.setup_trace_plot(axt, c)
+            axt = OscillogramPlot(c, self.fontMetrics().averageCharWidth())
             axt.addItem(trace)
-            vmarker = pg.InfiniteLine(angle=90, movable=False)
-            vmarker.setPen(pg.mkPen('white', width=2))
-            vmarker.setZValue(100)
-            self.audio_markers[-1].append(vmarker)
-            axt.addItem(vmarker, ignoreBounds=True)
-            axt.setLabel('left', f'channel {c}', color='black')
-            axt.setLabel('bottom', 'Time', 's', color='black')
             axt.getAxis('bottom').showLabel(c == self.show_channels[-1])
             axt.getAxis('bottom').setStyle(showValues=(c == self.show_channels[-1]))
+            axt.setLimits(xMin=0, xMax=self.tmax,
+                          yMin=trace.ymin, yMax=trace.ymax,
+                          minXRange=10/self.rate, maxXRange=self.tmax,
+                          minYRange=1/2**16,
+                          maxYRange=trace.ymax - trace.ymin)
+        
+
+            axt.setXRange(self.toffset, self.toffset + self.twindow)
+            axt.sigXRangeChanged.connect(self.update_times)
+            axt.setYRange(self.traces[c].ymin, self.traces[c].ymax)
+            axt.sigYRangeChanged.connect(self.update_amplitudes)
+            axt.sigSelectedRegion.connect(self.region_menu)
+            self.audio_markers[-1].append(axt.vmarker)
+            fig.addItem(axt, row=2, col=0)
             self.axts[-1].append(axt)
             self.axys[-1].append(axt)
             self.axgs[-1].append(axt)
@@ -221,29 +222,6 @@ class DataBrowser(QWidget):
             self.borders[c].setRect(0, 0, self.figs[c].size().width(),
                                     self.figs[c].size().height())
             self.borders[c].setVisible(c in self.selected_channels)
-
-
-    def setup_trace_plot(self, ax, c):
-        xwidth = self.fontMetrics().averageCharWidth()
-        ax.hideButtons()
-        ax.setMenuEnabled(False)
-        ax.getViewBox().setBackgroundColor('black')
-        ax.getViewBox().setDefaultPadding(padding=0.0)
-        ax.setLimits(xMin=0, xMax=self.tmax,
-                     yMin=self.traces[c].ymin, yMax=self.traces[c].ymax,
-                     minXRange=10/self.rate, maxXRange=self.tmax,
-                     minYRange=1/2**16,
-                     maxYRange=self.traces[c].ymax - self.traces[c].ymin)
-        ax.getAxis('bottom').setPen('white')
-        ax.getAxis('bottom').setTextPen('black')
-        ax.getAxis('left').setPen('white')
-        ax.getAxis('left').setTextPen('black')
-        ax.getAxis('left').setWidth(8*xwidth)
-        ax.enableAutoRange(False, False)
-        ax.setXRange(self.toffset, self.toffset + self.twindow)
-        ax.sigXRangeChanged.connect(self.update_times)
-        ax.setYRange(self.traces[c].ymin, self.traces[c].ymax)
-        ax.sigYRangeChanged.connect(self.update_amplitudes)
 
 
     def showEvent(self, event):
@@ -753,19 +731,43 @@ class DataBrowser(QWidget):
                     ax.getAxis(axis).setStyle(showValues=False)
 
 
-    def play_window(self):
-        t0 = int(np.round(self.toffset*self.rate))
-        t1 = int(np.round((self.toffset + self.twindow)*self.rate))
-        playdata = 1.0*self.data[t0:t1, self.selected_channels]
+    def region_menu(self, channel, vbox, rect):
+        menu = QMenu(self)
+        zoom_act = menu.addAction('&Zoom')
+        analyze_act = menu.addAction('&Analyze')
+        play_act = menu.addAction('&Play')
+        save_act = menu.addAction('&Save as')
+        crop_act = menu.addAction('&Crop')
+        act = menu.exec(QCursor.pos())
+        if act is zoom_act:
+            vbox.zoom_region(rect)
+        elif act is play_act:
+            self.play_region(rect.left(), rect.right())
+            vbox.hide_region()
+        elif act is save_act:
+            self.save_region(rect.left(), rect.right())
+            vbox.hide_region()
+        else:
+            vbox.hide_region()
+        
+
+    def play_region(self, t0, t1):
+        i0 = int(np.round(t0*self.rate))
+        i1 = int(np.round(t1*self.rate))
+        playdata = 1.0*self.data[i0:i1, self.selected_channels]
         fade(playdata, self.rate, 0.1)
         self.audio.play(playdata, self.rate, blocking=False)
-        self.audio_time = self.toffset
-        self.audio_tmax = self.toffset + self.twindow
+        self.audio_time = t0
+        self.audio_tmax = t1
         self.audio_timer.start(50)
         for c in range(self.data.channels):
             atime = self.audio_time if c in self.selected_channels else -1
             for vmarker in self.audio_markers[c]:
                 vmarker.setValue(atime)
+
+
+    def play_window(self):
+        self.play_region(self.toffset, self.toffset + self.twindow)
 
         
     def mark_audio(self):
@@ -779,3 +781,30 @@ class DataBrowser(QWidget):
             for amarkers in self.audio_markers:
                 for vmarker in amarkers:
                     vmarker.setValue(-1)
+
+                    
+    def save_region(self, t0, t1):
+        i0 = int(np.round(t0*self.rate))
+        i1 = int(np.round(t1*self.rate))
+        savedata = 1.0 * self.data[i0:i1,:]
+        name = self.file_path.split('.')[0]
+        #if self.channel > 0:
+        #    filename = f'{name}-{channel:d}-{t0:.4g}s-{t1s:.4g}s.wav'
+        #else:
+        filename = f'{name}-{1000*t0:.0f}ms-{1000*t1:.0f}ms.wav'
+        formats = available_formats()
+        for f in ['MP3', 'OGG', 'WAV']:
+            if 'WAV' in formats:
+                formats.remove(f)
+                formats.insert(0, f)
+        filters = ['All files (*)'] + [f'{f} files (*.{f}, *.{f.lower()})' for f in formats]
+        file_path = QFileDialog.getSaveFileName(self, 'Save region as',
+                                                os.path.dirname(self.file_path) + '/' + filename,
+                                                ';;'.join(filters))[0]
+        if file_path:
+            write_audio(file_path, savedata, self.rate)
+            print('saved region to: ' , file_path)
+
+        
+    def save_window(self):
+        self.save_region(self.toffset, self.toffset + self.twindow)

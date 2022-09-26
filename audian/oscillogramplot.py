@@ -5,12 +5,12 @@ from .timeaxisitem import TimeAxisItem
 from .yaxisitem import YAxisItem
 
 
-class SpectrumPlot(pg.PlotItem):
+class OscillogramPlot(pg.PlotItem):
 
     
     sigSelectedRegion = Signal(object, object, object)
 
-
+    
     def __init__(self, channel, xwidth):
 
         # view box:
@@ -19,20 +19,18 @@ class SpectrumPlot(pg.PlotItem):
         # axis:
         bottom_axis = TimeAxisItem(orientation='bottom', showValues=True)
         bottom_axis.setLabel('Time', 's', color='black')
-        bottom_axis.showLabel(False)
-        bottom_axis.setStyle(showValues=False)
         bottom_axis.setPen('white')
         bottom_axis.setTextPen('black')
         top_axis = TimeAxisItem(orientation='top', showValues=False)
         left_axis = YAxisItem(orientation='left', showValues=True)
-        left_axis.setLabel('Frequency', 'Hz', color='black')
+        left_axis.setLabel(f'channel {channel}', color='black')
         left_axis.setPen('white')
         left_axis.setTextPen('black')
         left_axis.setWidth(8*xwidth)
         right_axis = YAxisItem(orientation='right', showValues=False)
 
         # plot:
-        pg.PlotItem.__init__(self,  viewBox=view,
+        pg.PlotItem.__init__(self, viewBox=view,
                              axisItems={'bottom': bottom_axis,
                                         'top': top_axis,
                                         'left': left_axis,
@@ -42,13 +40,10 @@ class SpectrumPlot(pg.PlotItem):
         self.getViewBox().setBackgroundColor('black')
         self.getViewBox().setDefaultPadding(padding=0.0)
 
-        # ranges:
-        self.setLimits(xMin=0, yMin=0.0)
-
         # functionality:
-        self.enableAutoRange(False, False)
         self.hideButtons()
         self.setMenuEnabled(False)
+        self.enableAutoRange(False, False)
 
         # audio marker:
         self.vmarker = pg.InfiniteLine(angle=90, movable=False)
@@ -58,5 +53,3 @@ class SpectrumPlot(pg.PlotItem):
 
         # signals:
         view.sigSelectedRegion.connect(self.sigSelectedRegion)
-
-        
