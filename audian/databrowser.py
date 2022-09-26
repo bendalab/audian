@@ -6,10 +6,14 @@ import pyqtgraph as pg
 from audioio import AudioLoader, available_formats, write_audio
 from audioio import fade
 from .version import __version__, __year__
+from .spectrumplot import SpectrumPlot
 from .timeaxisitem import TimeAxisItem
 from .yaxisitem import YAxisItem
 from .traceitem import TraceItem
 from .specitem import SpecItem
+
+
+pg.setConfigOption('useNumba', True)
 
 
 class DataBrowser(QWidget):
@@ -83,10 +87,6 @@ class DataBrowser(QWidget):
         if self.twindow > self.tmax:
             self.twindow = np.round(2**(floor(log(self.tmax) / log(2.0)) + 1.0))
 
-        self.nfft = 256
-        self.fresolution = self.rate/self.nfft
-        self.step_frac = 0.5
-
         if self.show_channels is None:
             if len(self.channels) == 0:
                 self.show_channels = list(range(self.data.channels))
@@ -148,24 +148,20 @@ class DataBrowser(QWidget):
             fig.sigDeviceRangeChanged.connect(self.update_borders)
             self.borders.append(border)
             # spectrograms:
-            spec = SpecItem(self.data, self.rate, c, self.nfft, self.step_frac)
+            spec = SpecItem(self.data, self.rate, c, 256, 0.5)
             self.specs.append(spec)
-            bottom_axis = TimeAxisItem(orientation='bottom', showValues=True)
-            top_axis = TimeAxisItem(orientation='top', showValues=False)
-            left_axis = YAxisItem(orientation='left', showValues=True)
-            right_axis = YAxisItem(orientation='right', showValues=False)
-            axs = fig.addPlot(row=0, col=0,
-                              axisItems={'bottom': bottom_axis,
-                                         'top': top_axis,
-                                         'left': left_axis,
-                                         'right': right_axis})
+            axs = SpectrumPlot(c, self.fontMetrics().averageCharWidth())
             axs.addItem(spec)
-            vmarker = pg.InfiniteLine(angle=90, movable=False)
-            vmarker.setPen(pg.mkPen('white', width=2))
-            vmarker.setZValue(100)
-            self.audio_markers[-1].append(vmarker)
-            axs.addItem(vmarker, ignoreBounds=True)
-            self.setup_spec_plot(axs, c)
+            axs.setLimits(xMax=self.tmax, yMax=spec.fmax,
+                         minXRange=10/self.rate, maxXRange=self.tmax,
+                         minYRange=0.1, maxYRange=spec.fmax)
+            axs.setXRange(self.toffset, self.toffset + self.twindow)
+            axs.sigXRangeChanged.connect(self.update_times)
+            axs.setYRange(self.specs[c].f0, self.specs[c].f1)
+            axs.sigYRangeChanged.connect(self.update_frequencies)
+            self.audio_markers[-1].append(axs.vmarker)
+            fig.addItem(axs, row=0, col=0)
+            # color bar:
             cbar = pg.ColorBarItem(colorMap='CET-R4', interactive=True,
                                    rounding=1, limits=(-200, 20))
             cbar.setLabel('right', 'Power (dB)')
@@ -248,31 +244,6 @@ class DataBrowser(QWidget):
         ax.sigXRangeChanged.connect(self.update_times)
         ax.setYRange(self.traces[c].ymin, self.traces[c].ymax)
         ax.sigYRangeChanged.connect(self.update_amplitudes)
-
-
-    def setup_spec_plot(self, ax, c):
-        xwidth = self.fontMetrics().averageCharWidth()
-        ax.hideButtons()
-        ax.setMenuEnabled(False)
-        ax.getViewBox().setBackgroundColor('black')
-        ax.getViewBox().setDefaultPadding(padding=0.0)
-        ax.setLimits(xMin=0, xMax=self.tmax, yMin=0.0, yMax=self.specs[c].fmax,
-                     minXRange=10/self.rate, maxXRange=self.tmax,
-                     minYRange=0.1, maxYRange=self.specs[c].fmax)
-        ax.setLabel('left', 'Frequency', 'Hz', color='black')
-        ax.setLabel('bottom', 'Time', 's', color='black')
-        ax.getAxis('bottom').showLabel(False)
-        ax.getAxis('bottom').setStyle(showValues=False)
-        ax.getAxis('left').setWidth(8*xwidth)
-        ax.getAxis('bottom').setPen('white')
-        ax.getAxis('bottom').setTextPen('black')
-        ax.getAxis('left').setPen('white')
-        ax.getAxis('left').setTextPen('black')
-        ax.enableAutoRange(False, False)
-        ax.setXRange(self.toffset, self.toffset + self.twindow)
-        ax.sigXRangeChanged.connect(self.update_times)
-        ax.setYRange(self.specs[c].f0, self.specs[c].f1)
-        ax.sigYRangeChanged.connect(self.update_frequencies)
 
 
     def showEvent(self, event):
