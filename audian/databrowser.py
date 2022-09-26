@@ -37,7 +37,7 @@ class DataBrowser(QWidget):
         self.current_channel = 0
         self.selected_channels = []
 
-        self.trace_frac = 0.5
+        self.trace_fracs = {0: 1, 1: 1, 2: 0.5, 3: 0.25, 4: 0.15}
         
         # view:
         self.toffset = 0.0
@@ -48,7 +48,7 @@ class DataBrowser(QWidget):
         self.mouse_mode = pg.ViewBox.PanMode
         self.grids = 0
         self.show_traces = True
-        self.show_specs = True
+        self.show_specs = 2
         self.show_cbars = True
 
         # audio:
@@ -300,6 +300,7 @@ class DataBrowser(QWidget):
 
     def adjust_layout(self, height):
         bottom_channel = self.show_channels[-1]
+        trace_frac = self.trace_fracs[self.show_specs]
         xwidth = self.fontMetrics().averageCharWidth()
         #axis_height = None
         #if self.axtraces[bottom_channel].isVisible():
@@ -312,13 +313,12 @@ class DataBrowser(QWidget):
         for c in self.show_channels:
             nspecs.append(int(self.axspecs[c].isVisible()))
             ntraces.append(int(self.axtraces[c].isVisible()))
-        spec_height = (height - axis_height)/(np.sum(nspecs) + self.trace_frac*np.sum(ntraces))
+        spec_height = (height - axis_height)/(np.sum(nspecs) + trace_frac*np.sum(ntraces))
         for c, ns, nt in zip(self.show_channels, nspecs, ntraces):
             add_height = axis_height if c == bottom_channel else 0
             self.vbox.setStretch(c, int(ns*spec_height +
-                                        nt*self.trace_frac*spec_height +
-                                        add_height))
-            t_height = max(0, int(nt*(self.trace_frac*spec_height + add_height) - xwidth))
+                                        nt*trace_frac*spec_height + add_height))
+            t_height = max(0, int(nt*(trace_frac*spec_height + add_height) - xwidth))
             self.figs[c].ci.layout.setRowFixedHeight(2, t_height)
             self.figs[c].ci.layout.setRowFixedHeight(1, (nt+ns-1)*xwidth)
             s_height = max(0, int(ns*spec_height + (1-nt)*add_height - xwidth))
@@ -719,8 +719,8 @@ class DataBrowser(QWidget):
             self.show_cbars = cbars
         for axt, axs, cb in zip(self.axtraces, self.axspecs, self.cbars):
             axt.setVisible(self.show_traces)
-            axs.setVisible(self.show_specs)
-            cb.setVisible(self.show_specs and self.show_cbars)
+            axs.setVisible(self.show_specs > 0)
+            cb.setVisible(self.show_specs > 0 and self.show_cbars)
             if axt is self.axtraces[self.show_channels[-1]]:
                 axs.getAxis('bottom').showLabel(not self.show_traces)
                 axs.getAxis('bottom').setStyle(showValues=not self.show_traces)
@@ -732,13 +732,15 @@ class DataBrowser(QWidget):
     def toggle_traces(self):
         self.show_traces = not self.show_traces
         if not self.show_traces:
-            self.show_specs = True
+            self.show_specs = 1
         self.set_panels()
             
 
     def toggle_spectrograms(self):
-        self.show_specs = not self.show_specs
-        if not self.show_specs:
+        self.show_specs += 1
+        if self.show_specs > 4:
+            self.show_specs = 0
+        if self.show_specs == 0:
             self.show_traces = True
         self.set_panels()
 
