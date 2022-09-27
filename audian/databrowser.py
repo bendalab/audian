@@ -734,10 +734,10 @@ class DataBrowser(QWidget):
     def region_menu(self, channel, vbox, rect):
         menu = QMenu(self)
         zoom_act = menu.addAction('&Zoom')
-        analyze_act = menu.addAction('&Analyze')
+        #analyze_act = menu.addAction('&Analyze')
         play_act = menu.addAction('&Play')
         save_act = menu.addAction('&Save as')
-        crop_act = menu.addAction('&Crop')
+        #crop_act = menu.addAction('&Crop')
         act = menu.exec(QCursor.pos())
         if act is zoom_act:
             vbox.zoom_region(rect)

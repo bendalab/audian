@@ -12,6 +12,8 @@ class SelectViewBox(pg.ViewBox):
 
     def __init__(self, channel, *args, **kwargs):
         pg.ViewBox.__init__(self, *args, **kwargs)
+        self.rbScaleBox.setPen(pg.mkPen((200, 200, 200), width=1))
+        self.rbScaleBox.setBrush(pg.mkBrush(200, 200, 200, 100))
         self.channel = channel
 
 
