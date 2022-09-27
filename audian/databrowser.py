@@ -20,6 +20,10 @@ pg.setConfigOption('useNumba', True)
 
 class DataBrowser(QWidget):
 
+    zoom_region = 0
+    play_region = 1
+    save_region = 2
+    ask_region = 3
     
     sigTimesChanged = Signal(object, object)
     sigAmplitudesChanged = Signal(object, object)
@@ -44,6 +48,8 @@ class DataBrowser(QWidget):
         self.selected_channels = []
 
         self.trace_fracs = {0: 1, 1: 1, 2: 0.5, 3: 0.25, 4: 0.15}
+
+        self.region_mode = DataBrowser.ask_region
         
         # view:
         self.toffset = 0.0
@@ -51,7 +57,6 @@ class DataBrowser(QWidget):
 
         self.setting = False
         
-        self.mouse_mode = pg.ViewBox.PanMode
         self.grids = 0
         self.show_traces = True
         self.show_specs = 2
@@ -704,16 +709,6 @@ class DataBrowser(QWidget):
             if axs.isVisible():
                 cb.setVisible(self.show_cbars)
             
-
-    def toggle_zoom_mode(self):
-        if self.mouse_mode == pg.ViewBox.PanMode:
-            self.mouse_mode = pg.ViewBox.RectMode
-        else:
-            self.mouse_mode = pg.ViewBox.PanMode
-        for axs in self.axs:
-            for ax in axs:
-                ax.getViewBox().setMouseMode(self.mouse_mode)
-
             
     def toggle_grids(self):
         self.grids -= 1
@@ -731,24 +726,38 @@ class DataBrowser(QWidget):
                     ax.getAxis(axis).setStyle(showValues=False)
 
 
+    def set_zoom_mode(self, mode):
+        for axs in self.axs:
+            for ax in axs:
+                ax.getViewBox().setMouseMode(mode)
+
+
+    def set_region_mode(self, mode):
+        self.region_mode = mode
+
+
     def region_menu(self, channel, vbox, rect):
-        menu = QMenu(self)
-        zoom_act = menu.addAction('&Zoom')
-        #analyze_act = menu.addAction('&Analyze')
-        play_act = menu.addAction('&Play')
-        save_act = menu.addAction('&Save as')
-        #crop_act = menu.addAction('&Crop')
-        act = menu.exec(QCursor.pos())
-        if act is zoom_act:
+        if self.region_mode == DataBrowser.zoom_region:
             vbox.zoom_region(rect)
-        elif act is play_act:
+        elif self.region_mode == DataBrowser.play_region:
             self.play_region(rect.left(), rect.right())
-            vbox.hide_region()
-        elif act is save_act:
+        elif self.region_mode == DataBrowser.save_region:
             self.save_region(rect.left(), rect.right())
-            vbox.hide_region()
-        else:
-            vbox.hide_region()
+        elif self.region_mode == DataBrowser.ask_region:
+            menu = QMenu(self)
+            zoom_act = menu.addAction('&Zoom')
+            #analyze_act = menu.addAction('&Analyze')
+            play_act = menu.addAction('&Play')
+            save_act = menu.addAction('&Save as')
+            #crop_act = menu.addAction('&Crop')
+            act = menu.exec(QCursor.pos())
+            if act is zoom_act:
+                vbox.zoom_region(rect)
+            elif act is play_act:
+                self.play_region(rect.left(), rect.right())
+            elif act is save_act:
+                self.save_region(rect.left(), rect.right())
+        vbox.hide_region()
         
 
     def play_region(self, t0, t1):

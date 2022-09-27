@@ -5,8 +5,9 @@ from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTabWidget
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel
-from PyQt5.QtWidgets import QAction, QPushButton
+from PyQt5.QtWidgets import QAction, QActionGroup, QPushButton
 from PyQt5.QtWidgets import QDialog, QFileDialog
+import pyqtgraph as pg
 from audioio import available_formats, PlayAudio
 from .version import __version__, __year__
 from .databrowser import DataBrowser
@@ -15,6 +16,8 @@ from .databrowser import DataBrowser
 class Audian(QMainWindow):
     def __init__(self, file_paths, channels):
         super().__init__()
+
+        self.browsers = []
 
         self.channels = channels
         self.audio = PlayAudio()
@@ -44,10 +47,11 @@ class Audian(QMainWindow):
 
         # actions:
         file_menu = self.setup_file_actions(self.menuBar())
+        region_menu = self.setup_region_actions(self.menuBar())
         view_menu = self.setup_view_actions(self.menuBar())
         help_menu = self.setup_help_actions(self.menuBar())
         self.keys = ['<h1>Audian key shortcuts</h1>']
-        for menu in [file_menu, view_menu, help_menu]:
+        for menu in [file_menu, region_menu, view_menu, help_menu]:
             self.menu_shortcuts(menu)
         
         # default widget:
@@ -55,7 +59,6 @@ class Audian(QMainWindow):
         self.startup_active = False
         
         # data:
-        self.browsers = []
         self.load_files(file_paths)
 
         # init widgets to show:
@@ -148,6 +151,90 @@ class Audian(QMainWindow):
         file_menu.addAction(close_act)
         file_menu.addAction(quit_act)
         return file_menu
+
+
+    def set_rect_mode(self):
+        for b in self.browsers:
+            b.set_zoom_mode(pg.ViewBox.RectMode)
+
+
+    def set_pan_mode(self):
+        for b in self.browsers:
+            b.set_zoom_mode(pg.ViewBox.PanMode)
+
+
+    def set_zoom(self):
+        for b in self.browsers:
+            b.set_region_mode(DataBrowser.zoom_region)
+
+
+    def set_play(self):
+        for b in self.browsers:
+            b.set_region_mode(DataBrowser.play_region)
+
+
+    def set_save(self):
+        for b in self.browsers:
+            b.set_region_mode(DataBrowser.save_region)
+
+
+    def set_ask(self):
+        for b in self.browsers:
+            b.set_region_mode(DataBrowser.ask_region)
+
+            
+    def setup_region_actions(self, menu):
+        rect_act = QAction('&Rectangle zoom', self)
+        rect_act.setCheckable(True)
+        rect_act.setShortcut('Ctrl+R')
+        rect_act.toggled.connect(self.set_rect_mode)
+        
+        pan_act = QAction('&Pan && zoom', self)
+        pan_act.setCheckable(True)
+        pan_act.setShortcut('Ctrl+P')
+        pan_act.toggled.connect(self.set_pan_mode)
+        
+        zoom_mode = QActionGroup(self)
+        zoom_mode.addAction(rect_act)
+        zoom_mode.addAction(pan_act)
+        pan_act.setChecked(True)
+        
+        zoom_act = QAction('&Zoom', self)
+        zoom_act.setCheckable(True)
+        zoom_act.setShortcut('z')
+        zoom_act.toggled.connect(self.set_zoom)
+        
+        play_act = QAction('&Play', self)
+        play_act.setCheckable(True)
+        play_act.setShortcut('L')
+        play_act.toggled.connect(self.set_play)
+        
+        save_act = QAction('&Save', self)
+        save_act.setCheckable(True)
+        save_act.setShortcut('s')
+        save_act.toggled.connect(self.set_save)
+        
+        ask_act = QAction('&Ask', self)
+        ask_act.setCheckable(True)
+        ask_act.setShortcut('a')
+        ask_act.toggled.connect(self.set_ask)
+        
+        rect_mode = QActionGroup(self)
+        rect_mode.addAction(zoom_act)
+        rect_mode.addAction(play_act)
+        rect_mode.addAction(save_act)
+        rect_mode.addAction(ask_act)
+        ask_act.setChecked(True)
+
+        region_menu = menu.addMenu('&Region')
+        region_menu.addAction(rect_act)
+        region_menu.addAction(pan_act)
+        region_menu.addSeparator()
+        region_menu.addAction(zoom_act)
+        region_menu.addAction(play_act)
+        region_menu.addAction(save_act)
+        region_menu.addAction(ask_act)
+        return region_menu
 
         
     def toggle_link_timezoom(self):
@@ -404,11 +491,11 @@ class Audian(QMainWindow):
         linkpower_act.toggled.connect(self.toggle_link_power)
         
         powerup_act = QAction('Power &up', self)
-        powerup_act.setShortcut('Shift+Z')
+        powerup_act.setShortcut('Shift+P')
         powerup_act.triggered.connect(lambda x: self.browser().power_up())
 
         powerdown_act = QAction('Power &down', self)
-        powerdown_act.setShortcut('Z')
+        powerdown_act.setShortcut('P')
         powerdown_act.triggered.connect(lambda x: self.browser().power_down())
 
         maxpowerup_act = QAction('Max up', self)
@@ -560,10 +647,6 @@ class Audian(QMainWindow):
         grid_act.setShortcut('g')
         grid_act.triggered.connect(lambda x: self.browser().toggle_grids())
 
-        mouse_act = QAction('Toggle &zoom mode', self)
-        mouse_act.setShortcut('Ctrl+z')
-        mouse_act.triggered.connect(lambda x: self.browser().toggle_zoom_mode())
-
         nexttab_act = QAction('Next tab', self)
         nexttab_act.setShortcut('Ctrl+PgDown')
         nexttab_act.triggered.connect(self.next_tab)
@@ -595,7 +678,6 @@ class Audian(QMainWindow):
         self.view_menu.addAction(togglespectros_act)
         self.view_menu.addAction(togglecbars_act)
         self.view_menu.addSeparator()
-        self.view_menu.addAction(mouse_act)
         self.view_menu.addAction(grid_act)
         self.view_menu.addAction(maximize_act)
         self.addAction(nexttab_act)
