@@ -1,0 +1,9 @@
+.idea
+.idea/*
+*.pyc
+*.npy
+*.pdf
+*.txt
+.coverage
+__pycache__
+*~
