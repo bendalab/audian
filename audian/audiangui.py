@@ -198,7 +198,7 @@ class Audian(QMainWindow):
         zoom_mode = QActionGroup(self)
         zoom_mode.addAction(rect_act)
         zoom_mode.addAction(pan_act)
-        pan_act.setChecked(True)
+        rect_act.setChecked(True)
         
         zoomback_act = QAction('Zoom &back', self)
         zoomback_act.setShortcut('Backspace')
