@@ -48,10 +48,11 @@ class Audian(QMainWindow):
         # actions:
         file_menu = self.setup_file_actions(self.menuBar())
         region_menu = self.setup_region_actions(self.menuBar())
+        spec_menu = self.setup_spectrogram_actions(self.menuBar())
         view_menu = self.setup_view_actions(self.menuBar())
         help_menu = self.setup_help_actions(self.menuBar())
         self.keys = ['<h1>Audian key shortcuts</h1>']
-        for menu in [file_menu, region_menu, view_menu, help_menu]:
+        for menu in [file_menu, region_menu, spec_menu, view_menu, help_menu]:
             self.menu_shortcuts(menu)
         
         # default widget:
@@ -409,15 +410,6 @@ class Audian(QMainWindow):
                 if not b is self.tabs.currentWidget():
                     b.set_frequencies(f0, f1)
 
-        
-    def dispatch_resolution(self):
-        if self.link_frequency:
-            nfft = [s.nfft for s in self.browser().specs]
-            sfrac = [s.step_frac for s in self.browser().specs]
-            for b in self.browsers:
-                if not b is self.tabs.currentWidget():
-                    b.set_resolution(nfft, sfrac, False)
-
 
     def setup_frequency_actions(self, menu):
         linkfrequency_act = QAction('Link &frequency', self)
@@ -449,7 +441,27 @@ class Audian(QMainWindow):
         freqend_act = QAction('&End', self)
         freqend_act.setShortcuts(QKeySequence.MoveToNextWord)
         freqend_act.triggered.connect(lambda x: self.apply_frequencies('freq_end'))
+        freq_menu = menu.addMenu('Frequenc&y')
+        freq_menu.addAction(linkfrequency_act)
+        freq_menu.addAction(zoomfin_act)
+        freq_menu.addAction(zoomfout_act)
+        freq_menu.addAction(frequp_act)
+        freq_menu.addAction(freqdown_act)
+        freq_menu.addAction(freqhome_act)
+        freq_menu.addAction(freqend_act)
+        return freq_menu
 
+        
+    def dispatch_resolution(self):
+        if self.link_frequency:
+            nfft = [s.nfft for s in self.browser().specs]
+            sfrac = [s.step_frac for s in self.browser().specs]
+            for b in self.browsers:
+                if not b is self.tabs.currentWidget():
+                    b.set_resolution(nfft, sfrac, False)
+
+
+    def setup_spectrogram_actions(self, menu):
         fresup_act = QAction('Increase &resolution', self)
         fresup_act.setShortcut('Shift+R')
         fresup_act.triggered.connect(lambda x: self.browser().freq_resolution_up())
@@ -466,19 +478,12 @@ class Audian(QMainWindow):
         stepup_act.setShortcut('O')
         stepup_act.triggered.connect(lambda x: self.browser().step_frac_up())
         
-        freq_menu = menu.addMenu('Frequenc&y')
-        freq_menu.addAction(linkfrequency_act)
-        freq_menu.addAction(zoomfin_act)
-        freq_menu.addAction(zoomfout_act)
-        freq_menu.addAction(frequp_act)
-        freq_menu.addAction(freqdown_act)
-        freq_menu.addAction(freqhome_act)
-        freq_menu.addAction(freqend_act)
-        freq_menu.addAction(fresup_act)
-        freq_menu.addAction(fresdown_act)
-        freq_menu.addAction(stepdown_act)
-        freq_menu.addAction(stepup_act)
-        return freq_menu
+        spec_menu = menu.addMenu('&Spectrogram')
+        spec_menu.addAction(fresup_act)
+        spec_menu.addAction(fresdown_act)
+        spec_menu.addAction(stepdown_act)
+        spec_menu.addAction(stepup_act)
+        return spec_menu
 
         
     def toggle_link_power(self):
