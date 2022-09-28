@@ -3,8 +3,9 @@ from math import ceil, floor, log
 import numpy as np
 from PyQt5.QtCore import Signal, QTimer
 from PyQt5.QtGui import QCursor
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGraphicsRectItem
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QGraphicsRectItem
 from PyQt5.QtWidgets import QMenu, QAction, QFileDialog
+from PyQt5.QtWidgets import QAbstractButton, QPushButton, QButtonGroup
 import pyqtgraph as pg
 from audioio import AudioLoader, available_formats, write_audio
 from audioio import fade
@@ -46,7 +47,9 @@ class DataBrowser(QWidget):
         self.show_channels = show_channels
         self.current_channel = 0
         self.selected_channels = []
-
+        self.channel_group = QButtonGroup(self)
+        self.channel_group.setExclusive(False)
+        
         self.trace_fracs = {0: 1, 1: 1, 2: 0.5, 3: 0.25, 4: 0.15}
 
         self.region_mode = DataBrowser.ask_region
@@ -244,8 +247,21 @@ class DataBrowser(QWidget):
             self.axs[-1].append(axt)
             self.axtraces.append(axt)
         self.set_times()
+        csw = QWidget()
+        csh = QHBoxLayout(csw)
+        csh.setContentsMargins(0, 0, 0, 0)
+        csh.setSpacing(0)
+        for c in range(self.data.channels):
+            cpb = QPushButton(f'channel {c}')
+            cpb.setCheckable(True)
+            cpb.setChecked(not c in self.show_channels)
+            csh.addWidget(cpb)
+            self.channel_group.addButton(cpb, c)
+        self.channel_group.buttonToggled.connect(self.toggle_channel_button)
+        self.vbox.addWidget(csw)
+        csw.setVisible(self.data.channels > 1)
         self.setEnabled(True)
-        self.adjust_layout(self.height())
+        self.adjust_layout(self.width(), self.height())
 
 
     def update_borders(self, rect=None):
@@ -279,13 +295,16 @@ class DataBrowser(QWidget):
     def resizeEvent(self, event):
         if self.show_channels is None or len(self.show_channels) == 0:
             return
-        self.adjust_layout(event.size().height())
+        self.adjust_layout(event.size().width(), event.size().height())
         
 
-    def adjust_layout(self, height):
+    def adjust_layout(self, width, height):
+        xwidth = self.fontMetrics().averageCharWidth()
+        # subtract channel selector:
+        if self.data.channels > 1:
+            height -= 3*xwidth
         bottom_channel = self.show_channels[-1]
         trace_frac = self.trace_fracs[self.show_specs]
-        xwidth = self.fontMetrics().averageCharWidth()
         #axis_height = None
         #if self.axtraces[bottom_channel].isVisible():
         #    axis_height = self.axtraces[bottom_channel].getAxis('bottom').height()
@@ -309,6 +328,13 @@ class DataBrowser(QWidget):
             self.figs[c].ci.layout.setRowFixedHeight(0, s_height)
         for c in self.show_channels:
             self.figs[c].update()
+        # fix channel selector:
+        if width/self.data.channels < 12*xwidth:
+            for c in range(1, self.data.channels):
+                self.channel_group.button(c).setText(f'{c}')
+        else:
+            for c in range(1, self.data.channels):
+                self.channel_group.button(c).setText(f'channel {c}')
         
             
     def show_xticks(self, channel, show_ticks):
@@ -676,24 +702,34 @@ class DataBrowser(QWidget):
         for c in range(len(self.figs)):
             self.figs[c].setVisible(c in self.show_channels)
             self.show_xticks(c, c == self.show_channels[-1])
-        self.adjust_layout(self.height())
+        self.adjust_layout(self.width(), self.height())
         self.update_borders()
             
-            
-    def toggle_channel(self, channel):
-        if len(self.figs) > channel and \
-           (len(self.show_channels) > 1 or channel != self.show_channels[0]):
-            if channel in self.show_channels:
-                self.show_channels.remove(channel)
-                self.selected_channels.remove(channel)
-            else:
+
+    def toggle_channel_button(self, button, checked):
+        channel = self.channel_group.id(button)
+        if not checked:
+            if not channel in self.show_channels:
+                if len(self.show_channels) == 1:
+                    self.channel_group.button(self.show_channels[0]).setCheckable(True)
                 self.show_channels.append(channel)
                 self.show_channels.sort()
                 self.selected_channels.append(channel)
                 self.selected_channels.sort()
-            self.set_channels()
+                self.set_channels()
+        else:
+            if channel in self.show_channels:
+                self.show_channels.remove(channel)
+                self.selected_channels.remove(channel)
+                if len(self.show_channels) == 1:
+                    self.channel_group.button(self.show_channels[0]).setCheckable(False)
+                self.set_channels()
 
+        
+    def toggle_channel(self, channel):
+        self.channel_group.button(channel).setChecked(channel in self.show_channels)
 
+        
     def set_panels(self, traces=None, specs=None, cbars=None):
         if not traces is None:
             self.show_traces = traces
@@ -710,7 +746,7 @@ class DataBrowser(QWidget):
                 axs.getAxis('bottom').setStyle(showValues=not self.show_traces)
                 axt.getAxis('bottom').showLabel(self.show_traces)
                 axt.getAxis('bottom').setStyle(showValues=self.show_traces)
-        self.adjust_layout(self.height())
+        self.adjust_layout(self.width(), self.height())
             
 
     def toggle_traces(self):
