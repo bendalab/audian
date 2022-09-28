@@ -902,25 +902,45 @@ class DataBrowser(QWidget):
 
                     
     def save_region(self, t0, t1):
+
+        def secs_to_str(time):
+            hours = time//3600
+            time -= 3600*hours
+            mins = time//60
+            time -= 60*mins
+            secs = int(np.floor(time))
+            time -= secs
+            msecs = f'{1000*time:03.0f}ms'
+            if hours > 0:
+                return f'{hours}h{mins}m{secs}s{msecs}'
+            elif mins > 0:
+                return f'{mins}m{secs}s{msecs}'
+            elif secs > 0:
+                return f'{secs}s{msecs}'
+            else:
+                return msecs
+
         i0 = int(np.round(t0*self.rate))
         i1 = int(np.round(t1*self.rate))
-        savedata = 1.0 * self.data[i0:i1,:]
-        name = self.file_path.split('.')[0]
+        name = os.path.splitext(os.path.basename(self.file_path))[0]
         #if self.channel > 0:
         #    filename = f'{name}-{channel:d}-{t0:.4g}s-{t1s:.4g}s.wav'
-        #else:
-        filename = f'{name}-{1000*t0:.0f}ms-{1000*t1:.0f}ms.wav'
+        t0s = secs_to_str(t0)
+        t1s = secs_to_str(t1)
+        filename = f'{name}-{t0s}-{t1s}.wav'
         formats = available_formats()
         for f in ['MP3', 'OGG', 'WAV']:
             if 'WAV' in formats:
                 formats.remove(f)
                 formats.insert(0, f)
         filters = ['All files (*)'] + [f'{f} files (*.{f}, *.{f.lower()})' for f in formats]
+        file_path = os.path.join(os.path.dirname(self.file_path), filename)
+        print(file_path)
         file_path = QFileDialog.getSaveFileName(self, 'Save region as',
-                                                os.path.dirname(self.file_path) + '/' + filename,
+                                                file_path,
                                                 ';;'.join(filters))[0]
         if file_path:
-            write_audio(file_path, savedata, self.rate)
+            write_audio(file_path, self.data[i0:i1,:], self.rate)
             print('saved region to: ' , file_path)
 
         
