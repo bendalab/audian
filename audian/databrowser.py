@@ -300,9 +300,10 @@ class DataBrowser(QWidget):
 
     def adjust_layout(self, width, height):
         xwidth = self.fontMetrics().averageCharWidth()
+        xheight = self.fontMetrics().ascent()
         # subtract channel selector:
         if self.data.channels > 1:
-            height -= 3*xwidth
+            height -= 2*xheight
         bottom_channel = self.show_channels[-1]
         trace_frac = self.trace_fracs[self.show_specs]
         #axis_height = None
@@ -310,21 +311,24 @@ class DataBrowser(QWidget):
         #    axis_height = self.axtraces[bottom_channel].getAxis('bottom').height()
         #elif self.axspecs[bottom_channel].isVisible():
         #    axis_height = self.axspecs[bottom_channel].getAxis('bottom').height()
-        axis_height = 5*xwidth
+        axis_height = 3.2*xheight
         ntraces = []
         nspecs = []
+        nspacer = 0
         for c in self.show_channels:
             nspecs.append(int(self.axspecs[c].isVisible()))
             ntraces.append(int(self.axtraces[c].isVisible()))
-        spec_height = (height - axis_height)/(np.sum(nspecs) + trace_frac*np.sum(ntraces))
+            if self.axspecs[c].isVisible() and self.axtraces[c].isVisible():
+                nspacer += 1
+        spec_height = (height - len(self.show_channels)*xwidth - nspacer*xwidth - axis_height)/(np.sum(nspecs) + trace_frac*np.sum(ntraces))
         for c, ns, nt in zip(self.show_channels, nspecs, ntraces):
             add_height = axis_height if c == bottom_channel else 0
-            self.vbox.setStretch(c, int(ns*spec_height +
+            self.vbox.setStretch(c, int(ns*spec_height + (nt+ns)*xwidth +
                                         nt*trace_frac*spec_height + add_height))
-            t_height = max(0, int(nt*(trace_frac*spec_height + add_height) - xwidth))
+            t_height = max(0, int(nt*(trace_frac*spec_height + add_height)))
             self.figs[c].ci.layout.setRowFixedHeight(2, t_height)
             self.figs[c].ci.layout.setRowFixedHeight(1, (nt+ns-1)*xwidth)
-            s_height = max(0, int(ns*spec_height + (1-nt)*add_height - xwidth))
+            s_height = max(0, int(ns*spec_height + (1-nt)*add_height))
             self.figs[c].ci.layout.setRowFixedHeight(0, s_height)
         for c in self.show_channels:
             self.figs[c].update()
@@ -697,8 +701,8 @@ class DataBrowser(QWidget):
                 if c >= self.current_channel:
                     self.current_channel = c
                     break
-                if not self.current_channel in self.selected_channels:
-                    self.current_channel = self.selected_channels
+            if not self.current_channel in self.selected_channels:
+                self.current_channel = self.selected_channels[-1]
         for c in range(len(self.figs)):
             self.figs[c].setVisible(c in self.show_channels)
             self.show_xticks(c, c == self.show_channels[-1])
