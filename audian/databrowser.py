@@ -76,6 +76,25 @@ class DataBrowser(QWidget):
         self.vbox.setSpacing(0)
         self.setEnabled(False)
 
+        # plots:
+        self.figs = []     # all GraphicsLayoutWidgets - one for each channel
+        self.borders = []
+        # nested lists (channel, panel):
+        self.axs  = []      # all plots
+        self.axts = []      # plots with time axis
+        self.axys = []      # plots with amplitude axis
+        self.axfxs = []     # plots with x-frequency axis
+        self.axfys = []     # plots with y-frequency axis
+        self.axgs = []      # plots with grids
+        # lists with one plot per channel:
+        self.axtraces = []  # trace plots
+        self.axspacers = [] # spacer between trace and spectrogram
+        self.axspecs = []   # spectrogram plots
+        self.traces = []    # traces
+        self.specs = []     # spectrograms
+        self.cbars = []     # color bars
+        self.audio_markers = [] # vertical line showing position while playing
+
 
     def __del__(self):
         if not self.data is None:
@@ -167,6 +186,7 @@ class DataBrowser(QWidget):
             axs.setYRange(self.specs[c].f0, self.specs[c].f1)
             axs.sigYRangeChanged.connect(self.update_frequencies)
             axs.sigSelectedRegion.connect(self.region_menu)
+            axs.getViewBox().init_zoom_history()
             self.audio_markers[-1].append(axs.vmarker)
             fig.addItem(axs, row=0, col=0)
             # color bar:
@@ -210,6 +230,7 @@ class DataBrowser(QWidget):
             axt.setYRange(self.traces[c].ymin, self.traces[c].ymax)
             axt.sigYRangeChanged.connect(self.update_amplitudes)
             axt.sigSelectedRegion.connect(self.region_menu)
+            axt.getViewBox().init_zoom_history()
             self.audio_markers[-1].append(axt.vmarker)
             fig.addItem(axt, row=2, col=0)
             self.axts[-1].append(axt)
@@ -730,6 +751,12 @@ class DataBrowser(QWidget):
         for axs in self.axs:
             for ax in axs:
                 ax.getViewBox().setMouseMode(mode)
+
+
+    def zoom_back(self):
+        for axs in self.axs:
+            for ax in axs:
+                ax.getViewBox().zoom_back()
 
 
     def set_region_mode(self, mode):

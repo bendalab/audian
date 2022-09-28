@@ -199,6 +199,10 @@ class Audian(QMainWindow):
         zoom_mode.addAction(pan_act)
         pan_act.setChecked(True)
         
+        zoomback_act = QAction('Zoom &back', self)
+        zoomback_act.setShortcut('Backspace')
+        zoomback_act.triggered.connect(lambda x=0: self.browser().zoom_back())
+        
         zoom_act = QAction('&Zoom', self)
         zoom_act.setCheckable(True)
         zoom_act.setShortcut('z')
@@ -206,7 +210,7 @@ class Audian(QMainWindow):
         
         play_act = QAction('&Play', self)
         play_act.setCheckable(True)
-        play_act.setShortcut('L')
+        play_act.setShortcut('P')
         play_act.toggled.connect(self.set_play)
         
         save_act = QAction('&Save', self)
@@ -229,6 +233,8 @@ class Audian(QMainWindow):
         region_menu = menu.addMenu('&Region')
         region_menu.addAction(rect_act)
         region_menu.addAction(pan_act)
+        region_menu.addSeparator()
+        region_menu.addAction(zoomback_act)
         region_menu.addSeparator()
         region_menu.addAction(zoom_act)
         region_menu.addAction(play_act)
@@ -491,11 +497,11 @@ class Audian(QMainWindow):
         linkpower_act.toggled.connect(self.toggle_link_power)
         
         powerup_act = QAction('Power &up', self)
-        powerup_act.setShortcut('Shift+P')
+        powerup_act.setShortcut('Shift+D')
         powerup_act.triggered.connect(lambda x: self.browser().power_up())
 
         powerdown_act = QAction('Power &down', self)
-        powerdown_act.setShortcut('P')
+        powerdown_act.setShortcut('D')
         powerdown_act.triggered.connect(lambda x: self.browser().power_down())
 
         maxpowerup_act = QAction('Max up', self)

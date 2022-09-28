@@ -17,6 +17,10 @@ class SelectViewBox(pg.ViewBox):
         self.channel = channel
 
 
+    def keyPressEvent(self, ev):
+        ev.ignore()
+        
+        
     def mouseDragEvent(self, ev, axis=None):
         ## if axis is specified, event will only affect that axis.
         ev.accept()  ## we accept all buttons
@@ -96,3 +100,11 @@ class SelectViewBox(pg.ViewBox):
         self.axHistoryPointer += 1
         self.axHistory = self.axHistory[:self.axHistoryPointer] + [rect]
 
+
+    def zoom_back(self):
+        self.scaleHistory(-1)
+
+
+    def init_zoom_history(self):
+        self.axHistoryPointer += 1
+        self.axHistory = self.axHistory[:self.axHistoryPointer] + [self.viewRect()]
