@@ -112,7 +112,11 @@ class DataBrowser(QWidget):
     def open(self):
         if not self.data is None:
             self.data.close()
-        self.data = AudioLoader(self.file_path, 60.0, 10.0)
+        try:
+            self.data = AudioLoader(self.file_path, 60.0, 10.0)
+        except IOError:
+            self.data = None
+            return
         self.rate = self.data.samplerate
 
         self.toffset = 0.0

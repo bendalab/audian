@@ -6,7 +6,7 @@ from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTabWidget
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel
 from PyQt5.QtWidgets import QAction, QActionGroup, QPushButton
-from PyQt5.QtWidgets import QDialog, QFileDialog
+from PyQt5.QtWidgets import QDialog, QFileDialog, QMessageBox
 import pyqtgraph as pg
 from audioio import available_formats, PlayAudio
 from .version import __version__, __year__
@@ -746,6 +746,8 @@ class Audian(QMainWindow):
             show_channels = self.browser().show_channels
         first = True
         for file_path in file_paths:
+            if not os.path.isfile(file_path):
+                continue
             browser = DataBrowser(file_path, self.channels,
                                   show_channels, self.audio)
             self.tabs.addTab(browser, os.path.basename(file_path))
@@ -760,6 +762,12 @@ class Audian(QMainWindow):
         for browser in self.browsers:
             if browser.data is None:
                 browser.open()
+                if browser.data is None:
+                    self.tabs.removeTab(self.tabs.indexOf(browser))
+                    self.browsers.remove(browser)
+                    QMessageBox.critical(self, 'Error', f'''
+Can not open file <b>{browser.file_path}</b>!''')
+                    break
                 if self.tabs.currentWidget() is browser:
                     self.adapt_menu(self.tabs.currentIndex())
                 browser.sigTimesChanged.connect(self.dispatch_times)
