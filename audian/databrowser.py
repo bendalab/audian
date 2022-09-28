@@ -61,6 +61,10 @@ class DataBrowser(QWidget):
         self.show_traces = True
         self.show_specs = 2
         self.show_cbars = True
+        
+        # auto scroll:
+        self.scroll_timer = QTimer(self)
+        self.scroll_timer.timeout.connect(self.scroll_further)
 
         # audio:
         self.audio = audio
@@ -786,6 +790,17 @@ class DataBrowser(QWidget):
                 self.save_region(rect.left(), rect.right())
         vbox.hide_region()
         
+
+    def auto_scroll(self):
+        self.scroll_timer.start(20)
+
+        
+    def scroll_further(self):
+        if self.toffset + self.twindow > self.tmax:
+            self.scroll_timer.stop()
+        else:
+            self.set_times(self.toffset + 0.05)
+
 
     def play_region(self, t0, t1):
         i0 = int(np.round(t0*self.rate))

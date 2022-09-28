@@ -314,6 +314,10 @@ class Audian(QMainWindow):
         snaptime_act.setShortcut('.')
         snaptime_act.triggered.connect(lambda x=0: self.browser().snap_time())
 
+        autoscroll_act = QAction('&Auto scroll', self)
+        autoscroll_act.setShortcut('!')
+        autoscroll_act.triggered.connect(lambda x=0: self.browser().auto_scroll())
+
         time_menu = menu.addMenu('&Time')
         time_menu.addAction(play_act)
         time_menu.addAction(linktimezoom_act)
@@ -327,6 +331,7 @@ class Audian(QMainWindow):
         time_menu.addAction(dataend_act)
         time_menu.addAction(datahome_act)
         time_menu.addAction(snaptime_act)
+        time_menu.addAction(autoscroll_act)
         return time_menu
 
         
