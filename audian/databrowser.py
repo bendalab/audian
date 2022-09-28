@@ -809,6 +809,18 @@ class DataBrowser(QWidget):
                 ax.getViewBox().zoom_back()
 
 
+    def zoom_forward(self):
+        for axs in self.axs:
+            for ax in axs:
+                ax.getViewBox().zoom_forward()
+
+
+    def zoom_reset(self):
+        for axs in self.axs:
+            for ax in axs:
+                ax.getViewBox().zoom_reset()
+
+
     def set_region_mode(self, mode):
         self.region_mode = mode
 

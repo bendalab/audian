@@ -106,6 +106,14 @@ class SelectViewBox(pg.ViewBox):
         self.scaleHistory(-1)
 
 
+    def zoom_forward(self):
+        self.scaleHistory(1)
+
+
+    def zoom_reset(self):
+        self.scaleHistory(-len(self.axHistory))
+
+
     def init_zoom_history(self):
         self.axHistoryPointer += 1
         self.axHistory = self.axHistory[:self.axHistoryPointer] + [self.viewRect()]

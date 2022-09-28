@@ -201,8 +201,16 @@ class Audian(QMainWindow):
         rect_act.setChecked(True)
         
         zoomback_act = QAction('Zoom &back', self)
-        zoomback_act.setShortcut('Backspace')
+        zoomback_act.setShortcuts(['Backspace', 'Alt+Left'])
         zoomback_act.triggered.connect(lambda x=0: self.browser().zoom_back())
+        
+        zoomforward_act = QAction('Zoom &forward', self)
+        zoomforward_act.setShortcuts(['Shift+Backspace', 'Alt+Right'])
+        zoomforward_act.triggered.connect(lambda x=0: self.browser().zoom_forward())
+        
+        zoomreset_act = QAction('Zoom &reset', self)
+        zoomreset_act.setShortcut('Alt+Backspace')
+        zoomreset_act.triggered.connect(lambda x=0: self.browser().zoom_reset())
         
         zoom_act = QAction('&Zoom', self)
         zoom_act.setCheckable(True)
@@ -236,6 +244,8 @@ class Audian(QMainWindow):
         region_menu.addAction(pan_act)
         region_menu.addSeparator()
         region_menu.addAction(zoomback_act)
+        region_menu.addAction(zoomforward_act)
+        region_menu.addAction(zoomreset_act)
         region_menu.addSeparator()
         region_menu.addAction(zoom_act)
         region_menu.addAction(play_act)
