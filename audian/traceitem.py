@@ -23,20 +23,21 @@ def down_sample_peak(data, n, step):
     
 class TraceItem(pg.PlotDataItem):
     
-    def __init__(self, data, rate, channel, *args, **kwargs):
+    def __init__(self, data, rate, channel, *args, color='#00ee00', **kwargs):
         self.data = data
         self.rate = rate
         self.channel = channel
+        self.color = color
         self.ymin = -1.0
         self.ymax = +1.0
         
         pg.PlotDataItem.__init__(self, *args, connect='all',
                                  antialias=False, skipFiniteCheck=True,
                                  **kwargs)
-        self.setPen(dict(color='#00ff00', width=2))
+        self.setPen(dict(color=self.color, width=2))
         self.setSymbolSize(8)
-        self.setSymbolBrush(color='#00ff00')
-        self.setSymbolPen(color='#00ff00')
+        self.setSymbolBrush(color=self.color)
+        self.setSymbolPen(color=self.color)
         self.setSymbol(None)
 
         
@@ -55,7 +56,7 @@ class TraceItem(pg.PlotDataItem):
         stop = min(len(self.data), int(trange[1]*self.rate+1))
         step = max(1, (stop - start)//10000)
         if step > 1:
-            self.setPen(dict(color='#00ff00', width=1.1))
+            self.setPen(dict(color=self.color, width=1.1))
             # min - max: (good but a bit slow - let numba do it!)
             step2 = step//2
             step = step2*2
@@ -71,12 +72,12 @@ class TraceItem(pg.PlotDataItem):
             # subsample:
             self.setData(np.arange(start, stop, step)/self.rate,
                          self.data[start:stop:step, self.channel])
-            self.setPen(dict(color='#00ff00', width=1.1))
+            self.setPen(dict(color=self.color, width=1.1))
         else:
             # all data:
             self.setData(np.arange(start, stop)/self.rate,
                          self.data[start:stop, self.channel])
-            self.setPen(dict(color='#00ff00', width=2))
+            self.setPen(dict(color=self.color, width=2))
             if stop - start <= 50:
                 self.setSymbol('o')
             else:

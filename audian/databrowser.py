@@ -10,6 +10,7 @@ import pyqtgraph as pg
 from audioio import AudioLoader, available_formats, write_audio
 from audioio import fade
 from .version import __version__, __year__
+from .timeplot import TimePlot
 from .oscillogramplot import OscillogramPlot
 from .spectrumplot import SpectrumPlot
 from .traceitem import TraceItem
@@ -169,6 +170,7 @@ class DataBrowser(QWidget):
             self.axfys.append([])
             self.axgs.append([])
             self.audio_markers.append([])
+            
             # one figure per channel:
             fig = pg.GraphicsLayoutWidget()
             fig.setBackground(None)
@@ -178,6 +180,7 @@ class DataBrowser(QWidget):
             fig.setVisible(c in self.show_channels)
             self.vbox.addWidget(fig)
             self.figs.append(fig)
+            
             # border:
             border = QGraphicsRectItem()
             border.setZValue(-1000)
@@ -185,7 +188,8 @@ class DataBrowser(QWidget):
             fig.scene().addItem(border)
             fig.sigDeviceRangeChanged.connect(self.update_borders)
             self.borders.append(border)
-            # spectrograms:
+            
+            # spectrogram:
             spec = SpecItem(self.data, self.rate, c, 256, 0.5)
             self.specs.append(spec)
             axs = SpectrumPlot(c, self.fontMetrics().averageCharWidth())
@@ -201,6 +205,7 @@ class DataBrowser(QWidget):
             axs.getViewBox().init_zoom_history()
             self.audio_markers[-1].append(axs.vmarker)
             fig.addItem(axs, row=0, col=0)
+            
             # color bar:
             cbar = pg.ColorBarItem(colorMap='CET-R4', interactive=True,
                                    rounding=1, limits=(-200, 20))
@@ -219,10 +224,12 @@ class DataBrowser(QWidget):
             self.axgs[-1].append(axs)
             self.axs[-1].append(axs)
             self.axspecs.append(axs)
+            
             # spacer:
             axsp = fig.addLayout(row=1, col=0)
             axsp.setContentsMargins(0, 0, 0, 0)
             self.axspacers.append(axsp)
+            
             # trace plot:
             trace = TraceItem(self.data, self.rate, c)
             self.traces.append(trace)
@@ -251,6 +258,8 @@ class DataBrowser(QWidget):
             self.axs[-1].append(axt)
             self.axtraces.append(axt)
         self.set_times()
+        
+        # channel selector:
         csw = QWidget()
         csh = QHBoxLayout(csw)
         csh.setContentsMargins(0, 0, 0, 0)
@@ -264,6 +273,18 @@ class DataBrowser(QWidget):
         self.channel_group.buttonToggled.connect(self.toggle_channel_button)
         self.vbox.addWidget(csw)
         csw.setVisible(self.data.channels > 1)
+        
+        # full data:
+        self.timefig = pg.GraphicsLayoutWidget()
+        self.timefig.setBackground(None)
+        self.timefig.ci.layout.setContentsMargins(0, 0, 0, 0)
+        self.timefig.ci.layout.setVerticalSpacing(0)
+        self.vbox.addWidget(self.timefig)
+        axt = TimePlot(0, self.fontMetrics().averageCharWidth(), self.tmax)
+        trace = TraceItem(self.data, self.rate, c, color='#2206a7')
+        axt.addItem(trace)
+        self.timefig.addItem(axt)
+
         self.setEnabled(True)
         self.adjust_layout(self.width(), self.height())
 
@@ -305,6 +326,8 @@ class DataBrowser(QWidget):
     def adjust_layout(self, width, height):
         xwidth = self.fontMetrics().averageCharWidth()
         xheight = self.fontMetrics().ascent()
+        # subtract time plot:
+        height -= 2*xheight
         # subtract channel selector:
         if self.data.channels > 1:
             height -= 2*xheight
@@ -343,6 +366,9 @@ class DataBrowser(QWidget):
         else:
             for c in range(1, self.data.channels):
                 self.channel_group.button(c).setText(f'channel {c}')
+        # fix time plot:
+        self.timefig.ci.layout.setRowFixedHeight(0, 2*xheight)
+        self.timefig.setFixedHeight(2*xheight)
         
             
     def show_xticks(self, channel, show_ticks):
