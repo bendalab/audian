@@ -724,6 +724,7 @@ class DataBrowser(QWidget):
                 if len(self.show_channels) == 1:
                     self.channel_group.button(self.show_channels[0]).setCheckable(False)
                 self.set_channels()
+        self.setFocus()
 
         
     def toggle_channel(self, channel):
