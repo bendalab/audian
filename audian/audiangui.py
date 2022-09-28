@@ -264,7 +264,7 @@ class Audian(QMainWindow):
     def setup_time_actions(self, menu):
         play_act = QAction('&Play', self)
         play_act.setShortcut(' ')
-        play_act.triggered.connect(lambda x=0: self.browser().play_window())
+        play_act.triggered.connect(lambda x=0: self.browser().play_scroll())
         
         linktimezoom_act = QAction('Link time &zoom', self)
         linktimezoom_act.setShortcut('Alt+Z')
