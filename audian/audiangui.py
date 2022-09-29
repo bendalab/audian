@@ -46,6 +46,7 @@ class Audian(QMainWindow):
         self.setCentralWidget(self.tabs)
 
         # actions:
+        self.data_menus = []
         file_menu = self.setup_file_actions(self.menuBar())
         region_menu = self.setup_region_actions(self.menuBar())
         spec_menu = self.setup_spectrogram_actions(self.menuBar())
@@ -67,12 +68,14 @@ class Audian(QMainWindow):
             self.tabs.setCurrentIndex(0)
             self.startup.setVisible(False)
             self.startup_active = False
-            self.view_menu.setEnabled(True)
+            for menu in self.data_menus:
+                menu.setEnabled(True)
         else:
             self.startup.setVisible(True)
             self.startup_active = True
             self.tabs.addTab(self.startup, 'Startup')
-            self.view_menu.setEnabled(False)
+            for menu in self.data_menus:
+                menu.setEnabled(False)
 
 
     def __del__(self):
@@ -251,6 +254,9 @@ class Audian(QMainWindow):
         region_menu.addAction(play_act)
         region_menu.addAction(save_act)
         region_menu.addAction(ask_act)
+
+        self.data_menus.append(region_menu)
+        
         return region_menu
 
         
@@ -268,7 +274,7 @@ class Audian(QMainWindow):
         if not self.link_timezoom:
             twindow = None
         for b in self.browsers:
-            if not b is self.tabs.currentWidget():
+            if not b is self.browser():
                 b.set_times(toffset, twindow, False)
 
 
@@ -343,6 +349,9 @@ class Audian(QMainWindow):
         time_menu.addAction(datahome_act)
         time_menu.addAction(snaptime_act)
         time_menu.addAction(autoscroll_act)
+
+        self.data_menus.append(time_menu)
+        
         return time_menu
 
         
@@ -354,14 +363,14 @@ class Audian(QMainWindow):
         getattr(self.browser(), amplitudefunc)()
         if self.link_amplitude:
             for b in self.browsers:
-                if not b is self.tabs.currentWidget():
+                if not b is self.browser():
                     getattr(b, amplitudefunc)()
 
 
     def dispatch_amplitudes(self, ymin, ymax):
         if self.link_amplitude:
             for b in self.browsers:
-                if not b is self.tabs.currentWidget():
+                if not b is self.browser():
                     b.set_amplitudes(ymin, ymax)
 
         
@@ -399,6 +408,9 @@ class Audian(QMainWindow):
         ampl_menu.addAction(autoy_act)
         ampl_menu.addAction(resety_act)
         ampl_menu.addAction(centery_act)
+
+        self.data_menus.append(ampl_menu)
+        
         return ampl_menu
 
         
@@ -410,14 +422,14 @@ class Audian(QMainWindow):
         getattr(self.browser(), frequencyfunc)()
         if self.link_frequency:
             for b in self.browsers:
-                if not b is self.tabs.currentWidget():
+                if not b is self.browser():
                     getattr(b, frequencyfunc)()
 
 
     def dispatch_frequencies(self, f0, f1):
         if self.link_frequency:
             for b in self.browsers:
-                if not b is self.tabs.currentWidget():
+                if not b is self.browser():
                     b.set_frequencies(f0, f1)
 
 
@@ -459,6 +471,9 @@ class Audian(QMainWindow):
         freq_menu.addAction(freqdown_act)
         freq_menu.addAction(freqhome_act)
         freq_menu.addAction(freqend_act)
+
+        self.data_menus.append(freq_menu)
+        
         return freq_menu
 
         
@@ -467,7 +482,7 @@ class Audian(QMainWindow):
             nfft = [s.nfft for s in self.browser().specs]
             sfrac = [s.step_frac for s in self.browser().specs]
             for b in self.browsers:
-                if not b is self.tabs.currentWidget():
+                if not b is self.browser():
                     b.set_resolution(nfft, sfrac, False)
 
 
@@ -493,6 +508,9 @@ class Audian(QMainWindow):
         spec_menu.addAction(fresdown_act)
         spec_menu.addAction(stepdown_act)
         spec_menu.addAction(stepup_act)
+
+        self.data_menus.append(spec_menu)
+        
         return spec_menu
 
         
@@ -505,7 +523,7 @@ class Audian(QMainWindow):
             zmin = [s.zmin for s in self.browser().specs]
             zmax = [s.zmax for s in self.browser().specs]
             for b in self.browsers:
-                if not b is self.tabs.currentWidget():
+                if not b is self.browser():
                     b.set_power(zmin, zmax, False)
 
 
@@ -548,6 +566,9 @@ class Audian(QMainWindow):
         power_menu.addAction(maxpowerdown_act)
         power_menu.addAction(minpowerup_act)
         power_menu.addAction(minpowerdown_act)
+
+        self.data_menus.append(power_menu)
+        
         return power_menu
 
         
@@ -559,15 +580,16 @@ class Audian(QMainWindow):
         self.browser().toggle_channel(channel)
         if self.link_channels:
             for b in self.browsers:
-                if not b is self.tabs.currentWidget():
-                    b.set_channels(self.browser().show_channels)
+                if not b is self.browser():
+                    b.set_channels(self.browser().show_channels,
+                                   self.browser().selected_channels)
 
         
     def select_channels(self, selectfunc):
         getattr(self.browser(), selectfunc)()
         if self.link_channels:
             for b in self.browsers:
-                if not b is self.tabs.currentWidget():
+                if not b is self.browser():
                     b.select_channels(self.browser().selected_channels)
 
         
@@ -579,7 +601,7 @@ class Audian(QMainWindow):
         self.browser().toggle_traces()
         if self.link_panels:
             for b in self.browsers:
-                if not b is self.tabs.currentWidget():
+                if not b is self.browser():
                     b.set_panels(self.browser().show_traces,
                                  self.browser().show_specs,
                                  self.browser().show_cbars)
@@ -589,7 +611,7 @@ class Audian(QMainWindow):
         self.browser().toggle_spectrograms()
         if self.link_panels:
             for b in self.browsers:
-                if not b is self.tabs.currentWidget():
+                if not b is self.browser():
                     b.set_panels(self.browser().show_traces,
                                  self.browser().show_specs,
                                  self.browser().show_cbars)
@@ -599,7 +621,7 @@ class Audian(QMainWindow):
         self.browser().toggle_colorbars()
         if self.link_panels:
             for b in self.browsers:
-                if not b is self.tabs.currentWidget():
+                if not b is self.browser():
                     b.set_panels(self.browser().show_traces,
                                  self.browser().show_specs,
                                  self.browser().show_cbars)
@@ -685,30 +707,33 @@ class Audian(QMainWindow):
         maximize_act.setShortcut('Ctrl+M')
         maximize_act.triggered.connect(self.toggle_maximize)
 
-        self.view_menu = menu.addMenu('&View')
-        self.setup_time_actions(self.view_menu)
-        self.setup_amplitude_actions(self.view_menu)
-        self.setup_frequency_actions(self.view_menu)
-        self.setup_power_actions(self.view_menu)
-        self.view_menu.addAction(linkchannels_act)
-        channel_menu = self.view_menu.addMenu('&Channels')
+        view_menu = menu.addMenu('&View')
+        self.setup_time_actions(view_menu)
+        self.setup_amplitude_actions(view_menu)
+        self.setup_frequency_actions(view_menu)
+        self.setup_power_actions(view_menu)
+        view_menu.addAction(linkchannels_act)
+        channel_menu = view_menu.addMenu('&Channels')
         for act in self.toggle_channel_acts:
             channel_menu.addAction(act)
-        self.view_menu.addAction(allchannel_act)
-        self.view_menu.addAction(nextchannel_act)
-        self.view_menu.addAction(previouschannel_act)
-        self.view_menu.addAction(selectnextchannel_act)
-        self.view_menu.addAction(selectpreviouschannel_act)
-        self.view_menu.addAction(linkpanels_act)
-        self.view_menu.addAction(toggletraces_act)
-        self.view_menu.addAction(togglespectros_act)
-        self.view_menu.addAction(togglecbars_act)
-        self.view_menu.addSeparator()
-        self.view_menu.addAction(grid_act)
-        self.view_menu.addAction(maximize_act)
+        view_menu.addAction(allchannel_act)
+        view_menu.addAction(nextchannel_act)
+        view_menu.addAction(previouschannel_act)
+        view_menu.addAction(selectnextchannel_act)
+        view_menu.addAction(selectpreviouschannel_act)
+        view_menu.addAction(linkpanels_act)
+        view_menu.addAction(toggletraces_act)
+        view_menu.addAction(togglespectros_act)
+        view_menu.addAction(togglecbars_act)
+        view_menu.addSeparator()
+        view_menu.addAction(grid_act)
+        view_menu.addAction(maximize_act)
         self.addAction(nexttab_act)
         self.addAction(previoustab_act)
-        return self.view_menu
+
+        self.data_menus.append(view_menu)
+        
+        return view_menu
 
 
     def setup_help_actions(self, menu):
@@ -752,7 +777,8 @@ class Audian(QMainWindow):
             self.tabs.removeTab(0)
             self.startup.setVisible(False)
             self.startup_active = False
-            self.view_menu.setEnabled(True)
+            for menu in self.data_menus:
+                menu.setEnabled(True)
 
 
     def load_files(self, file_paths):
@@ -784,7 +810,7 @@ class Audian(QMainWindow):
                     QMessageBox.critical(self, 'Error', f'''
 Can not open file <b>{browser.file_path}</b>!''')
                     break
-                if self.tabs.currentWidget() is browser:
+                if browser is self.browser():
                     self.adapt_menu(self.tabs.currentIndex())
                 browser.sigTimesChanged.connect(self.dispatch_times)
                 browser.sigAmplitudesChanged.connect(self.dispatch_amplitudes)
@@ -840,7 +866,8 @@ Can not open file <b>{browser.file_path}</b>!''')
             self.tabs.addTab(self.startup, 'Startup')
             self.startup.setVisible(True)
             self.startup_active = True
-            self.view_menu.setEnabled(False)
+            for menu in self.data_menus:
+                menu.setEnabled(False)
 
             
     def quit(self):

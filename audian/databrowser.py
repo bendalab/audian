@@ -103,6 +103,7 @@ class DataBrowser(QWidget):
         self.specs = []     # spectrograms
         self.cbars = []     # color bars
         self.audio_markers = [] # vertical line showing position while playing
+        self.axdatas = []   # full data plot
 
 
     def __del__(self):
@@ -159,6 +160,12 @@ class DataBrowser(QWidget):
         self.specs = []     # spectrograms
         self.cbars = []     # color bars
         self.audio_markers = [] # vertical line showing position while playing
+        # full data:
+        self.datafig = pg.GraphicsLayoutWidget()
+        self.datafig.setBackground(None)
+        self.datafig.ci.layout.setContentsMargins(0, 0, 0, 0)
+        self.datafig.ci.layout.setVerticalSpacing(0)
+        self.axdatas = []
         # font size:
         xwidth = self.fontMetrics().averageCharWidth()
         xwidth2 = xwidth/2
@@ -192,7 +199,7 @@ class DataBrowser(QWidget):
             # spectrogram:
             spec = SpecItem(self.data, self.rate, c, 256, 0.5)
             self.specs.append(spec)
-            axs = SpectrumPlot(c, self.fontMetrics().averageCharWidth())
+            axs = SpectrumPlot(c, xwidth)
             axs.addItem(spec)
             axs.setLimits(xMax=self.tmax, yMax=spec.fmax,
                          minXRange=10/self.rate, maxXRange=self.tmax,
@@ -233,7 +240,7 @@ class DataBrowser(QWidget):
             # trace plot:
             trace = TraceItem(self.data, self.rate, c)
             self.traces.append(trace)
-            axt = OscillogramPlot(c, self.fontMetrics().averageCharWidth())
+            axt = OscillogramPlot(c, xwidth)
             axt.addItem(trace)
             axt.getAxis('bottom').showLabel(c == self.show_channels[-1])
             axt.getAxis('bottom').setStyle(showValues=(c == self.show_channels[-1]))
@@ -257,6 +264,18 @@ class DataBrowser(QWidget):
             self.axgs[-1].append(axt)
             self.axs[-1].append(axt)
             self.axtraces.append(axt)
+            
+            # full data:
+            axd = TimePlot(c, xwidth, self.tmax)
+            data = TraceItem(self.data, self.rate, c)
+            axd.addItem(data)
+            axd.sigRegionChanged.connect(axt.setXRange)
+            axt.sigRangeChanged.connect(axd.update_region)
+            self.datafig.addItem(axd, row=c, col=0)
+            axd.update_region(axd.getViewBox(),
+                              ((self.toffset, self.toffset + self.twindow),
+                               (trace.ymin, trace.ymin)))
+            self.axdatas.append(axd)
         self.set_times()
         
         # channel selector:
@@ -275,21 +294,7 @@ class DataBrowser(QWidget):
         csw.setVisible(self.data.channels > 1)
         
         # full data:
-        self.timefig = pg.GraphicsLayoutWidget()
-        self.timefig.setBackground(None)
-        self.timefig.ci.layout.setContentsMargins(0, 0, 0, 0)
-        self.timefig.ci.layout.setVerticalSpacing(0)
-        self.vbox.addWidget(self.timefig)
-        c = 0
-        axt = TimePlot(c, self.fontMetrics().averageCharWidth(), self.tmax)
-        trace = TraceItem(self.data, self.rate, c)
-        axt.addItem(trace)
-        axt.sigRegionChanged.connect(self.axtraces[0].setXRange)
-        self.axtraces[0].sigRangeChanged.connect(axt.update_region)
-        self.timefig.addItem(axt)
-        axt.update_region(axt.getViewBox(),
-                          ((self.toffset, self.toffset + self.twindow),
-                           (self.traces[c].ymin, self.traces[c].ymin)))
+        self.vbox.addWidget(self.datafig)
 
         self.setEnabled(True)
         self.adjust_layout(self.width(), self.height())
@@ -332,8 +337,9 @@ class DataBrowser(QWidget):
     def adjust_layout(self, width, height):
         xwidth = self.fontMetrics().averageCharWidth()
         xheight = self.fontMetrics().ascent()
-        # subtract time plot:
-        height -= 2*xheight
+        # subtract full data plot:
+        data_height = 2.5*xheight if len(self.show_channels) <= 1 else 1.5*xheight
+        height -= len(self.show_channels)*data_height
         # subtract channel selector:
         if not self.data is None and self.data.channels > 1:
             height -= 2*xheight
@@ -365,8 +371,6 @@ class DataBrowser(QWidget):
             self.figs[c].ci.layout.setRowFixedHeight(1, (nt+ns-1)*xwidth)
             s_height = max(0, int(ns*spec_height + (1-nt)*add_height))
             self.figs[c].ci.layout.setRowFixedHeight(0, s_height)
-        for c in self.show_channels:
-            self.figs[c].update()
         # fix channel selector:
         if width/self.data.channels < 12*xwidth:
             for c in range(1, self.data.channels):
@@ -374,9 +378,16 @@ class DataBrowser(QWidget):
         else:
             for c in range(1, self.data.channels):
                 self.channel_group.button(c).setText(f'channel {c}')
-        # fix time plot:
-        self.timefig.ci.layout.setRowFixedHeight(0, 2*xheight)
-        self.timefig.setFixedHeight(2*xheight)
+        # fix full data plot:
+        for c in range(self.data.channels):
+            if c in self.show_channels:
+                self.datafig.ci.layout.setRowFixedHeight(c, data_height)
+            else:
+                self.datafig.ci.layout.setRowFixedHeight(c, 0)
+        self.datafig.setFixedHeight(len(self.show_channels)*data_height)
+        # update:
+        for c in self.show_channels:
+            self.figs[c].update()
         
             
     def show_xticks(self, channel, show_ticks):
@@ -727,13 +738,13 @@ class DataBrowser(QWidget):
         self.update_borders()
         
             
-    def set_channels(self, channels=None):
-        if not channels is None:
+    def set_channels(self, show_channels=None, selected_channels=None):
+        if not show_channels is None:
             if self.data is None:
-                self.channels = channels
+                self.channels = show_channels
                 return
-            self.show_channels = [c for c in channels if c < len(self.figs)]
-            self.selected_channels = [c for c in self.selected_channels if c in self.show_channels]
+            self.show_channels = [c for c in show_channels if c < len(self.figs)]
+            self.selected_channels = [c for c in selected_channels if c < len(self.figs)]
         if not self.current_channel in self.selected_channels:
             for c in self.selected_channels:
                 if c >= self.current_channel:
@@ -743,6 +754,7 @@ class DataBrowser(QWidget):
                 self.current_channel = self.selected_channels[-1]
         for c in range(len(self.figs)):
             self.figs[c].setVisible(c in self.show_channels)
+            self.axdatas[c].setVisible(c in self.show_channels)
             self.show_xticks(c, c == self.show_channels[-1])
         self.adjust_layout(self.width(), self.height())
         self.update_borders()
@@ -762,7 +774,15 @@ class DataBrowser(QWidget):
         else:
             if channel in self.show_channels:
                 self.show_channels.remove(channel)
-                self.selected_channels.remove(channel)
+                if channel in self.selected_channels:
+                    self.selected_channels.remove(channel)
+                    if len(self.selected_channels) == 0:
+                        for c in self.show_channels:
+                            if c < channel:
+                                self.current_channel = c
+                            else:
+                                break
+                        self.selected_channels = [self.current_channel]
                 if len(self.show_channels) == 1:
                     self.channel_group.button(self.show_channels[0]).setCheckable(False)
                 self.set_channels()
