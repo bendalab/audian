@@ -379,11 +379,15 @@ class DataBrowser(QWidget):
             for c in range(1, self.data.channels):
                 self.channel_group.button(c).setText(f'channel {c}')
         # fix full data plot:
+        first = True
         for c in range(self.data.channels):
             if c in self.show_channels:
                 self.datafig.ci.layout.setRowFixedHeight(c, data_height)
+                self.axdatas[c].show_tmax(first)
+                first = False
             else:
                 self.datafig.ci.layout.setRowFixedHeight(c, 0)
+                self.axdatas[c].show_tmax(False)
         self.datafig.setFixedHeight(len(self.show_channels)*data_height)
         # update:
         for c in self.show_channels:
