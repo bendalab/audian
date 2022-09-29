@@ -280,10 +280,15 @@ class DataBrowser(QWidget):
         self.timefig.ci.layout.setContentsMargins(0, 0, 0, 0)
         self.timefig.ci.layout.setVerticalSpacing(0)
         self.vbox.addWidget(self.timefig)
-        axt = TimePlot(0, self.fontMetrics().averageCharWidth(), self.tmax)
-        trace = TraceItem(self.data, self.rate, c, color='#2206a7')
+        c = 0
+        axt = TimePlot(c, self.fontMetrics().averageCharWidth(), self.tmax)
+        trace = TraceItem(self.data, self.rate, c)
         axt.addItem(trace)
+        self.axtraces[0].sigRangeChanged.connect(axt.update_region)
         self.timefig.addItem(axt)
+        axt.update_region(axt.getViewBox(),
+                          ((self.toffset, self.toffset + self.twindow),
+                           (self.traces[c].ymin, self.traces[c].ymin)))
 
         self.setEnabled(True)
         self.adjust_layout(self.width(), self.height())
@@ -327,7 +332,7 @@ class DataBrowser(QWidget):
         xwidth = self.fontMetrics().averageCharWidth()
         xheight = self.fontMetrics().ascent()
         # subtract time plot:
-        height -= 2*xheight
+        height -= 1*xheight
         # subtract channel selector:
         if self.data.channels > 1:
             height -= 2*xheight
@@ -367,8 +372,8 @@ class DataBrowser(QWidget):
             for c in range(1, self.data.channels):
                 self.channel_group.button(c).setText(f'channel {c}')
         # fix time plot:
-        self.timefig.ci.layout.setRowFixedHeight(0, 2*xheight)
-        self.timefig.setFixedHeight(2*xheight)
+        self.timefig.ci.layout.setRowFixedHeight(0, 1*xheight)
+        self.timefig.setFixedHeight(1*xheight)
         
             
     def show_xticks(self, channel, show_ticks):

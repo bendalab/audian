@@ -40,6 +40,13 @@ class TraceItem(pg.PlotDataItem):
         self.setSymbolPen(color=self.color)
         self.setSymbol(None)
 
+
+    def set_color(self, color):
+        self.color = color
+        self.setPen(dict(color=self.color, width=2))
+        self.setSymbolBrush(color=self.color)
+        self.setSymbolPen(color=self.color)
+
         
     def viewRangeChanged(self):
         self.updateTrace()

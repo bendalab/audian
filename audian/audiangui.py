@@ -713,6 +713,7 @@ class Audian(QMainWindow):
 
     def setup_help_actions(self, menu):
         shortcuts_act = QAction('&Key shortcuts', self)
+        shortcuts_act.setShortcut('H')
         shortcuts_act.triggered.connect(self.shortcuts)
         
         about_act = QAction('&About Audian', self)
