@@ -284,6 +284,7 @@ class DataBrowser(QWidget):
         axt = TimePlot(c, self.fontMetrics().averageCharWidth(), self.tmax)
         trace = TraceItem(self.data, self.rate, c)
         axt.addItem(trace)
+        axt.sigRegionChanged.connect(self.axtraces[0].setXRange)
         self.axtraces[0].sigRangeChanged.connect(axt.update_region)
         self.timefig.addItem(axt)
         axt.update_region(axt.getViewBox(),
@@ -332,9 +333,9 @@ class DataBrowser(QWidget):
         xwidth = self.fontMetrics().averageCharWidth()
         xheight = self.fontMetrics().ascent()
         # subtract time plot:
-        height -= 1*xheight
+        height -= 2*xheight
         # subtract channel selector:
-        if self.data.channels > 1:
+        if not self.data is None and self.data.channels > 1:
             height -= 2*xheight
         bottom_channel = self.show_channels[-1]
         trace_frac = self.trace_fracs[self.show_specs]
@@ -348,6 +349,8 @@ class DataBrowser(QWidget):
         nspecs = []
         nspacer = 0
         for c in self.show_channels:
+            if c >= len(self.axspecs) or c >= len(self.axtraces):
+                break
             nspecs.append(int(self.axspecs[c].isVisible()))
             ntraces.append(int(self.axtraces[c].isVisible()))
             if self.axspecs[c].isVisible() and self.axtraces[c].isVisible():
@@ -372,8 +375,8 @@ class DataBrowser(QWidget):
             for c in range(1, self.data.channels):
                 self.channel_group.button(c).setText(f'channel {c}')
         # fix time plot:
-        self.timefig.ci.layout.setRowFixedHeight(0, 1*xheight)
-        self.timefig.setFixedHeight(1*xheight)
+        self.timefig.ci.layout.setRowFixedHeight(0, 2*xheight)
+        self.timefig.setFixedHeight(2*xheight)
         
             
     def show_xticks(self, channel, show_ticks):
