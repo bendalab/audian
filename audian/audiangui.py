@@ -138,7 +138,7 @@ class Audian(QMainWindow):
         save_act.triggered.connect(lambda x: self.browser().save_window())
 
         close_act = QAction('&Close', self)
-        close_act.setShortcuts([QKeySequence.Close, 'Q'])
+        close_act.setShortcuts(QKeySequence.Close)
         close_act.triggered.connect(lambda x: self.close(None))
 
         quit_act = QAction('&Quit', self)
@@ -832,8 +832,9 @@ Can not open file <b>{browser.file_path}</b>!''')
         if self.tabs.count() > 0:
             if index is None:
                 index = self.tabs.currentIndex()
-            self.browsers.remove(self.tabs.widget(index))
-            self.tabs.removeTab(index)
+            if not self.startup_active:
+                self.browsers.remove(self.tabs.widget(index))
+                self.tabs.removeTab(index)
         if self.tabs.count() == 0:
             self.tabs.addTab(self.startup, 'Startup')
             self.startup.setVisible(True)
