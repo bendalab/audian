@@ -5,9 +5,9 @@ import pyqtgraph as pg
 
 
 def secs_to_str(time):
-    hours = time//3600
+    hours = int(time//3600)
     time -= 3600*hours
-    mins = time//60
+    mins = int(time//60)
     time -= 60*mins
     secs = int(floor(time))
     time -= secs
@@ -19,6 +19,17 @@ def secs_to_str(time):
         return f'{secs}.{1000*time:03.0f}s'
     else:
         return msecs
+
+
+def secs_format(time):
+    if time >= 3600.0:
+        return 'h:mm:ss'
+    elif time >= 60.0:
+        return 'mm:ss'
+    elif time > 1.0:
+        return 's.ms'
+    else:
+        return 'ms'
 
     
 class TimePlot(pg.PlotItem):
@@ -62,6 +73,7 @@ class TimePlot(pg.PlotItem):
 
         # time label:
         self.label = QGraphicsSimpleTextItem(self.getAxis('left'))
+        self.label.setToolTip(f'Total duration in {secs_format(tmax)}')
         self.label.setText(secs_to_str(tmax))
         self.label.setPos(int(xwidth), xwidth/2)
 
