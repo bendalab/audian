@@ -60,6 +60,8 @@ class SelectViewBox(pg.ViewBox):
                 if x is not None or y is not None:
                     self.translateBy(x=x, y=y)
                 self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
+                if ev.isFinish():
+                    self.add_region(self.viewRect())
         elif ev.button() & Qt.MouseButton.RightButton:
             #print "vb.rightDrag"
             if self.state['aspectLocked'] is not False:
@@ -80,6 +82,8 @@ class SelectViewBox(pg.ViewBox):
             self._resetTarget()
             self.scaleBy(x=x, y=y, center=center)
             self.sigRangeChangedManually.emit(self.state['mouseEnabled'])
+            if ev.isFinish():
+                self.add_region(self.viewRect())
 
 
     def updateScaleBox(self, p1, p2):
@@ -95,11 +99,15 @@ class SelectViewBox(pg.ViewBox):
         self.rbScaleBox.hide()
 
         
+    def add_region(self, rect):
+        self.axHistoryPointer += 1
+        self.axHistory = self.axHistory[:self.axHistoryPointer] + [rect]
+
+        
     def zoom_region(self, rect):
         self.hide_region()
         self.showAxRect(rect)
-        self.axHistoryPointer += 1
-        self.axHistory = self.axHistory[:self.axHistoryPointer] + [rect]
+        self.add_region(rect)
 
 
     def zoom_back(self):
@@ -111,9 +119,9 @@ class SelectViewBox(pg.ViewBox):
 
 
     def zoom_reset(self):
+        print(self.axHistory)
         self.scaleHistory(-len(self.axHistory))
 
 
     def init_zoom_history(self):
-        self.axHistoryPointer += 1
-        self.axHistory = self.axHistory[:self.axHistoryPointer] + [self.viewRect()]
+        self.add_region(self.viewRect())
