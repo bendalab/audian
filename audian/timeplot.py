@@ -67,6 +67,7 @@ class TimePlot(pg.PlotItem):
         self.region.sigRegionChanged.connect(self.update_time_range)
 
         # view:
+        self.tmax = tmax
         self.setLimits(xMin=0, xMax=tmax,
                        minXRange=tmax, maxXRange=tmax)
         self.setXRange(0, tmax)
@@ -99,3 +100,21 @@ class TimePlot(pg.PlotItem):
     def update_time_range(self):
         xmin, xmax = self.region.getRegion()
         self.sigRegionChanged.emit(xmin, xmax)
+
+
+    def mousePressEvent(self, ev):
+        # set region on position of mouse click:
+        xmin, xmax = self.region.getRegion()
+        pos = self.getViewBox().mapFromItemToView(self, ev.pos())
+        x = pos.x()
+        if xmin <= x <= xmax:
+            ev.ignore()
+        else:
+            dx = xmax - xmin
+            xmin = max(0, x - dx/2)
+            xmax = xmin + dx
+            if xmax > self.tmax:
+                xmin = max(0, xmax - dx)
+            self.region.setRegion((xmin, xmax))
+            ev.accept()
+
