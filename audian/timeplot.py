@@ -81,6 +81,10 @@ class TimePlot(pg.PlotItem):
     def addItem(self, item, *args, **kwargs):
         item.set_color('#2206a7')
         super().addItem(item, *args, **kwargs)
+        #self.setLimits(yMin=item.ymin, yMax=item.ymax,
+        #               minYRange=item.ymax - item.ymin,
+        #               maxYRange=item.ymax - item.ymin)
+        #self.setYRange(item.ymin, item.ymax)
         self.region.setClipItem(item)
 
 

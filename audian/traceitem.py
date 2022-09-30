@@ -13,11 +13,13 @@ except ImportError:
 
 
 @jit(nopython=True)
-def down_sample_peak(data, n, step):
+def down_sample_peak(data, step):
+    n = len(data)//step
     ddata = np.zeros(2*n)
     for k in range(n):
-        ddata[2*k] = np.min(data[k*step:(k+1)*step])
-        ddata[2*k+1] = np.max(data[k*step:(k+1)*step])
+        dd = data[k*step:(k+1)*step]
+        ddata[2*k] = np.min(dd)
+        ddata[2*k+1] = np.max(dd)
     return ddata
 
     
@@ -64,15 +66,19 @@ class TraceItem(pg.PlotDataItem):
         step = max(1, (stop - start)//10000)
         if step > 1:
             self.setPen(dict(color=self.color, width=1.1))
-            # min - max: (good but a bit slow - let numba do it!)
             step2 = step//2
             step = step2*2
             n = (stop-start)//step
-            if has_numba:
-                data = down_sample_peak(self.data[start:stop, self.channel],
-                                        n, step)
-            else:
-                data = np.array([(np.min(self.data[start+k*step:start+(k+1)*step, self.channel]), np.max(self.data[start+k*step:start+(k+1)*step, self.channel])) for k in range(n)]).reshape((-1))
+            data = np.zeros(2*n)
+            i = 0
+            nb = int(60*self.rate//step)*step
+            for dd in self.data.blocks(nb, 0, start, stop):
+                if has_numba:
+                    dsd = down_sample_peak(dd[:, self.channel], step)
+                    data[i:i+len(dsd)] = dsd
+                    i += len(dsd)
+                #else:
+                #    data = np.array([(np.min(self.data[start+k*step:start+(k+1)*step, self.channel]), np.max(self.data[start+k*step:start+(k+1)*step, self.channel])) for k in range(n)]).reshape((-1))
             time = np.arange(start, start + len(data)*step2, step2)/self.rate
             self.setData(time, data) #, connect='pairs')???
         elif step > 1:  # TODO: not used
