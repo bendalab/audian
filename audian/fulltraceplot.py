@@ -1,7 +1,9 @@
 from math import floor
-from PyQt5.QtCore import Signal
+import numpy as np
+from PyQt5.QtCore import Signal, Qt, QTimer
 from PyQt5.QtWidgets import QGraphicsSimpleTextItem
 import pyqtgraph as pg
+from .traceitem import down_sample_peak
 
 
 def secs_to_str(time):
@@ -50,6 +52,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
         # for each channel prepare a plot panel:
         xwidth = self.fontMetrics().averageCharWidth()
         self.axs = []
+        self.lines = []
         self.regions = []
         self.labels = []
         for c in range(self.data.channels):
@@ -70,13 +73,16 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             # add region marker:
             region = pg.LinearRegionItem(pen=dict(color='#110353', width=2),
                                          brush=(34, 6, 167, 127),
-                                         hoverPen=dict(color='#2206a7', width=2),
-                                         hoverBrush=(34, 6, 167, 255))
+                                         hoverPen=dict(color='#aa77ff', width=2),
+                                         hoverBrush=(34, 6, 167, 255),
+                                         movable=True,
+                                         swapMode='block')
             region.setZValue(10)
+            region.setBounds((0, self.tmax))
             region.setRegion((self.axtraces[c].viewRange()[0]))
             region.sigRegionChanged.connect(self.update_time_range)
             self.axtraces[c].sigXRangeChanged.connect(self.update_region)
-            axt.addItem(region, ignoreBounds=True)
+            axt.addItem(region)
             self.regions.append(region)
 
             # add time label:
@@ -85,24 +91,48 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             label.setText(secs_to_str(self.tmax))
             label.setPos(int(xwidth), xwidth/2)
             self.labels.append(label)
-            
-            self.addItem(axt, row=c, col=0)
-            self.axs.append(axt)
 
+            # init data:
+            self.step = max(1, len(self.data)//10000)
+            self.index = 0
+            self.nblock = int(60.0*self.rate//self.step)*self.step
+            self.times = np.arange(0, len(self.data), self.step//2)/self.rate
+            self.datas = np.zeros((len(self.times), self.data.channels))
+            
             # add data:
-            #data = TraceItem(self.data, self.rate, c)
-            #axt.addItem(data)
-            #axt.update_region(axt.getViewBox(),
-            #                  ((self.toffset, self.toffset + self.twindow),
-            #                   (trace.ymin, trace.ymin)))
-            #item.set_color('#2206a7')
+            line = pg.PlotDataItem(antialias=True,
+                                   pen=dict(color='#2206a7', width=1.1),
+                                   skipFiniteCheck=True, autDownsample=False)
+            axt.addItem(line)
+            self.lines.append(line)
             #self.setLimits(yMin=item.ymin, yMax=item.ymax,
             #               minYRange=1/2**16,
             #               maxYRange=item.ymax - item.ymin)
-            ## autoscale the yrange!
-            #self.region.setClipItem(item)
+            ## autoscale the yrange and keep it fixed!
+            
+            self.addItem(axt, row=c, col=0)
+            self.axs.append(axt)
+            
+        QTimer.singleShot(10, self.load_data)
 
 
+    def load_data(self):
+        i = 2*self.index//self.step
+        n = min(self.nblock, len(self.data) - self.index)
+        buffer = np.zeros((n, self.data.channels))
+        self.data.load_buffer(self.index, n, buffer)
+        for c in range(self.data.channels):
+            data = down_sample_peak(buffer[:,c], self.step)
+            self.datas[i:i+len(data), c] = data
+            self.lines[c].setData(self.times, self.datas[:,c])
+        self.index += n
+        if self.index < len(self.data):
+            QTimer.singleShot(10, self.load_data)
+        else:
+            self.times = None
+            self.datas = None
+
+        
     def update_layout(self, channels, data_height):
         first = True
         for c in range(self.data.channels):
@@ -133,22 +163,23 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
 
         
     def mousePressEvent(self, ev):
-        for ax, region in zip(self.axs, self.regions):
-            pos = ax.getViewBox().mapSceneToView(ev.pos())
-            [xmin, xmax], [ymin, ymax] = ax.viewRange()
-            if xmin <= pos.x() <= xmax and ymin <= pos.y() <= ymax:
-                dx = (xmax - xmin)/self.width()
-                x = pos.x()
-                xmin, xmax = region.getRegion()
-                if x < xmin-2*dx or x > xmax + 2*dx:
-                    dx = xmax - xmin
-                    xmin = max(0, x - dx/2)
-                    xmax = xmin + dx
-                    if xmax > self.tmax:
-                        xmin = max(0, xmax - dx)
-                    region.setRegion((xmin, xmax))
-                    ev.accept()
-                    return
-                break
+        if ev.button() == Qt.MouseButton.LeftButton:
+            for ax, region in zip(self.axs, self.regions):
+                pos = ax.getViewBox().mapSceneToView(ev.pos())
+                [xmin, xmax], [ymin, ymax] = ax.viewRange()
+                if xmin <= pos.x() <= xmax and ymin <= pos.y() <= ymax:
+                    dx = (xmax - xmin)/self.width()
+                    x = pos.x()
+                    xmin, xmax = region.getRegion()
+                    if x < xmin-2*dx or x > xmax + 2*dx:
+                        dx = xmax - xmin
+                        xmin = max(0, x - dx/2)
+                        xmax = xmin + dx
+                        if xmax > self.tmax:
+                            xmin = max(0, xmax - dx)
+                        region.setRegion((xmin, xmax))
+                        ev.accept()
+                        return
+                    break
         ev.ignore()
         super().mousePressEvent(ev)
