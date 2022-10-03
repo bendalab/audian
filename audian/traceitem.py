@@ -1,3 +1,4 @@
+from math import floor, ceil
 import numpy as np
 import pyqtgraph as pg
 
@@ -65,6 +66,8 @@ class TraceItem(pg.PlotDataItem):
         stop = min(len(self.data), int(trange[1]*self.rate+1))
         step = max(1, (stop - start)//10000)
         if step > 1:
+            start = int(floor(start/step)*step)
+            stop = int(ceil(stop/step)*step)
             self.setPen(dict(color=self.color, width=1.1))
             step2 = step//2
             step = step2*2
