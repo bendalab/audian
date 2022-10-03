@@ -119,7 +119,6 @@ class SelectViewBox(pg.ViewBox):
 
 
     def zoom_reset(self):
-        print(self.axHistory)
         self.scaleHistory(-len(self.axHistory))
 
 

@@ -10,7 +10,7 @@ import pyqtgraph as pg
 from audioio import AudioLoader, available_formats, write_audio
 from audioio import fade
 from .version import __version__, __year__
-from .timeplot import TimePlot
+from .fulltraceplot import FullTracePlot
 from .oscillogramplot import OscillogramPlot
 from .spectrumplot import SpectrumPlot
 from .traceitem import TraceItem
@@ -103,7 +103,6 @@ class DataBrowser(QWidget):
         self.specs = []     # spectrograms
         self.cbars = []     # color bars
         self.audio_markers = [] # vertical line showing position while playing
-        self.axdatas = []   # full data plot
 
 
     def __del__(self):
@@ -160,12 +159,6 @@ class DataBrowser(QWidget):
         self.specs = []     # spectrograms
         self.cbars = []     # color bars
         self.audio_markers = [] # vertical line showing position while playing
-        # full data:
-        self.datafig = pg.GraphicsLayoutWidget()
-        self.datafig.setBackground(None)
-        self.datafig.ci.layout.setContentsMargins(0, 0, 0, 0)
-        self.datafig.ci.layout.setVerticalSpacing(0)
-        self.axdatas = []
         # font size:
         xwidth = self.fontMetrics().averageCharWidth()
         xwidth2 = xwidth/2
@@ -264,18 +257,6 @@ class DataBrowser(QWidget):
             self.axgs[-1].append(axt)
             self.axs[-1].append(axt)
             self.axtraces.append(axt)
-            
-            # full data:
-            axd = TimePlot(c, xwidth, self.tmax)
-            data = TraceItem(self.data, self.rate, c)
-            axd.addItem(data)
-            axd.sigRegionChanged.connect(axt.setXRange)
-            axt.sigRangeChanged.connect(axd.update_region)
-            self.datafig.addItem(axd, row=c, col=0)
-            axd.update_region(axd.getViewBox(),
-                              ((self.toffset, self.toffset + self.twindow),
-                               (trace.ymin, trace.ymin)))
-            self.axdatas.append(axd)
         self.set_times()
         
         # channel selector:
@@ -294,6 +275,7 @@ class DataBrowser(QWidget):
         csw.setVisible(self.data.channels > 1)
         
         # full data:
+        self.datafig = FullTracePlot(self.data, self.rate, self.axtraces)
         self.vbox.addWidget(self.datafig)
 
         self.setEnabled(True)
@@ -379,16 +361,7 @@ class DataBrowser(QWidget):
             for c in range(1, self.data.channels):
                 self.channel_group.button(c).setText(f'channel {c}')
         # fix full data plot:
-        first = True
-        for c in range(self.data.channels):
-            if c in self.show_channels:
-                self.datafig.ci.layout.setRowFixedHeight(c, data_height)
-                self.axdatas[c].show_tmax(first)
-                first = False
-            else:
-                self.datafig.ci.layout.setRowFixedHeight(c, 0)
-                self.axdatas[c].show_tmax(False)
-        self.datafig.setFixedHeight(len(self.show_channels)*data_height)
+        self.datafig.update_layout(self.show_channels, data_height)
         # update:
         for c in self.show_channels:
             self.figs[c].update()
@@ -758,7 +731,6 @@ class DataBrowser(QWidget):
                 self.current_channel = self.selected_channels[-1]
         for c in range(len(self.figs)):
             self.figs[c].setVisible(c in self.show_channels)
-            self.axdatas[c].setVisible(c in self.show_channels)
             self.show_xticks(c, c == self.show_channels[-1])
         self.adjust_layout(self.width(), self.height())
         self.update_borders()
