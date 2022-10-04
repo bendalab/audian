@@ -65,6 +65,7 @@ class DataBrowser(QWidget):
         self.show_traces = True
         self.show_specs = 2
         self.show_cbars = True
+        self.show_fulldata = True
         
         # auto scroll:
         self.scroll_step = 0.0
@@ -321,6 +322,8 @@ class DataBrowser(QWidget):
         xheight = self.fontMetrics().ascent()
         # subtract full data plot:
         data_height = 2.5*xheight if len(self.show_channels) <= 1 else 1.5*xheight
+        if not self.show_fulldata:
+            data_height = 0
         height -= len(self.show_channels)*data_height
         # subtract channel selector:
         if not self.data is None and self.data.channels > 1:
@@ -362,6 +365,7 @@ class DataBrowser(QWidget):
                 self.channel_group.button(c).setText(f'channel {c}')
         # fix full data plot:
         self.datafig.update_layout(self.show_channels, data_height)
+        self.datafig.setVisible(self.show_fulldata)
         # update:
         for c in self.show_channels:
             self.figs[c].update()
@@ -809,6 +813,17 @@ class DataBrowser(QWidget):
         for cb, axs in zip(self.cbars, self.axspecs):
             if axs.isVisible():
                 cb.setVisible(self.show_cbars)
+            
+                
+    def set_fulldata(self, show):
+        self.show_fulldata = show
+        self.datafig.setVisible(self.show_fulldata)
+        self.adjust_layout(self.width(), self.height())
+            
+                
+    def toggle_fulldata(self):
+        self.show_fulldata = not self.show_fulldata
+        self.set_fulldata(self.show_fulldata)
             
             
     def toggle_grids(self):

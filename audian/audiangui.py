@@ -32,8 +32,8 @@ class Audian(QMainWindow):
 
         # window:
         rec = QApplication.desktop().screenGeometry()
-        height = rec.height();
-        width = rec.width();
+        height = rec.height()
+        width = rec.width()
         self.resize(int(0.7*width), int(0.7*height))
         self.setWindowTitle(f'Audian {__version__}')
         self.tabs = QTabWidget(self)
@@ -626,6 +626,14 @@ class Audian(QMainWindow):
                                  self.browser().show_specs,
                                  self.browser().show_cbars)
 
+        
+    def toggle_fulldata(self):
+        self.browser().toggle_fulldata()
+        if self.link_panels:
+            for b in self.browsers:
+                if not b is self.browser():
+                    b.set_fulldata(self.browser().show_fulldata)
+
 
     def next_tab(self):
         idx = self.tabs.currentIndex()
@@ -690,6 +698,10 @@ class Audian(QMainWindow):
         togglecbars_act = QAction('Toggle color bars', self)
         togglecbars_act.setShortcut('Ctrl+C')
         togglecbars_act.triggered.connect(self.toggle_colorbars)
+
+        togglefull_act = QAction('Toggle full data', self)
+        togglefull_act.setShortcut('Ctrl+F')
+        togglefull_act.triggered.connect(self.toggle_fulldata)
             
         grid_act = QAction('Toggle &grid', self)
         grid_act.setShortcut('g')
@@ -725,6 +737,7 @@ class Audian(QMainWindow):
         view_menu.addAction(toggletraces_act)
         view_menu.addAction(togglespectros_act)
         view_menu.addAction(togglecbars_act)
+        view_menu.addAction(togglefull_act)
         view_menu.addSeparator()
         view_menu.addAction(grid_act)
         view_menu.addAction(maximize_act)
