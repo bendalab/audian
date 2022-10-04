@@ -1,4 +1,4 @@
-from math import floor
+from math import floor, fabs
 import numpy as np
 from PyQt5.QtCore import Signal, Qt, QTimer
 from PyQt5.QtWidgets import QGraphicsSimpleTextItem
@@ -77,7 +77,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
                                          hoverBrush=(34, 6, 167, 255),
                                          movable=True,
                                          swapMode='block')
-            region.setZValue(10)
+            region.setZValue(50)
             region.setBounds((0, self.tmax))
             region.setRegion((self.axtraces[c].viewRange()[0]))
             region.sigRegionChanged.connect(self.update_time_range)
@@ -103,12 +103,13 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             line = pg.PlotDataItem(antialias=True,
                                    pen=dict(color='#2206a7', width=1.1),
                                    skipFiniteCheck=True, autDownsample=False)
+            line.setZValue(10)
             axt.addItem(line)
             self.lines.append(line)
-            #self.setLimits(yMin=item.ymin, yMax=item.ymax,
-            #               minYRange=1/2**16,
-            #               maxYRange=item.ymax - item.ymin)
-            ## autoscale the yrange and keep it fixed!
+
+            # add zero line:
+            zero_line = axt.addLine(y=0, movable=False, pen=dict(color='grey', width=1))
+            zero_line.setZValue(20)
             
             self.addItem(axt, row=c, col=0)
             self.axs.append(axt)
@@ -129,8 +130,17 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
         if self.index < len(self.data):
             QTimer.singleShot(10, self.load_data)
         else:
+            for c in range(self.data.channels):
+                ymin = np.min(self.datas[:,c])
+                ymax = np.max(self.datas[:,c])
+                y = max(fabs(ymin), fabs(ymax))
+                self.axs[c].setYRange(-y, y)
             self.times = None
             self.datas = None
+            #self.setLimits(yMin=item.ymin, yMax=item.ymax,
+            #               minYRange=1/2**16,
+            #               maxYRange=item.ymax - item.ymin)
+            ## autoscale the yrange and keep it fixed!
 
         
     def update_layout(self, channels, data_height):
