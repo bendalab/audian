@@ -1,7 +1,7 @@
 from math import floor, fabs
 import numpy as np
 from PyQt5.QtCore import Signal, Qt, QTimer
-from PyQt5.QtWidgets import QGraphicsSimpleTextItem
+from PyQt5.QtWidgets import QGraphicsSimpleTextItem, QApplication
 import pyqtgraph as pg
 from .traceitem import down_sample_peak
 
@@ -94,7 +94,8 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             self.labels.append(label)
 
             # init data:
-            self.step = max(1, len(self.data)//10000)
+            max_pixel = QApplication.desktop().screenGeometry().width()
+            self.step = max(1, len(self.data)//max_pixel)
             self.index = 0
             self.nblock = int(20.0*self.rate//self.step)*self.step
             self.times = np.arange(0, len(self.data), self.step//2)/self.rate

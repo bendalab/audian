@@ -1,5 +1,6 @@
 from math import floor, ceil
 import numpy as np
+from PyQt5.QtWidgets import QApplication
 import pyqtgraph as pg
 
 has_numba = False
@@ -64,7 +65,8 @@ class TraceItem(pg.PlotDataItem):
         trange = vb.viewRange()[0]
         start = max(0, int(trange[0]*self.rate))
         stop = min(len(self.data), int(trange[1]*self.rate+1))
-        step = max(1, (stop - start)//10000)
+        max_pixel = QApplication.desktop().screenGeometry().width()
+        step = max(1, (stop - start)//max_pixel)
         if step > 1:
             start = int(floor(start/step)*step)
             stop = int(ceil(stop/step)*step)
