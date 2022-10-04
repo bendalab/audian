@@ -44,6 +44,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
         self.rate = rate
         self.tmax = len(self.data)/self.rate
         self.axtraces = axtraces
+        self.no_signal = False
 
         self.setBackground(None)
         self.ci.layout.setContentsMargins(0, 0, 0, 0)
@@ -95,7 +96,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             # init data:
             self.step = max(1, len(self.data)//10000)
             self.index = 0
-            self.nblock = int(60.0*self.rate//self.step)*self.step
+            self.nblock = int(20.0*self.rate//self.step)*self.step
             self.times = np.arange(0, len(self.data), self.step//2)/self.rate
             self.datas = np.zeros((len(self.times), self.data.channels))
             
@@ -135,12 +136,10 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
                 ymax = np.max(self.datas[:,c])
                 y = max(fabs(ymin), fabs(ymax))
                 self.axs[c].setYRange(-y, y)
+                self.axs[c].setLimits(yMin=-y, yMax=y,
+                                      minYRange=2*y, maxYRange=2*y)
             self.times = None
             self.datas = None
-            #self.setLimits(yMin=item.ymin, yMax=item.ymax,
-            #               minYRange=1/2**16,
-            #               maxYRange=item.ymax - item.ymin)
-            ## autoscale the yrange and keep it fixed!
 
         
     def update_layout(self, channels, data_height):
@@ -158,11 +157,15 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
 
 
     def update_time_range(self, region):
+        if self.no_signal:
+            return
+        self.no_signal = True
         xmin, xmax = region.getRegion()
         for ax, reg in zip(self.axtraces, self.regions):
             if reg is region:
                 ax.setXRange(xmin, xmax)
                 break
+        self.no_signal = False
 
 
     def update_region(self, vbox, x_range):
