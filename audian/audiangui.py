@@ -3,7 +3,7 @@ import sys
 import argparse
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QKeySequence
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTabWidget
+from PyQt5.QtWidgets import QStyle, QApplication, QMainWindow, QTabWidget
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel
 from PyQt5.QtWidgets import QAction, QActionGroup, QPushButton
 from PyQt5.QtWidgets import QDialog, QFileDialog, QMessageBox
@@ -16,6 +16,9 @@ from .databrowser import DataBrowser
 class Audian(QMainWindow):
     def __init__(self, file_paths, channels):
         super().__init__()
+
+        class acts: pass
+        self.acts = acts
 
         self.browsers = []
 
@@ -132,28 +135,28 @@ class Audian(QMainWindow):
 
         
     def setup_file_actions(self, menu):
-        open_act = QAction('&Open', self)
-        open_act.setShortcuts(QKeySequence.Open)
-        open_act.triggered.connect(self.open_files)
+        self.acts.open_files = QAction('&Open', self)
+        self.acts.open_files.setShortcuts(QKeySequence.Open)
+        self.acts.open_files.triggered.connect(self.open_files)
 
-        save_act = QAction('&Save as', self)
-        save_act.setShortcuts(QKeySequence.SaveAs)
-        save_act.triggered.connect(lambda x: self.browser().save_window())
+        self.acts.save_window = QAction('&Save window as', self)
+        self.acts.save_window.setShortcuts(QKeySequence.SaveAs)
+        self.acts.save_window.triggered.connect(lambda x: self.browser().save_window())
 
-        close_act = QAction('&Close', self)
-        close_act.setShortcuts(QKeySequence.Close)
-        close_act.triggered.connect(lambda x: self.close(None))
+        self.acts.close = QAction('&Close', self)
+        self.acts.close.setShortcuts(QKeySequence.Close)
+        self.acts.close.triggered.connect(lambda x: self.close(None))
 
-        quit_act = QAction('&Quit', self)
-        quit_act.setShortcuts(QKeySequence.Quit)
-        quit_act.triggered.connect(self.quit)
-        
+        self.acts.quit = QAction('&Quit', self)
+        self.acts.quit.setShortcuts(QKeySequence.Quit)
+        self.acts.quit.triggered.connect(self.quit)
+
         file_menu = menu.addMenu('&File')
-        file_menu.addAction(open_act)
-        file_menu.addAction(save_act)
+        file_menu.addAction(self.acts.open_files)
+        file_menu.addAction(self.acts.save_window)
         file_menu.addSeparator()
-        file_menu.addAction(close_act)
-        file_menu.addAction(quit_act)
+        file_menu.addAction(self.acts.close)
+        file_menu.addAction(self.acts.quit)
         return file_menu
 
 
@@ -188,72 +191,72 @@ class Audian(QMainWindow):
 
             
     def setup_region_actions(self, menu):
-        rect_act = QAction('&Rectangle zoom', self)
-        rect_act.setCheckable(True)
-        rect_act.setShortcut('Ctrl+R')
-        rect_act.toggled.connect(self.set_rect_mode)
+        self.acts.rect_zoom = QAction('&Rectangle zoom', self)
+        self.acts.rect_zoom.setCheckable(True)
+        self.acts.rect_zoom.setShortcut('Ctrl+R')
+        self.acts.rect_zoom.toggled.connect(self.set_rect_mode)
         
-        pan_act = QAction('&Pan && zoom', self)
-        pan_act.setCheckable(True)
-        pan_act.setShortcut('Ctrl+P')
-        pan_act.toggled.connect(self.set_pan_mode)
+        self.acts.pan_zoom = QAction('&Pan && zoom', self)
+        self.acts.pan_zoom.setCheckable(True)
+        self.acts.pan_zoom.setShortcut('Ctrl+P')
+        self.acts.pan_zoom.toggled.connect(self.set_pan_mode)
         
-        zoom_mode = QActionGroup(self)
-        zoom_mode.addAction(rect_act)
-        zoom_mode.addAction(pan_act)
-        rect_act.setChecked(True)
+        self.acts.zoom_mode = QActionGroup(self)
+        self.acts.zoom_mode.addAction(self.acts.rect_zoom)
+        self.acts.zoom_mode.addAction(self.acts.pan_zoom)
+        self.acts.rect_zoom.setChecked(True)
         
-        zoomback_act = QAction('Zoom &back', self)
-        zoomback_act.setShortcuts(['Backspace', 'Alt+Left'])
-        zoomback_act.triggered.connect(lambda x=0: self.browser().zoom_back())
+        self.acts.zoom_back = QAction('Zoom &back', self)
+        self.acts.zoom_back.setShortcuts(['Backspace', 'Alt+Left'])
+        self.acts.zoom_back.triggered.connect(lambda x=0: self.browser().zoom_back())
         
-        zoomforward_act = QAction('Zoom &forward', self)
-        zoomforward_act.setShortcuts(['Shift+Backspace', 'Alt+Right'])
-        zoomforward_act.triggered.connect(lambda x=0: self.browser().zoom_forward())
+        self.acts.zoom_forward = QAction('Zoom &forward', self)
+        self.acts.zoom_forward.setShortcuts(['Shift+Backspace', 'Alt+Right'])
+        self.acts.zoom_forward.triggered.connect(lambda x=0: self.browser().zoom_forward())
         
-        zoomreset_act = QAction('Zoom &reset', self)
-        zoomreset_act.setShortcut('Alt+Backspace')
-        zoomreset_act.triggered.connect(lambda x=0: self.browser().zoom_reset())
+        self.acts.zoom_reset = QAction('Zoom &reset', self)
+        self.acts.zoom_reset.setShortcut('Alt+Backspace')
+        self.acts.zoom_reset.triggered.connect(lambda x=0: self.browser().zoom_reset())
         
-        zoom_act = QAction('&Zoom', self)
-        zoom_act.setCheckable(True)
-        zoom_act.setShortcut('z')
-        zoom_act.toggled.connect(self.set_zoom)
+        self.acts.zoom_region = QAction('&Zoom', self)
+        self.acts.zoom_region.setCheckable(True)
+        self.acts.zoom_region.setShortcut('z')
+        self.acts.zoom_region.toggled.connect(self.set_zoom)
         
-        play_act = QAction('&Play', self)
-        play_act.setCheckable(True)
-        play_act.setShortcut('P')
-        play_act.toggled.connect(self.set_play)
+        self.acts.play_region = QAction('&Play', self)
+        self.acts.play_region.setCheckable(True)
+        self.acts.play_region.setShortcut('P')
+        self.acts.play_region.toggled.connect(self.set_play)
         
-        save_act = QAction('&Save', self)
-        save_act.setCheckable(True)
-        save_act.setShortcut('s')
-        save_act.toggled.connect(self.set_save)
+        self.acts.save_region = QAction('&Save', self)
+        self.acts.save_region.setCheckable(True)
+        self.acts.save_region.setShortcut('s')
+        self.acts.save_region.toggled.connect(self.set_save)
         
-        ask_act = QAction('&Ask', self)
-        ask_act.setCheckable(True)
-        ask_act.setShortcut('a')
-        ask_act.toggled.connect(self.set_ask)
+        self.acts.ask_region = QAction('&Ask', self)
+        self.acts.ask_region.setCheckable(True)
+        self.acts.ask_region.setShortcut('a')
+        self.acts.ask_region.toggled.connect(self.set_ask)
         
-        rect_mode = QActionGroup(self)
-        rect_mode.addAction(zoom_act)
-        rect_mode.addAction(play_act)
-        rect_mode.addAction(save_act)
-        rect_mode.addAction(ask_act)
-        ask_act.setChecked(True)
+        self.acts.zoom_rect_mode = QActionGroup(self)
+        self.acts.zoom_rect_mode.addAction(self.acts.zoom_region)
+        self.acts.zoom_rect_mode.addAction(self.acts.play_region)
+        self.acts.zoom_rect_mode.addAction(self.acts.save_region)
+        self.acts.zoom_rect_mode.addAction(self.acts.ask_region)
+        self.acts.ask_region.setChecked(True)
 
         region_menu = menu.addMenu('&Region')
-        region_menu.addAction(rect_act)
-        region_menu.addAction(pan_act)
+        region_menu.addAction(self.acts.rect_zoom)
+        region_menu.addAction(self.acts.pan_zoom)
         region_menu.addSeparator()
-        region_menu.addAction(zoomback_act)
-        region_menu.addAction(zoomforward_act)
-        region_menu.addAction(zoomreset_act)
+        region_menu.addAction(self.acts.zoom_back)
+        region_menu.addAction(self.acts.zoom_forward)
+        region_menu.addAction(self.acts.zoom_reset)
         region_menu.addSeparator()
-        region_menu.addAction(zoom_act)
-        region_menu.addAction(play_act)
-        region_menu.addAction(save_act)
-        region_menu.addAction(ask_act)
+        region_menu.addAction(self.acts.zoom_region)
+        region_menu.addAction(self.acts.play_region)
+        region_menu.addAction(self.acts.save_region)
+        region_menu.addAction(self.acts.ask_region)
 
         self.data_menus.append(region_menu)
         
@@ -279,76 +282,81 @@ class Audian(QMainWindow):
 
 
     def setup_time_actions(self, menu):
-        play_act = QAction('&Play', self)
-        play_act.setShortcut(' ')
-        play_act.triggered.connect(lambda x=0: self.browser().play_scroll())
+        self.acts.play_window = QAction('&Play', self)
+        self.acts.play_window.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
+        self.acts.play_window.setShortcut(' ')
+        self.acts.play_window.triggered.connect(lambda x=0: self.browser().play_scroll())
         
-        linktimezoom_act = QAction('Link time &zoom', self)
-        linktimezoom_act.setShortcut('Alt+Z')
-        linktimezoom_act.setCheckable(True)
-        linktimezoom_act.setChecked(self.link_timezoom)
-        linktimezoom_act.toggled.connect(self.toggle_link_timezoom)
+        self.acts.link_time_zoom = QAction('Link time &zoom', self)
+        self.acts.link_time_zoom.setShortcut('Alt+Z')
+        self.acts.link_time_zoom.setCheckable(True)
+        self.acts.link_time_zoom.setChecked(self.link_timezoom)
+        self.acts.link_time_zoom.toggled.connect(self.toggle_link_timezoom)
 
-        zoomxin_act = QAction('Zoom &in', self)
-        zoomxin_act.setShortcuts([QKeySequence.ZoomIn, '+', '=', 'Shift+X'])
-        zoomxin_act.triggered.connect(lambda x: self.browser().zoom_time_in())
+        self.acts.zoom_time_in = QAction('Zoom &in', self)
+        self.acts.zoom_time_in.setShortcuts([QKeySequence.ZoomIn, '+', '=', 'Shift+X'])
+        self.acts.zoom_time_in.triggered.connect(lambda x: self.browser().zoom_time_in())
         
-        zoomxout_act = QAction('Zoom &out', self)
-        zoomxout_act.setShortcuts([QKeySequence.ZoomOut, '-', 'x'])
-        zoomxout_act.triggered.connect(lambda x: self.browser().zoom_time_out())
+        self.acts.zoom_time_out = QAction('Zoom &out', self)
+        self.acts.zoom_time_out.setShortcuts([QKeySequence.ZoomOut, '-', 'x'])
+        self.acts.zoom_time_out.triggered.connect(lambda x: self.browser().zoom_time_out())
         
-        linktimescroll_act = QAction('Link &time scroll', self)
-        linktimescroll_act.setShortcut('Alt+T')
-        linktimescroll_act.setCheckable(True)
-        linktimescroll_act.setChecked(self.link_timescroll)
-        linktimescroll_act.toggled.connect(self.toggle_link_timescroll)
+        self.acts.link_time_scroll = QAction('Link &time scroll', self)
+        self.acts.link_time_scroll.setShortcut('Alt+T')
+        self.acts.link_time_scroll.setCheckable(True)
+        self.acts.link_time_scroll.setChecked(self.link_timescroll)
+        self.acts.link_time_scroll.toggled.connect(self.toggle_link_timescroll)
 
-        pagedown_act = QAction('Page &down', self)
-        pagedown_act.setShortcuts(QKeySequence.MoveToNextPage)
-        pagedown_act.triggered.connect(lambda x=0: self.browser().time_page_down())
+        self.acts.seek_forward = QAction('Seek &forward', self)
+        self.acts.seek_forward.setIcon(self.style().standardIcon(QStyle.SP_MediaSeekForward))
+        self.acts.seek_forward.setShortcuts(QKeySequence.MoveToNextPage)
+        self.acts.seek_forward.triggered.connect(lambda x=0: self.browser().time_seek_forward())
 
-        pageup_act = QAction('Page &up', self)
-        pageup_act.setShortcuts(QKeySequence.MoveToPreviousPage)
-        pageup_act.triggered.connect(lambda x=0: self.browser().time_page_up())
+        self.acts.seek_backward = QAction('Seek &backward', self)
+        self.acts.seek_backward.setIcon(self.style().standardIcon(QStyle.SP_MediaSeekBackward))
+        self.acts.seek_backward.setShortcuts(QKeySequence.MoveToPreviousPage)
+        self.acts.seek_backward.triggered.connect(lambda x=0: self.browser().time_seek_backward())
 
-        datadown_act = QAction('Trace down', self)
-        datadown_act.setShortcuts(QKeySequence.MoveToNextLine)
-        datadown_act.triggered.connect(lambda x=0: self.browser().time_down())
+        self.acts.time_forward = QAction('Forward', self)
+        self.acts.time_forward.setShortcuts(QKeySequence.MoveToNextLine)
+        self.acts.time_forward.triggered.connect(lambda x=0: self.browser().time_forward())
 
-        dataup_act = QAction('Trace up', self)
-        dataup_act.setShortcuts(QKeySequence.MoveToPreviousLine)
-        dataup_act.triggered.connect(lambda x=0: self.browser().time_up())
+        self.acts.time_backward = QAction('Backward', self)
+        self.acts.time_backward.setShortcuts(QKeySequence.MoveToPreviousLine)
+        self.acts.time_backward.triggered.connect(lambda x=0: self.browser().time_backward())
 
-        dataend_act = QAction('&End', self)
-        dataend_act.setShortcuts([QKeySequence.MoveToEndOfLine, QKeySequence.MoveToEndOfDocument])
-        dataend_act.triggered.connect(lambda x=0: self.browser().time_end())
+        self.acts.skip_forward = QAction('&End', self)
+        self.acts.skip_forward.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipForward))
+        self.acts.skip_forward.setShortcuts([QKeySequence.MoveToEndOfLine, QKeySequence.MoveToEndOfDocument])
+        self.acts.skip_forward.triggered.connect(lambda x=0: self.browser().time_end())
 
-        datahome_act = QAction('&Home', self)
-        datahome_act.setShortcuts([QKeySequence.MoveToStartOfLine, QKeySequence.MoveToStartOfDocument])
-        datahome_act.triggered.connect(lambda x=0: self.browser().time_home())
+        self.acts.skip_backward = QAction('&Home', self)
+        self.acts.skip_backward.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipBackward))
+        self.acts.skip_backward.setShortcuts([QKeySequence.MoveToStartOfLine, QKeySequence.MoveToStartOfDocument])
+        self.acts.skip_backward.triggered.connect(lambda x=0: self.browser().time_home())
 
-        snaptime_act = QAction('&Snap', self)
-        snaptime_act.setShortcut('.')
-        snaptime_act.triggered.connect(lambda x=0: self.browser().snap_time())
+        self.acts.snap_time = QAction('&Snap', self)
+        self.acts.snap_time.setShortcut('.')
+        self.acts.snap_time.triggered.connect(lambda x=0: self.browser().snap_time())
 
-        autoscroll_act = QAction('&Auto scroll', self)
-        autoscroll_act.setShortcut('!')
-        autoscroll_act.triggered.connect(lambda x=0: self.browser().auto_scroll())
+        self.acts.auto_scroll = QAction('&Auto scroll', self)
+        self.acts.auto_scroll.setShortcut('!')
+        self.acts.auto_scroll.triggered.connect(lambda x=0: self.browser().auto_scroll())
 
         time_menu = menu.addMenu('&Time')
-        time_menu.addAction(play_act)
-        time_menu.addAction(linktimezoom_act)
-        time_menu.addAction(zoomxin_act)
-        time_menu.addAction(zoomxout_act)
-        time_menu.addAction(linktimescroll_act)
-        time_menu.addAction(pagedown_act)
-        time_menu.addAction(pageup_act)
-        time_menu.addAction(datadown_act)
-        time_menu.addAction(dataup_act)
-        time_menu.addAction(dataend_act)
-        time_menu.addAction(datahome_act)
-        time_menu.addAction(snaptime_act)
-        time_menu.addAction(autoscroll_act)
+        time_menu.addAction(self.acts.play_window)
+        time_menu.addAction(self.acts.link_time_zoom)
+        time_menu.addAction(self.acts.zoom_time_in)
+        time_menu.addAction(self.acts.zoom_time_out)
+        time_menu.addAction(self.acts.link_time_scroll)
+        time_menu.addAction(self.acts.seek_forward)
+        time_menu.addAction(self.acts.seek_backward)
+        time_menu.addAction(self.acts.time_forward)
+        time_menu.addAction(self.acts.time_backward)
+        time_menu.addAction(self.acts.skip_forward)
+        time_menu.addAction(self.acts.skip_backward)
+        time_menu.addAction(self.acts.snap_time)
+        time_menu.addAction(self.acts.auto_scroll)
 
         self.data_menus.append(time_menu)
         
@@ -375,39 +383,39 @@ class Audian(QMainWindow):
 
         
     def setup_amplitude_actions(self, menu):
-        linkamplitude_act = QAction('Link &amplitude', self)
-        linkamplitude_act.setShortcut('Alt+A')
-        linkamplitude_act.setCheckable(True)
-        linkamplitude_act.setChecked(self.link_amplitude)
-        linkamplitude_act.toggled.connect(self.toggle_link_amplitude)
+        self.acts.link_amplitude = QAction('Link &amplitude', self)
+        self.acts.link_amplitude.setShortcut('Alt+A')
+        self.acts.link_amplitude.setCheckable(True)
+        self.acts.link_amplitude.setChecked(self.link_amplitude)
+        self.acts.link_amplitude.toggled.connect(self.toggle_link_amplitude)
         
-        zoomyin_act = QAction('Zoom &in', self)
-        zoomyin_act.setShortcut('Shift+Y')
-        zoomyin_act.triggered.connect(lambda x: self.apply_amplitude('zoom_ampl_in'))
+        self.acts.zoom_amplitude_in = QAction('Zoom &in', self)
+        self.acts.zoom_amplitude_in.setShortcut('Shift+Y')
+        self.acts.zoom_amplitude_in.triggered.connect(lambda x: self.apply_amplitude('zoom_ampl_in'))
 
-        zoomyout_act = QAction('Zoom &out', self)
-        zoomyout_act.setShortcut('Y')
-        zoomyout_act.triggered.connect(lambda x: self.apply_amplitude('zoom_ampl_out'))
+        self.acts.zoom_amplitude_out = QAction('Zoom &out', self)
+        self.acts.zoom_amplitude_out.setShortcut('Y')
+        self.acts.zoom_amplitude_out.triggered.connect(lambda x: self.apply_amplitude('zoom_ampl_out'))
 
-        autoy_act = QAction('&Auto scale', self)
-        autoy_act.setShortcut('v')
-        autoy_act.triggered.connect(lambda x: self.apply_amplitude('auto_ampl'))
+        self.acts.auto_zoom_amplitude = QAction('&Auto scale', self)
+        self.acts.auto_zoom_amplitude.setShortcut('v')
+        self.acts.auto_zoom_amplitude.triggered.connect(lambda x: self.apply_amplitude('auto_ampl'))
 
-        resety_act = QAction('&Reset', self)
-        resety_act.setShortcut('Shift+V')
-        resety_act.triggered.connect(lambda x: self.apply_amplitude('reset_ampl'))
+        self.acts.reset_amplitude = QAction('&Reset', self)
+        self.acts.reset_amplitude.setShortcut('Shift+V')
+        self.acts.reset_amplitude.triggered.connect(lambda x: self.apply_amplitude('reset_ampl'))
 
-        centery_act = QAction('&Center', self)
-        centery_act.setShortcut('C')
-        centery_act.triggered.connect(lambda x: self.apply_amplitude('center_ampl'))
+        self.acts.center_amplitude = QAction('&Center', self)
+        self.acts.center_amplitude.setShortcut('C')
+        self.acts.center_amplitude.triggered.connect(lambda x: self.apply_amplitude('center_ampl'))
 
         ampl_menu = menu.addMenu('&Amplitude')
-        ampl_menu.addAction(linkamplitude_act)
-        ampl_menu.addAction(zoomyin_act)
-        ampl_menu.addAction(zoomyout_act)
-        ampl_menu.addAction(autoy_act)
-        ampl_menu.addAction(resety_act)
-        ampl_menu.addAction(centery_act)
+        ampl_menu.addAction(self.acts.link_amplitude)
+        ampl_menu.addAction(self.acts.zoom_amplitude_in)
+        ampl_menu.addAction(self.acts.zoom_amplitude_out)
+        ampl_menu.addAction(self.acts.auto_zoom_amplitude)
+        ampl_menu.addAction(self.acts.reset_amplitude)
+        ampl_menu.addAction(self.acts.center_amplitude)
 
         self.data_menus.append(ampl_menu)
         
@@ -434,43 +442,44 @@ class Audian(QMainWindow):
 
 
     def setup_frequency_actions(self, menu):
-        linkfrequency_act = QAction('Link &frequency', self)
-        #linkfrequency_act.setShortcut('Alt+F')
-        linkfrequency_act.setCheckable(True)
-        linkfrequency_act.setChecked(self.link_frequency)
-        linkfrequency_act.toggled.connect(self.toggle_link_frequency)
+        self.acts.link_frequency = QAction('Link &frequency', self)
+        #self.acts.link_frequency.setShortcut('Alt+F')
+        self.acts.link_frequency.setCheckable(True)
+        self.acts.link_frequency.setChecked(self.link_frequency)
+        self.acts.link_frequency.toggled.connect(self.toggle_link_frequency)
         
-        zoomfin_act = QAction('Zoom &in', self)
-        zoomfin_act.setShortcut('Shift+F')
-        zoomfin_act.triggered.connect(lambda x: self.apply_frequencies('zoom_freq_in'))
+        self.acts.zoom_frequency_in = QAction('Zoom &in', self)
+        self.acts.zoom_frequency_in.setShortcut('Shift+F')
+        self.acts.zoom_frequency_in.triggered.connect(lambda x: self.apply_frequencies('zoom_freq_in'))
 
-        zoomfout_act = QAction('Zoom &out', self)
-        zoomfout_act.setShortcut('F')
-        zoomfout_act.triggered.connect(lambda x: self.apply_frequencies('zoom_freq_out'))
+        self.acts.zoom_frequency_out = QAction('Zoom &out', self)
+        self.acts.zoom_frequency_out.setShortcut('F')
+        self.acts.zoom_frequency_out.triggered.connect(lambda x: self.apply_frequencies('zoom_freq_out'))
 
-        frequp_act = QAction('Move &up', self)
-        frequp_act.setShortcuts(QKeySequence.MoveToNextChar)
-        frequp_act.triggered.connect(lambda x: self.apply_frequencies('freq_up'))
+        self.acts.frequency_up = QAction('Move &up', self)
+        self.acts.frequency_up.setShortcuts(QKeySequence.MoveToNextChar)
+        self.acts.frequency_up.triggered.connect(lambda x: self.apply_frequencies('freq_up'))
 
-        freqdown_act = QAction('Move &down', self)
-        freqdown_act.setShortcuts(QKeySequence.MoveToPreviousChar)
-        freqdown_act.triggered.connect(lambda x: self.apply_frequencies('freq_down'))
+        self.acts.frequency_down = QAction('Move &down', self)
+        self.acts.frequency_down.setShortcuts(QKeySequence.MoveToPreviousChar)
+        self.acts.frequency_down.triggered.connect(lambda x: self.apply_frequencies('freq_down'))
 
-        freqhome_act = QAction('&Home', self)
-        freqhome_act.setShortcuts(QKeySequence.MoveToPreviousWord)
-        freqhome_act.triggered.connect(lambda x: self.apply_frequencies('freq_home'))
+        self.acts.frequency_home = QAction('&Home', self)
+        self.acts.frequency_home.setShortcuts(QKeySequence.MoveToPreviousWord)
+        self.acts.frequency_home.triggered.connect(lambda x: self.apply_frequencies('freq_home'))
 
-        freqend_act = QAction('&End', self)
-        freqend_act.setShortcuts(QKeySequence.MoveToNextWord)
-        freqend_act.triggered.connect(lambda x: self.apply_frequencies('freq_end'))
+        self.acts.frequency_end = QAction('&End', self)
+        self.acts.frequency_end.setShortcuts(QKeySequence.MoveToNextWord)
+        self.acts.frequency_end.triggered.connect(lambda x: self.apply_frequencies('freq_end'))
+        
         freq_menu = menu.addMenu('Frequenc&y')
-        freq_menu.addAction(linkfrequency_act)
-        freq_menu.addAction(zoomfin_act)
-        freq_menu.addAction(zoomfout_act)
-        freq_menu.addAction(frequp_act)
-        freq_menu.addAction(freqdown_act)
-        freq_menu.addAction(freqhome_act)
-        freq_menu.addAction(freqend_act)
+        freq_menu.addAction(self.acts.link_frequency)
+        freq_menu.addAction(self.acts.zoom_frequency_in)
+        freq_menu.addAction(self.acts.zoom_frequency_out)
+        freq_menu.addAction(self.acts.frequency_up)
+        freq_menu.addAction(self.acts.frequency_down)
+        freq_menu.addAction(self.acts.frequency_home)
+        freq_menu.addAction(self.acts.frequency_end)
 
         self.data_menus.append(freq_menu)
         
@@ -487,27 +496,27 @@ class Audian(QMainWindow):
 
 
     def setup_spectrogram_actions(self, menu):
-        fresup_act = QAction('Increase &resolution', self)
-        fresup_act.setShortcut('Shift+R')
-        fresup_act.triggered.connect(lambda x: self.browser().freq_resolution_up())
+        self.acts.frequency_resolution_up = QAction('Increase &resolution', self)
+        self.acts.frequency_resolution_up.setShortcut('Shift+R')
+        self.acts.frequency_resolution_up.triggered.connect(lambda x: self.browser().freq_resolution_up())
 
-        fresdown_act = QAction('De&crease resolution', self)
-        fresdown_act.setShortcut('R')
-        fresdown_act.triggered.connect(lambda x: self.browser().freq_resolution_down())
+        self.acts.frequency_resolution_down = QAction('De&crease resolution', self)
+        self.acts.frequency_resolution_down.setShortcut('R')
+        self.acts.frequency_resolution_down.triggered.connect(lambda x: self.browser().freq_resolution_down())
 
-        stepdown_act = QAction('Increase overlap', self)
-        stepdown_act.setShortcut('Shift+O')
-        stepdown_act.triggered.connect(lambda x: self.browser().step_frac_down())
+        self.acts.overlap_up = QAction('Increase overlap', self)
+        self.acts.overlap_up.setShortcut('Shift+O')
+        self.acts.overlap_up.triggered.connect(lambda x: self.browser().step_frac_down())
 
-        stepup_act = QAction('Decrease &overlap', self)
-        stepup_act.setShortcut('O')
-        stepup_act.triggered.connect(lambda x: self.browser().step_frac_up())
+        self.acts.overlap_down = QAction('Decrease &overlap', self)
+        self.acts.overlap_down.setShortcut('O')
+        self.acts.overlap_down.triggered.connect(lambda x: self.browser().step_frac_up())
         
         spec_menu = menu.addMenu('&Spectrogram')
-        spec_menu.addAction(fresup_act)
-        spec_menu.addAction(fresdown_act)
-        spec_menu.addAction(stepdown_act)
-        spec_menu.addAction(stepup_act)
+        spec_menu.addAction(self.acts.frequency_resolution_up)
+        spec_menu.addAction(self.acts.frequency_resolution_down)
+        spec_menu.addAction(self.acts.overlap_up)
+        spec_menu.addAction(self.acts.overlap_down)
 
         self.data_menus.append(spec_menu)
         
@@ -528,44 +537,44 @@ class Audian(QMainWindow):
 
 
     def setup_power_actions(self, menu):
-        linkpower_act = QAction('Link &power', self)
-        linkpower_act.setShortcut('Alt+P')
-        linkpower_act.setCheckable(True)
-        linkpower_act.setChecked(self.link_power)
-        linkpower_act.toggled.connect(self.toggle_link_power)
+        self.acts.link_power = QAction('Link &power', self)
+        self.acts.link_power.setShortcut('Alt+P')
+        self.acts.link_power.setCheckable(True)
+        self.acts.link_power.setChecked(self.link_power)
+        self.acts.link_power.toggled.connect(self.toggle_link_power)
         
-        powerup_act = QAction('Power &up', self)
-        powerup_act.setShortcut('Shift+D')
-        powerup_act.triggered.connect(lambda x: self.browser().power_up())
+        self.acts.power_up = QAction('Power &up', self)
+        self.acts.power_up.setShortcut('Shift+D')
+        self.acts.power_up.triggered.connect(lambda x: self.browser().power_up())
 
-        powerdown_act = QAction('Power &down', self)
-        powerdown_act.setShortcut('D')
-        powerdown_act.triggered.connect(lambda x: self.browser().power_down())
+        self.acts.power_down = QAction('Power &down', self)
+        self.acts.power_down.setShortcut('D')
+        self.acts.power_down.triggered.connect(lambda x: self.browser().power_down())
 
-        maxpowerup_act = QAction('Max up', self)
-        maxpowerup_act.setShortcut('Shift+K')
-        maxpowerup_act.triggered.connect(lambda x: self.browser().max_power_up())
+        self.acts.max_power_up = QAction('Max up', self)
+        self.acts.max_power_up.setShortcut('Shift+K')
+        self.acts.max_power_up.triggered.connect(lambda x: self.browser().max_power_up())
 
-        maxpowerdown_act = QAction('Max down', self)
-        maxpowerdown_act.setShortcut('K')
-        maxpowerdown_act.triggered.connect(lambda x: self.browser().max_power_down())
+        self.acts.max_power_down = QAction('Max down', self)
+        self.acts.max_power_down.setShortcut('K')
+        self.acts.max_power_down.triggered.connect(lambda x: self.browser().max_power_down())
 
-        minpowerup_act = QAction('Min up', self)
-        minpowerup_act.setShortcut('Shift+J')
-        minpowerup_act.triggered.connect(lambda x: self.browser().min_power_up())
+        self.acts.min_power_up = QAction('Min up', self)
+        self.acts.min_power_up.setShortcut('Shift+J')
+        self.acts.min_power_up.triggered.connect(lambda x: self.browser().min_power_up())
 
-        minpowerdown_act = QAction('Min down', self)
-        minpowerdown_act.setShortcut('J')
-        minpowerdown_act.triggered.connect(lambda x: self.browser().min_power_down())
+        self.acts.min_power_down = QAction('Min down', self)
+        self.acts.min_power_down.setShortcut('J')
+        self.acts.min_power_down.triggered.connect(lambda x: self.browser().min_power_down())
         
         power_menu = menu.addMenu('&Power')
-        power_menu.addAction(linkpower_act)
-        power_menu.addAction(powerup_act)
-        power_menu.addAction(powerdown_act)
-        power_menu.addAction(maxpowerup_act)
-        power_menu.addAction(maxpowerdown_act)
-        power_menu.addAction(minpowerup_act)
-        power_menu.addAction(minpowerdown_act)
+        power_menu.addAction(self.acts.link_power)
+        power_menu.addAction(self.acts.power_up)
+        power_menu.addAction(self.acts.power_down)
+        power_menu.addAction(self.acts.max_power_up)
+        power_menu.addAction(self.acts.max_power_down)
+        power_menu.addAction(self.acts.min_power_up)
+        power_menu.addAction(self.acts.min_power_down)
 
         self.data_menus.append(power_menu)
         
@@ -648,101 +657,105 @@ class Audian(QMainWindow):
 
 
     def setup_view_actions(self, menu):
-        linkchannels_act = QAction('Link &channels', self)
-        linkchannels_act.setShortcut('Alt+C')
-        linkchannels_act.setCheckable(True)
-        linkchannels_act.setChecked(self.link_channels)
-        linkchannels_act.toggled.connect(self.toggle_link_channels)
+        self.acts.link_channels = QAction('Link &channels', self)
+        self.acts.link_channels.setShortcut('Alt+C')
+        self.acts.link_channels.setCheckable(True)
+        self.acts.link_channels.setChecked(self.link_channels)
+        self.acts.link_channels.toggled.connect(self.toggle_link_channels)
 
-        self.toggle_channel_acts = []
+        self.acts.channels = []
         for c in range(10):
-            togglechannel_act = QAction(f'Toggle channel &{c}', self)
-            togglechannel_act.setShortcut(f'{c}')
-            togglechannel_act.triggered.connect(lambda x, channel=c: self.toggle_channel(channel))
-            self.toggle_channel_acts.append(togglechannel_act)
+            channel = QAction(f'Channel &{c}', self)
+            channel.setToolTip(f'Toggle channel {c}')
+            channel.setIconText(f'{c}')
+            channel.setShortcut(f'{c}')
+            channel.setCheckable(True)
+            channel.setChecked(False)
+            channel.toggled.connect(lambda x, channel=c: self.toggle_channel(channel))
+            self.acts.channels.append(channel)
 
-        allchannel_act = QAction('Select &all channels', self)
-        allchannel_act.setShortcuts(QKeySequence.SelectAll)
-        allchannel_act.triggered.connect(lambda x: self.select_channels('all_channels'))
+        self.acts.select_all_channels = QAction('Select &all channels', self)
+        self.acts.select_all_channels.setShortcuts(QKeySequence.SelectAll)
+        self.acts.select_all_channels.triggered.connect(lambda x: self.select_channels('all_channels'))
 
-        nextchannel_act = QAction('&Next channel', self)
-        nextchannel_act.setShortcuts(QKeySequence.SelectNextLine)
-        nextchannel_act.triggered.connect(lambda x: self.select_channels('next_channel'))
+        self.acts.next_channel = QAction('&Next channel', self)
+        self.acts.next_channel.setShortcuts(QKeySequence.SelectNextLine)
+        self.acts.next_channel.triggered.connect(lambda x: self.select_channels('next_channel'))
 
-        previouschannel_act = QAction('&Previous channel', self)
-        previouschannel_act.setShortcuts(QKeySequence.SelectPreviousLine)
-        previouschannel_act.triggered.connect(lambda x: self.select_channels('previous_channel'))
+        self.acts.previous_channel = QAction('&Previous channel', self)
+        self.acts.previous_channel.setShortcuts(QKeySequence.SelectPreviousLine)
+        self.acts.previous_channel.triggered.connect(lambda x: self.select_channels('previous_channel'))
 
-        selectnextchannel_act = QAction('Select next channel', self)
-        selectnextchannel_act.setShortcuts(QKeySequence.SelectNextPage)
-        selectnextchannel_act.triggered.connect(lambda x: self.select_channels('select_next_channel'))
+        self.acts.select_next_channel = QAction('Select next channel', self)
+        self.acts.select_next_channel.setShortcuts(QKeySequence.SelectNextPage)
+        self.acts.select_next_channel.triggered.connect(lambda x: self.select_channels('select_next_channel'))
 
-        selectpreviouschannel_act = QAction('Select previous channel', self)
-        selectpreviouschannel_act.setShortcuts(QKeySequence.SelectPreviousPage)
-        selectpreviouschannel_act.triggered.connect(lambda x: self.select_channels('select_previous_channel'))
+        self.acts.select_previous_channel = QAction('Select previous channel', self)
+        self.acts.select_previous_channel.setShortcuts(QKeySequence.SelectPreviousPage)
+        self.acts.select_previous_channel.triggered.connect(lambda x: self.select_channels('select_previous_channel'))
 
-        linkpanels_act = QAction('Link &panels', self)
-        linkpanels_act.setShortcut('Alt+P')
-        linkpanels_act.setCheckable(True)
-        linkpanels_act.setChecked(self.link_panels)
-        linkpanels_act.toggled.connect(self.toggle_link_panels)
+        self.acts.link_panels = QAction('Link &panels', self)
+        self.acts.link_panels.setShortcut('Alt+P')
+        self.acts.link_panels.setCheckable(True)
+        self.acts.link_panels.setChecked(self.link_panels)
+        self.acts.link_panels.toggled.connect(self.toggle_link_panels)
 
-        toggletraces_act = QAction('Toggle &traces', self)
-        toggletraces_act.setShortcut('Ctrl+T')
-        toggletraces_act.triggered.connect(self.toggle_traces)
+        self.acts.toggle_traces = QAction('Toggle &traces', self)
+        self.acts.toggle_traces.setShortcut('Ctrl+T')
+        self.acts.toggle_traces.triggered.connect(self.toggle_traces)
 
-        togglespectros_act = QAction('Toggle &spectrograms', self)
-        togglespectros_act.setShortcut('Ctrl+S')
-        togglespectros_act.triggered.connect(self.toggle_spectrograms)
+        self.acts.toggle_spectrograms = QAction('Toggle &spectrograms', self)
+        self.acts.toggle_spectrograms.setShortcut('Ctrl+S')
+        self.acts.toggle_spectrograms.triggered.connect(self.toggle_spectrograms)
 
-        togglecbars_act = QAction('Toggle color bars', self)
-        togglecbars_act.setShortcut('Ctrl+C')
-        togglecbars_act.triggered.connect(self.toggle_colorbars)
+        self.acts.toggle_power = QAction('Toggle color bars', self)
+        self.acts.toggle_power.setShortcut('Ctrl+C')
+        self.acts.toggle_power.triggered.connect(self.toggle_colorbars)
 
-        togglefull_act = QAction('Toggle full data', self)
-        togglefull_act.setShortcut('Ctrl+F')
-        togglefull_act.triggered.connect(self.toggle_fulldata)
+        self.acts.toggle_fulldata = QAction('Toggle full data', self)
+        self.acts.toggle_fulldata.setShortcut('Ctrl+F')
+        self.acts.toggle_fulldata.triggered.connect(self.toggle_fulldata)
             
-        grid_act = QAction('Toggle &grid', self)
-        grid_act.setShortcut('g')
-        grid_act.triggered.connect(lambda x: self.browser().toggle_grids())
+        self.acts.toggle_grid = QAction('Toggle &grid', self)
+        self.acts.toggle_grid.setShortcut('g')
+        self.acts.toggle_grid.triggered.connect(lambda x: self.browser().toggle_grids())
 
-        nexttab_act = QAction('Next tab', self)
-        nexttab_act.setShortcut('Ctrl+PgDown')
-        nexttab_act.triggered.connect(self.next_tab)
+        self.acts.next_file = QAction('Next tab', self)
+        self.acts.next_file.setShortcut('Ctrl+PgDown')
+        self.acts.next_file.triggered.connect(self.next_tab)
 
-        previoustab_act = QAction('Previous tab', self)
-        previoustab_act.setShortcut('Ctrl+PgUp')
-        previoustab_act.triggered.connect(self.previous_tab)
+        self.acts.previous_file = QAction('Previous tab', self)
+        self.acts.previous_file.setShortcut('Ctrl+PgUp')
+        self.acts.previous_file.triggered.connect(self.previous_tab)
 
-        maximize_act = QAction('Toggle &maximize', self)
-        maximize_act.setShortcut('Ctrl+M')
-        maximize_act.triggered.connect(self.toggle_maximize)
+        self.acts.maximize_window = QAction('Toggle &maximize', self)
+        self.acts.maximize_window.setShortcut('Ctrl+M')
+        self.acts.maximize_window.triggered.connect(self.toggle_maximize)
 
         view_menu = menu.addMenu('&View')
         self.setup_time_actions(view_menu)
         self.setup_amplitude_actions(view_menu)
         self.setup_frequency_actions(view_menu)
         self.setup_power_actions(view_menu)
-        view_menu.addAction(linkchannels_act)
+        view_menu.addAction(self.acts.link_channels)
         channel_menu = view_menu.addMenu('&Channels')
-        for act in self.toggle_channel_acts:
+        for act in self.acts.channels:
             channel_menu.addAction(act)
-        view_menu.addAction(allchannel_act)
-        view_menu.addAction(nextchannel_act)
-        view_menu.addAction(previouschannel_act)
-        view_menu.addAction(selectnextchannel_act)
-        view_menu.addAction(selectpreviouschannel_act)
-        view_menu.addAction(linkpanels_act)
-        view_menu.addAction(toggletraces_act)
-        view_menu.addAction(togglespectros_act)
-        view_menu.addAction(togglecbars_act)
-        view_menu.addAction(togglefull_act)
+        view_menu.addAction(self.acts.select_all_channels)
+        view_menu.addAction(self.acts.next_channel)
+        view_menu.addAction(self.acts.previous_channel)
+        view_menu.addAction(self.acts.select_next_channel)
+        view_menu.addAction(self.acts.select_previous_channel)
+        view_menu.addAction(self.acts.link_panels)
+        view_menu.addAction(self.acts.toggle_traces)
+        view_menu.addAction(self.acts.toggle_spectrograms)
+        view_menu.addAction(self.acts.toggle_power)
+        view_menu.addAction(self.acts.toggle_fulldata)
         view_menu.addSeparator()
-        view_menu.addAction(grid_act)
-        view_menu.addAction(maximize_act)
-        self.addAction(nexttab_act)
-        self.addAction(previoustab_act)
+        view_menu.addAction(self.acts.toggle_grid)
+        view_menu.addAction(self.acts.maximize_window)
+        self.addAction(self.acts.next_file)
+        self.addAction(self.acts.previous_file)
 
         self.data_menus.append(view_menu)
         
@@ -750,23 +763,23 @@ class Audian(QMainWindow):
 
 
     def setup_help_actions(self, menu):
-        shortcuts_act = QAction('&Key shortcuts', self)
-        shortcuts_act.setShortcut('H')
-        shortcuts_act.triggered.connect(self.shortcuts)
+        self.acts.key_shortcuts = QAction('&Key shortcuts', self)
+        self.acts.key_shortcuts.setShortcut('H')
+        self.acts.key_shortcuts.triggered.connect(self.shortcuts)
         
-        about_act = QAction('&About Audian', self)
-        about_act.triggered.connect(self.about)
+        self.acts.about = QAction('&About Audian', self)
+        self.acts.about.triggered.connect(self.about)
         
         help_menu = menu.addMenu('&Help')
-        help_menu.addAction(shortcuts_act)
-        help_menu.addAction(about_act)
+        help_menu.addAction(self.acts.key_shortcuts)
+        help_menu.addAction(self.acts.about)
         return help_menu
         
 
     def adapt_menu(self, index):
         browser = self.tabs.widget(index)
         if isinstance(browser, DataBrowser) and not browser.data is None:
-            for i, act in enumerate(self.toggle_channel_acts):
+            for i, act in enumerate(self.acts.channels):
                 act.setVisible(i < browser.data.channels)
             browser.update()
 
@@ -804,7 +817,8 @@ class Audian(QMainWindow):
             if not os.path.isfile(file_path):
                 continue
             browser = DataBrowser(file_path, self.channels,
-                                  show_channels, self.audio)
+                                  show_channels, self.audio,
+                                  self.acts)
             self.tabs.addTab(browser, os.path.basename(file_path))
             self.browsers.append(browser)
             if first:

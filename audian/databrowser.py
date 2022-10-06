@@ -3,7 +3,7 @@ from math import ceil, floor, log
 import numpy as np
 from PyQt5.QtCore import Qt, Signal, QTimer
 from PyQt5.QtGui import QCursor
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGraphicsRectItem
+from PyQt5.QtWidgets import QStyle, QWidget, QVBoxLayout, QGraphicsRectItem
 from PyQt5.QtWidgets import QAction, QActionGroup, QMenu, QToolBar, QFileDialog
 from PyQt5.QtWidgets import QLabel, QSizePolicy
 import pyqtgraph as pg
@@ -34,9 +34,12 @@ class DataBrowser(QWidget):
     sigPowerChanged = Signal()
 
     
-    def __init__(self, file_path, channels, show_channels, audio,
+    def __init__(self, file_path, channels, show_channels, audio, acts,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # actions of main window:
+        self.acts = acts
 
         # data:
         self.file_path = file_path
@@ -48,8 +51,6 @@ class DataBrowser(QWidget):
         self.show_channels = show_channels
         self.current_channel = 0
         self.selected_channels = []
-        self.channel_group = QActionGroup(self)
-        self.channel_group.setExclusive(False)
         
         self.trace_fracs = {0: 1, 1: 1, 2: 0.5, 3: 0.25, 4: 0.15}
 
@@ -261,21 +262,21 @@ class DataBrowser(QWidget):
             self.axtraces.append(axt)
         self.set_times()
         
-        # channel selector:
+        # tool bar:
         self.toolbar = QToolBar()
-        self.toolbar.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.toolbar.addAction(self.acts.skip_backward)
+        self.toolbar.addAction(self.acts.seek_backward)
+        self.toolbar.addAction(self.acts.seek_forward)
+        self.toolbar.addAction(self.acts.skip_forward)
+        self.toolbar.addSeparator()
+        self.toolbar.addAction(self.acts.play_window)
         #spacer = QWidget()
         #spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         #self.toolbar.addWidget(spacer)
-        #self.toolbar.addSeparator()
+        self.toolbar.addSeparator()
         self.toolbar.addWidget(QLabel('Channel:'))
-        for c in range(self.data.channels):
-            act = self.toolbar.addAction(f'{c}')
-            act.setToolTip(f'toggle channel {c}')
-            act.setCheckable(True)
-            act.setChecked(not c in self.show_channels)
-            self.channel_group.addAction(act)
-        self.channel_group.triggered.connect(self.toggle_channel_button)
+        for act in self.acts.channels:
+            self.toolbar.addAction(act)
         self.vbox.addWidget(self.toolbar)
         self.toolbar.setVisible(self.data.channels > 1)
         
@@ -417,13 +418,13 @@ class DataBrowser(QWidget):
             self.set_times()
 
                 
-    def time_page_down(self):
+    def time_seek_forward(self):
         if self.toffset + self.twindow < self.tmax:
             self.toffset += 0.5*self.twindow
             self.set_times()
 
             
-    def time_page_up(self):
+    def time_seek_backward(self):
         if self.toffset > 0:
             self.toffset -= 0.5*self.twindow
             if self.toffset < 0.0:
@@ -431,13 +432,13 @@ class DataBrowser(QWidget):
             self.set_times()
 
                 
-    def time_down(self):
+    def time_forward(self):
         if self.toffset + self.twindow < self.tmax:
             self.toffset += 0.05*self.twindow
             self.set_times()
 
                 
-    def time_up(self):
+    def time_backward(self):
         if self.toffset > 0.0:
             self.toffset -= 0.05*self.twindow
             if self.toffset < 0.0:
@@ -733,20 +734,16 @@ class DataBrowser(QWidget):
         for c in range(len(self.figs)):
             self.figs[c].setVisible(c in self.show_channels)
             self.show_xticks(c, c == self.show_channels[-1])
-            self.channel_group.actions()[c].setChecked(not c in self.show_channels)
+            self.acts.channels[c].setChecked(not c in self.show_channels)
         self.adjust_layout(self.width(), self.height())
         self.update_borders()
             
-
-    def toggle_channel_button(self, button):
-        for channel, act in enumerate(self.channel_group.actions()):
-            if act is button:
-                break
-        checked = act.isChecked()
-        if not checked:
+        
+    def toggle_channel(self, channel):
+        if not self.acts.channels[channel].isChecked():
             if not channel in self.show_channels:
                 if len(self.show_channels) == 1:
-                    self.channel_group.actions()[self.show_channels[0]].setCheckable(True)
+                    self.acts.channels[self.show_channels[0]].setCheckable(True)
                 self.show_channels.append(channel)
                 self.show_channels.sort()
                 self.selected_channels.append(channel)
@@ -765,14 +762,9 @@ class DataBrowser(QWidget):
                                 break
                         self.selected_channels = [self.current_channel]
                 if len(self.show_channels) == 1:
-                    self.channel_group.actions()[self.show_channels[0]].setCheckable(False)
+                    self.acts.channels[self.show_channels[0]].setCheckable(False)
                 self.set_channels()
         self.setFocus()
-
-        
-    def toggle_channel(self, channel):
-        self.channel_group.actions()[channel].setChecked(channel in self.show_channels)
-        self.toggle_channel_button(self.channel_group.actions()[channel])
 
         
     def set_panels(self, traces=None, specs=None, cbars=None):
