@@ -3,8 +3,8 @@ from math import ceil, floor, log
 import numpy as np
 from PyQt5.QtCore import Qt, Signal, QTimer
 from PyQt5.QtGui import QCursor
-from PyQt5.QtWidgets import QStyle, QWidget, QVBoxLayout, QGraphicsRectItem
-from PyQt5.QtWidgets import QAction, QActionGroup, QMenu, QToolBar, QFileDialog
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGraphicsRectItem
+from PyQt5.QtWidgets import QMenu, QToolBar, QComboBox, QFileDialog
 from PyQt5.QtWidgets import QLabel, QSizePolicy
 import pyqtgraph as pg
 from audioio import AudioLoader, available_formats, write_audio
@@ -87,7 +87,8 @@ class DataBrowser(QWidget):
         self.vbox.setSpacing(0)
         self.setEnabled(False)
         self.toolbar = None
-
+        self.nfftw = None
+        
         # plots:
         self.figs = []     # all GraphicsLayoutWidgets - one for each channel
         self.borders = []
@@ -274,8 +275,16 @@ class DataBrowser(QWidget):
         #spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         #self.toolbar.addWidget(spacer)
         self.toolbar.addSeparator()
+        self.nfftw = QComboBox(self)
+        self.nfftw.setToolTip('NFFT (R, Shift+R)')
+        self.nfftw.addItems([f'{2**i}' for i in range(4, 16)])
+        self.nfftw.setEditable(False)
+        self.nfftw.setCurrentText(f'{self.specs[self.current_channel].nfft}')
+        self.nfftw.currentTextChanged.connect(lambda s: self.set_resolution(nfft=int(s)))
+        self.toolbar.addWidget(self.nfftw)
+        self.toolbar.addSeparator()
         self.toolbar.addWidget(QLabel('Channel:'))
-        for act in self.acts.channels:
+        for act in self.acts.channels[:self.data.channels]:
             self.toolbar.addAction(act)
         self.vbox.addWidget(self.toolbar)
         self.toolbar.setVisible(self.data.channels > 1)
@@ -584,6 +593,7 @@ class DataBrowser(QWidget):
         for c in self.selected_channels:
             self.specs[c].set_resolution(nfft[c], step_frac[c],
                                          self.isVisible())
+        self.nfftw.setCurrentText(f'{self.specs[self.current_channel].nfft}')
         self.setting = False
         if dispatch:
             self.sigResolutionChanged.emit()

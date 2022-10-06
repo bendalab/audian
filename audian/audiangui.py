@@ -282,8 +282,9 @@ class Audian(QMainWindow):
 
 
     def setup_time_actions(self, menu):
-        self.acts.play_window = QAction('&Play', self)
+        self.acts.play_window = QAction('&Play window', self)
         self.acts.play_window.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
+        self.acts.play_window.setToolTip('Play window (space)')
         self.acts.play_window.setShortcut(' ')
         self.acts.play_window.triggered.connect(lambda x=0: self.browser().play_scroll())
         
@@ -309,11 +310,13 @@ class Audian(QMainWindow):
 
         self.acts.seek_forward = QAction('Seek &forward', self)
         self.acts.seek_forward.setIcon(self.style().standardIcon(QStyle.SP_MediaSeekForward))
+        self.acts.seek_forward.setToolTip('Seek forward (Page down)')
         self.acts.seek_forward.setShortcuts(QKeySequence.MoveToNextPage)
         self.acts.seek_forward.triggered.connect(lambda x=0: self.browser().time_seek_forward())
 
         self.acts.seek_backward = QAction('Seek &backward', self)
         self.acts.seek_backward.setIcon(self.style().standardIcon(QStyle.SP_MediaSeekBackward))
+        self.acts.seek_backward.setToolTip('Seek backward (Page up)')
         self.acts.seek_backward.setShortcuts(QKeySequence.MoveToPreviousPage)
         self.acts.seek_backward.triggered.connect(lambda x=0: self.browser().time_seek_backward())
 
@@ -327,11 +330,13 @@ class Audian(QMainWindow):
 
         self.acts.skip_forward = QAction('&End', self)
         self.acts.skip_forward.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipForward))
+        self.acts.skip_forward.setToolTip('Skip to end of data (End)')
         self.acts.skip_forward.setShortcuts([QKeySequence.MoveToEndOfLine, QKeySequence.MoveToEndOfDocument])
         self.acts.skip_forward.triggered.connect(lambda x=0: self.browser().time_end())
 
         self.acts.skip_backward = QAction('&Home', self)
         self.acts.skip_backward.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipBackward))
+        self.acts.skip_backward.setToolTip('Skip to beginning of data (Home)')
         self.acts.skip_backward.setShortcuts([QKeySequence.MoveToStartOfLine, QKeySequence.MoveToStartOfDocument])
         self.acts.skip_backward.triggered.connect(lambda x=0: self.browser().time_home())
 
@@ -666,7 +671,7 @@ class Audian(QMainWindow):
         self.acts.channels = []
         for c in range(10):
             channel = QAction(f'Channel &{c}', self)
-            channel.setToolTip(f'Toggle channel {c}')
+            channel.setToolTip(f'Toggle channel {c} ({c})')
             channel.setIconText(f'{c}')
             channel.setShortcut(f'{c}')
             channel.setCheckable(True)
