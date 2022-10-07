@@ -189,6 +189,11 @@ class Audian(QMainWindow):
         for b in self.browsers:
             b.set_region_mode(DataBrowser.ask_region)
 
+
+    def set_cross_hair(self, checked):
+        for b in self.browsers:
+            b.set_cross_hair(checked)
+
             
     def setup_region_actions(self, menu):
         self.acts.rect_zoom = QAction('&Rectangle zoom', self)
@@ -244,6 +249,12 @@ class Audian(QMainWindow):
         self.acts.zoom_rect_mode.addAction(self.acts.save_region)
         self.acts.zoom_rect_mode.addAction(self.acts.ask_region)
         self.acts.ask_region.setChecked(True)
+        
+        self.acts.cross_hair = QAction('&Cross hair', self)
+        self.acts.cross_hair.setCheckable(True)
+        self.acts.cross_hair.setChecked(False)
+        self.acts.cross_hair.setShortcut('Ctrl+c')
+        self.acts.cross_hair.toggled.connect(self.set_cross_hair)
 
         region_menu = menu.addMenu('&Region')
         region_menu.addAction(self.acts.rect_zoom)
@@ -257,6 +268,8 @@ class Audian(QMainWindow):
         region_menu.addAction(self.acts.play_region)
         region_menu.addAction(self.acts.save_region)
         region_menu.addAction(self.acts.ask_region)
+        region_menu.addSeparator()
+        region_menu.addAction(self.acts.cross_hair)
 
         self.data_menus.append(region_menu)
         
@@ -713,8 +726,8 @@ class Audian(QMainWindow):
         self.acts.toggle_spectrograms.setShortcut('Ctrl+S')
         self.acts.toggle_spectrograms.triggered.connect(self.toggle_spectrograms)
 
-        self.acts.toggle_power = QAction('Toggle color bars', self)
-        self.acts.toggle_power.setShortcut('Ctrl+C')
+        self.acts.toggle_power = QAction('Toggle power', self)
+        self.acts.toggle_power.setShortcut('Ctrl+P')
         self.acts.toggle_power.triggered.connect(self.toggle_colorbars)
 
         self.acts.toggle_fulldata = QAction('Toggle full data', self)

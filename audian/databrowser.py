@@ -91,6 +91,7 @@ class DataBrowser(QWidget):
         self.xpos_action = None
         self.ypos_action = None
         self.zpos_action = None
+        self.cross_hair = False
         self.prev_time = 0
         self.prev_ampl = 0
         self.prev_freq = 0
@@ -319,8 +320,27 @@ class DataBrowser(QWidget):
         self.setEnabled(True)
         self.adjust_layout(self.width(), self.height())
 
+
+    def set_cross_hair(self, checked):
+        self.cross_hair = checked
+        if not self.cross_hair:
+            self.xpos_action.setVisible(False)
+            self.ypos_action.setVisible(False)
+            self.zpos_action.setVisible(False)
+            for axts in self.axts:
+                for ax in axts:
+                    ax.xline.setPos(-1)
+            for axys in self.axys:
+                for ax in axys:
+                    ax.yline.setPos(-1000)
+            for axfys in self.axfys:
+                for ax in axfys:
+                    ax.yline.setPos(-1)
+            
         
     def mouse_moved(self, evt, channel, button=0, modifiers=0):
+        if not self.cross_hair:
+            return
         clicked = (button & Qt.LeftButton) > 0 and modifiers == Qt.NoModifier
         store = (button & Qt.LeftButton) > 0 and (modifiers & Qt.ControlModifier) == Qt.ControlModifier
         pos = evt[0]  ## using signal proxy turns original arguments into a tuple
