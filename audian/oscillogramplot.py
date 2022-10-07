@@ -65,6 +65,17 @@ class OscillogramPlot(pg.PlotItem):
         self.yline.setValue(-1000)
         self.addItem(self.yline, ignoreBounds=True)
 
+        # previous cross hair marker:
+        self.prev_marker = pg.ScatterPlotItem(
+            size=14,
+            pen=pg.mkPen('white'),
+            brush=pg.mkBrush((255, 255, 255, 128)),
+            symbol='o',
+            hoverable=False
+        )
+        self.prev_marker.setZValue(20)
+        self.addItem(self.prev_marker, ignoreBounds=True)
+
         # signals:
         view.sigSelectedRegion.connect(self.sigSelectedRegion)
 

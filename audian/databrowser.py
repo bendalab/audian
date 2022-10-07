@@ -1,5 +1,5 @@
 import os
-from math import ceil, floor, log
+from math import fabs, ceil, floor, log
 import numpy as np
 from PyQt5.QtCore import Qt, Signal, QTimer
 from PyQt5.QtGui import QCursor
@@ -91,6 +91,11 @@ class DataBrowser(QWidget):
         self.xpos_action = None
         self.ypos_action = None
         self.zpos_action = None
+        self.prev_time = 0
+        self.prev_ampl = 0
+        self.prev_freq = 0
+        self.prev_power = 0
+        self.prev_channel = None
         
         # plots:
         self.figs = []      # all GraphicsLayoutWidgets - one for each channel
@@ -266,7 +271,11 @@ class DataBrowser(QWidget):
             self.axs[-1].append(axt)
             self.axtraces.append(axt)
 
-            proxy = pg.SignalProxy(fig.scene().sigMouseMoved, rateLimit=60, slot=lambda x, c=c: self.mouse_moved(x, c))
+            proxy = pg.SignalProxy(fig.scene().sigMouseMoved, rateLimit=60,
+                                   slot=lambda x, c=c: self.mouse_moved(x, c))
+            self.sig_proxies.append(proxy)
+            proxy = pg.SignalProxy(fig.scene().sigMouseClicked, rateLimit=60,
+                                   slot=lambda x, c=c: self.mouse_clicked(x, c))
             self.sig_proxies.append(proxy)
             
         self.set_times()
@@ -311,7 +320,7 @@ class DataBrowser(QWidget):
         self.adjust_layout(self.width(), self.height())
 
         
-    def mouse_moved(self, evt, channel):
+    def mouse_moved(self, evt, channel, button=0):
         pos = evt[0]  ## using signal proxy turns original arguments into a tuple
         time = None
         ampl = None
@@ -319,6 +328,9 @@ class DataBrowser(QWidget):
         power = None
         for ax in self.axs[channel]:
             if ax.sceneBoundingRect().contains(pos):
+                if (button & Qt.RightButton) > 0:
+                    ax.prev_marker.clear()
+                    self.prev_channel = None
                 pos = ax.getViewBox().mapSceneToView(pos)
                 if hasattr(ax, 'xline'):
                     ax.xline.setPos(pos.x())
@@ -340,6 +352,8 @@ class DataBrowser(QWidget):
                         if not time is None:
                             # TODO: do this only without downsampling!!!!
                             ampl = data[int(np.round(time*data.samplerate)), channel]
+                            if (button & Qt.LeftButton) > 0:
+                                ax.prev_marker.setData((time,), (ampl,))
                     # is it frequency?
                     for axfys in self.axfys:
                         if ax in axfys:
@@ -348,8 +362,8 @@ class DataBrowser(QWidget):
                     # is it spectrogram?
                     if time is not None and freq is not None and ax in self.axspecs:
                         spec = self.specs[self.axspecs.index(ax)]
-                        fi = int(np.round(freq/spec.fresolution))
-                        ti = int(np.round((time - spec.offset/spec.rate) / spec.tresolution))
+                        fi = int(floor(freq/spec.fresolution))
+                        ti = int(floor((time - spec.offset/spec.rate) / spec.tresolution))
                         power = spec.spectrum[fi, ti]
                 break
         # set cross-hair positions:
@@ -362,19 +376,51 @@ class DataBrowser(QWidget):
         for axfys in self.axfys:
             for ax in axfys:
                 ax.yline.setPos(-1 if freq is None else freq)
+        # remember:
+        if (button & Qt.LeftButton) > 0:
+            self.prev_time = time
+            self.prev_ampl = ampl
+            self.prev_freq = freq
+            self.prev_power = power
+            self.prev_channel = channel
         # report positions on toolbar:
-        self.xpos_action.setText('' if time is None else f't={secs_to_str(time)}')
+        delta = self.prev_channel is not None and self.prev_channel == channel
+        tds = ''
+        if time is not None:
+            if delta and self.prev_time is not None:
+                time -= self.prev_time
+                tds = '\u0394'
+            self.xpos_action.setText(f'{tds}t={secs_to_str(fabs(time))}')
+        else:
+            self.xpos_action.setText('')
+        yds = ''
         if ampl is not None:
-            self.ypos_action.setText(f'y={ampl:6.3f}')
+            if delta and self.prev_ampl is not None:
+                ampl -= self.prev_ampl
+                yds = '\u0394'
+            self.ypos_action.setText(f'{yds}y={ampl:6.3f}')
         elif freq is not None:
-            self.ypos_action.setText(f'f={freq:4.0f}Hz')
+            if delta and self.prev_freq is not None:
+                freq -= self.prev_freq
+                yds = '\u0394'
+            self.ypos_action.setText(f'{yds}f={freq:4.0f}Hz')
         else:
             self.ypos_action.setText('')
-        self.zpos_action.setText('' if power is None else f'p={power:6.1f}dB')
+        pds = ''
+        if power is not None:
+            if delta and self.prev_power is not None:
+                power -= self.prev_power
+                pds = '\u0394'
+            self.zpos_action.setText(f'{pds}p={power:6.1f}dB')
+        else:
+            self.zpos_action.setText('')
         self.xpos_action.setVisible(time is not None)
         self.ypos_action.setVisible(ampl is not None or freq is not None)
         self.zpos_action.setVisible(power is not None)
-                
+
+
+    def mouse_clicked(self, evt, channel):
+        self.mouse_moved((evt[0].scenePos(),), channel, evt[0].button())
             
 
     def update_borders(self, rect=None):
