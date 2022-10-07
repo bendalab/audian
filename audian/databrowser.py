@@ -367,6 +367,8 @@ class DataBrowser(QWidget):
                         fi = int(floor(freq/spec.fresolution))
                         ti = int(floor((time - spec.offset/spec.rate) / spec.tresolution))
                         power = spec.spectrum[fi, ti]
+                        if clicked:
+                            ax.prev_marker.setData((time,), (freq,))
                 break
         # set cross-hair positions:
         for axts in self.axts:
