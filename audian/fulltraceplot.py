@@ -20,7 +20,7 @@ def secs_to_str(time):
     elif secs > 0:
         return f'{secs}.{1000*time:03.0f}s'
     else:
-        return msecs
+        return f'{1000*time:03.0f}ms'
 
 
 def secs_format(time):

@@ -10,7 +10,7 @@ import pyqtgraph as pg
 from audioio import AudioLoader, available_formats, write_audio
 from audioio import fade
 from .version import __version__, __year__
-from .fulltraceplot import FullTracePlot
+from .fulltraceplot import FullTracePlot, secs_to_str
 from .oscillogramplot import OscillogramPlot
 from .spectrumplot import SpectrumPlot
 from .traceitem import TraceItem
@@ -79,7 +79,7 @@ class DataBrowser(QWidget):
         self.audio_timer.timeout.connect(self.mark_audio)
         self.audio_time = 0.0
         self.audio_tmax = 0.0
-        self.audio_markers = []
+        self.audio_markers = [] # vertical lines showing position while playing
 
         # window:
         self.vbox = QVBoxLayout(self)
@@ -88,10 +88,14 @@ class DataBrowser(QWidget):
         self.setEnabled(False)
         self.toolbar = None
         self.nfftw = None
+        self.xpos_action = None
+        self.ypos_action = None
+        self.zpos_action = None
         
         # plots:
-        self.figs = []     # all GraphicsLayoutWidgets - one for each channel
+        self.figs = []      # all GraphicsLayoutWidgets - one for each channel
         self.borders = []
+        self.sig_proxies = []
         # nested lists (channel, panel):
         self.axs  = []      # all plots
         self.axts = []      # plots with time axis
@@ -106,7 +110,6 @@ class DataBrowser(QWidget):
         self.traces = []    # traces
         self.specs = []     # spectrograms
         self.cbars = []     # color bars
-        self.audio_markers = [] # vertical line showing position while playing
 
 
     def __del__(self):
@@ -148,6 +151,7 @@ class DataBrowser(QWidget):
 
         self.figs = []     # all GraphicsLayoutWidgets - one for each channel
         self.borders = []
+        self.sig_proxies = []
         # nested lists (channel, panel):
         self.axs  = []      # all plots
         self.axts = []      # plots with time axis
@@ -261,6 +265,10 @@ class DataBrowser(QWidget):
             self.axgs[-1].append(axt)
             self.axs[-1].append(axt)
             self.axtraces.append(axt)
+
+            proxy = pg.SignalProxy(fig.scene().sigMouseMoved, rateLimit=60, slot=lambda x, c=c: self.mouse_moved(x, c))
+            self.sig_proxies.append(proxy)
+            
         self.set_times()
         
         # tool bar:
@@ -271,9 +279,6 @@ class DataBrowser(QWidget):
         self.toolbar.addAction(self.acts.skip_forward)
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.acts.play_window)
-        #spacer = QWidget()
-        #spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        #self.toolbar.addWidget(spacer)
         self.toolbar.addSeparator()
         self.nfftw = QComboBox(self)
         self.nfftw.setToolTip('NFFT (R, Shift+R)')
@@ -286,6 +291,15 @@ class DataBrowser(QWidget):
         self.toolbar.addWidget(QLabel('Channel:'))
         for act in self.acts.channels[:self.data.channels]:
             self.toolbar.addAction(act)
+        spacer = QWidget()
+        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.toolbar.addWidget(spacer)
+        self.xpos_action = self.toolbar.addAction('xpos')
+        self.xpos_action.setVisible(False)
+        self.ypos_action = self.toolbar.addAction('ypos')
+        self.ypos_action.setVisible(False)
+        self.zpos_action = self.toolbar.addAction('zpos')
+        self.zpos_action.setVisible(False)
         self.vbox.addWidget(self.toolbar)
         self.toolbar.setVisible(self.data.channels > 1)
         
@@ -296,6 +310,72 @@ class DataBrowser(QWidget):
         self.setEnabled(True)
         self.adjust_layout(self.width(), self.height())
 
+        
+    def mouse_moved(self, evt, channel):
+        pos = evt[0]  ## using signal proxy turns original arguments into a tuple
+        time = None
+        ampl = None
+        freq = None
+        power = None
+        for ax in self.axs[channel]:
+            if ax.sceneBoundingRect().contains(pos):
+                pos = ax.getViewBox().mapSceneToView(pos)
+                if hasattr(ax, 'xline'):
+                    ax.xline.setPos(pos.x())
+                    # is it time?
+                    for axts in self.axts:
+                        if ax in axts:
+                            time = pos.x()
+                            break
+                if hasattr(ax, 'yline'):
+                    ax.yline.setPos(pos.y())
+                    # is it amplitude?
+                    for axys in self.axys:
+                        if ax in axys:
+                            ampl = pos.y()
+                            break
+                    # is it trace amplitude?
+                    if ax in self.axtraces:
+                        data = self.traces[self.axtraces.index(ax)].data
+                        if not time is None:
+                            # TODO: do this only without downsampling!!!!
+                            ampl = data[int(np.round(time*data.samplerate)), channel]
+                    # is it frequency?
+                    for axfys in self.axfys:
+                        if ax in axfys:
+                            freq = pos.y()
+                            break
+                    # is it spectrogram?
+                    if time is not None and freq is not None and ax in self.axspecs:
+                        spec = self.specs[self.axspecs.index(ax)]
+                        fi = int(np.round(freq/spec.fresolution))
+                        ti = int(np.round((time - spec.offset/spec.rate) / spec.tresolution))
+                        power = spec.spectrum[fi, ti]
+                break
+        # set cross-hair positions:
+        for axts in self.axts:
+            for ax in axts:
+                ax.xline.setPos(-1 if time is None else time)
+        for axys in self.axys:
+            for ax in axys:
+                ax.yline.setPos(-1000 if ampl is None else ampl)
+        for axfys in self.axfys:
+            for ax in axfys:
+                ax.yline.setPos(-1 if freq is None else freq)
+        # report positions on toolbar:
+        self.xpos_action.setText('' if time is None else f't={secs_to_str(time)}')
+        if ampl is not None:
+            self.ypos_action.setText(f'y={ampl:6.3f}')
+        elif freq is not None:
+            self.ypos_action.setText(f'f={freq:4.0f}Hz')
+        else:
+            self.ypos_action.setText('')
+        self.zpos_action.setText('' if power is None else f'p={power:6.1f}dB')
+        self.xpos_action.setVisible(time is not None)
+        self.ypos_action.setVisible(ampl is not None or freq is not None)
+        self.zpos_action.setVisible(power is not None)
+                
+            
 
     def update_borders(self, rect=None):
         for c in range(len(self.figs)):
@@ -321,7 +401,7 @@ class DataBrowser(QWidget):
             for ax in self.axfxs[c]:
                 ax.setXRange(self.specs[c].f0, self.specs[c].f1)
             # update spectrograms:
-            self.specs[c].updateSpec()
+            self.specs[c].update_spectrum()
         self.setting = False
 
                 

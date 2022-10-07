@@ -54,9 +54,22 @@ class SpectrumPlot(pg.PlotItem):
         self.vmarker = pg.InfiniteLine(angle=90, movable=False)
         self.vmarker.setPen(pg.mkPen('white', width=2))
         self.vmarker.setZValue(100)
+        self.vmarker.setValue(-1)
         self.addItem(self.vmarker, ignoreBounds=True)
+
+        # cross hair:
+        self.xline = pg.InfiniteLine(angle=90, movable=False)
+        self.xline.setPen(pg.mkPen('white', width=1))
+        self.xline.setZValue(100)
+        self.xline.setValue(-1)
+        self.addItem(self.xline, ignoreBounds=True)
+        
+        self.yline = pg.InfiniteLine(angle=0, movable=False)
+        self.yline.setPen(pg.mkPen('white', width=1))
+        self.yline.setZValue(100)
+        self.yline.setValue(-1)
+        self.addItem(self.yline, ignoreBounds=True)
 
         # signals:
         view.sigSelectedRegion.connect(self.sigSelectedRegion)
 
-        

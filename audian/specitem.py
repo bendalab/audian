@@ -53,6 +53,7 @@ class SpecItem(pg.ImageItem):
         self.offset = -1
         self.buffer_size = 0
         self.nfft = nfft
+        self.tresolution = None
         self.fresolution = self.rate/self.nfft
         self.step_frac = 0.5
         self.current_nfft = 1
@@ -62,6 +63,7 @@ class SpecItem(pg.ImageItem):
         self.f0 = 0.0
         self.f1 = self.fmax
         self.cbar = None
+        #self.spectrum = None
 
 
     def set_resolution(self, nfft=None, step_frac=None, update=True):
@@ -76,7 +78,7 @@ class SpecItem(pg.ImageItem):
         if self.step < 1:
             self.step = 1
         if update:
-            return self.updateSpec()
+            return self.update_spectrum()
 
 
     def setCBar(self, cbar):
@@ -103,10 +105,10 @@ class SpecItem(pg.ImageItem):
         stop = min(len(self.data), int(trange[1]*self.rate+1))
         if start < self.data.offset or stop >= self.data.offset + len(self.data.buffer):
             self.data.update_buffer(start, stop)
-        self.updateSpec()
+        self.update_spectrum()
     
 
-    def updateSpec(self):
+    def update_spectrum(self):
         if len(self.data.buffer) == 0:
             return 0, 1
         if self.offset == self.data.offset and \
@@ -118,15 +120,16 @@ class SpecItem(pg.ImageItem):
         freq, time, Sxx = spectrogram(self.data.buffer[:, self.channel],
                                       self.rate, nperseg=self.nfft,
                                       noverlap=self.nfft-self.step)
+        self.tresolution = time[1] - time[0]
         self.fresolution = freq[1] - freq[0]
-        Sxx = decibel(Sxx)
-        #print(np.max(Sxx))
-        zmax = np.percentile(Sxx, 99.9) + 5.0
-        #zmin = np.percentile(Sxx, 70.0)
+        self.spectrum = decibel(Sxx)
+        #print(np.max(self.spectrum))
+        zmax = np.percentile(self.spectrum, 99.9) + 5.0
+        #zmin = np.percentile(self.spectrum, 70.0)
         #zmax = -20
         zmin = zmax - 60
         self.fmax = freq[-1]
-        self.setImage(Sxx, autoLevels=False)
+        self.setImage(self.spectrum, autoLevels=False)
         self.resetTransform()
         self.translate(self.data.offset/self.rate, 0)
         self.scale(time[-1]/len(time), freq[-1]/len(freq))
