@@ -320,7 +320,9 @@ class DataBrowser(QWidget):
         self.adjust_layout(self.width(), self.height())
 
         
-    def mouse_moved(self, evt, channel, button=0):
+    def mouse_moved(self, evt, channel, button=0, modifiers=0):
+        clicked = (button & Qt.LeftButton) > 0 and modifiers == Qt.NoModifier
+        store = (button & Qt.LeftButton) > 0 and (modifiers & Qt.ControlModifier) == Qt.ControlModifier
         pos = evt[0]  ## using signal proxy turns original arguments into a tuple
         time = None
         ampl = None
@@ -352,7 +354,7 @@ class DataBrowser(QWidget):
                         if not time is None:
                             # TODO: do this only without downsampling!!!!
                             ampl = data[int(np.round(time*data.samplerate)), channel]
-                            if (button & Qt.LeftButton) > 0:
+                            if clicked:
                                 ax.prev_marker.setData((time,), (ampl,))
                     # is it frequency?
                     for axfys in self.axfys:
@@ -377,20 +379,23 @@ class DataBrowser(QWidget):
             for ax in axfys:
                 ax.yline.setPos(-1 if freq is None else freq)
         # remember:
-        if (button & Qt.LeftButton) > 0:
+        if clicked:
             self.prev_time = time
             self.prev_ampl = ampl
             self.prev_freq = freq
             self.prev_power = power
             self.prev_channel = channel
-        # report positions on toolbar:
+        # report positions on toolbar and store them:
         delta = self.prev_channel is not None and self.prev_channel == channel
         tds = ''
+        ss = []
         if time is not None:
             if delta and self.prev_time is not None:
                 time -= self.prev_time
                 tds = '\u0394'
-            self.xpos_action.setText(f'{tds}t={secs_to_str(fabs(time))}')
+            s = f'{tds}t={secs_to_str(fabs(time))}'
+            self.xpos_action.setText(s)
+            ss.append(s)
         else:
             self.xpos_action.setText('')
         yds = ''
@@ -398,12 +403,16 @@ class DataBrowser(QWidget):
             if delta and self.prev_ampl is not None:
                 ampl -= self.prev_ampl
                 yds = '\u0394'
-            self.ypos_action.setText(f'{yds}y={ampl:6.3f}')
+            s = f'{yds}y={ampl:6.3f}'
+            self.ypos_action.setText(s)
+            ss.append(s)
         elif freq is not None:
             if delta and self.prev_freq is not None:
                 freq -= self.prev_freq
                 yds = '\u0394'
-            self.ypos_action.setText(f'{yds}f={freq:4.0f}Hz')
+            s = f'{yds}f={freq:4.0f}Hz'
+            self.ypos_action.setText(s)
+            ss.append(s)
         else:
             self.ypos_action.setText('')
         pds = ''
@@ -411,16 +420,21 @@ class DataBrowser(QWidget):
             if delta and self.prev_power is not None:
                 power -= self.prev_power
                 pds = '\u0394'
-            self.zpos_action.setText(f'{pds}p={power:6.1f}dB')
+            s = f'{pds}p={power:6.1f}dB'
+            self.zpos_action.setText(s)
+            ss.append(s)
         else:
             self.zpos_action.setText('')
         self.xpos_action.setVisible(time is not None)
         self.ypos_action.setVisible(ampl is not None or freq is not None)
         self.zpos_action.setVisible(power is not None)
+        if store:
+            print(', '.join(ss))
 
 
     def mouse_clicked(self, evt, channel):
-        self.mouse_moved((evt[0].scenePos(),), channel, evt[0].button())
+        self.mouse_moved((evt[0].scenePos(),), channel,
+                         evt[0].button(), evt[0].modifiers())
             
 
     def update_borders(self, rect=None):
