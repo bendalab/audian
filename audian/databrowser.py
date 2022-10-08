@@ -306,10 +306,13 @@ class DataBrowser(QWidget):
         self.toolbar.addWidget(spacer)
         self.xpos_action = self.toolbar.addAction('xpos')
         self.xpos_action.setVisible(False)
+        self.toolbar.widgetForAction(self.xpos_action).setFixedWidth(10*xwidth)
         self.ypos_action = self.toolbar.addAction('ypos')
         self.ypos_action.setVisible(False)
+        self.toolbar.widgetForAction(self.ypos_action).setFixedWidth(10*xwidth)
         self.zpos_action = self.toolbar.addAction('zpos')
         self.zpos_action.setVisible(False)
+        self.toolbar.widgetForAction(self.zpos_action).setFixedWidth(10*xwidth)
         self.vbox.addWidget(self.toolbar)
         self.toolbar.setVisible(self.data.channels > 1)
         
@@ -330,12 +333,16 @@ class DataBrowser(QWidget):
             for axts in self.axts:
                 for ax in axts:
                     ax.xline.setPos(-1)
+                    ax.prev_marker.clear()
             for axys in self.axys:
                 for ax in axys:
                     ax.yline.setPos(-1000)
+                    ax.prev_marker.clear()
             for axfys in self.axfys:
                 for ax in axfys:
                     ax.yline.setPos(-1)
+                    ax.prev_marker.clear()
+            self.prev_channel = None
             
         
     def mouse_moved(self, evt, channel, button=0, modifiers=0):
@@ -344,6 +351,13 @@ class DataBrowser(QWidget):
         clicked = (button & Qt.LeftButton) > 0 and modifiers == Qt.NoModifier
         store = (button & Qt.LeftButton) > 0 and (modifiers & Qt.ControlModifier) == Qt.ControlModifier
         pos = evt[0]  ## using signal proxy turns original arguments into a tuple
+
+        if clicked:
+            for axs in self.axs:
+                for axp in axs:
+                    if hasattr(axp, 'prev_marker'):
+                        axp.prev_marker.clear()
+            
         time = None
         ampl = None
         freq = None
@@ -351,7 +365,10 @@ class DataBrowser(QWidget):
         for ax in self.axs[channel]:
             if ax.sceneBoundingRect().contains(pos):
                 if (button & Qt.RightButton) > 0:
-                    ax.prev_marker.clear()
+                    for axs in self.axs:
+                        for axp in axs:
+                            if hasattr(axp, 'prev_marker'):
+                                axp.prev_marker.clear()
                     self.prev_channel = None
                 pos = ax.getViewBox().mapSceneToView(pos)
                 if hasattr(ax, 'xline'):
@@ -392,14 +409,14 @@ class DataBrowser(QWidget):
                 break
         # set cross-hair positions:
         for axts in self.axts:
-            for ax in axts:
-                ax.xline.setPos(-1 if time is None else time)
+            for axt in axts:
+                axt.xline.setPos(-1 if time is None else time)
         for axys in self.axys:
-            for ax in axys:
-                ax.yline.setPos(-1000 if ampl is None else ampl)
+            for axy in axys:
+                axy.yline.setPos(-1000 if ampl is None else ampl)
         for axfys in self.axfys:
-            for ax in axfys:
-                ax.yline.setPos(-1 if freq is None else freq)
+            for axf in axfys:
+                axf.yline.setPos(-1 if freq is None else freq)
         # remember:
         if clicked:
             self.prev_time = time
@@ -410,12 +427,13 @@ class DataBrowser(QWidget):
         # report positions on toolbar and store them:
         delta = self.prev_channel is not None and self.prev_channel == channel
         tds = ''
-        ss = []
+        ss = [f'channel {channel}']
         if time is not None:
-            if delta and self.prev_time is not None:
+            if self.prev_channel is not None and self.prev_time is not None:
                 time -= self.prev_time
                 tds = '\u0394'
-            s = f'{tds}t={secs_to_str(fabs(time))}'
+            sign = '-' if time < 0 else ''
+            s = f'{tds}t={sign}{secs_to_str(fabs(time))}'
             self.xpos_action.setText(s)
             ss.append(s)
         else:
@@ -425,7 +443,7 @@ class DataBrowser(QWidget):
             if delta and self.prev_ampl is not None:
                 ampl -= self.prev_ampl
                 yds = '\u0394'
-            s = f'{yds}y={ampl:6.3f}'
+            s = f'{yds}a={ampl:6.3f}'
             self.ypos_action.setText(s)
             ss.append(s)
         elif freq is not None:
