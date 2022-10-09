@@ -388,9 +388,20 @@ class DataBrowser(QWidget):
                     # is it trace amplitude?
                     if ax in self.axtraces:
                         data = self.traces[self.axtraces.index(ax)].data
+                        step = self.traces[self.axtraces.index(ax)].step
                         if not time is None:
-                            # TODO: do this only without downsampling!!!!
-                            ampl = data[int(np.round(time*data.samplerate)), channel]
+                            idx = int(np.round(time*data.samplerate))
+                            if step > 1:
+                                idx = (idx//step)*step
+                                data_block = data[idx:idx + step]
+                                amin = np.min(data_block)
+                                amax = np.max(data_block)
+                                if fabs(pos.y() - amax) < fabs(pos.y() - amin):
+                                    ampl = amax
+                                else:
+                                    ampl = amin
+                            else:
+                                ampl = data[idx, channel]
                             if clicked:
                                 ax.prev_marker.setData((time,), (ampl,))
                     # is it frequency?

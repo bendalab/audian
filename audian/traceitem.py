@@ -31,6 +31,7 @@ class TraceItem(pg.PlotDataItem):
         self.data = data
         self.rate = rate
         self.channel = channel
+        self.step = 1
         self.color = color
         self.ymin = -1.0
         self.ymax = +1.0
@@ -66,30 +67,30 @@ class TraceItem(pg.PlotDataItem):
         start = max(0, int(trange[0]*self.rate))
         stop = min(len(self.data), int(trange[1]*self.rate+1))
         max_pixel = QApplication.desktop().screenGeometry().width()
-        step = max(1, (stop - start)//max_pixel)
-        if step > 1:
-            start = int(floor(start/step)*step)
-            stop = int(ceil(stop/step)*step)
+        self.step = max(1, (stop - start)//max_pixel)
+        if self.step > 1:
+            step2 = self.step//2
+            self.step = step2*2
+            start = int(floor(start/self.step)*self.step)
+            stop = int(ceil(stop/self.step)*self.step)
             self.setPen(dict(color=self.color, width=1.1))
-            step2 = step//2
-            step = step2*2
-            n = (stop-start)//step
+            n = (stop-start)//self.step
             data = np.zeros(2*n)
             i = 0
-            nb = int(60*self.rate//step)*step
+            nb = int(60*self.rate//self.step)*self.step
             for dd in self.data.blocks(nb, 0, start, stop):
                 if has_numba:
-                    dsd = down_sample_peak(dd[:, self.channel], step)
+                    dsd = down_sample_peak(dd[:, self.channel], self.step)
                     data[i:i+len(dsd)] = dsd
                     i += len(dsd)
                 #else:
-                #    data = np.array([(np.min(self.data[start+k*step:start+(k+1)*step, self.channel]), np.max(self.data[start+k*step:start+(k+1)*step, self.channel])) for k in range(n)]).reshape((-1))
+                #    data = np.array([(np.min(self.data[start+k*self.step:start+(k+1)*self.step, self.channel]), np.max(self.data[start+k*self.step:start+(k+1)*self.step, self.channel])) for k in range(n)]).reshape((-1))
             time = np.arange(start, start + len(data)*step2, step2)/self.rate
             self.setData(time, data) #, connect='pairs')???
-        elif step > 1:  # TODO: not used
+        elif self.step > 1:  # TODO: not used
             # subsample:
-            self.setData(np.arange(start, stop, step)/self.rate,
-                         self.data[start:stop:step, self.channel])
+            self.setData(np.arange(start, stop, self.step)/self.rate,
+                         self.data[start:stop:self.step, self.channel])
             self.setPen(dict(color=self.color, width=1.1))
         else:
             # all data:
