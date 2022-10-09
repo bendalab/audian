@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from PyQt5.QtCore import Qt, QAbstractTableModel, QVariant
 
 
 class MarkerData:
@@ -15,6 +16,14 @@ class MarkerData:
         self.delta_frequencies = []
         self.delta_powers = []
         self.comments = []
+        self.keys = ['channels', 'times', 'amplitudes',
+                     'frequencies', 'powers',
+                     'delta_times', 'delta_amplitudes',
+                     'delta_frequencies', 'delta_powers', 'comments']
+        self.labels = ['channel', 'time/s', 'amplitude',
+                       'frequency/Hz', 'power/dB',
+                       'd-time/s', 'd-amplitude',
+                       'd-frequency/Hz', 'd-power/dB', 'comment']
 
         
     def clear(self):
@@ -57,14 +66,45 @@ class MarkerData:
 
     def print(self):
         table_dict = {}
-        keys = ['channels', 'times', 'amplitudes', 'frequencies', 'powers',
-                'delta_times', 'delta_amplitudes',
-                'delta_frequencies', 'delta_powers', 'comments']
-        labels = ['channel', 'time/s', 'amplitude', 'frequency/Hz', 'power/dB',
-                  'd-time/s', 'd-amplitude',
-                  'd-frequency/Hz', 'd-power/dB', 'comment']
         for key, label in zip(keys, labels):
             table_dict[label] = getattr(self, key)
         table = pd.DataFrame(table_dict)
         print(table)
 
+
+
+    
+class MarkerDataModel(QAbstractTableModel):
+    
+    def __init__(self, data, parent=None):
+        QAbstractTableModel.__init__(self, parent)
+        self.data = data
+
+        
+    def rowCount(self, parent=None):
+        return len(self.data.channels)
+
+    
+    def columnCount(self, parent=None):
+        return len(self.data.keys)
+
+
+    def headerData(self, col, orientation, role=Qt.DisplayRole):
+        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+            return self.data.keys[col]
+        return QVariant()
+
+    
+    def data(self, index, role=Qt.DisplayRole):
+        if not index.isValid():
+            return QVariant()
+        
+        if role == Qt.DisplayRole:
+            key = self.data.keys[index.column()]
+            item = self.data[key][index.row()]
+            if key == 'comment':
+                return QVariant(item)
+            else:
+                return QVariant(str(item))
+
+    
