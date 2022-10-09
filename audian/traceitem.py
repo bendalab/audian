@@ -1,4 +1,4 @@
-from math import floor, ceil
+from math import fabs, floor, ceil
 import numpy as np
 from PyQt5.QtWidgets import QApplication
 import pyqtgraph as pg
@@ -103,6 +103,22 @@ class TraceItem(pg.PlotDataItem):
                 self.setSymbol(None)
 
 
+    def get_amplitude(self, x, y):
+        """Get trace amplitude next to cursor position. """
+        idx = int(np.round(x*self.rate))
+        if self.step > 1:
+            idx = (idx//self.step)*self.step
+            data_block = self.data[idx:idx + self.step, self.channel]
+            amin = np.min(data_block)
+            amax = np.max(data_block)
+            if fabs(y - amax) < fabs(y - amin):
+                return amax
+            else:
+                return amin
+        else:
+            return self.data[idx, self.channel]
+
+        
     def zoom_ampl_in(self):
         h = 0.25*(self.ymax - self.ymin)
         c = 0.5*(self.ymax + self.ymin)

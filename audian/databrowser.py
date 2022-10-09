@@ -387,21 +387,9 @@ class DataBrowser(QWidget):
                             break
                     # is it trace amplitude?
                     if ax in self.axtraces:
-                        data = self.traces[self.axtraces.index(ax)].data
-                        step = self.traces[self.axtraces.index(ax)].step
                         if not time is None:
-                            idx = int(np.round(time*data.samplerate))
-                            if step > 1:
-                                idx = (idx//step)*step
-                                data_block = data[idx:idx + step]
-                                amin = np.min(data_block)
-                                amax = np.max(data_block)
-                                if fabs(pos.y() - amax) < fabs(pos.y() - amin):
-                                    ampl = amax
-                                else:
-                                    ampl = amin
-                            else:
-                                ampl = data[idx, channel]
+                            trace = self.traces[self.axtraces.index(ax)]
+                            ampl = trace.get_amplitude(time, pos.y())
                             if clicked:
                                 ax.prev_marker.setData((time,), (ampl,))
                     # is it frequency?
