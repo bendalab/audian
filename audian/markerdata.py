@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
-from PyQt5.QtCore import Qt, QAbstractTableModel, QVariant
+from PyQt5.QtCore import Qt, QVariant
+from PyQt5.QtCore import QAbstractTableModel, QModelIndex
 
 
 class MarkerData:
@@ -102,10 +103,10 @@ class MarkerDataModel(QAbstractTableModel):
             return QVariant()
         
         key = self.data.keys[index.column()]
+        item = getattr(self.data, key)[index.row()]
         
         # data:
         if role == Qt.DisplayRole:
-            item = getattr(self.data, key)[index.row()]
             if key == 'comments':
                 return item
             else:
@@ -119,6 +120,29 @@ class MarkerDataModel(QAbstractTableModel):
             if key == 'comments':
                 return Qt.AlignLeft
             else:
-                return Qt.AlignRight
+                if item is np.nan:
+                    return Qt.AlignCenter
+                else:
+                    return Qt.AlignRight
 
-    
+
+    def clear(self):
+        self.beginResetModel()
+        self.data.clear()
+        self.endResetModel()
+
+
+    def add_data(self, channel, time, amplitude, frequency, power):
+        self.beginInsertRows(QModelIndex(),
+                             len(self.data.channels), len(self.data.channels))
+        self.data.add_data(channel, time, amplitude, frequency, power)
+        self.endInsertRows()
+
+        
+    def set_delta(self, delta_time, delta_amplitude,
+                  delta_frequency, delta_power):
+        self.data.set_delta(delta_time, delta_amplitude,
+                            delta_frequency, delta_power)
+        self.dataChanged.emit(self.index(len(self.data.channels)-1, 0),
+                              self.index(len(self.data.channels)-1,
+                                         len(self.data.keys)))

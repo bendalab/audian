@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGraphicsRectItem
 from PyQt5.QtWidgets import QMenu, QToolBar, QComboBox
 from PyQt5.QtWidgets import QLabel, QSizePolicy, QTableView
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFileDialog
+from PyQt5.QtWidgets import QAbstractItemView
 import pyqtgraph as pg
 from audioio import AudioLoader, available_formats, write_audio
 from audioio import fade
@@ -102,6 +103,7 @@ class DataBrowser(QWidget):
         self.prev_power = 0
         self.prev_channel = None
         self.marker_data = MarkerData()
+        self.marker_model = MarkerDataModel(self.marker_data)
         
         # plots:
         self.figs = []      # all GraphicsLayoutWidgets - one for each channel
@@ -430,7 +432,7 @@ class DataBrowser(QWidget):
             self.prev_channel = channel
         # store absolute values:
         if store:
-            self.marker_data.add_data(channel, time, ampl, freq, power)
+            self.marker_model.add_data(channel, time, ampl, freq, power)
         delta_time = None
         delta_ampl = None
         delta_freq = None
@@ -479,8 +481,8 @@ class DataBrowser(QWidget):
         self.ypos_action.setVisible(ampl is not None or freq is not None)
         self.zpos_action.setVisible(power is not None)
         if store:
-            self.marker_data.set_delta(delta_time, delta_ampl,
-                                       delta_freq, delta_power)
+            self.marker_model.set_delta(delta_time, delta_ampl,
+                                        delta_freq, delta_power)
 
 
     def mouse_clicked(self, evt, channel):
@@ -494,18 +496,19 @@ class DataBrowser(QWidget):
         vbox = QVBoxLayout()
         dialog.setLayout(vbox)
         view = QTableView()
-        model = MarkerDataModel(self.marker_data)
-        view.setModel(model)
+        view.setModel(self.marker_model)
         view.resizeColumnsToContents()
         width = view.verticalHeader().width() + 4
-        for c in range(model.columnCount()):
-            width += view.columnWidth(c) + 2
+        for c in range(self.marker_model.columnCount()):
+            width += view.columnWidth(c)
         view.setFixedWidth(width)
+        view.setSelectionMode(QAbstractItemView.ContiguousSelection)
         vbox.addWidget(view)
         buttons = QDialogButtonBox(QDialogButtonBox.Close |
                                    QDialogButtonBox.Save |
                                    QDialogButtonBox.Reset)
         buttons.rejected.connect(dialog.reject)
+        buttons.button(QDialogButtonBox.Reset).clicked.connect(self.marker_model.clear)
         vbox.addWidget(buttons)
         dialog.show()
             
