@@ -498,10 +498,11 @@ class DataBrowser(QWidget):
         view = QTableView()
         view.setModel(self.marker_model)
         view.resizeColumnsToContents()
-        width = view.verticalHeader().width() + 4
+        width = view.verticalHeader().width() + 24
         for c in range(self.marker_model.columnCount()):
             width += view.columnWidth(c)
-        view.setFixedWidth(width)
+        dialog.setMaximumWidth(width)
+        dialog.resize(width, 2*width//3)
         view.setSelectionMode(QAbstractItemView.ContiguousSelection)
         vbox.addWidget(view)
         buttons = QDialogButtonBox(QDialogButtonBox.Close |

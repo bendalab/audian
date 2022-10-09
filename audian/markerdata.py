@@ -23,8 +23,8 @@ class MarkerData:
                      'delta_frequencies', 'delta_powers', 'comments']
         self.labels = ['channel', 'time/s', 'amplitude',
                        'frequency/Hz', 'power/dB',
-                       'd-time/s', 'd-amplitude',
-                       'd-frequency/Hz', 'd-power/dB', 'comment']
+                       'time-diff/s', 'ampl-diff',
+                       'freq-diff/Hz', 'power-diff/dB', 'comment']
 
         
     def clear(self):
