@@ -15,6 +15,7 @@ from .oscillogramplot import OscillogramPlot
 from .spectrumplot import SpectrumPlot
 from .traceitem import TraceItem
 from .specitem import SpecItem
+from .markerdata import MarkerData
 
 
 pg.setConfigOption('useNumba', True)
@@ -88,6 +89,8 @@ class DataBrowser(QWidget):
         self.setEnabled(False)
         self.toolbar = None
         self.nfftw = None
+
+        # cross hair:
         self.xpos_action = None
         self.ypos_action = None
         self.zpos_action = None
@@ -97,6 +100,7 @@ class DataBrowser(QWidget):
         self.prev_freq = 0
         self.prev_power = 0
         self.prev_channel = None
+        self.marker_data = MarkerData()
         
         # plots:
         self.figs = []      # all GraphicsLayoutWidgets - one for each channel
@@ -423,52 +427,60 @@ class DataBrowser(QWidget):
             self.prev_freq = freq
             self.prev_power = power
             self.prev_channel = channel
-        # report positions on toolbar and store them:
+        # store absolute values:
+        if store:
+            self.marker_data.add_data(channel, time, ampl, freq, power)
+        delta_time = None
+        delta_ampl = None
+        delta_freq = None
+        delta_power = None
+        # report positions on toolbar:
         delta = self.prev_channel is not None and self.prev_channel == channel
         tds = ''
-        ss = [f'channel {channel}']
         if time is not None:
             if self.prev_channel is not None and self.prev_time is not None:
                 time -= self.prev_time
+                delta_time = time
                 tds = '\u0394'
             sign = '-' if time < 0 else ''
             s = f'{tds}t={sign}{secs_to_str(fabs(time))}'
             self.xpos_action.setText(s)
-            ss.append(s)
         else:
             self.xpos_action.setText('')
         yds = ''
         if ampl is not None:
             if delta and self.prev_ampl is not None:
                 ampl -= self.prev_ampl
+                delta_ampl = ampl
                 yds = '\u0394'
             s = f'{yds}a={ampl:6.3f}'
             self.ypos_action.setText(s)
-            ss.append(s)
         elif freq is not None:
             if delta and self.prev_freq is not None:
                 freq -= self.prev_freq
+                delta_freq = freq
                 yds = '\u0394'
             s = f'{yds}f={freq:4.0f}Hz'
             self.ypos_action.setText(s)
-            ss.append(s)
         else:
             self.ypos_action.setText('')
         pds = ''
         if power is not None:
             if delta and self.prev_power is not None:
                 power -= self.prev_power
+                delta_power = power
                 pds = '\u0394'
             s = f'{pds}p={power:6.1f}dB'
             self.zpos_action.setText(s)
-            ss.append(s)
         else:
             self.zpos_action.setText('')
         self.xpos_action.setVisible(time is not None)
         self.ypos_action.setVisible(ampl is not None or freq is not None)
         self.zpos_action.setVisible(power is not None)
         if store:
-            print(', '.join(ss))
+            self.marker_data.set_delta(delta_time, delta_ampl,
+                                       delta_freq, delta_power)
+            self.marker_data.print()
 
 
     def mouse_clicked(self, evt, channel):
