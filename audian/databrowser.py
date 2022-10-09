@@ -4,8 +4,9 @@ import numpy as np
 from PyQt5.QtCore import Qt, Signal, QTimer
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGraphicsRectItem
-from PyQt5.QtWidgets import QMenu, QToolBar, QComboBox, QFileDialog
-from PyQt5.QtWidgets import QLabel, QSizePolicy
+from PyQt5.QtWidgets import QMenu, QToolBar, QComboBox
+from PyQt5.QtWidgets import QLabel, QSizePolicy, QTableView
+from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFileDialog
 import pyqtgraph as pg
 from audioio import AudioLoader, available_formats, write_audio
 from audioio import fade
@@ -15,7 +16,7 @@ from .oscillogramplot import OscillogramPlot
 from .spectrumplot import SpectrumPlot
 from .traceitem import TraceItem
 from .specitem import SpecItem
-from .markerdata import MarkerData
+from .markerdata import MarkerData, MarkerDataModel
 
 
 pg.setConfigOption('useNumba', True)
@@ -480,12 +481,33 @@ class DataBrowser(QWidget):
         if store:
             self.marker_data.set_delta(delta_time, delta_ampl,
                                        delta_freq, delta_power)
-            self.marker_data.print()
 
 
     def mouse_clicked(self, evt, channel):
         self.mouse_moved((evt[0].scenePos(),), channel,
                          evt[0].button(), evt[0].modifiers())
+
+
+    def marker_table(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle('Audian marker table')
+        vbox = QVBoxLayout()
+        dialog.setLayout(vbox)
+        view = QTableView()
+        model = MarkerDataModel(self.marker_data)
+        view.setModel(model)
+        view.resizeColumnsToContents()
+        width = view.verticalHeader().width() + 4
+        for c in range(model.columnCount()):
+            width += view.columnWidth(c) + 2
+        view.setFixedWidth(width)
+        vbox.addWidget(view)
+        buttons = QDialogButtonBox(QDialogButtonBox.Close |
+                                   QDialogButtonBox.Save |
+                                   QDialogButtonBox.Reset)
+        buttons.rejected.connect(dialog.reject)
+        vbox.addWidget(buttons)
+        dialog.show()
             
 
     def update_borders(self, rect=None):

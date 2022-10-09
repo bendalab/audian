@@ -66,7 +66,7 @@ class MarkerData:
 
     def print(self):
         table_dict = {}
-        for key, label in zip(keys, labels):
+        for key, label in zip(self.keys, self.labels):
             table_dict[label] = getattr(self, key)
         table = pd.DataFrame(table_dict)
         print(table)
@@ -89,9 +89,11 @@ class MarkerDataModel(QAbstractTableModel):
         return len(self.data.keys)
 
 
-    def headerData(self, col, orientation, role=Qt.DisplayRole):
+    def headerData(self, index, orientation, role=Qt.DisplayRole):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
-            return self.data.keys[col]
+            return self.data.labels[index]
+        if orientation == Qt.Vertical and role == Qt.DisplayRole:
+            return f'{index}'
         return QVariant()
 
     
@@ -99,12 +101,24 @@ class MarkerDataModel(QAbstractTableModel):
         if not index.isValid():
             return QVariant()
         
+        key = self.data.keys[index.column()]
+        
+        # data:
         if role == Qt.DisplayRole:
-            key = self.data.keys[index.column()]
-            item = self.data[key][index.row()]
-            if key == 'comment':
-                return QVariant(item)
+            item = getattr(self.data, key)[index.row()]
+            if key == 'comments':
+                return item
             else:
-                return QVariant(str(item))
+                if item is np.nan:
+                    return '-'
+                else:
+                    return f'{item:.5g}'
+                
+        # alignment:
+        if role == Qt.TextAlignmentRole:
+            if key == 'comments':
+                return Qt.AlignLeft
+            else:
+                return Qt.AlignRight
 
     

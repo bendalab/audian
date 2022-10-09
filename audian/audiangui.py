@@ -255,6 +255,10 @@ class Audian(QMainWindow):
         self.acts.cross_hair.setChecked(False)
         self.acts.cross_hair.setShortcut('Ctrl+c')
         self.acts.cross_hair.toggled.connect(self.set_cross_hair)
+        
+        self.acts.marker_table = QAction('&Marker table', self)
+        self.acts.marker_table.setShortcut('M')
+        self.acts.marker_table.triggered.connect(lambda x: self.browser().marker_table())
 
         region_menu = menu.addMenu('&Region')
         region_menu.addAction(self.acts.rect_zoom)
@@ -270,6 +274,7 @@ class Audian(QMainWindow):
         region_menu.addAction(self.acts.ask_region)
         region_menu.addSeparator()
         region_menu.addAction(self.acts.cross_hair)
+        region_menu.addAction(self.acts.marker_table)
 
         self.data_menus.append(region_menu)
         
