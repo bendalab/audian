@@ -103,12 +103,16 @@ class TraceItem(pg.PlotDataItem):
                 self.setSymbol(None)
 
 
-    def get_amplitude(self, x, y):
+    def get_amplitude(self, x, y, x1=None):
         """Get trace amplitude next to cursor position. """
         idx = int(np.round(x*self.rate))
-        if self.step > 1:
-            idx = (idx//self.step)*self.step
-            data_block = self.data[idx:idx + self.step, self.channel]
+        step = self.step
+        if x1 is not None:
+            idx1 = int(np.round(x1*self.rate))
+            step = max(1, idx1 - idx)
+        if step > 1:
+            idx = (idx//step)*step
+            data_block = self.data[idx:idx + step, self.channel]
             amin = np.min(data_block)
             amax = np.max(data_block)
             if fabs(y - amax) < fabs(y - amin):

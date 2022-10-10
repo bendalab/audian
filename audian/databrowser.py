@@ -357,7 +357,7 @@ class DataBrowser(QWidget):
             return
         clicked = (button & Qt.LeftButton) > 0 and modifiers == Qt.NoModifier
         store = (button & Qt.LeftButton) > 0 and (modifiers & Qt.ControlModifier) == Qt.ControlModifier
-        pos = evt[0]  ## using signal proxy turns original arguments into a tuple
+        pixel_pos = evt[0]
 
         if clicked:
             for axs in self.axs:
@@ -370,14 +370,16 @@ class DataBrowser(QWidget):
         freq = None
         power = None
         for ax in self.axs[channel]:
-            if ax.sceneBoundingRect().contains(pos):
+            if ax.sceneBoundingRect().contains(pixel_pos):
                 if (button & Qt.RightButton) > 0:
                     for axs in self.axs:
                         for axp in axs:
                             if hasattr(axp, 'prev_marker'):
                                 axp.prev_marker.clear()
                     self.prev_channel = None
-                pos = ax.getViewBox().mapSceneToView(pos)
+                pos = ax.getViewBox().mapSceneToView(pixel_pos)
+                pixel_pos.setX(pixel_pos.x()+1)
+                npos = ax.getViewBox().mapSceneToView(pixel_pos)
                 if hasattr(ax, 'xline'):
                     ax.xline.setPos(pos.x())
                     # is it time?
@@ -396,7 +398,7 @@ class DataBrowser(QWidget):
                     if ax in self.axtraces:
                         if not time is None:
                             trace = self.traces[self.axtraces.index(ax)]
-                            ampl = trace.get_amplitude(time, pos.y())
+                            ampl = trace.get_amplitude(time, pos.y(), npos.x())
                             if clicked:
                                 ax.prev_marker.setData((time,), (ampl,))
                     # is it frequency?
