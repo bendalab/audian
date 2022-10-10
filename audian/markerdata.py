@@ -1,12 +1,15 @@
+import os
 import numpy as np
 import pandas as pd
 from PyQt5.QtCore import Qt, QVariant
 from PyQt5.QtCore import QAbstractTableModel, QModelIndex
+from PyQt5.QtWidgets import QFileDialog
 
 
 class MarkerData:
 
     def __init__(self):
+        self.file_path = None
         self.channels = []
         self.times = []
         self.amplitudes = []
@@ -65,13 +68,11 @@ class MarkerData:
         self.comments[index] = comment
 
 
-    def print(self):
+    def data_frame(self):
         table_dict = {}
         for key, label in zip(self.keys, self.labels):
             table_dict[label] = getattr(self, key)
-        table = pd.DataFrame(table_dict)
-        print(table)
-
+        return pd.DataFrame(table_dict)
 
 
     
@@ -131,6 +132,30 @@ class MarkerDataModel(QAbstractTableModel):
         self.data.clear()
         self.endResetModel()
 
+
+    def save(self, parent):
+        name = os.path.splitext(os.path.basename(self.data.file_path))[0]
+        file_name = f'{name}-marker.csv'
+        filters = 'All files (*);;Comma separated values (*.csv)'
+        has_excel = False
+        try:
+            import openpyxl
+            has_excel = True
+            filters += ';;Excel spreadsheet (*.xlsx)'
+        except ImportError:
+            pass
+        file_path = os.path.join(os.path.dirname(self.data.file_path),
+                                 file_name)
+        file_path = QFileDialog.getSaveFileName(parent, 'Save marker data',
+                                                file_path, filters)[0]
+        if file_path:
+            df = self.data.data_frame()
+            ext = os.path.splitext(file_path)[1]
+            if has_excel and ext.lower() == '.xlsx':
+                df.to_excel(file_path, index=False)
+            else:
+                df.to_csv(file_path, index=False)
+            
 
     def add_data(self, channel, time, amplitude, frequency, power):
         self.beginInsertRows(QModelIndex(),

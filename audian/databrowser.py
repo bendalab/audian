@@ -139,6 +139,7 @@ class DataBrowser(QWidget):
             self.data = None
             return
         self.rate = self.data.samplerate
+        self.marker_data.file_path = self.file_path
 
         self.toffset = 0.0
         self.twindow = 10.0
@@ -516,6 +517,7 @@ class DataBrowser(QWidget):
                                    QDialogButtonBox.Reset)
         buttons.rejected.connect(dialog.reject)
         buttons.button(QDialogButtonBox.Reset).clicked.connect(self.marker_model.clear)
+        buttons.button(QDialogButtonBox.Save).clicked.connect(lambda x: self.marker_model.save(self))
         vbox.addWidget(buttons)
         dialog.show()
             
@@ -1220,15 +1222,14 @@ class DataBrowser(QWidget):
         #    filename = f'{name}-{channel:d}-{t0:.4g}s-{t1s:.4g}s.wav'
         t0s = secs_to_str(t0)
         t1s = secs_to_str(t1)
-        filename = f'{name}-{t0s}-{t1s}.wav'
+        file_name = f'{name}-{t0s}-{t1s}.wav'
         formats = available_formats()
         for f in ['MP3', 'OGG', 'WAV']:
             if 'WAV' in formats:
                 formats.remove(f)
                 formats.insert(0, f)
         filters = ['All files (*)'] + [f'{f} files (*.{f}, *.{f.lower()})' for f in formats]
-        file_path = os.path.join(os.path.dirname(self.file_path), filename)
-        print(file_path)
+        file_path = os.path.join(os.path.dirname(self.file_path), file_name)
         file_path = QFileDialog.getSaveFileName(self, 'Save region as',
                                                 file_path,
                                                 ';;'.join(filters))[0]
