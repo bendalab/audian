@@ -963,16 +963,14 @@ class DataBrowser(QWidget):
         for c in range(len(self.figs)):
             self.figs[c].setVisible(c in self.show_channels)
             self.show_xticks(c, c == self.show_channels[-1])
-            self.acts.channels[c].setChecked(not c in self.show_channels)
+            self.acts.channels[c].setChecked(c in self.show_channels)
         self.adjust_layout(self.width(), self.height())
         self.update_borders()
             
         
     def toggle_channel(self, channel):
-        if not self.acts.channels[channel].isChecked():
+        if self.acts.channels[channel].isChecked():
             if not channel in self.show_channels:
-                if len(self.show_channels) == 1:
-                    self.acts.channels[self.show_channels[0]].setCheckable(True)
                 self.show_channels.append(channel)
                 self.show_channels.sort()
                 self.selected_channels.append(channel)
@@ -981,6 +979,13 @@ class DataBrowser(QWidget):
         else:
             if channel in self.show_channels:
                 self.show_channels.remove(channel)
+                if len(self.show_channels) == 0:
+                    c = channel - 1
+                    if c < 0:
+                        c = channel + 1
+                    if c >= self.data.channels:
+                        c = channel
+                    self.show_channels = [c]
                 if channel in self.selected_channels:
                     self.selected_channels.remove(channel)
                     if len(self.selected_channels) == 0:
@@ -990,8 +995,8 @@ class DataBrowser(QWidget):
                             else:
                                 break
                         self.selected_channels = [self.current_channel]
-                if len(self.show_channels) == 1:
-                    self.acts.channels[self.show_channels[0]].setCheckable(False)
+                #if len(self.show_channels) == 1:
+                #    self.acts.channels[self.show_channels[0]].setCheckable(False)
                 self.set_channels()
         self.setFocus()
 

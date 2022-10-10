@@ -693,7 +693,7 @@ class Audian(QMainWindow):
             channel.setIconText(f'{c}')
             channel.setShortcut(f'{c}')
             channel.setCheckable(True)
-            channel.setChecked(False)
+            channel.setChecked(True)
             channel.toggled.connect(lambda x, channel=c: self.toggle_channel(channel))
             self.acts.channels.append(channel)
 
