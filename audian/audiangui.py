@@ -212,16 +212,19 @@ class Audian(QMainWindow):
         self.acts.rect_zoom.setChecked(True)
         
         self.acts.zoom_back = QAction('Zoom &back', self)
+        self.acts.zoom_back.setIcon(self.style().standardIcon(QStyle.SP_ArrowBack))
         self.acts.zoom_back.setShortcuts(['Backspace', 'Alt+Left'])
         self.acts.zoom_back.triggered.connect(lambda x=0: self.browser().zoom_back())
         
         self.acts.zoom_forward = QAction('Zoom &forward', self)
+        self.acts.zoom_forward.setIcon(self.style().standardIcon(QStyle.SP_ArrowForward))
         self.acts.zoom_forward.setShortcuts(['Shift+Backspace', 'Alt+Right'])
         self.acts.zoom_forward.triggered.connect(lambda x=0: self.browser().zoom_forward())
         
-        self.acts.zoom_reset = QAction('Zoom &reset', self)
-        self.acts.zoom_reset.setShortcut('Alt+Backspace')
-        self.acts.zoom_reset.triggered.connect(lambda x=0: self.browser().zoom_reset())
+        self.acts.zoom_home = QAction('Zoom &home', self)
+        self.acts.zoom_home.setIcon(self.style().standardIcon(QStyle.SP_DirHomeIcon))
+        self.acts.zoom_home.setShortcut('Alt+Backspace')
+        self.acts.zoom_home.triggered.connect(lambda x=0: self.browser().zoom_home())
         
         self.acts.zoom_region = QAction('&Zoom', self)
         self.acts.zoom_region.setCheckable(True)
@@ -266,7 +269,7 @@ class Audian(QMainWindow):
         region_menu.addSeparator()
         region_menu.addAction(self.acts.zoom_back)
         region_menu.addAction(self.acts.zoom_forward)
-        region_menu.addAction(self.acts.zoom_reset)
+        region_menu.addAction(self.acts.zoom_home)
         region_menu.addSeparator()
         region_menu.addAction(self.acts.zoom_region)
         region_menu.addAction(self.acts.play_region)

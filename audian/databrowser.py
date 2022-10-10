@@ -297,6 +297,10 @@ class DataBrowser(QWidget):
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.acts.play_window)
         self.toolbar.addSeparator()
+        self.toolbar.addAction(self.acts.zoom_home)
+        self.toolbar.addAction(self.acts.zoom_back)
+        self.toolbar.addAction(self.acts.zoom_forward)
+        self.toolbar.addSeparator()
         self.nfftw = QComboBox(self)
         self.nfftw.setToolTip('NFFT (R, Shift+R)')
         self.nfftw.addItems([f'{2**i}' for i in range(4, 16)])
@@ -1088,10 +1092,10 @@ class DataBrowser(QWidget):
                 ax.getViewBox().zoom_forward()
 
 
-    def zoom_reset(self):
+    def zoom_home(self):
         for axs in self.axs:
             for ax in axs:
-                ax.getViewBox().zoom_reset()
+                ax.getViewBox().zoom_home()
 
 
     def set_region_mode(self, mode):
