@@ -97,11 +97,21 @@ class DataBrowser(QWidget):
         self.ypos_action = None
         self.zpos_action = None
         self.cross_hair = False
+        self.marker_ax = None
+        self.marker_time = 0
+        self.marker_ampl = 0
+        self.marker_freq = 0
+        self.marker_power = 0
+        self.marker_channel = None
         self.prev_time = 0
         self.prev_ampl = 0
         self.prev_freq = 0
         self.prev_power = 0
         self.prev_channel = None
+        self.delta_time = None
+        self.delta_ampl = None
+        self.delta_freq = None
+        self.delta_power = None
         self.marker_data = MarkerData()
         self.marker_model = MarkerDataModel(self.marker_data)
         
@@ -354,33 +364,47 @@ class DataBrowser(QWidget):
                     ax.yline.setPos(-1)
                     ax.prev_marker.clear()
             self.prev_channel = None
+
+
+    def clear_marker(self):
+        for axs in self.axs:
+            for axp in axs:
+                if hasattr(axp, 'prev_marker'):
+                    axp.prev_marker.clear()
+        self.prev_channel = None
+
+
+    def set_marker(self):
+        self.clear_marker()
+        if not self.marker_ax is None and not self.marker_time is None:
+            if not self.marker_ampl is None:
+                self.marker_ax.prev_marker.setData((self.marker_time,),
+                                                   (self.marker_ampl,))
+            if not self.marker_freq is None:
+                self.marker_ax.prev_marker.setData((self.marker_time,),
+                                                   (self.marker_freq,))
+            # remember:
+            self.prev_time = self.marker_time
+            self.prev_ampl = self.marker_ampl
+            self.prev_freq = self.marker_freq
+            self.prev_power = self.marker_power
+            self.prev_channel = self.marker_channel
             
         
-    def mouse_moved(self, evt, channel, button=0, modifiers=0):
+    def mouse_moved(self, evt, channel):
         if not self.cross_hair:
             return
-        clicked = (button & Qt.LeftButton) > 0 and modifiers == Qt.NoModifier
-        store = (button & Qt.LeftButton) > 0 and (modifiers & Qt.ControlModifier) == Qt.ControlModifier
-        pixel_pos = evt[0]
-
-        if clicked:
-            for axs in self.axs:
-                for axp in axs:
-                    if hasattr(axp, 'prev_marker'):
-                        axp.prev_marker.clear()
             
-        time = None
-        ampl = None
-        freq = None
-        power = None
+        # find axes and position:
+        pixel_pos = evt[0]
+        self.marker_ax = None
+        self.marker_time = None
+        self.marker_ampl = None
+        self.marker_freq = None
+        self.marker_power = None
+        self.marker_channel = channel
         for ax in self.axs[channel]:
             if ax.sceneBoundingRect().contains(pixel_pos):
-                if (button & Qt.RightButton) > 0:
-                    for axs in self.axs:
-                        for axp in axs:
-                            if hasattr(axp, 'prev_marker'):
-                                axp.prev_marker.clear()
-                    self.prev_channel = None
                 pos = ax.getViewBox().mapSceneToView(pixel_pos)
                 pixel_pos.setX(pixel_pos.x()+1)
                 npos = ax.getViewBox().mapSceneToView(pixel_pos)
@@ -389,111 +413,131 @@ class DataBrowser(QWidget):
                     # is it time?
                     for axts in self.axts:
                         if ax in axts:
-                            time = pos.x()
+                            self.marker_ax = ax
+                            self.marker_time = pos.x()
                             break
                 if hasattr(ax, 'yline'):
                     ax.yline.setPos(pos.y())
                     # is it amplitude?
                     for axys in self.axys:
                         if ax in axys:
-                            ampl = pos.y()
+                            self.marker_ampl = pos.y()
                             break
                     # is it trace amplitude?
                     if ax in self.axtraces:
-                        if not time is None:
+                        if not self.marker_time is None:
                             trace = self.traces[self.axtraces.index(ax)]
-                            ampl = trace.get_amplitude(time, pos.y(), npos.x())
-                            if clicked:
-                                ax.prev_marker.setData((time,), (ampl,))
+                            self.marker_ampl = trace.get_amplitude(
+                                self.marker_time, pos.y(), npos.x())
                     # is it frequency?
                     for axfys in self.axfys:
                         if ax in axfys:
-                            freq = pos.y()
+                            self.marker_freq = pos.y()
                             break
                     # is it spectrogram?
-                    if time is not None and freq is not None and ax in self.axspecs:
+                    if self.marker_time is not None and \
+                       self.marker_freq is not None and ax in self.axspecs:
                         spec = self.specs[self.axspecs.index(ax)]
-                        fi = int(floor(freq/spec.fresolution))
-                        ti = int(floor((time - spec.offset/spec.rate) / spec.tresolution))
-                        power = spec.spectrum[fi, ti]
-                        if clicked:
-                            ax.prev_marker.setData((time,), (freq,))
+                        fi = int(floor(self.marker_freq/spec.fresolution))
+                        ti = int(floor((self.marker_time - spec.offset/spec.rate) / spec.tresolution))
+                        self.marker_power = spec.spectrum[fi, ti]
                 break
+            
         # set cross-hair positions:
         for axts in self.axts:
             for axt in axts:
-                axt.xline.setPos(-1 if time is None else time)
+                axt.xline.setPos(-1 if self.marker_time is None else self.marker_time)
         for axys in self.axys:
             for axy in axys:
-                axy.yline.setPos(-1000 if ampl is None else ampl)
+                axy.yline.setPos(-1000 if self.marker_ampl is None else self.marker_ampl)
         for axfys in self.axfys:
             for axf in axfys:
-                axf.yline.setPos(-1 if freq is None else freq)
-        # remember:
-        if clicked:
-            self.prev_time = time
-            self.prev_ampl = ampl
-            self.prev_freq = freq
-            self.prev_power = power
-            self.prev_channel = channel
-        # store absolute values:
-        if store:
-            self.marker_model.add_data(channel, time, ampl, freq, power)
-        delta_time = None
-        delta_ampl = None
-        delta_freq = None
-        delta_power = None
-        # report positions on toolbar:
-        delta = self.prev_channel is not None and self.prev_channel == channel
-        tds = ''
-        if time is not None:
-            if self.prev_channel is not None and self.prev_time is not None:
-                time -= self.prev_time
-                delta_time = time
-                tds = '\u0394'
-            sign = '-' if time < 0 else ''
-            s = f'{tds}t={sign}{secs_to_str(fabs(time))}'
+                axf.yline.setPos(-1 if self.marker_freq is None else self.marker_freq)
+                
+        # compute deltas:
+        self.delta_time = None
+        self.delta_ampl = None
+        self.delta_freq = None
+        self.delta_power = None
+        if self.marker_time is not None and \
+           self.prev_channel is not None and self.prev_time is not None:
+                self.delta_time = self.marker_time - self.prev_time
+        if self.marker_ampl is not None and \
+           self.prev_channel is not None and self.prev_ampl is not None:
+                self.delta_ampl = self.marker_ampl - self.prev_ampl
+        if self.marker_freq is not None and \
+           self.prev_channel is not None and self.prev_freq is not None:
+                self.delta_freq = self.marker_freq - self.prev_freq
+        if self.marker_power is not None and \
+           self.prev_channel is not None and self.prev_power is not None:
+                self.delta_power = self.marker_power - self.prev_power
+        
+        # report time on toolbar:
+        if self.delta_time is not None:
+            sign = '-' if self.delta_time < 0 else ''
+            s = f'\u0394t={sign}{secs_to_str(fabs(self.delta_time))}'
+            self.xpos_action.setText(s)
+        elif self.marker_time is not None:
+            sign = '-' if self.marker_time < 0 else ''
+            s = f't={sign}{secs_to_str(fabs(self.marker_time))}'
             self.xpos_action.setText(s)
         else:
             self.xpos_action.setText('')
-        yds = ''
-        if ampl is not None:
-            if delta and self.prev_ampl is not None:
-                ampl -= self.prev_ampl
-                delta_ampl = ampl
-                yds = '\u0394'
-            s = f'{yds}a={ampl:6.3f}'
+        # report amplitude or frequency on toolbar:
+        if self.delta_ampl is not None:
+            s = f'\u0394a={self.delta_ampl:6.3f}'
             self.ypos_action.setText(s)
-        elif freq is not None:
-            if delta and self.prev_freq is not None:
-                freq -= self.prev_freq
-                delta_freq = freq
-                yds = '\u0394'
-            s = f'{yds}f={freq:4.0f}Hz'
+        elif self.marker_ampl is not None:
+            s = f'a={self.marker_ampl:6.3f}'
+            self.ypos_action.setText(s)
+        elif self.delta_freq is not None:
+            s = f'\u0394f={self.delta_freq:4.0f}Hz'
+            self.ypos_action.setText(s)
+        elif self.marker_freq is not None:
+            s = f'f={self.marker_freq:4.0f}Hz'
             self.ypos_action.setText(s)
         else:
             self.ypos_action.setText('')
-        pds = ''
-        if power is not None:
-            if delta and self.prev_power is not None:
-                power -= self.prev_power
-                delta_power = power
-                pds = '\u0394'
-            s = f'{pds}p={power:6.1f}dB'
+        # report power on toolbar:
+        if self.delta_power is not None:
+            s = f'\u0394p={self.delta_power:6.1f}dB'
+            self.zpos_action.setText(s)
+        elif self.marker_power is not None:
+            s = f'p={self.marker_power:6.1f}dB'
             self.zpos_action.setText(s)
         else:
             self.zpos_action.setText('')
-        self.xpos_action.setVisible(time is not None)
-        self.ypos_action.setVisible(ampl is not None or freq is not None)
-        self.zpos_action.setVisible(power is not None)
-        if store:
-            self.marker_model.set_delta(delta_time, delta_ampl,
-                                        delta_freq, delta_power)
+        self.xpos_action.setVisible(self.marker_time is not None)
+        self.ypos_action.setVisible(self.marker_ampl is not None or
+                                    self.marker_freq is not None)
+        self.zpos_action.setVisible(self.marker_power is not None)
 
 
     def mouse_clicked(self, evt, channel):
-        self.mouse_moved((evt[0].scenePos(),), channel,
-                         evt[0].button(), evt[0].modifiers())
+        if not self.cross_hair:
+            return
+        
+        # update position:
+        self.mouse_moved((evt[0].scenePos(),), channel)
+
+        # store marker positions:
+        if (evt[0].button() & Qt.LeftButton) > 0 and \
+           (evt[0].modifiers() & Qt.ControlModifier) == Qt.ControlModifier:
+            self.marker_model.add_data(self.marker_channel, self.marker_time,
+                                       self.marker_ampl, self.marker_freq,
+                                       self.marker_power)
+            self.marker_model.set_delta(self.delta_time, self.delta_ampl,
+                                        self.delta_freq, self.delta_power)
+
+        # clear marker:
+        if (evt[0].button() & Qt.RightButton) > 0:
+            self.clear_marker()
+            
+        # set marker and remember position:
+        if (evt[0].button() & Qt.LeftButton) > 0 and \
+           (evt[0].modifiers() == Qt.NoModifier or \
+            (evt[0].modifiers() & Qt.ShiftModifier) == Qt.ShiftModifier):
+            self.set_marker()
 
 
     def marker_table(self):
