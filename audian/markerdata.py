@@ -43,25 +43,19 @@ class MarkerData:
         self.comments = []
 
 
-    def add_data(self, channel, time, amplitude, frequency, power):
+    def add_data(self, channel, time, amplitude, frequency, power,
+                 delta_time=None, delta_amplitude=None,
+                 delta_frequency=None, delta_power=None, comment=''):
         self.channels.append(channel)
         self.times.append(time if not time is None else np.nan)
         self.amplitudes.append(amplitude if not amplitude is None else np.nan)
         self.frequencies.append(frequency if not frequency is None else np.nan)
         self.powers.append(power if not power is None else np.nan)
-        self.delta_times.append(np.nan)
-        self.delta_amplitudes.append(np.nan)
-        self.delta_frequencies.append(np.nan)
-        self.delta_powers.append(np.nan)
-        self.comments.append('')
-
-
-    def set_delta(self, delta_time, delta_amplitude,
-                  delta_frequency, delta_power):
-        self.delta_times[-1] = delta_time if not delta_time is None else np.nan
-        self.delta_amplitudes[-1] = delta_amplitude if not delta_amplitude is None else np.nan
-        self.delta_frequencies[-1] = delta_frequency if not delta_frequency is None else np.nan
-        self.delta_powers[-1] = delta_power if not delta_power is None else np.nan
+        self.delta_times.append(delta_time if not delta_time is None else np.nan)
+        self.delta_amplitudes.append(delta_amplitude if not delta_amplitude is None else np.nan)
+        self.delta_frequencies.append(delta_frequency if not delta_frequency is None else np.nan)
+        self.delta_powers.append(delta_power if not delta_power is None else np.nan)
+        self.comments.append(comment)
 
         
     def set_comment(self, index, comment):
@@ -180,17 +174,12 @@ class MarkerDataModel(QAbstractTableModel):
                 df.to_csv(file_path, index=False)
             
 
-    def add_data(self, channel, time, amplitude, frequency, power):
+    def add_data(self, channel, time, amplitude, frequency, power,
+                 delta_time=None, delta_amplitude=None,
+                 delta_frequency=None, delta_power=None, comment=''):
         self.beginInsertRows(QModelIndex(),
                              len(self.data.channels), len(self.data.channels))
-        self.data.add_data(channel, time, amplitude, frequency, power)
+        self.data.add_data(channel, time, amplitude, frequency, power,
+                           delta_time, delta_amplitude,
+                           delta_frequency, delta_power, comment)
         self.endInsertRows()
-
-        
-    def set_delta(self, delta_time, delta_amplitude,
-                  delta_frequency, delta_power):
-        self.data.set_delta(delta_time, delta_amplitude,
-                            delta_frequency, delta_power)
-        self.dataChanged.emit(self.index(len(self.data.channels)-1, 0),
-                              self.index(len(self.data.channels)-1,
-                                         len(self.data.keys)))

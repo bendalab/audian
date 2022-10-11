@@ -389,7 +389,16 @@ class DataBrowser(QWidget):
             self.prev_freq = self.marker_freq
             self.prev_power = self.marker_power
             self.prev_channel = self.marker_channel
+
             
+    def store_marker(self, comment=''):
+        self.marker_model.add_data(self.marker_channel,
+                                   self.marker_time, self.marker_ampl,
+                                   self.marker_freq,
+                                   self.marker_power,self.delta_time,
+                                   self.delta_ampl, self.delta_freq,
+                                   self.delta_power, comment)
+
         
     def mouse_moved(self, evt, channel):
         if not self.cross_hair:
@@ -523,11 +532,7 @@ class DataBrowser(QWidget):
         # store marker positions:
         if (evt[0].button() & Qt.LeftButton) > 0 and \
            (evt[0].modifiers() & Qt.ControlModifier) == Qt.ControlModifier:
-            self.marker_model.add_data(self.marker_channel, self.marker_time,
-                                       self.marker_ampl, self.marker_freq,
-                                       self.marker_power)
-            self.marker_model.set_delta(self.delta_time, self.delta_ampl,
-                                        self.delta_freq, self.delta_power)
+            self.store_marker()
 
         # clear marker:
         if (evt[0].button() & Qt.RightButton) > 0:
