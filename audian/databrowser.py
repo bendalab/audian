@@ -326,7 +326,6 @@ class DataBrowser(QWidget):
         self.zpos_action.setVisible(False)
         self.toolbar.widgetForAction(self.zpos_action).setFixedWidth(10*xwidth)
         self.vbox.addWidget(self.toolbar)
-        self.toolbar.setVisible(self.data.channels > 1)
         
         # full data:
         self.datafig = FullTracePlot(self.data, self.rate, self.axtraces)
@@ -564,9 +563,8 @@ class DataBrowser(QWidget):
         if not self.show_fulldata:
             data_height = 0
         height -= len(self.show_channels)*data_height
-        # subtract channel selector:
-        if not self.toolbar is None and self.toolbar.isVisible():
-            height -= 2*xheight
+        # subtract toolbar:
+        height -= 2*xheight
         bottom_channel = self.show_channels[-1]
         trace_frac = self.trace_fracs[self.show_specs]
         #axis_height = None
