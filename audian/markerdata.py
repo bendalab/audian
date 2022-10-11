@@ -119,13 +119,36 @@ class MarkerDataModel(QAbstractTableModel):
         # alignment:
         if role == Qt.TextAlignmentRole:
             if key == 'comments':
-                return Qt.AlignLeft
+                return Qt.AlignLeft | Qt.AlignVCenter
             else:
                 if item is np.nan:
-                    return Qt.AlignCenter
+                    return Qt.AlignHCenter | Qt.AlignVCenter
                 else:
-                    return Qt.AlignRight
+                    return Qt.AlignRight | Qt.AlignVCenter
 
+    
+    def flags(self, index):
+        if not index.isValid():
+            return Qt.NoItemFlag
+        flags = Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsEnabled
+        key = self.data.keys[index.column()]
+        if key == 'comments':
+            return flags | Qt.ItemIsEditable
+        else:
+            return flags
+
+
+    def setData(self, index, value, role=Qt.EditRole):
+        if not index.isValid():
+            return False
+        key = self.data.keys[index.column()]
+        if key == 'comments':
+            self.data.comments[index.row()] = value
+            self.dataChanged.emit(index, index)
+            return True
+        else:
+            return False
+        
 
     def clear(self):
         self.beginResetModel()
