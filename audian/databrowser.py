@@ -2,9 +2,9 @@ import os
 from math import fabs, ceil, floor, log
 import numpy as np
 from PyQt5.QtCore import Qt, Signal, QTimer
-from PyQt5.QtGui import QCursor
+from PyQt5.QtGui import QCursor, QKeySequence
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGraphicsRectItem
-from PyQt5.QtWidgets import QMenu, QToolBar, QComboBox
+from PyQt5.QtWidgets import QAction, QMenu, QToolBar, QComboBox
 from PyQt5.QtWidgets import QLabel, QSizePolicy, QTableView
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFileDialog
 from PyQt5.QtWidgets import QAbstractItemView
@@ -114,6 +114,10 @@ class DataBrowser(QWidget):
         self.delta_power = None
         self.marker_data = MarkerData()
         self.marker_model = MarkerDataModel(self.marker_data)
+        # TODO: add dialog for binding user defined events to keys:
+        self.marker_keys = {'s': 'start', 'e': 'end', 'p': 'peak'}
+        self.marker_acts = None
+        self.marker_orig_acts = []
         
         # plots:
         self.figs = []      # all GraphicsLayoutWidgets - one for each channel
@@ -347,23 +351,50 @@ class DataBrowser(QWidget):
 
     def set_cross_hair(self, checked):
         self.cross_hair = checked
-        if not self.cross_hair:
+        if self.cross_hair:
+            # disable existing key shortcuts:
+            for k in self.marker_keys:
+                ks = QKeySequence(k)
+                self.marker_orig_acts = []
+                for a in dir(self.acts):
+                    act = getattr(self.acts, a)
+                    if isinstance(act, QAction) and act.shortcut() == ks:
+                        self.marker_orig_acts.append((act.shortcut(), act))
+                        act.setShortcut(QKeySequence())
+                        break
+            # setup marker actions:            
+            if self.marker_acts is None:
+                self.marker_acts = []
+                for k in self.marker_keys:
+                    act = QAction(self.marker_keys[k], self)
+                    act.setShortcut(k)
+                    act.triggered.connect(lambda x, c=self.marker_keys[k]: self.store_marker(c))
+                    self.addAction(act)
+                    self.marker_acts.append(act)
+            else:
+                for k, act in zip(self.marker_keys, self.marker_acts):
+                    act.setShortcut(k)
+        else:
             self.xpos_action.setVisible(False)
             self.ypos_action.setVisible(False)
             self.zpos_action.setVisible(False)
             for axts in self.axts:
                 for ax in axts:
                     ax.xline.setPos(-1)
-                    ax.prev_marker.clear()
             for axys in self.axys:
                 for ax in axys:
                     ax.yline.setPos(-1000)
-                    ax.prev_marker.clear()
             for axfys in self.axfys:
                 for ax in axfys:
                     ax.yline.setPos(-1)
-                    ax.prev_marker.clear()
-            self.prev_channel = None
+            self.clear_marker()
+            # disable marker actions:
+            for act in self.marker_acts:
+                act.setShortcut(QKeySequence())
+            # restore key shortcuts:
+            for key, act in self.marker_orig_acts:
+                act.setShortcuts(key)
+            self.marker_orig_acts = []
 
 
     def clear_marker(self):

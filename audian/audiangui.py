@@ -203,7 +203,7 @@ class Audian(QMainWindow):
         
         self.acts.pan_zoom = QAction('&Pan && zoom', self)
         self.acts.pan_zoom.setCheckable(True)
-        self.acts.pan_zoom.setShortcut('Ctrl+P')
+        self.acts.pan_zoom.setShortcut('Ctrl+Z')
         self.acts.pan_zoom.toggled.connect(self.set_pan_mode)
         
         self.acts.zoom_mode = QActionGroup(self)
