@@ -986,12 +986,13 @@ class DataBrowser(QWidget):
             if channel in self.show_channels:
                 self.show_channels.remove(channel)
                 if len(self.show_channels) == 0:
-                    c = channel - 1
-                    if c < 0:
-                        c = channel + 1
+                    c = channel + 1
                     if c >= self.data.channels:
-                        c = channel
+                        c = 0
                     self.show_channels = [c]
+                    if not c in self.selected_channels:
+                        self.selected_channels.append(c)
+                        self.selected_channels.sort()
                 if channel in self.selected_channels:
                     self.selected_channels.remove(channel)
                     if len(self.selected_channels) == 0:

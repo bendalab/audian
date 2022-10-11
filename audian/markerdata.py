@@ -136,12 +136,12 @@ class MarkerDataModel(QAbstractTableModel):
     def save(self, parent):
         name = os.path.splitext(os.path.basename(self.data.file_path))[0]
         file_name = f'{name}-marker.csv'
-        filters = 'All files (*);;Comma separated values (*.csv)'
+        filters = 'All files (*);;Comma separated values CSV (*.csv)'
         has_excel = False
         try:
             import openpyxl
             has_excel = True
-            filters += ';;Excel spreadsheet (*.xlsx)'
+            filters += ';;Excel spreadsheet XLSX (*.xlsx)'
         except ImportError:
             pass
         file_path = os.path.join(os.path.dirname(self.data.file_path),
