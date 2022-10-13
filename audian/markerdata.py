@@ -6,6 +6,78 @@ from PyQt5.QtCore import QAbstractTableModel, QModelIndex
 from PyQt5.QtWidgets import QFileDialog
 
 
+class MarkerLabel:
+
+    def __init__(self, label, key_shortcut, color):
+        self.label = label
+        self.key_shortcut = key_shortcut
+        self.color = color
+        self.action = None
+
+    
+class MarkerLabelsModel(QAbstractTableModel):
+    
+    def __init__(self, labels, parent=None):
+        QAbstractTableModel.__init__(self, parent)
+        self.labels = labels
+        self.header = ['label', 'key', 'color']
+
+        
+    def rowCount(self, parent=None):
+        return len(self.labels)
+
+    
+    def columnCount(self, parent=None):
+        return 3
+
+
+    def headerData(self, index, orientation, role=Qt.DisplayRole):
+        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+            return self.header[index]
+        if orientation == Qt.Vertical and role == Qt.DisplayRole:
+            return f'{index}'
+        return QVariant()
+
+    
+    def data(self, index, role=Qt.DisplayRole):
+        if not index.isValid():
+            return QVariant()
+        
+        # data:
+        if role == Qt.DisplayRole:
+            label = self.labels[index.row()]
+            item = label.label
+            if index.column() == 1:
+                item = label.key_shortcut
+            elif index.column() == 2:
+                item = label.color
+            return item
+                
+        # alignment:
+        if role == Qt.TextAlignmentRole:
+            return Qt.AlignLeft | Qt.AlignVCenter
+
+    
+    def flags(self, index):
+        if not index.isValid():
+            return Qt.NoItemFlag
+        flags = Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsEnabled | Qt.ItemIsEditable
+        return flags
+
+
+    def setData(self, index, value, role=Qt.EditRole):
+        if not index.isValid():
+            return False
+        if index.column() == 2:
+            self.labels[index.row()].color = value
+        elif index.column() == 1:
+            self.labels[index.row()].key_shortcut = value
+        else:
+            self.labels[index.row()].label = value
+        self.dataChanged.emit(index, index)
+        return True
+        
+
 class MarkerData:
 
     def __init__(self):
@@ -19,15 +91,15 @@ class MarkerData:
         self.delta_amplitudes = []
         self.delta_frequencies = []
         self.delta_powers = []
-        self.comments = []
+        self.labels = []
         self.keys = ['channels', 'times', 'amplitudes',
                      'frequencies', 'powers',
                      'delta_times', 'delta_amplitudes',
-                     'delta_frequencies', 'delta_powers', 'comments']
-        self.labels = ['channel', 'time/s', 'amplitude',
+                     'delta_frequencies', 'delta_powers', 'labels']
+        self.headers = ['channel', 'time/s', 'amplitude',
                        'frequency/Hz', 'power/dB',
                        'time-diff/s', 'ampl-diff',
-                       'freq-diff/Hz', 'power-diff/dB', 'comment']
+                       'freq-diff/Hz', 'power-diff/dB', 'label']
 
         
     def clear(self):
@@ -40,12 +112,12 @@ class MarkerData:
         self.delta_amplitudes = []
         self.delta_frequencies = []
         self.delta_powers = []
-        self.comments = []
+        self.labels = []
 
 
     def add_data(self, channel, time, amplitude, frequency, power,
                  delta_time=None, delta_amplitude=None,
-                 delta_frequency=None, delta_power=None, comment=''):
+                 delta_frequency=None, delta_power=None, label=''):
         self.channels.append(channel)
         self.times.append(time if not time is None else np.nan)
         self.amplitudes.append(amplitude if not amplitude is None else np.nan)
@@ -55,17 +127,17 @@ class MarkerData:
         self.delta_amplitudes.append(delta_amplitude if not delta_amplitude is None else np.nan)
         self.delta_frequencies.append(delta_frequency if not delta_frequency is None else np.nan)
         self.delta_powers.append(delta_power if not delta_power is None else np.nan)
-        self.comments.append(comment)
+        self.labels.append(label)
 
         
-    def set_comment(self, index, comment):
-        self.comments[index] = comment
+    def set_label(self, index, label):
+        self.labels[index] = label
 
 
     def data_frame(self):
         table_dict = {}
-        for key, label in zip(self.keys, self.labels):
-            table_dict[label] = getattr(self, key)
+        for key, header in zip(self.keys, self.headers):
+            table_dict[header] = getattr(self, key)
         return pd.DataFrame(table_dict)
 
 
@@ -87,7 +159,7 @@ class MarkerDataModel(QAbstractTableModel):
 
     def headerData(self, index, orientation, role=Qt.DisplayRole):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
-            return self.data.labels[index]
+            return self.data.headers[index]
         if orientation == Qt.Vertical and role == Qt.DisplayRole:
             return f'{index}'
         return QVariant()
@@ -102,7 +174,7 @@ class MarkerDataModel(QAbstractTableModel):
         
         # data:
         if role == Qt.DisplayRole:
-            if key == 'comments':
+            if key == 'labels':
                 return item
             else:
                 if item is np.nan:
@@ -112,7 +184,7 @@ class MarkerDataModel(QAbstractTableModel):
                 
         # alignment:
         if role == Qt.TextAlignmentRole:
-            if key == 'comments':
+            if key == 'labels':
                 return Qt.AlignLeft | Qt.AlignVCenter
             else:
                 if item is np.nan:
@@ -126,7 +198,7 @@ class MarkerDataModel(QAbstractTableModel):
             return Qt.NoItemFlag
         flags = Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsEnabled
         key = self.data.keys[index.column()]
-        if key == 'comments':
+        if key == 'labels':
             return flags | Qt.ItemIsEditable
         else:
             return flags
@@ -136,8 +208,8 @@ class MarkerDataModel(QAbstractTableModel):
         if not index.isValid():
             return False
         key = self.data.keys[index.column()]
-        if key == 'comments':
-            self.data.comments[index.row()] = value
+        if key == 'labels':
+            self.data.labels[index.row()] = value
             self.dataChanged.emit(index, index)
             return True
         else:
@@ -152,7 +224,7 @@ class MarkerDataModel(QAbstractTableModel):
 
     def save(self, parent):
         name = os.path.splitext(os.path.basename(self.data.file_path))[0]
-        file_name = f'{name}-marker.csv'
+        file_name = f'{name}-events.csv'
         filters = 'All files (*);;Comma separated values CSV (*.csv)'
         has_excel = False
         try:
@@ -176,10 +248,10 @@ class MarkerDataModel(QAbstractTableModel):
 
     def add_data(self, channel, time, amplitude, frequency, power,
                  delta_time=None, delta_amplitude=None,
-                 delta_frequency=None, delta_power=None, comment=''):
+                 delta_frequency=None, delta_power=None, label=''):
         self.beginInsertRows(QModelIndex(),
                              len(self.data.channels), len(self.data.channels))
         self.data.add_data(channel, time, amplitude, frequency, power,
                            delta_time, delta_amplitude,
-                           delta_frequency, delta_power, comment)
+                           delta_frequency, delta_power, label)
         self.endInsertRows()

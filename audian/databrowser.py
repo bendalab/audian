@@ -17,6 +17,7 @@ from .oscillogramplot import OscillogramPlot
 from .spectrumplot import SpectrumPlot
 from .traceitem import TraceItem
 from .specitem import SpecItem
+from .markerdata import MarkerLabel, MarkerLabelsModel
 from .markerdata import MarkerData, MarkerDataModel
 
 
@@ -115,8 +116,11 @@ class DataBrowser(QWidget):
         self.marker_data = MarkerData()
         self.marker_model = MarkerDataModel(self.marker_data)
         # TODO: add dialog for binding user defined events to keys:
-        self.marker_keys = {'s': 'start', 'e': 'end', 'p': 'peak'}
-        self.marker_acts = None
+        self.marker_labels = []
+        self.marker_labels.append(MarkerLabel('start', 's', 'red'))
+        self.marker_labels.append(MarkerLabel('peak', 'p', 'blue'))
+        self.marker_labels.append(MarkerLabel('end', 'e', 'green'))
+        self.marker_labels_model = MarkerLabelsModel(self.marker_labels)
         self.marker_orig_acts = []
         
         # plots:
@@ -353,9 +357,9 @@ class DataBrowser(QWidget):
         self.cross_hair = checked
         if self.cross_hair:
             # disable existing key shortcuts:
-            for k in self.marker_keys:
-                ks = QKeySequence(k)
-                self.marker_orig_acts = []
+            self.marker_orig_acts = []
+            for l in self.marker_labels:
+                ks = QKeySequence(l.key_shortcut)
                 for a in dir(self.acts):
                     act = getattr(self.acts, a)
                     if isinstance(act, QAction) and act.shortcut() == ks:
@@ -363,17 +367,13 @@ class DataBrowser(QWidget):
                         act.setShortcut(QKeySequence())
                         break
             # setup marker actions:            
-            if self.marker_acts is None:
-                self.marker_acts = []
-                for k in self.marker_keys:
-                    act = QAction(self.marker_keys[k], self)
-                    act.setShortcut(k)
-                    act.triggered.connect(lambda x, c=self.marker_keys[k]: self.store_marker(c))
-                    self.addAction(act)
-                    self.marker_acts.append(act)
-            else:
-                for k, act in zip(self.marker_keys, self.marker_acts):
-                    act.setShortcut(k)
+            for l in self.marker_labels:
+                if l.action is None:
+                    l.action = QAction(l.label, self)
+                    l.action.triggered.connect(lambda x, label=l.label: self.store_marker(label))
+                    self.addAction(l.action)
+                l.action.setShortcut(l.key_shortcut)
+                l.action.setEnabled(True)
         else:
             self.xpos_action.setVisible(False)
             self.ypos_action.setVisible(False)
@@ -389,8 +389,8 @@ class DataBrowser(QWidget):
                     ax.yline.setPos(-1)
             self.clear_marker()
             # disable marker actions:
-            for act in self.marker_acts:
-                act.setShortcut(QKeySequence())
+            for l in self.marker_labels:
+                l.action.setEnabled(False)
             # restore key shortcuts:
             for key, act in self.marker_orig_acts:
                 act.setShortcuts(key)
@@ -422,13 +422,13 @@ class DataBrowser(QWidget):
             self.prev_channel = self.marker_channel
 
             
-    def store_marker(self, comment=''):
+    def store_marker(self, label=''):
         self.marker_model.add_data(self.marker_channel,
                                    self.marker_time, self.marker_ampl,
                                    self.marker_freq,
                                    self.marker_power,self.delta_time,
                                    self.delta_ampl, self.delta_freq,
-                                   self.delta_power, comment)
+                                   self.delta_power, label)
 
         
     def mouse_moved(self, evt, channel):
@@ -575,7 +575,32 @@ class DataBrowser(QWidget):
             (evt[0].modifiers() & Qt.ShiftModifier) == Qt.ShiftModifier):
             self.set_marker()
 
+            
+    def label_editor(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle('Audian label editor')
+        vbox = QVBoxLayout()
+        dialog.setLayout(vbox)
+        view = QTableView()
+        view.setModel(self.marker_labels_model)
+        view.resizeColumnsToContents()
+        width = view.verticalHeader().width() + 24
+        for c in range(self.marker_model.columnCount()):
+            width += view.columnWidth(c)
+        dialog.setMaximumWidth(width)
+        xheight = self.fontMetrics().ascent()
+        dialog.resize(width, 20*xheight)
+        vbox.addWidget(view)
+        buttons = QDialogButtonBox(QDialogButtonBox.Close |
+                                   QDialogButtonBox.Save |
+                                   QDialogButtonBox.Reset)
+        #buttons.rejected.connect(dialog.reject)
+        #buttons.button(QDialogButtonBox.Reset).clicked.connect(self.marker_model.clear)
+        #buttons.button(QDialogButtonBox.Save).clicked.connect(lambda x: self.marker_model.save(self))
+        vbox.addWidget(buttons)
+        dialog.show()
 
+        
     def marker_table(self):
         dialog = QDialog(self)
         dialog.setWindowTitle('Audian marker table')
