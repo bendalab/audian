@@ -44,18 +44,22 @@ class MarkerLabelsModel(QAbstractTableModel):
             return QVariant()
         
         # data:
-        if role == Qt.DisplayRole:
+        if role == Qt.DisplayRole or role == Qt.EditRole:
             label = self.labels[index.row()]
-            item = label.label
-            if index.column() == 1:
-                item = label.key_shortcut
+            if index.column() == 0:
+                return label.label
+            elif index.column() == 1:
+                return label.key_shortcut
             elif index.column() == 2:
-                item = label.color
-            return item
+                return label.color
+            else:
+                return QVariant()
                 
         # alignment:
         if role == Qt.TextAlignmentRole:
             return Qt.AlignLeft | Qt.AlignVCenter
+
+        return QVariant()
 
     
     def flags(self, index):
@@ -68,12 +72,14 @@ class MarkerLabelsModel(QAbstractTableModel):
     def setData(self, index, value, role=Qt.EditRole):
         if not index.isValid():
             return False
-        if index.column() == 2:
-            self.labels[index.row()].color = value
+        if index.column() == 0:
+            self.labels[index.row()].label = value
         elif index.column() == 1:
             self.labels[index.row()].key_shortcut = value
+        elif index.column() == 2:
+            self.labels[index.row()].color = value
         else:
-            self.labels[index.row()].label = value
+            return False
         self.dataChanged.emit(index, index)
         return True
         
@@ -173,7 +179,7 @@ class MarkerDataModel(QAbstractTableModel):
         item = getattr(self.data, key)[index.row()]
         
         # data:
-        if role == Qt.DisplayRole:
+        if role == Qt.DisplayRole or role == Qt.EditRole:
             if key == 'labels':
                 return item
             else:
@@ -191,6 +197,8 @@ class MarkerDataModel(QAbstractTableModel):
                     return Qt.AlignHCenter | Qt.AlignVCenter
                 else:
                     return Qt.AlignRight | Qt.AlignVCenter
+
+        return QVariant()
 
     
     def flags(self, index):
