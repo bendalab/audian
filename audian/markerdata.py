@@ -3,24 +3,33 @@ import numpy as np
 import pandas as pd
 from PyQt5.QtCore import Qt, QVariant
 from PyQt5.QtCore import QAbstractTableModel, QModelIndex
-from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtGui import QKeySequence
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTableView
+from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFileDialog
 
 
 class MarkerLabel:
 
-    def __init__(self, label, key_shortcut, color):
+    def __init__(self, label, key_shortcut, color, action=None):
         self.label = label
         self.key_shortcut = key_shortcut
         self.color = color
-        self.action = None
+        self.action = action
+
+
+    def copy(self):
+        ml = MarkerLabel(self.label, self.key_shortcut, self.color, self.action)
+        return ml
 
     
 class MarkerLabelsModel(QAbstractTableModel):
     
     def __init__(self, labels, parent=None):
         QAbstractTableModel.__init__(self, parent)
-        self.labels = labels
+        self.orig_labels = labels
+        self.labels = [x.copy() for x in labels]
         self.header = ['label', 'key', 'color']
+        self.dialog = None
 
         
     def rowCount(self, parent=None):
@@ -82,7 +91,54 @@ class MarkerLabelsModel(QAbstractTableModel):
             return False
         self.dataChanged.emit(index, index)
         return True
+
+
+    def store(self):
+        for k in range(len(self.labels)):
+            if k < len(self.orig_labels):
+                self.orig_labels[k] = self.labels[k]
+            else:
+                self.orig_labels.append(self.labels[k])
+
+                
+    def set(self, labels):
+        self.beginResetModel()
+        self.orig_labels = labels
+        self.labels = [x.copy() for x in labels]
+        self.endResetModel()
         
+            
+    def edit(self, parent):
+        if not self.dialog is None:
+            return
+        self.dialog = QDialog(parent)
+        self.dialog.setWindowTitle('Audian label editor')
+        vbox = QVBoxLayout()
+        self.dialog.setLayout(vbox)
+        view = QTableView()
+        view.setModel(self)
+        view.resizeColumnsToContents()
+        width = view.verticalHeader().width() + 24
+        for c in range(self.columnCount()):
+            width += view.columnWidth(c)
+        self.dialog.setMaximumWidth(width)
+        xheight = self.dialog.fontMetrics().ascent()
+        self.dialog.resize(width, 20*xheight)
+        vbox.addWidget(view)
+        buttons = QDialogButtonBox(QDialogButtonBox.Cancel |
+                                   QDialogButtonBox.Ok)
+        buttons.rejected.connect(self.dialog.reject)
+        buttons.accepted.connect(self.dialog.accept)
+        vbox.addWidget(buttons)
+        self.dialog.finished.connect(self.finished)
+        self.dialog.show()
+
+
+    def finished(self, result=0):
+        if result == QDialog.Accepted:
+            self.store()
+        self.dialog = None
+
 
 class MarkerData:
 

@@ -577,29 +577,9 @@ class DataBrowser(QWidget):
 
             
     def label_editor(self):
-        dialog = QDialog(self)
-        dialog.setWindowTitle('Audian label editor')
-        vbox = QVBoxLayout()
-        dialog.setLayout(vbox)
-        view = QTableView()
-        view.setModel(self.marker_labels_model)
-        view.resizeColumnsToContents()
-        width = view.verticalHeader().width() + 24
-        for c in range(self.marker_model.columnCount()):
-            width += view.columnWidth(c)
-        dialog.setMaximumWidth(width)
-        xheight = self.fontMetrics().ascent()
-        dialog.resize(width, 20*xheight)
-        vbox.addWidget(view)
-        buttons = QDialogButtonBox(QDialogButtonBox.Close |
-                                   QDialogButtonBox.Save |
-                                   QDialogButtonBox.Reset)
-        #buttons.rejected.connect(dialog.reject)
-        #buttons.button(QDialogButtonBox.Reset).clicked.connect(self.marker_model.clear)
-        #buttons.button(QDialogButtonBox.Save).clicked.connect(lambda x: self.marker_model.save(self))
-        vbox.addWidget(buttons)
-        dialog.show()
-
+        self.marker_labels_model.set(self.marker_labels)
+        self.marker_labels_model.edit(self)
+        
         
     def marker_table(self):
         dialog = QDialog(self)
