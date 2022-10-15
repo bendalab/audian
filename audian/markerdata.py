@@ -4,8 +4,8 @@ import pandas as pd
 from PyQt5.QtCore import Qt, QVariant
 from PyQt5.QtCore import QAbstractTableModel, QModelIndex
 from PyQt5.QtGui import QKeySequence
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTableView
-from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFileDialog
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QTableView
+from PyQt5.QtWidgets import QPushButton, QDialog, QDialogButtonBox, QFileDialog
 
 
 class MarkerLabel:
@@ -30,6 +30,7 @@ class MarkerLabelsModel(QAbstractTableModel):
         self.labels = [x.copy() for x in labels]
         self.header = ['label', 'key', 'color']
         self.dialog = None
+        self.view = None
 
         
     def rowCount(self, parent=None):
@@ -106,30 +107,76 @@ class MarkerLabelsModel(QAbstractTableModel):
         self.orig_labels = labels
         self.labels = [x.copy() for x in labels]
         self.endResetModel()
+
+
+    def insertRows(self, row, count, parent=QModelIndex()):
+        if row > len(self.labels):
+            return False
+        self.beginInsertRows(parent, row, row+count-1)
+        for k in range(count):
+            self.labels.insert(row+k, MarkerLabel(f'events{row+k+1}', '', ''))
+        self.endInsertRows()
+        return True
+
         
-            
+    def add_row(self):
+        self.insertRows(len(self.labels), 1)
+
+
+    def removeRows(self, row, count, parent=QModelIndex()):
+        if row >= len(self.labels):
+            return False
+        self.beginRemoveRows(parent, row, row+count-1)
+        for k in range(count):
+            self.labels.pop(row)
+        self.endRemoveRows()
+        return True
+
+        
+    def remove_rows(self):
+        selection = self.view.selectionModel()
+        if selection.hasSelection():
+            for r in selection.selectedRows():
+                self.removeRow(r.row())
+
+    
     def edit(self, parent):
         if not self.dialog is None:
             return
+        xheight = parent.fontMetrics().ascent()
         self.dialog = QDialog(parent)
         self.dialog.setWindowTitle('Audian label editor')
         vbox = QVBoxLayout()
+        vbox.setContentsMargins(10, 10, 10, 10)
         self.dialog.setLayout(vbox)
-        view = QTableView()
-        view.setModel(self)
-        view.resizeColumnsToContents()
-        width = view.verticalHeader().width() + 24
-        for c in range(self.columnCount()):
-            width += view.columnWidth(c)
-        self.dialog.setMaximumWidth(width)
-        xheight = self.dialog.fontMetrics().ascent()
-        self.dialog.resize(width, 20*xheight)
-        vbox.addWidget(view)
+        hbox = QHBoxLayout()
+        hbox.setContentsMargins(0, 0, 0, 0)
+        vbox.addLayout(hbox)
+        self.view = QTableView()
+        self.view.setModel(self)
+        self.view.resizeColumnsToContents()
+        self.view.setColumnWidth(0, max(8*xheight, self.view.columnWidth(0)) + 4*xheight)
+        hbox.addWidget(self.view)
+        bbox = QVBoxLayout()
+        bbox.setContentsMargins(0, 0, 0, 0)
+        hbox.addLayout(bbox)
+        addb = QPushButton('&Add')
+        addb.clicked.connect(self.add_row)
+        bbox.addWidget(addb)
+        delb = QPushButton('&Remove')
+        delb.clicked.connect(self.remove_rows)
+        bbox.addWidget(delb)
         buttons = QDialogButtonBox(QDialogButtonBox.Cancel |
                                    QDialogButtonBox.Ok)
         buttons.rejected.connect(self.dialog.reject)
         buttons.accepted.connect(self.dialog.accept)
         vbox.addWidget(buttons)
+        width = 20 + delb.sizeHint().width()
+        width += self.view.verticalHeader().width() + 24
+        for c in range(self.columnCount()):
+            width += self.view.columnWidth(c)
+        self.dialog.setMaximumWidth(width)
+        self.dialog.resize(width, 20*xheight)
         self.dialog.finished.connect(self.finished)
         self.dialog.show()
 
