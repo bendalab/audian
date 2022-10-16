@@ -2,7 +2,7 @@ import os
 import sys
 import argparse
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QKeySequence
+from PyQt5.QtGui import QKeySequence, QIcon
 from PyQt5.QtWidgets import QStyle, QApplication, QMainWindow, QTabWidget
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel
 from PyQt5.QtWidgets import QAction, QActionGroup, QPushButton

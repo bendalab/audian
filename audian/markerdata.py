@@ -1,12 +1,13 @@
+from collections import OrderedDict
 import os
 import numpy as np
 import pandas as pd
 from PyQt5.QtCore import Qt, QVariant
 from PyQt5.QtCore import QAbstractTableModel, QModelIndex
-from PyQt5.QtGui import QKeySequence
+from PyQt5.QtGui import QKeySequence, QIcon, QIconEngine, QColor
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QTableView
 from PyQt5.QtWidgets import QPushButton, QDialog, QDialogButtonBox, QFileDialog
-from PyQt5.QtWidgets import QStyledItemDelegate, QMessageBox, QAction
+from PyQt5.QtWidgets import QStyledItemDelegate, QComboBox, QAction, QMessageBox
 try:
     from PyQt5.QtWidgets import QKeySequenceEditor
     has_key_editor = True
@@ -14,12 +15,30 @@ except ImportError:
     has_key_editor = False
 
 
+""" Colors from https://github.com/bendalab/plottools/colors.py """
+colors_vivid = OrderedDict()
+colors_vivid['red'] = '#D71000'
+colors_vivid['orange'] = '#FF9000'
+colors_vivid['yellow'] = '#FFF700'
+colors_vivid['lightgreen'] = '#B0FF00'
+colors_vivid['green'] = '#30D700'
+colors_vivid['darkgreen'] = '#00A050'
+colors_vivid['cyan'] = '#00D0B0'
+colors_vivid['lightblue'] = '#00B0C7'
+colors_vivid['blue'] = '#1040C0'
+colors_vivid['purple'] = '#8000C0'
+colors_vivid['magenta'] = '#B000B0'
+colors_vivid['pink'] = '#E00080'
+
+colors = colors_vivid
+
+
 if has_key_editor:
 
     class KeySequenceDelegate(QStyledItemDelegate):
 
         def __init__(self, parent=None):
-            pass
+            super().__init__(parent)
 
 
         def createEditor(self, parent, option, index):
@@ -39,6 +58,64 @@ if has_key_editor:
 
         def updateEditorGeometry(self, editor, option, index):
             editor.setGeometry(option.rect)
+
+
+class TestIconEngine(QIconEngine):
+    def paint(self, painter, rect, mode=QIcon.Normal, state=QIcon.Off):
+        painter.setBrush(QColor('black'))
+        painter.setPen(Qt.NoPen)
+        painter.drawRect(rect)
+        painter.setBrush(QColor('blue'))
+        painter.setPen(Qt.NoPen)
+        d = rect.width()//5
+        painter.drawEllipse(rect.adjusted(d, d, -d, -d))
+
+test_icon = QIcon(TestIconEngine())
+
+
+class ColorIconEngine(QIconEngine):
+
+    def __init__(self, color):
+        super().__init__()
+        self.color = colors[color]
+
+
+    def paint(self, painter, rect, mode=QIcon.Normal, state=QIcon.Off):
+        painter.setBrush(QColor('black'))
+        painter.setPen(Qt.NoPen)
+        painter.drawRect(rect)
+        painter.setBrush(QColor(self.color))
+        painter.setPen(Qt.NoPen)
+        d = rect.width()//5
+        painter.drawEllipse(rect.adjusted(d, d, -d, -d))
+
+
+class ColorDelegate(QStyledItemDelegate):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+
+    def createEditor(self, parent, option, index):
+        editor = QComboBox(parent)
+        for c in colors:
+            editor.addItem(index.model().icons[c], c)
+        editor.setEditable(False)
+        return editor
+
+
+    def setEditorData(self, editor, index):
+        value = index.model().data(index, Qt.EditRole)
+        editor.setCurrentText(value)
+
+
+    def setModelData(self, editor, model, index):
+        value = editor.currentText()
+        model.setData(index, value, Qt.EditRole)
+
+
+    def updateEditorGeometry(self, editor, option, index):
+        editor.setGeometry(option.rect)
 
 
 class MarkerLabel:
@@ -66,6 +143,9 @@ class MarkerLabelsModel(QAbstractTableModel):
         self.view = None
         self.key_delegate = None
         self.acts = acts
+        self.icons = {}
+        for c in colors:
+            self.icons[c] = QIcon(ColorIconEngine(c))
 
         
     def rowCount(self, parent=None):
@@ -99,6 +179,12 @@ class MarkerLabelsModel(QAbstractTableModel):
                 return label.color
             else:
                 return QVariant()
+
+        # icons:
+        if role == Qt.DecorationRole:
+            label = self.labels[index.row()]
+            if index.column() == 2:
+                return self.icons[label.color]
                 
         # alignment:
         if role == Qt.TextAlignmentRole:
@@ -163,7 +249,9 @@ class MarkerLabelsModel(QAbstractTableModel):
             return False
         self.beginInsertRows(parent, row, row+count-1)
         for k in range(count):
-            self.labels.insert(row+k, MarkerLabel(f'events{row+k+1}', '', ''))
+            color = list(colors.keys())[(row+k)%len(colors)]
+            self.labels.insert(row+k, MarkerLabel(chr(ord('A')+row+k),
+                                                  '', color))
         self.endInsertRows()
         return True
 
@@ -185,14 +273,15 @@ class MarkerLabelsModel(QAbstractTableModel):
     def remove_rows(self):
         selection = self.view.selectionModel()
         if selection.hasSelection():
-            for r in selection.selectedRows():
-                self.removeRow(r.row())
+            rows = [r.row() for r in selection.selectedRows()]
+            for r in reversed(sorted(rows)):
+                self.removeRow(r)
 
     
     def edit(self, parent):
         if not self.dialog is None:
             return
-        xheight = parent.fontMetrics().ascent()
+        xwidth = parent.fontMetrics().averageCharWidth()
         self.dialog = QDialog(parent)
         self.dialog.setWindowTitle('Audian label editor')
         vbox = QVBoxLayout()
@@ -204,11 +293,18 @@ class MarkerLabelsModel(QAbstractTableModel):
         self.view = QTableView()
         self.view.setModel(self)
         self.view.resizeColumnsToContents()
-        self.view.setColumnWidth(0, max(8*xheight, self.view.columnWidth(0)) + 4*xheight)
+        self.view.setColumnWidth(0, max(8*xwidth,
+                                        self.view.columnWidth(0)) +
+                                 4*xwidth)
+        self.view.setColumnWidth(2, max(12*xwidth,
+                                        self.view.columnWidth(2)))
         self.view.horizontalHeader().setStretchLastSection(True)
+        self.view.setSelectionBehavior(self.view.SelectRows)
         if has_key_editor:
             self.key_delegate = KeySequenceDelegate(self.dialog)
-            self.view.setItemDelegateForColumn(1, self.key_delegae)
+            self.view.setItemDelegateForColumn(1, self.key_delegate)
+        color_delegate = ColorDelegate(self.dialog)
+        self.view.setItemDelegateForColumn(2, color_delegate)
         hbox.addWidget(self.view)
         bbox = QVBoxLayout()
         bbox.setContentsMargins(0, 0, 0, 0)
@@ -224,12 +320,12 @@ class MarkerLabelsModel(QAbstractTableModel):
         buttons.rejected.connect(self.dialog.reject)
         buttons.accepted.connect(self.dialog.accept)
         vbox.addWidget(buttons)
-        width = 20 + delb.sizeHint().width()
-        width += self.view.verticalHeader().width() + 24
+        width = 50 + delb.sizeHint().width()
+        width += self.view.verticalHeader().width()
         for c in range(self.columnCount()):
             width += self.view.columnWidth(c)
         self.dialog.setMaximumWidth(width)
-        self.dialog.resize(width, 20*xheight)
+        self.dialog.resize(width, 30*xwidth)
         self.dialog.finished.connect(self.finished)
         self.dialog.show()
 
