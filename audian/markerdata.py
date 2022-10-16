@@ -6,6 +6,39 @@ from PyQt5.QtCore import QAbstractTableModel, QModelIndex
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QTableView
 from PyQt5.QtWidgets import QPushButton, QDialog, QDialogButtonBox, QFileDialog
+from PyQt5.QtWidgets import QStyledItemDelegate
+try:
+    from PyQt5.QtWidgets import QKeySequenceEditor
+    has_key_editor = True
+except ImportError:
+    has_key_editor = False
+
+
+if has_key_editor:
+
+    class KeySequenceDelegate(QStyledItemDelegate):
+
+        def __init__(self, parent=None):
+            pass
+
+
+        def createEditor(self, parent, option, index):
+            editor = QKeySequenceEditor(parent)
+            return editor
+
+
+        def setEditorData(self, editor, index):
+            value = index.model().data(index, Qt.EditRole)
+            editor.setKeySequence(value)
+
+
+        def setModelData(self, editor, model, index):
+            value = editor.keySequence()
+            model.setData(index, value.toString(), Qt.EditRole)
+
+
+        def updateEditorGeometry(self, editor, option, index):
+            editor.setGeometry(option.rect)
 
 
 class MarkerLabel:
@@ -31,6 +64,7 @@ class MarkerLabelsModel(QAbstractTableModel):
         self.header = ['label', 'key', 'color']
         self.dialog = None
         self.view = None
+        self.key_delegate = None
 
         
     def rowCount(self, parent=None):
@@ -156,6 +190,10 @@ class MarkerLabelsModel(QAbstractTableModel):
         self.view.setModel(self)
         self.view.resizeColumnsToContents()
         self.view.setColumnWidth(0, max(8*xheight, self.view.columnWidth(0)) + 4*xheight)
+        self.view.horizontalHeader().setStretchLastSection(True)
+        if has_key_editor:
+            self.key_delegate = KeySequenceDelegate(self.dialog)
+            self.view.setItemDelegateForColumn(1, self.key_delegae)
         hbox.addWidget(self.view)
         bbox = QVBoxLayout()
         bbox.setContentsMargins(0, 0, 0, 0)
