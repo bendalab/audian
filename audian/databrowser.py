@@ -120,7 +120,8 @@ class DataBrowser(QWidget):
         self.marker_labels.append(MarkerLabel('start', 's', 'red'))
         self.marker_labels.append(MarkerLabel('peak', 'p', 'blue'))
         self.marker_labels.append(MarkerLabel('end', 'e', 'green'))
-        self.marker_labels_model = MarkerLabelsModel(self.marker_labels)
+        self.marker_labels_model = MarkerLabelsModel(self.marker_labels,
+                                                     self.acts)
         self.marker_orig_acts = []
         
         # plots:

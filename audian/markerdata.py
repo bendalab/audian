@@ -6,7 +6,7 @@ from PyQt5.QtCore import QAbstractTableModel, QModelIndex
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QTableView
 from PyQt5.QtWidgets import QPushButton, QDialog, QDialogButtonBox, QFileDialog
-from PyQt5.QtWidgets import QStyledItemDelegate
+from PyQt5.QtWidgets import QStyledItemDelegate, QMessageBox, QAction
 try:
     from PyQt5.QtWidgets import QKeySequenceEditor
     has_key_editor = True
@@ -57,7 +57,7 @@ class MarkerLabel:
     
 class MarkerLabelsModel(QAbstractTableModel):
     
-    def __init__(self, labels, parent=None):
+    def __init__(self, labels, acts, parent=None):
         QAbstractTableModel.__init__(self, parent)
         self.orig_labels = labels
         self.labels = [x.copy() for x in labels]
@@ -65,6 +65,7 @@ class MarkerLabelsModel(QAbstractTableModel):
         self.dialog = None
         self.view = None
         self.key_delegate = None
+        self.acts = acts
 
         
     def rowCount(self, parent=None):
@@ -120,6 +121,11 @@ class MarkerLabelsModel(QAbstractTableModel):
             self.labels[index.row()].label = value
         elif index.column() == 1:
             self.labels[index.row()].key_shortcut = value
+            act = self.find_action(value)
+            if not act is None:
+                act_text = act.text().replace('&', '')
+                QMessageBox.information(self.parent(), "Audian key shortcut",
+                                        f'Key shortcut <b>{value}</b> for label <b>{self.labels[index.row()].label}</b> disables <b>{act_text}</b>')
         elif index.column() == 2:
             self.labels[index.row()].color = value
         else:
@@ -128,6 +134,15 @@ class MarkerLabelsModel(QAbstractTableModel):
         return True
 
 
+    def find_action(self, key_shortcut):
+        ks = QKeySequence(key_shortcut)
+        for a in dir(self.acts):
+            act = getattr(self.acts, a)
+            if isinstance(act, QAction) and act.shortcut() == ks:
+                return act
+        return None
+
+                
     def store(self):
         for k in range(len(self.labels)):
             if k < len(self.orig_labels):
