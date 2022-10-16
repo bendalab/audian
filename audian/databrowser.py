@@ -142,6 +142,8 @@ class DataBrowser(QWidget):
         self.traces = []    # traces
         self.specs = []     # spectrograms
         self.cbars = []     # color bars
+        self.trace_labels = [] # labels on traces
+        self.spec_labels = []  # labels on spectrograms
 
 
     def __del__(self):
@@ -197,7 +199,9 @@ class DataBrowser(QWidget):
         self.axspacers = [] # spacer between trace and spectrogram
         self.axspecs = []   # spectrogram plots
         self.traces = []    # traces
+        self.trace_labels = [] # labels on traces
         self.specs = []     # spectrograms
+        self.spec_labels = []  # labels on spectrograms
         self.cbars = []     # color bars
         self.audio_markers = [] # vertical line showing position while playing
         # font size:
@@ -235,6 +239,13 @@ class DataBrowser(QWidget):
             self.specs.append(spec)
             axs = SpectrumPlot(c, xwidth)
             axs.addItem(spec)
+            labels = []
+            for l in self.marker_labels:
+                label = pg.ScatterPlotItem(size=10, pen=pg.mkPen(None),
+                                           brush=pg.mkBrush(l.color))
+                axs.addItem(label)
+                labels.append(label)
+            self.spec_labels.append(labels)
             axs.setLimits(xMax=self.tmax, yMax=spec.fmax,
                          minXRange=10/self.rate, maxXRange=self.tmax,
                          minYRange=0.1, maxYRange=spec.fmax)
@@ -276,6 +287,13 @@ class DataBrowser(QWidget):
             self.traces.append(trace)
             axt = OscillogramPlot(c, xwidth)
             axt.addItem(trace)
+            labels = []
+            for l in self.marker_labels:
+                label = pg.ScatterPlotItem(size=10, pen=pg.mkPen(None),
+                                           brush=pg.mkBrush(l.color))
+                axt.addItem(label)
+                labels.append(label)
+            self.trace_labels.append(labels)
             axt.getAxis('bottom').showLabel(c == self.show_channels[-1])
             axt.getAxis('bottom').setStyle(showValues=(c == self.show_channels[-1]))
             axt.setLimits(xMin=0, xMax=self.tmax,
@@ -430,7 +448,23 @@ class DataBrowser(QWidget):
                                    self.marker_power,self.delta_time,
                                    self.delta_ampl, self.delta_freq,
                                    self.delta_power, label)
-
+        # add new label point to scatter plots:
+        labels = [l.label for l in self.marker_labels]
+        if len(label) > 0 and label in labels and \
+           not self.marker_time is None:
+            lidx = labels.index(label)
+            for c, tl in enumerate(self.trace_labels):
+                if c == self.marker_channel and not self.marker_ampl is None:
+                    tl[lidx].addPoints((self.marker_time,),
+                                      (self.marker_ampl,))
+                else:
+                    tidx = int(self.marker_time*self.rate)
+                    tl[lidx].addPoints((self.marker_time,),
+                                       (self.data[tidx, c],))
+            for c, sl in enumerate(self.spec_labels):
+                y = 0.0 if self.marker_freq is None else self.marker_freq
+                sl[lidx].addPoints((self.marker_time,), (y,))
+                
         
     def mouse_moved(self, evt, channel):
         if not self.cross_hair:
@@ -468,8 +502,9 @@ class DataBrowser(QWidget):
                     if ax in self.axtraces:
                         if not self.marker_time is None:
                             trace = self.traces[self.axtraces.index(ax)]
-                            self.marker_ampl = trace.get_amplitude(
-                                self.marker_time, pos.y(), npos.x())
+                            self.marker_time, self.marker_ampl = \
+                                trace.get_amplitude(self.marker_time,
+                                                    pos.y(), npos.x())
                     # is it frequency?
                     for axfys in self.axfys:
                         if ax in axfys:

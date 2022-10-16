@@ -113,14 +113,16 @@ class TraceItem(pg.PlotDataItem):
         if step > 1:
             idx = (idx//step)*step
             data_block = self.data[idx:idx + step, self.channel]
-            amin = np.min(data_block)
-            amax = np.max(data_block)
+            mini = np.argmin(data_block)
+            maxi = np.argmax(data_block)
+            amin = data_block[mini]
+            amax = data_block[maxi]
             if fabs(y - amax) < fabs(y - amin):
-                return amax
+                return (idx+maxi)/self.rate, amax
             else:
-                return amin
+                return (idx+mini)/self.rate, amin
         else:
-            return self.data[idx, self.channel]
+            return idx/self.rate, self.data[idx, self.channel]
 
         
     def zoom_ampl_in(self):
