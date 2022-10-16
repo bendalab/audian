@@ -115,11 +115,10 @@ class DataBrowser(QWidget):
         self.delta_power = None
         self.marker_data = MarkerData()
         self.marker_model = MarkerDataModel(self.marker_data)
-        # TODO: add dialog for binding user defined events to keys:
         self.marker_labels = []
-        self.marker_labels.append(MarkerLabel('start', 's', 'red'))
-        self.marker_labels.append(MarkerLabel('peak', 'p', 'blue'))
-        self.marker_labels.append(MarkerLabel('end', 'e', 'green'))
+        self.marker_labels.append(MarkerLabel('start', 's', 'magenta'))
+        self.marker_labels.append(MarkerLabel('peak', 'p', 'yellow'))
+        self.marker_labels.append(MarkerLabel('end', 'e', 'blue'))
         self.marker_labels_model = MarkerLabelsModel(self.marker_labels,
                                                      self.acts)
         self.marker_orig_acts = []
@@ -598,8 +597,14 @@ class DataBrowser(QWidget):
 
         # store marker positions:
         if (evt[0].button() & Qt.LeftButton) > 0 and \
-           (evt[0].modifiers() & Qt.ControlModifier) == Qt.ControlModifier:
-            self.store_marker()
+           (evt[0].modifiers() == Qt.NoModifier or \
+            (evt[0].modifiers() & Qt.ShiftModifier) == Qt.ShiftModifier):
+            menu = QMenu(self)
+            acts = [menu.addAction(self.marker_labels_model.icons[l.color], l.label) for l in self.marker_labels]
+            act = menu.exec(QCursor.pos())
+            if act in acts:
+                idx = acts.index(act)
+                self.store_marker(self.marker_labels[idx].label)
 
         # clear marker:
         if (evt[0].button() & Qt.RightButton) > 0:
@@ -607,8 +612,7 @@ class DataBrowser(QWidget):
             
         # set marker and remember position:
         if (evt[0].button() & Qt.LeftButton) > 0 and \
-           (evt[0].modifiers() == Qt.NoModifier or \
-            (evt[0].modifiers() & Qt.ShiftModifier) == Qt.ShiftModifier):
+           (evt[0].modifiers() & Qt.ControlModifier) == Qt.ControlModifier:
             self.set_marker()
 
             

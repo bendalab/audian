@@ -60,19 +60,6 @@ if has_key_editor:
             editor.setGeometry(option.rect)
 
 
-class TestIconEngine(QIconEngine):
-    def paint(self, painter, rect, mode=QIcon.Normal, state=QIcon.Off):
-        painter.setBrush(QColor('black'))
-        painter.setPen(Qt.NoPen)
-        painter.drawRect(rect)
-        painter.setBrush(QColor('blue'))
-        painter.setPen(Qt.NoPen)
-        d = rect.width()//5
-        painter.drawEllipse(rect.adjusted(d, d, -d, -d))
-
-test_icon = QIcon(TestIconEngine())
-
-
 class ColorIconEngine(QIconEngine):
 
     def __init__(self, color):
