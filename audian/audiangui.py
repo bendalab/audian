@@ -821,7 +821,7 @@ class Audian(QMainWindow):
     def open_files(self):
         formats = available_formats()
         for f in ['MP3', 'OGG', 'WAV']:
-            if 'WAV' in formats:
+            if f in formats:
                 formats.remove(f)
                 formats.insert(0, f)
         filters = ['All files (*)'] + [f'{f} files (*.{f}, *.{f.lower()})' for f in formats]
