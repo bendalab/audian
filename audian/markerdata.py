@@ -360,7 +360,8 @@ class MarkerData:
         self.labels = []
 
 
-    def add_data(self, channel, time, amplitude, frequency, power,
+    def add_data(self, channel, time, amplitude=None,
+                 frequency=None, power=None,
                  delta_time=None, delta_amplitude=None,
                  delta_frequency=None, delta_power=None, label=''):
         self.channels.append(channel)

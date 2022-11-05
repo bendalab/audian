@@ -18,7 +18,7 @@ from .oscillogramplot import OscillogramPlot
 from .spectrumplot import SpectrumPlot
 from .traceitem import TraceItem
 from .specitem import SpecItem
-from .markerdata import MarkerLabel, MarkerLabelsModel
+from .markerdata import colors, MarkerLabel, MarkerLabelsModel
 from .markerdata import MarkerData, MarkerDataModel
 
 
@@ -185,6 +185,11 @@ class DataBrowser(QWidget):
         # load data:
         md, cues = self.data.metadata(store_empty=False)
         self.meta_data = md
+        for c in cues:
+            self.marker_data.add_data(0, float(c['pos'])/self.rate, label=c.get('label', ''))
+        labels = [c['label'] for c in cues if 'label' in c]
+        for i, l in enumerate(labels):
+            self.marker_labels.append(MarkerLabel(l, '', list(colors.keys())[i % len(colors.keys())]))
         self.data[0,:]
 
         self.figs = []     # all GraphicsLayoutWidgets - one for each channel
@@ -373,6 +378,16 @@ class DataBrowser(QWidget):
 
         self.setEnabled(True)
         self.adjust_layout(self.width(), self.height())
+
+        # add marker data to plot:
+        labels = [l.label for l in self.marker_labels]
+        for t, l in zip(self.marker_data.times, self.marker_data.labels):
+            lidx = labels.index(l)
+            for c, tl in enumerate(self.trace_labels):
+                tidx = int(t*self.rate)
+                tl[lidx].addPoints((t,), (self.data[tidx, c],))
+            for c, sl in enumerate(self.spec_labels):
+                sl[lidx].addPoints((t,), (0.0,))
 
 
     def show_metadata(self):
