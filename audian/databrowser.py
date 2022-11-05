@@ -1,13 +1,14 @@
 import os
+import xml.dom.minidom
 from math import fabs, ceil, floor, log
 import numpy as np
 from PyQt5.QtCore import Qt, Signal, QTimer
 from PyQt5.QtGui import QCursor, QKeySequence
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGraphicsRectItem
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QScrollArea
 from PyQt5.QtWidgets import QAction, QMenu, QToolBar, QComboBox
 from PyQt5.QtWidgets import QLabel, QSizePolicy, QTableView
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFileDialog
-from PyQt5.QtWidgets import QAbstractItemView
+from PyQt5.QtWidgets import QAbstractItemView, QGraphicsRectItem
 import pyqtgraph as pg
 from audioio import AudioLoader, available_formats, write_audio
 from audioio import fade
@@ -51,6 +52,7 @@ class DataBrowser(QWidget):
         self.data = None
         self.rate = None
         self.tmax = 0.0
+        self.meta_data = {}
 
         self.show_channels = show_channels
         self.current_channel = 0
@@ -181,6 +183,8 @@ class DataBrowser(QWidget):
         self.selected_channels = list(self.show_channels)
 
         # load data:
+        md, cues = self.data.metadata(store_empty=False)
+        self.meta_data = md
         self.data[0,:]
 
         self.figs = []     # all GraphicsLayoutWidgets - one for each channel
@@ -369,6 +373,37 @@ class DataBrowser(QWidget):
 
         self.setEnabled(True)
         self.adjust_layout(self.width(), self.height())
+
+
+    def show_metadata(self):
+        mdtable = '<table>'
+        for i, sk in enumerate(self.meta_data):
+            md = self.meta_data[sk]
+            if i > 0:
+                mdtable += '<tr><td colspan=2></td></tr>'
+            mdtable += f'<tr><td colspan=2><font size="+1"><b>{sk}:</b></font></td></tr>'
+            if isinstance(md, dict):
+                for k in md:
+                    mdtable += f'<tr><td><b>{k}</b></td><td>{md[k]}</td></tr>'
+            else:
+                if len(md) > 0 and md[0] == '<':
+                    dom = xml.dom.minidom.parseString(md)
+                    md = dom.toprettyxml(indent='    ')
+                    md = f'<pre>{md.replace("<", "&lt;").replace(">", "&gt;")}</pre>'
+                mdtable += f'<tr><td colspan=2>{md}</td></tr>'
+        dialog = QDialog(self)
+        dialog.setWindowTitle('Meta data')
+        vbox = QVBoxLayout()
+        dialog.setLayout(vbox)
+        label = QLabel(mdtable)
+        label.setTextInteractionFlags(Qt.TextSelectableByMouse);
+        scrollarea = QScrollArea()
+        scrollarea.setWidget(label)
+        vbox.addWidget(scrollarea)
+        buttons = QDialogButtonBox(QDialogButtonBox.Close)
+        buttons.rejected.connect(dialog.reject)
+        vbox.addWidget(buttons)
+        dialog.show()
 
 
     def set_cross_hair(self, checked):
