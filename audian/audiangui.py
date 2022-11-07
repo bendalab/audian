@@ -42,7 +42,7 @@ class Audian(QMainWindow):
         self.tabs = QTabWidget(self)
         self.tabs.setDocumentMode(True)
         self.tabs.setMovable(True)
-        self.tabs.setTabBarAutoHide(True)
+        self.tabs.setTabBarAutoHide(False)
         self.tabs.setTabsClosable(True)
         self.tabs.tabCloseRequested.connect(lambda index: self.close(index))
         self.tabs.currentChanged.connect(self.adapt_menu)
