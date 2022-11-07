@@ -14,7 +14,7 @@ from .databrowser import DataBrowser
 
 
 class Audian(QMainWindow):
-    def __init__(self, file_paths, channels):
+    def __init__(self, file_paths, channels, high_pass, low_pass):
         super().__init__()
 
         class acts: pass
@@ -23,12 +23,16 @@ class Audian(QMainWindow):
         self.browsers = []
 
         self.channels = channels
+        self.high_pass = high_pass
+        self.low_pass = low_pass
+        
         self.audio = PlayAudio()
 
         self.link_timezoom = True
         self.link_timescroll = False
         self.link_amplitude = True
         self.link_frequency = True
+        self.link_filter = True
         self.link_power = True
         self.link_channels = True
         self.link_panels = True
@@ -533,6 +537,19 @@ class Audian(QMainWindow):
                 if not b is self.browser():
                     b.set_resolution(nfft, sfrac, False)
 
+        
+    def toggle_link_filter(self):
+        self.link_filter = not self.link_filter
+
+        
+    def dispatch_filter(self):
+        if self.link_filter:
+            highpass_cutoff = [t.highpass_cutoff for t in self.browser().traces]
+            lowpass_cutoff = [t.lowpass_cutoff for t in self.browser().traces]
+            for b in self.browsers:
+                if not b is self.browser():
+                    b.set_filter(highpass_cutoff, lowpass_cutoff, False)
+
 
     def setup_spectrogram_actions(self, menu):
         self.acts.frequency_resolution_up = QAction('Increase &resolution', self)
@@ -550,12 +567,40 @@ class Audian(QMainWindow):
         self.acts.overlap_down = QAction('Decrease &overlap', self)
         self.acts.overlap_down.setShortcut('O')
         self.acts.overlap_down.triggered.connect(lambda x: self.browser().step_frac_up())
+
+        self.acts.link_filter = QAction('Link &filter', self)
+        #self.acts.link_filter.setShortcut('Alt+F')
+        self.acts.link_filter.setCheckable(True)
+        self.acts.link_filter.setChecked(self.link_filter)
+        self.acts.link_filter.toggled.connect(self.toggle_link_filter)
+        
+        self.acts.highpass_up = QAction('Increase &highpass cutoff', self)
+        self.acts.highpass_up.setShortcut('Shift+H')
+        self.acts.highpass_up.triggered.connect(lambda x: self.browser().highpass_cutoff_up())
+        
+        self.acts.highpass_down = QAction('Decrease highpass cutoff', self)
+        self.acts.highpass_down.setShortcut('H')
+        self.acts.highpass_down.triggered.connect(lambda x: self.browser().highpass_cutoff_down())
+        
+        self.acts.lowpass_up = QAction('Increase &lowpass cutoff', self)
+        self.acts.lowpass_up.setShortcut('Shift+L')
+        self.acts.lowpass_up.triggered.connect(lambda x: self.browser().lowpass_cutoff_up())
+        
+        self.acts.lowpass_down = QAction('Decrease lowpass cutoff', self)
+        self.acts.lowpass_down.setShortcut('L')
+        self.acts.lowpass_down.triggered.connect(lambda x: self.browser().lowpass_cutoff_down())
         
         spec_menu = menu.addMenu('&Spectrogram')
         spec_menu.addAction(self.acts.frequency_resolution_up)
         spec_menu.addAction(self.acts.frequency_resolution_down)
         spec_menu.addAction(self.acts.overlap_up)
         spec_menu.addAction(self.acts.overlap_down)
+        spec_menu.addSeparator()
+        spec_menu.addAction(self.acts.link_filter)
+        spec_menu.addAction(self.acts.highpass_up)
+        spec_menu.addAction(self.acts.highpass_down)
+        spec_menu.addAction(self.acts.lowpass_up)
+        spec_menu.addAction(self.acts.lowpass_down)
 
         self.data_menus.append(spec_menu)
         
@@ -882,7 +927,9 @@ Can not open file <b>{browser.file_path}</b>!''')
                 browser.sigAmplitudesChanged.connect(self.dispatch_amplitudes)
                 browser.sigFrequenciesChanged.connect(self.dispatch_frequencies)
                 browser.sigResolutionChanged.connect(self.dispatch_resolution)
+                browser.sigFilterChanged.connect(self.dispatch_filter)
                 browser.sigPowerChanged.connect(self.dispatch_power)
+                browser.init_filter(self.high_pass, self.low_pass)
                 QTimer.singleShot(100, self.load_data)
                 break
 
@@ -965,7 +1012,7 @@ def main(cargs):
     channels = [int(c) for c in cs if len(c)>0]
     
     app = QApplication(sys.argv[:1] + qt_args)
-    main = Audian(args.files, channels)
+    main = Audian(args.files, channels, args.high_pass, args.low_pass)
     main.show()
     app.exec_()
 

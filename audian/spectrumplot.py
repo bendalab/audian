@@ -50,6 +50,10 @@ class SpectrumPlot(pg.PlotItem):
         self.hideButtons()
         self.setMenuEnabled(False)
 
+        # filter handles:
+        self.highpass_cutoff = 0
+        self.lowpass_cutoff = 0
+
         # audio marker:
         self.vmarker = pg.InfiniteLine(angle=90, movable=False)
         self.vmarker.setPen(pg.mkPen('white', width=2))
@@ -84,3 +88,9 @@ class SpectrumPlot(pg.PlotItem):
         # signals:
         view.sigSelectedRegion.connect(self.sigSelectedRegion)
 
+
+    def set_filter(self, highpass_cutoff=None, lowpass_cutoff=None):
+        if highpass_cutoff is not None:
+            self.highpass_cutoff = highpass_cutoff
+        if lowpass_cutoff is not None:
+            self.lowpass_cutoff = lowpass_cutoff

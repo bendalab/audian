@@ -36,11 +36,12 @@ class DataBrowser(QWidget):
     sigAmplitudesChanged = Signal(object, object)
     sigFrequenciesChanged = Signal(object, object)
     sigResolutionChanged = Signal()
+    sigFilterChanged = Signal()
     sigPowerChanged = Signal()
 
     
-    def __init__(self, file_path, channels, show_channels, audio, acts,
-                 *args, **kwargs):
+    def __init__(self, file_path, channels, show_channels, audio,
+                 acts, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # actions of main window:
@@ -1080,6 +1081,40 @@ class DataBrowser(QWidget):
         self.set_power()
 
 
+    def highpass_cutoff_up(self):
+        pass
+
+
+    def highpass_cutoff_down(self):
+        pass
+
+
+    def lowpass_cutoff_up(self):
+        pass
+
+
+    def lowpass_cutoff_down(self):
+        pass
+
+
+    def set_filter(highpass_cutoffs=None, lowpass_cutoffs=None, dispatch=True):
+        self.setting = True
+        self.setting = False
+        if dispatch:
+            self.sigFilterChanged.emit()
+
+
+    def init_filter(self, highpass_cutoff, lowpass_cutoff):
+        if highpass_cutoff is None:
+            highpass_cutoff = 0.0
+        if lowpass_cutoff is None:
+            lowpass_cutoff = self.rate/2
+        for t in self.traces:
+            t.set_filter(highpass_cutoff, lowpass_cutoff)
+        for axs in self.axspecs:
+            axs.set_filter(highpass_cutoff, lowpass_cutoff)
+
+    
     def all_channels(self):
         self.selected_channels = list(self.show_channels)
         self.update_borders()

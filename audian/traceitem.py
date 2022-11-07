@@ -1,5 +1,6 @@
 from math import fabs, floor, ceil
 import numpy as np
+import scipy.signal as sig
 from PyQt5.QtWidgets import QApplication
 import pyqtgraph as pg
 
@@ -35,6 +36,9 @@ class TraceItem(pg.PlotDataItem):
         self.color = color
         self.ymin = -1.0
         self.ymax = +1.0
+        self.highpass_cutoff = None
+        self.lowpass_cutoff = None
+        self.sos = None
         
         pg.PlotDataItem.__init__(self, *args, connect='all',
                                  antialias=False, skipFiniteCheck=True,
@@ -79,8 +83,12 @@ class TraceItem(pg.PlotDataItem):
             i = 0
             nb = int(60*self.rate//self.step)*self.step
             for dd in self.data.blocks(nb, 0, start, stop):
+                db = dd[:, self.channel]
+                if self.sos is not None:
+                    # TODO: extend data!!!
+                    db = sig.sosfiltfilt(self.sos, db)
                 if has_numba:
-                    dsd = down_sample_peak(dd[:, self.channel], self.step)
+                    dsd = down_sample_peak(db, self.step)
                     data[i:i+len(dsd)] = dsd
                     i += len(dsd)
                 #else:
@@ -168,4 +176,24 @@ class TraceItem(pg.PlotDataItem):
         dy = self.ymax - self.ymin
         self.ymin = -dy/2
         self.ymax = +dy/2
+
+
+    def set_filter(self, highpass_cutoff, lowpass_cutoff):
+        if highpass_cutoff is not None:
+            self.highpass_cutoff = highpass_cutoff
+        if lowpass_cutoff is not None:
+            self.lowpass_cutoff = lowpass_cutoff
+        if self.highpass_cutoff < 1e-8 and \
+           self.lowpass_cutoff >= self.rate/2-1e-8:
+            self.sos = None
+        elif self.highpass_cutoff < 1e-8:
+            self.sos = sig.butter(2, self.lowpass_cutoff,
+                                  'lowpass', fs=self.rate, output='sos')
+        elif self.lowpass_cutoff >= self.rate/2-1e-8:
+            self.sos = sig.butter(2, self.highpass_cutoff,
+                                  'highpass', fs=self.rate, output='sos')
+        else:
+            self.sos = sig.butter(2, (self.highpass_cutoff, self.lowpass_cutoff),
+                                  'bandpass', fs=self.rate, output='sos')
+        self.updateTrace()
         

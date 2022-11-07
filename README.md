@@ -35,14 +35,13 @@ of audio signals. Here an incomple list of ToDos:
 
 - Fix offset problem in FullTracePlot.
 - FullTracePlot should indicate time under mouse cursor.
-- Improve downsampling of traces.
+- Improve downsampling of traces (also non-numba support).
 - Implement downsampling of spectrograms!
 - Interactive high- and low-pass filtering:
-  - reintroduce command line arguments
-  - filter original signal in trace plot.
-  - show only filtered trace?
+  - filter original signal in trace plot and spectrogram plot.
   - add horizontal lines setting cutoff frequencies to spectrogram
   - make these lines interactive.
+  - add a second line for setting filter order.
 - New plot widget showing power spectrum of visible range
   or slice at current cursor position.
 - Improve on the concept of current cursor:
@@ -64,6 +63,7 @@ of audio signals. Here an incomple list of ToDos:
 - Have a dockable sidebar for showing metadata, cue tables etc.
 - Implement a proper layout for showing the plot panels, allowing also for
   an optional grid layout.
+- Improve key shortcuts.
 
 
 ## Run Audian from Spyder IPython console:
