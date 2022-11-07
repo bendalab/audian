@@ -30,33 +30,35 @@ Still experimental new implementation of `audian` based on
 audiangui data.wav
 ```
 
-I currently explore various possibilities for interactive exploration
-of audio signals. Here an incomple list of ToDos:
+I currently explore various possibilities for interactive analysis
+of audio signals. Here an incomplete list of ToDos:
 
-- Fix offset problem in FullTracePlot.
-- FullTracePlot should indicate time under mouse cursor.
-- Improve downsampling of traces (also non-numba support).
-- Implement downsampling of spectrograms!
+- FullTracePlot:
+  - fix offset problem,
+  - indicate time under mouse cursor.
 - Interactive high- and low-pass filtering:
   - filter original signal in trace plot and spectrogram plot.
-  - add horizontal lines setting cutoff frequencies to spectrogram
+  - add horizontal lines setting cutoff frequencies to spectrogram.
   - make these lines interactive.
   - add a second line for setting filter order.
+- Improve downsampling and filtering of traces (also non-numba support).
+- Implement downsampling of spectrograms!
 - New plot widget showing power spectrum of visible range
   or slice at current cursor position.
 - Improve on the concept of current cursor:
-  - Play does not stop at visible range but keeps going and scrolls data.
-  - Make cursor moveable by mouse.
-  - Some key shortcuts for moving and handling cursor.
+  - play should not stop at visible range but keeps going and scrolls data.
+  - make cursor moveable by mouse.
+  - some key shortcuts for moving and handling cursor.
 - Improve on marking cross hair, cues, regions, events:
   - Cross hair should only be used for measuring! Just a single color/label?
     Show comments interactively and show points only fom active measurement.
-  = Cues and regions have position data for all channels and have labels.
-    - Visualize them by infinite vertical lines/regions, both in plots and
+  - Cues and regions have position data for all channels and have labels.
+    - visualize them by infinite vertical lines/regions, both in plots and
       FullTracePlot (maybe in extra row?).
-    - Can be set from cursor position/marked region.
-    - Add key shortcuts to go to next/previous cue.
-    - From cue table go to selected cue.
+    - can be set from cursor position/marked region.
+    - add key shortcuts to go to next/previous cue.
+    - from cue table go to selected cue.
+    - how does boris export them?
   - Events are channel specific points with amplitude? Many points per label.
     Result from some analysis.
 - Define interface for analysis on full data, visible range, selected range.
