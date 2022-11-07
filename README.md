@@ -23,14 +23,50 @@ audian.main(['-f', f'{high_pass}', filepath])
 
 ## audiangui
 
-Still experimental new implementation of `audian` based on [pyqtgraph](https://pyqtgraph.readthedocs.io):
+Still experimental new implementation of `audian` based on
+[pyqtgraph](https://pyqtgraph.readthedocs.io):
 
 ``` sh
 audiangui data.wav
 ```
 
+I currently explore various possibilities for interactive exploration
+of audio signals. Here an incomple list of ToDos:
 
-## Run it from Spyder IPython console:
+- Fix offset problem in FullTracePlot.
+- FullTracePlot should indicate time under mouse cursor.
+- Improve downsampling of traces.
+- Implement downsampling of spectrograms!
+- Interactive high- and low-pass filtering:
+  - reintroduce command line arguments
+  - filter original signal in trace plot.
+  - show only filtered trace?
+  - add horizontal lines setting cutoff frequencies to spectrogram
+  - make these lines interactive.
+- New plot widget showing power spectrum of visible range
+  or slice at current cursor position.
+- Improve on the concept of current cursor:
+  - Play does not stop at visible range but keeps going and scrolls data.
+  - Make cursor moveable by mouse.
+  - Some key shortcuts for moving and handling cursor.
+- Improve on marking cross hair, cues, regions, events:
+  - Cross hair should only be used for measuring! Just a single color/label?
+    Show comments interactively and show points only fom active measurement.
+  = Cues and regions have position data for all channels and have labels.
+    - Visualize them by infinite vertical lines/regions, both in plots and
+      FullTracePlot (maybe in extra row?).
+    - Can be set from cursor position/marked region.
+    - Add key shortcuts to go to next/previous cue.
+    - From cue table go to selected cue.
+  - Events are channel specific points with amplitude? Many points per label.
+    Result from some analysis.
+- Define interface for analysis on full data, visible range, selected range.
+- Have a dockable sidebar for showing metadata, cue tables etc.
+- Implement a proper layout for showing the plot panels, allowing also for
+  an optional grid layout.
+
+
+## Run Audian from Spyder IPython console:
 
 In the IPython console do:
 ``` py
