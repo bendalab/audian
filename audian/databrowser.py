@@ -297,7 +297,9 @@ class DataBrowser(QWidget):
             axt.addItem(trace)
             labels = []
             for l in self.marker_labels:
-                label = pg.ScatterPlotItem(size=10, pen=pg.mkPen(None),
+                label = pg.ScatterPlotItem(size=10, hoverSize=20,
+                                           hoverable=True,
+                                           pen=pg.mkPen(None),
                                            brush=pg.mkBrush(l.color))
                 axt.addItem(label)
                 labels.append(label)
@@ -385,9 +387,9 @@ class DataBrowser(QWidget):
             lidx = labels.index(l)
             for c, tl in enumerate(self.trace_labels):
                 tidx = int(t*self.rate)
-                tl[lidx].addPoints((t,), (self.data[tidx, c],))
+                tl[lidx].addPoints((t,), (self.data[tidx, c],), data=(l,))
             for c, sl in enumerate(self.spec_labels):
-                sl[lidx].addPoints((t,), (0.0,))
+                sl[lidx].addPoints((t,), (0.0,), data=(l,))
 
 
     def show_metadata(self):
