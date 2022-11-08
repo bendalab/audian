@@ -272,11 +272,11 @@ class Audian(QMainWindow):
         self.acts.cross_hair.toggled.connect(self.set_cross_hair)
         
         self.acts.label_editor = QAction('&Label editor', self)
-        self.acts.label_editor.setShortcut('L')
+        self.acts.label_editor.setShortcut('Ctrl+L')
         self.acts.label_editor.triggered.connect(lambda x: self.browser().label_editor())
         
         self.acts.marker_table = QAction('&Marker table', self)
-        self.acts.marker_table.setShortcut('M')
+        self.acts.marker_table.setShortcut('Ctrl+M')
         self.acts.marker_table.triggered.connect(lambda x: self.browser().marker_table())
 
         region_menu = menu.addMenu('&Region')
@@ -548,7 +548,7 @@ class Audian(QMainWindow):
             lowpass_cutoff = [t.lowpass_cutoff for t in self.browser().traces]
             for b in self.browsers:
                 if not b is self.browser():
-                    b.set_filter(highpass_cutoff, lowpass_cutoff, False)
+                    b.set_filter(highpass_cutoff, lowpass_cutoff)
 
 
     def setup_spectrogram_actions(self, menu):
@@ -848,7 +848,7 @@ class Audian(QMainWindow):
 
     def setup_help_actions(self, menu):
         self.acts.key_shortcuts = QAction('&Key shortcuts', self)
-        self.acts.key_shortcuts.setShortcut('H')
+        self.acts.key_shortcuts.setShortcut('Ctrl+H')
         self.acts.key_shortcuts.triggered.connect(self.shortcuts)
         
         self.acts.about = QAction('&About Audian', self)

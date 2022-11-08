@@ -9,9 +9,12 @@ class SpectrumPlot(pg.PlotItem):
 
     
     sigSelectedRegion = Signal(object, object, object)
+    sigUpdateFilter = Signal(object, object, object)
 
 
-    def __init__(self, channel, xwidth):
+    def __init__(self, channel, xwidth, fmax):
+
+        self.channel = channel
 
         # view box:
         view = SelectViewBox(channel)
@@ -43,7 +46,8 @@ class SpectrumPlot(pg.PlotItem):
         self.getViewBox().setDefaultPadding(padding=0.0)
 
         # ranges:
-        self.setLimits(xMin=0, yMin=0.0)
+        self.setLimits(xMin=0, yMin=0.0, yMax=fmax,
+                       minYRange=0.1, maxYRange=fmax)
 
         # functionality:
         self.enableAutoRange(False, False)
@@ -53,6 +57,22 @@ class SpectrumPlot(pg.PlotItem):
         # filter handles:
         self.highpass_cutoff = 0
         self.lowpass_cutoff = 0
+        self.highpass_handle = pg.InfiniteLine(angle=0, movable=True)
+        self.highpass_handle.setPen(pg.mkPen('white', width=2))
+        self.highpass_handle.addMarker('o', position=0.75, size=6)
+        self.highpass_handle.setZValue(100)
+        self.highpass_handle.setBounds((0, fmax))
+        self.highpass_handle.setValue(self.highpass_cutoff)
+        self.highpass_handle.sigPositionChangeFinished.connect(self.highpass_changed)
+        self.addItem(self.highpass_handle, ignoreBounds=True)
+        self.lowpass_handle = pg.InfiniteLine(angle=0, movable=True)
+        self.lowpass_handle.setPen(pg.mkPen('white', width=2))
+        self.lowpass_handle.addMarker('o', position=0.75, size=6)
+        self.lowpass_handle.setZValue(100)
+        self.lowpass_handle.setBounds((0, fmax))
+        self.lowpass_handle.setValue(self.lowpass_cutoff)
+        self.lowpass_handle.sigPositionChangeFinished.connect(self.lowpass_changed)
+        self.addItem(self.lowpass_handle, ignoreBounds=True)
 
         # audio marker:
         self.vmarker = pg.InfiniteLine(angle=90, movable=False)
@@ -92,5 +112,20 @@ class SpectrumPlot(pg.PlotItem):
     def set_filter(self, highpass_cutoff=None, lowpass_cutoff=None):
         if highpass_cutoff is not None:
             self.highpass_cutoff = highpass_cutoff
+            self.highpass_handle.setValue(self.highpass_cutoff)
         if lowpass_cutoff is not None:
             self.lowpass_cutoff = lowpass_cutoff
+            self.lowpass_handle.setValue(self.lowpass_cutoff)
+
+
+    def highpass_changed(self):
+        self.set_filter(highpass_cutoff=self.highpass_handle.value())
+        self.sigUpdateFilter.emit(self.channel, self.highpass_cutoff,
+                                  self.lowpass_cutoff)
+        
+
+    def lowpass_changed(self):
+        self.set_filter(lowpass_cutoff=self.lowpass_handle.value())
+        self.sigUpdateFilter.emit(self.channel, self.highpass_cutoff,
+                                  self.lowpass_cutoff)
+

@@ -1,6 +1,6 @@
 import os
 import xml.dom.minidom
-from math import fabs, ceil, floor, log
+from math import fabs, ceil, floor, log, log10
 import numpy as np
 from PyQt5.QtCore import Qt, Signal, QTimer
 from PyQt5.QtGui import QCursor, QKeySequence
@@ -246,7 +246,7 @@ class DataBrowser(QWidget):
             # spectrogram:
             spec = SpecItem(self.data, self.rate, c, 256, 0.5)
             self.specs.append(spec)
-            axs = SpectrumPlot(c, xwidth)
+            axs = SpectrumPlot(c, xwidth, spec.fmax)
             axs.addItem(spec)
             labels = []
             for l in self.marker_labels:
@@ -255,14 +255,14 @@ class DataBrowser(QWidget):
                 axs.addItem(label)
                 labels.append(label)
             self.spec_labels.append(labels)
-            axs.setLimits(xMax=self.tmax, yMax=spec.fmax,
-                         minXRange=10/self.rate, maxXRange=self.tmax,
-                         minYRange=0.1, maxYRange=spec.fmax)
+            axs.setLimits(xMax=self.tmax,
+                         minXRange=10/self.rate, maxXRange=self.tmax)
             axs.setXRange(self.toffset, self.toffset + self.twindow)
             axs.sigXRangeChanged.connect(self.update_times)
             axs.setYRange(self.specs[c].f0, self.specs[c].f1)
             axs.sigYRangeChanged.connect(self.update_frequencies)
             axs.sigSelectedRegion.connect(self.region_menu)
+            axs.sigUpdateFilter.connect(self.update_filter)
             axs.getViewBox().init_zoom_history()
             self.audio_markers[-1].append(axs.vmarker)
             fig.addItem(axs, row=0, col=0)
@@ -1082,26 +1082,84 @@ class DataBrowser(QWidget):
 
 
     def highpass_cutoff_up(self):
-        pass
+        highpass_cutoff = self.traces[self.current_channel].highpass_cutoff
+        lowpass_cutoff = self.traces[self.current_channel].lowpass_cutoff
+        step = 1.0
+        if highpass_cutoff >= 1.0:
+            step = 0.5*10**(floor(log10(highpass_cutoff)))
+        elif highpass_cutoff == 0.0:
+            step = 100.0
+        highpass_cutoff += step
+        if highpass_cutoff + step > lowpass_cutoff:
+            highpass_cutoff = lowpass_cutoff - step
+        if highpass_cutoff < 0:
+            highpass_cutoff = 0
+        self.update_filter(self.current_channel, highpass_cutoff,
+                           None, True)
 
 
     def highpass_cutoff_down(self):
-        pass
+        highpass_cutoff = self.traces[self.current_channel].highpass_cutoff
+        step = 1.0
+        if highpass_cutoff >= 1.0:
+            step = 0.5*10**(floor(log10(highpass_cutoff)))
+            step = 0.5*10**(floor(log10(highpass_cutoff - 0.1*step)))
+        highpass_cutoff -= step
+        if highpass_cutoff < 0:
+            highpass_cutoff = 0
+        self.update_filter(self.current_channel, highpass_cutoff,
+                           None, True)
 
 
     def lowpass_cutoff_up(self):
-        pass
+        lowpass_cutoff = self.traces[self.current_channel].lowpass_cutoff
+        step = 1.0
+        if lowpass_cutoff >= 1.0:
+            step = 0.5*10**(floor(log10(lowpass_cutoff)))
+        lowpass_cutoff += step
+        if lowpass_cutoff > self.rate/2:
+            lowpass_cutoff = self.rate/2
+        self.update_filter(self.current_channel, None,
+                           lowpass_cutoff, True)
 
 
     def lowpass_cutoff_down(self):
-        pass
+        highpass_cutoff = self.traces[self.current_channel].highpass_cutoff
+        lowpass_cutoff = self.traces[self.current_channel].lowpass_cutoff
+        step = 1.0
+        if lowpass_cutoff >= 1.0:
+            step = 0.5*10**(floor(log10(lowpass_cutoff)))
+            step = 0.5*10**(floor(log10(lowpass_cutoff - 0.1*step)))
+        if lowpass_cutoff < highpass_cutoff + step:
+            return
+        lowpass_cutoff -= step
+        if lowpass_cutoff < highpass_cutoff + step:
+            lowpass_cutoff = highpass_cutoff + step
+        self.update_filter(self.current_channel, None,
+                           lowpass_cutoff, True)
 
 
-    def set_filter(highpass_cutoffs=None, lowpass_cutoffs=None, dispatch=True):
+    def set_filter(self, highpass_cutoffs, lowpass_cutoffs):
         self.setting = True
+        for c in range(self.data.channels):
+            cf = c if c < len(highpass_cutoffs) else -1
+            self.traces[c].set_filter(highpass_cutoffs[cf],
+                                      lowpass_cutoffs[cf])
+            self.axspecs[c].set_filter(highpass_cutoffs[cf],
+                                       lowpass_cutoffs[cf])
         self.setting = False
-        if dispatch:
-            self.sigFilterChanged.emit()
+
+
+    def update_filter(self, channel, highpass_cutoff,
+                      lowpass_cutoff, set_spec=False):
+        if channel in self.selected_channels:
+            for c in self.selected_channels:
+                self.traces[c].set_filter(highpass_cutoff, lowpass_cutoff)
+                if c != channel or set_spec:
+                    self.axspecs[c].set_filter(highpass_cutoff, lowpass_cutoff)
+        else:
+            self.traces[channel].set_filter(highpass_cutoff, lowpass_cutoff)
+        self.sigFilterChanged.emit()
 
 
     def init_filter(self, highpass_cutoff, lowpass_cutoff):
@@ -1114,7 +1172,7 @@ class DataBrowser(QWidget):
         for axs in self.axspecs:
             axs.set_filter(highpass_cutoff, lowpass_cutoff)
 
-    
+        
     def all_channels(self):
         self.selected_channels = list(self.show_channels)
         self.update_borders()
@@ -1153,12 +1211,18 @@ class DataBrowser(QWidget):
 
             
     def select_channels(self, channels):
-        self.selected_channels = [c for c in channels if c in self.show_channels]
+        sc = [c for c in channels if c in self.show_channels]
+        if len(sc) == 0:
+            return
+        self.selected_channels = sc
         if not self.current_channel in self.selected_channels:
             for c in self.selected_channels:
                 if c >= self.current_channel:
+                    self.current_channel = c
                     break
-            self.current_channel = c
+            else:
+                if len(self.selected_channels) > 0:
+                    self.current_channel = self.selected_channels[0]
         self.update_borders()
         
             

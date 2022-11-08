@@ -37,9 +37,9 @@ of audio signals. Here an incomplete list of ToDos:
   - fix offset problem,
   - indicate time under mouse cursor.
 - Interactive high- and low-pass filtering:
+  - databrowser should provide the filtered traces to both traceitems and specitems.
   - filter original signal in trace plot and spectrogram plot.
-  - add horizontal lines setting cutoff frequencies to spectrogram.
-  - make these lines interactive.
+  - play should filter its data on its own.
   - add a second line for setting filter order.
 - Improve downsampling and filtering of traces (also non-numba support).
 - Implement downsampling of spectrograms!
