@@ -6,7 +6,7 @@ from PyQt5.QtGui import QKeySequence, QIcon
 from PyQt5.QtWidgets import QStyle, QApplication, QMainWindow, QTabWidget
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel
 from PyQt5.QtWidgets import QAction, QActionGroup, QPushButton
-from PyQt5.QtWidgets import QDialog, QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QMessageBox
 import pyqtgraph as pg
 from audioio import available_formats, PlayAudio
 from .version import __version__, __year__
@@ -276,7 +276,7 @@ class Audian(QMainWindow):
         self.acts.label_editor.triggered.connect(lambda x: self.browser().label_editor())
         
         self.acts.marker_table = QAction('&Marker table', self)
-        self.acts.marker_table.setShortcut('Ctrl+M')
+        self.acts.marker_table.setShortcut('M')
         self.acts.marker_table.triggered.connect(lambda x: self.browser().marker_table())
 
         region_menu = menu.addMenu('&Region')
@@ -944,11 +944,11 @@ Can not open file <b>{browser.file_path}</b>!''')
     def shortcuts(self):
         dialog = QDialog(self)
         dialog.setWindowTitle('Audian Key Shortcuts')
-        vbox = QVBoxLayout(dialog)
-        vbox.addWidget(QLabel(self.keys[0]))
+        mvbox = QVBoxLayout(dialog)
+        mvbox.addWidget(QLabel(self.keys[0]))
         hbox = QHBoxLayout()
         hbox.setSpacing(4*self.fontMetrics().averageCharWidth())
-        vbox.addLayout(hbox)
+        mvbox.addLayout(hbox)
         n = 2
         for ks in self.keys[1:]:
             if n == 2:
@@ -958,9 +958,10 @@ Can not open file <b>{browser.file_path}</b>!''')
             valign = Qt.AlignTop if n == 0 else Qt.AlignBottom
             vbox.addWidget(QLabel(ks), 1, Qt.AlignLeft | valign)
             n += 1
+        buttons = QDialogButtonBox(QDialogButtonBox.Close)
+        buttons.rejected.connect(dialog.reject)
+        mvbox.addWidget(buttons)
         dialog.show()
-        dialog.raise_()
-        dialog.activateWindow()
 
 
     def about(self):
