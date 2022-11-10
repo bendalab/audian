@@ -68,6 +68,50 @@ of audio signals. Here an incomplete list of ToDos:
   an optional grid layout.
 - Improve key shortcuts.
 
+### Installation of audiangui in Anaconda3 on windows
+
+Anaconda supports really old versions of PyQt5 and Qt5 only that are
+not compatible with a recent pyqtgraph. No fun.
+
+A workaround is to first create a new conda environment. For this open
+the windows powershell from the Anaconda navigator. Type in and execute
+``` sh
+conda create -n Qt python=3.9
+```
+Then activate the new `Qt` environment:
+``` sh
+conda activate Qt
+```
+Then we use `pip` to install PyQt5:
+``` sh
+pip install PyQt5
+```
+Change into a directory where you want to put audioio and audian. First, download audioio and install it:
+``` sh
+git clone https://github.com/janscience/audioio.git
+cd audioio
+pip install .
+cd ..
+```
+And then do the same with audian:
+``` sh
+git cone https://github.com/bendalab/audian.git
+cd audian
+pip install .
+```
+This installs many other packages (numpy, scipy, etc.).
+
+Then you should be able to run `audiangui` from the power shell
+(currently the spectrogram does not work yet...).
+
+For updating audian do
+``` sh
+cd audian
+git pull origin master
+pip install .
+```
+Same for audioio.
+
 
 ## Run Audian from Spyder IPython console:
 

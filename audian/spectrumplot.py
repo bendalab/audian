@@ -1,4 +1,7 @@
-from PyQt5.QtCore import Signal
+try:
+    from PyQt5.QtCore import Signal
+except ImportError:
+    from PyQt5.QtCore import pyqtSignal as Signal
 import pyqtgraph as pg
 from .selectviewbox import SelectViewBox
 from .timeaxisitem import TimeAxisItem

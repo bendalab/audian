@@ -1,5 +1,9 @@
 import numpy as np
-from PyQt5.QtCore import Signal, Qt, QRectF
+try:
+    from PyQt5.QtCore import Signal
+except ImportError:
+    from PyQt5.QtCore import pyqtSignal as Signal
+from PyQt5.QtCore import Qt, QRectF
 from PyQt5.QtGui import QTransform
 import pyqtgraph as pg
 

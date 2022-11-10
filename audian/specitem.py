@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.signal import spectrogram
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import QRectF
 import pyqtgraph as pg
 
 
@@ -130,9 +130,7 @@ class SpecItem(pg.ImageItem):
         zmin = zmax - 60
         self.fmax = freq[-1]
         self.setImage(self.spectrum, autoLevels=False)
-        self.resetTransform()
-        self.translate(self.data.offset/self.rate, 0)
-        self.scale(time[-1]/len(time), freq[-1]/len(freq))
+        self.setRect(QRectF(self.data.offset/self.rate, 0, time[-1], freq[-1]))
         self.offset = self.data.offset
         self.buffer_size = len(self.data.buffer)
         self.current_nfft = self.nfft

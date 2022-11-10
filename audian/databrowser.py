@@ -2,7 +2,11 @@ import os
 import xml.dom.minidom
 from math import fabs, ceil, floor, log, log10
 import numpy as np
-from PyQt5.QtCore import Qt, Signal, QTimer
+try:
+    from PyQt5.QtCore import Signal
+except ImportError:
+    from PyQt5.QtCore import pyqtSignal as Signal
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QCursor, QKeySequence
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QScrollArea
 from PyQt5.QtWidgets import QAction, QMenu, QToolBar, QComboBox

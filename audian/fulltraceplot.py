@@ -1,6 +1,6 @@
 from math import floor, fabs
 import numpy as np
-from PyQt5.QtCore import Signal, Qt, QTimer
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import QGraphicsSimpleTextItem, QApplication
 import pyqtgraph as pg
 from .traceitem import down_sample_peak
