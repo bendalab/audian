@@ -188,8 +188,13 @@ class DataBrowser(QWidget):
         self.selected_channels = list(self.show_channels)
 
         # load data:
+        fmt_md = dict(samplingrate=f'{self.rate:.1f}Hz',
+                      channels=self.data.channels,
+                      frames=self.data.frames,
+                      duration=f'{self.data.frames/self.rate:.3f}s')
         md, cues = self.data.metadata(store_empty=False)
-        self.meta_data = md
+        self.meta_data = dict(format=fmt_md)
+        self.meta_data.update(md)
         for c in cues:
             self.marker_data.add_data(0, float(c['pos'])/self.rate, label=c.get('label', ''))
         labels = [c['label'] for c in cues if 'label' in c]
@@ -408,7 +413,7 @@ class DataBrowser(QWidget):
                 for k in md:
                     mdtable += f'<tr><td><b>{k}</b></td><td>{md[k]}</td></tr>'
             else:
-                if len(md) > 0 and md[0] == '<':
+                if hasattr(md, '__getitem__') and len(md) > 0 and md[0] == '<':
                     dom = xml.dom.minidom.parseString(md)
                     md = dom.toprettyxml(indent='    ')
                     md = f'<pre>{md.replace("<", "&lt;").replace(">", "&gt;")}</pre>'
