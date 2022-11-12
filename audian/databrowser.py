@@ -188,7 +188,8 @@ class DataBrowser(QWidget):
         self.selected_channels = list(self.show_channels)
 
         # load data:
-        fmt_md = dict(samplingrate=f'{self.rate:.1f}Hz',
+        fmt_md = dict(filepath=self.file_path,
+                      samplingrate=f'{self.rate:.1f}Hz',
                       channels=self.data.channels,
                       frames=self.data.frames,
                       duration=f'{self.data.frames/self.rate:.3f}s')
@@ -403,7 +404,8 @@ class DataBrowser(QWidget):
 
 
     def show_metadata(self):
-        mdtable = '<table>'
+        w = xwidth = self.fontMetrics().averageCharWidth()
+        mdtable = f'<style>td {{padding: 0 {w}px 0 0; }}</style><table>'
         for i, sk in enumerate(self.meta_data):
             md = self.meta_data[sk]
             if i > 0:
