@@ -702,6 +702,7 @@ class Audian(QMainWindow):
         self.acts.link_channels.toggled.connect(self.toggle_link_channels)
 
         self.acts.channels = []
+        self.acts.select_channels = []
         for c in range(10):
             channel = QAction(f'Channel &{c}', self)
             channel.setToolTip(f'Toggle channel {c} ({c})')
@@ -716,7 +717,7 @@ class Audian(QMainWindow):
             channel.setShortcut(f'Ctrl+{c}')
             channel.triggered.connect(lambda x, channel=c: self.show_channel(channel))
             setattr(self.acts, f'select_channel{c}', channel)
-            self.addAction(channel)
+            self.acts.select_channels.append(channel)
 
         self.acts.select_all_channels = QAction('Select &all channels', self)
         self.acts.select_all_channels.setShortcuts(QKeySequence.SelectAll)
@@ -745,10 +746,16 @@ class Audian(QMainWindow):
         channel_menu.addAction(self.acts.previous_channel)
         channel_menu.addAction(self.acts.select_next_channel)
         channel_menu.addAction(self.acts.select_previous_channel)
+        toggle_menu = channel_menu.addMenu('&Toggle channels')
         for act in self.acts.channels:
-            channel_menu.addAction(act)
+            toggle_menu.addAction(act)
+        select_menu = channel_menu.addMenu('&Select channels')
+        for act in self.acts.select_channels:
+            select_menu.addAction(act)
 
         self.data_menus.append(channel_menu)
+        self.data_menus.append(toggle_menu)
+        self.data_menus.append(select_menu)
         
         return channel_menu
 
@@ -894,6 +901,8 @@ class Audian(QMainWindow):
         browser = self.tabs.widget(index)
         if isinstance(browser, DataBrowser) and not browser.data is None:
             for i, act in enumerate(self.acts.channels):
+                act.setVisible(i < browser.data.channels)
+            for i, act in enumerate(self.acts.select_channels):
                 act.setVisible(i < browser.data.channels)
             browser.update()
 
