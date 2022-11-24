@@ -685,6 +685,59 @@ class Audian(QMainWindow):
                 if not b is self.browser():
                     b.select_channels(self.browser().selected_channels)
 
+                    
+    def setup_channel_actions(self, menu):
+        self.acts.link_channels = QAction('Link &channels', self)
+        self.acts.link_channels.setShortcut('Alt+C')
+        self.acts.link_channels.setCheckable(True)
+        self.acts.link_channels.setChecked(self.link_channels)
+        self.acts.link_channels.toggled.connect(self.toggle_link_channels)
+
+        self.acts.channels = []
+        for c in range(10):
+            channel = QAction(f'Channel &{c}', self)
+            channel.setToolTip(f'Toggle channel {c} ({c})')
+            channel.setIconText(f'{c}')
+            channel.setShortcut(f'{c}')
+            channel.setCheckable(True)
+            channel.setChecked(True)
+            channel.toggled.connect(lambda x, channel=c: self.toggle_channel(channel))
+            self.acts.channels.append(channel)
+
+        self.acts.select_all_channels = QAction('Select &all channels', self)
+        self.acts.select_all_channels.setShortcuts(QKeySequence.SelectAll)
+        self.acts.select_all_channels.triggered.connect(lambda x: self.select_channels('all_channels'))
+
+        self.acts.next_channel = QAction('&Next channel', self)
+        self.acts.next_channel.setShortcuts(QKeySequence.SelectNextLine)
+        self.acts.next_channel.triggered.connect(lambda x: self.select_channels('next_channel'))
+
+        self.acts.previous_channel = QAction('&Previous channel', self)
+        self.acts.previous_channel.setShortcuts(QKeySequence.SelectPreviousLine)
+        self.acts.previous_channel.triggered.connect(lambda x: self.select_channels('previous_channel'))
+
+        self.acts.select_next_channel = QAction('Select next channel', self)
+        self.acts.select_next_channel.setShortcuts(QKeySequence.SelectNextPage)
+        self.acts.select_next_channel.triggered.connect(lambda x: self.select_channels('select_next_channel'))
+
+        self.acts.select_previous_channel = QAction('Select previous channel', self)
+        self.acts.select_previous_channel.setShortcuts(QKeySequence.SelectPreviousPage)
+        self.acts.select_previous_channel.triggered.connect(lambda x: self.select_channels('select_previous_channel'))
+
+        channel_menu = menu.addMenu('&Channels')
+        channel_menu.addAction(self.acts.link_channels)
+        channel_menu.addAction(self.acts.select_all_channels)
+        channel_menu.addAction(self.acts.next_channel)
+        channel_menu.addAction(self.acts.previous_channel)
+        channel_menu.addAction(self.acts.select_next_channel)
+        channel_menu.addAction(self.acts.select_previous_channel)
+        for act in self.acts.channels:
+            channel_menu.addAction(act)
+
+        self.data_menus.append(channel_menu)
+        
+        return channel_menu
+
         
     def toggle_link_panels(self):
         self.link_panels = not self.link_panels
@@ -727,57 +780,8 @@ class Audian(QMainWindow):
                 if not b is self.browser():
                     b.set_fulldata(self.browser().show_fulldata)
 
-
-    def next_tab(self):
-        idx = self.tabs.currentIndex()
-        if idx + 1 < self.tabs.count():
-            self.tabs.setCurrentIndex(idx + 1)
-
-
-    def previous_tab(self):
-        idx = self.tabs.currentIndex()
-        if idx > 0:
-            self.tabs.setCurrentIndex(idx - 1)
-
-
-    def setup_view_actions(self, menu):
-        self.acts.link_channels = QAction('Link &channels', self)
-        self.acts.link_channels.setShortcut('Alt+C')
-        self.acts.link_channels.setCheckable(True)
-        self.acts.link_channels.setChecked(self.link_channels)
-        self.acts.link_channels.toggled.connect(self.toggle_link_channels)
-
-        self.acts.channels = []
-        for c in range(10):
-            channel = QAction(f'Channel &{c}', self)
-            channel.setToolTip(f'Toggle channel {c} ({c})')
-            channel.setIconText(f'{c}')
-            channel.setShortcut(f'{c}')
-            channel.setCheckable(True)
-            channel.setChecked(True)
-            channel.toggled.connect(lambda x, channel=c: self.toggle_channel(channel))
-            self.acts.channels.append(channel)
-
-        self.acts.select_all_channels = QAction('Select &all channels', self)
-        self.acts.select_all_channels.setShortcuts(QKeySequence.SelectAll)
-        self.acts.select_all_channels.triggered.connect(lambda x: self.select_channels('all_channels'))
-
-        self.acts.next_channel = QAction('&Next channel', self)
-        self.acts.next_channel.setShortcuts(QKeySequence.SelectNextLine)
-        self.acts.next_channel.triggered.connect(lambda x: self.select_channels('next_channel'))
-
-        self.acts.previous_channel = QAction('&Previous channel', self)
-        self.acts.previous_channel.setShortcuts(QKeySequence.SelectPreviousLine)
-        self.acts.previous_channel.triggered.connect(lambda x: self.select_channels('previous_channel'))
-
-        self.acts.select_next_channel = QAction('Select next channel', self)
-        self.acts.select_next_channel.setShortcuts(QKeySequence.SelectNextPage)
-        self.acts.select_next_channel.triggered.connect(lambda x: self.select_channels('select_next_channel'))
-
-        self.acts.select_previous_channel = QAction('Select previous channel', self)
-        self.acts.select_previous_channel.setShortcuts(QKeySequence.SelectPreviousPage)
-        self.acts.select_previous_channel.triggered.connect(lambda x: self.select_channels('select_previous_channel'))
-
+                    
+    def setup_panel_actions(self, menu):
         self.acts.link_panels = QAction('Link &panels', self)
         self.acts.link_panels.setShortcut('Alt+P')
         self.acts.link_panels.setCheckable(True)
@@ -800,6 +804,31 @@ class Audian(QMainWindow):
         self.acts.toggle_fulldata.setShortcut('Ctrl+F')
         self.acts.toggle_fulldata.triggered.connect(self.toggle_fulldata)
             
+        panel_menu = menu.addMenu('&Panels')
+        panel_menu.addAction(self.acts.link_panels)
+        panel_menu.addAction(self.acts.toggle_traces)
+        panel_menu.addAction(self.acts.toggle_spectrograms)
+        panel_menu.addAction(self.acts.toggle_power)
+        panel_menu.addAction(self.acts.toggle_fulldata)
+
+        self.data_menus.append(panel_menu)
+        
+        return panel_menu
+
+    
+    def next_tab(self):
+        idx = self.tabs.currentIndex()
+        if idx + 1 < self.tabs.count():
+            self.tabs.setCurrentIndex(idx + 1)
+
+
+    def previous_tab(self):
+        idx = self.tabs.currentIndex()
+        if idx > 0:
+            self.tabs.setCurrentIndex(idx - 1)
+
+
+    def setup_view_actions(self, menu):
         self.acts.toggle_grid = QAction('Toggle &grid', self)
         self.acts.toggle_grid.setShortcut('g')
         self.acts.toggle_grid.triggered.connect(lambda x: self.browser().toggle_grids())
@@ -821,21 +850,8 @@ class Audian(QMainWindow):
         self.setup_amplitude_actions(view_menu)
         self.setup_frequency_actions(view_menu)
         self.setup_power_actions(view_menu)
-        view_menu.addAction(self.acts.link_channels)
-        channel_menu = view_menu.addMenu('&Channels')
-        for act in self.acts.channels:
-            channel_menu.addAction(act)
-        view_menu.addAction(self.acts.select_all_channels)
-        view_menu.addAction(self.acts.next_channel)
-        view_menu.addAction(self.acts.previous_channel)
-        view_menu.addAction(self.acts.select_next_channel)
-        view_menu.addAction(self.acts.select_previous_channel)
-        view_menu.addAction(self.acts.link_panels)
-        view_menu.addAction(self.acts.toggle_traces)
-        view_menu.addAction(self.acts.toggle_spectrograms)
-        view_menu.addAction(self.acts.toggle_power)
-        view_menu.addAction(self.acts.toggle_fulldata)
-        view_menu.addSeparator()
+        self.setup_channel_actions(view_menu)
+        self.setup_panel_actions(view_menu)
         view_menu.addAction(self.acts.toggle_grid)
         view_menu.addAction(self.acts.maximize_window)
         self.addAction(self.acts.next_file)
