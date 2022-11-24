@@ -51,17 +51,25 @@ of audio signals. Here an incomplete list of ToDos:
   - make cursor moveable by mouse.
   - some key shortcuts for moving and handling cursor.
 - Improve on marking cross hair, cues, regions, events:
-  - Cross hair should only be used for measuring! Just a single color/label?
-    Show comments interactively and show points only fom active measurement.
-  - Cues and regions have position data for all channels and have labels.
+  - Cross hair should only be used for measuring! Just a single whitish color.
+    Comments only in the table.
+    Show points only fom active measurement.
+  - Cues and regions have position data with labels. Same for all channels.
     - visualize them by infinite vertical lines/regions, both in plots and
       FullTracePlot (maybe in extra row?).
     - can be set from cursor position/marked region.
     - add key shortcuts to go to next/previous cue.
     - from cue table go to selected cue.
     - how does boris export them?
-  - Events are channel specific points with amplitude? Many points per label.
-    Result from some analysis.
+  - Events are channel specific points.
+    - Plotted as dot at data amplitude.
+    - Many events per label.
+    - Result from some analysis.
+    - But should be editable.
+  - Event regions are channel specific:
+    - Plotted as lines on top of data.
+    - Result from some analysis.
+    - But should be editable.
 - Define interface for analysis on full data, visible range, selected range.
 - Have a dockable sidebar for showing metadata, cue tables etc.
 - Implement a proper layout for showing the plot panels, allowing also for

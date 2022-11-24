@@ -15,7 +15,7 @@ from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFileDialog
 from PyQt5.QtWidgets import QAbstractItemView, QGraphicsRectItem
 import pyqtgraph as pg
 try:
-    from thunderfish import DataLoader
+    from thunderfish.dataloader import DataLoader
 except ImportError:
     from audioio import AudioLoader as DataLoader
 from audioio import available_formats, write_audio
