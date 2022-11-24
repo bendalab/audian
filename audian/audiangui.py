@@ -678,6 +678,14 @@ class Audian(QMainWindow):
                                    self.browser().selected_channels)
 
         
+    def show_channel(self, channel):
+        self.browser().show_channel(channel)
+        if self.link_channels:
+            for b in self.browsers:
+                if not b is self.browser():
+                    b.show_channel(channel)
+
+        
     def select_channels(self, selectfunc):
         getattr(self.browser(), selectfunc)()
         if self.link_channels:
@@ -703,6 +711,12 @@ class Audian(QMainWindow):
             channel.setChecked(True)
             channel.toggled.connect(lambda x, channel=c: self.toggle_channel(channel))
             self.acts.channels.append(channel)
+            
+            channel = QAction(f'Select channel {c}', self)
+            channel.setShortcut(f'Ctrl+{c}')
+            channel.triggered.connect(lambda x, channel=c: self.show_channel(channel))
+            setattr(self.acts, f'select_channel{c}', channel)
+            self.addAction(channel)
 
         self.acts.select_all_channels = QAction('Select &all channels', self)
         self.acts.select_all_channels.setShortcuts(QKeySequence.SelectAll)

@@ -1194,35 +1194,47 @@ class DataBrowser(QWidget):
 
 
     def next_channel(self):
-        idx = self.show_channels.index(self.current_channel)
-        if idx + 1 < len(self.show_channels):
-            self.current_channel = self.show_channels[idx + 1]
-        self.selected_channels = [self.current_channel]
-        self.update_borders()
+        if len(self.show_channels) == 1:
+            self.show_channel(self.current_channel + 1)
+        else:
+            idx = self.show_channels.index(self.current_channel)
+            if idx + 1 < len(self.show_channels):
+                self.current_channel = self.show_channels[idx + 1]
+            self.selected_channels = [self.current_channel]
+            self.update_borders()
 
 
     def previous_channel(self):
-        idx = self.show_channels.index(self.current_channel)
-        if idx > 0:
-            self.current_channel = self.show_channels[idx - 1]
-        self.selected_channels = [self.current_channel]
-        self.update_borders()
+        if len(self.show_channels) == 1:
+            self.show_channel(self.current_channel - 1)
+        else:
+            idx = self.show_channels.index(self.current_channel)
+            if idx > 0:
+                self.current_channel = self.show_channels[idx - 1]
+            self.selected_channels = [self.current_channel]
+            self.update_borders()
 
 
     def select_next_channel(self):
-        idx = self.show_channels.index(self.current_channel)
-        if idx + 1 < len(self.show_channels):
-            self.current_channel = self.show_channels[idx + 1]
-        self.selected_channels.append(self.current_channel)
-        self.update_borders()
+        if len(self.show_channels) == 1:
+            self.show_channel(self.current_channel + 1)
+        else:
+            idx = self.show_channels.index(self.current_channel)
+            if idx + 1 < len(self.show_channels):
+                self.current_channel = self.show_channels[idx + 1]
+                self.selected_channels.append(self.current_channel)
+                self.update_borders()
 
 
     def select_previous_channel(self):
-        idx = self.show_channels.index(self.current_channel)
-        if idx > 0:
-            self.current_channel = self.show_channels[idx - 1]
-        self.selected_channels.append(self.current_channel)
-        self.update_borders()
+        if len(self.show_channels) == 1:
+            self.show_channel(self.current_channel - 1)
+        else:
+            idx = self.show_channels.index(self.current_channel)
+            if idx > 0:
+                self.current_channel = self.show_channels[idx - 1]
+            self.selected_channels.append(self.current_channel)
+            self.update_borders()
 
             
     def select_channels(self, channels):
@@ -1295,6 +1307,13 @@ class DataBrowser(QWidget):
                 #    self.acts.channels[self.show_channels[0]].setCheckable(False)
                 self.set_channels()
         self.setFocus()
+
+        
+    def show_channel(self, channel):
+        if channel < 0 or channel >= len(self.figs):
+            return
+        self.current_channel = channel
+        self.set_channels([channel], [channel])
 
         
     def set_panels(self, traces=None, specs=None, cbars=None):
