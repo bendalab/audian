@@ -14,7 +14,11 @@ from PyQt5.QtWidgets import QLabel, QSizePolicy, QTableView
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFileDialog
 from PyQt5.QtWidgets import QAbstractItemView, QGraphicsRectItem
 import pyqtgraph as pg
-from audioio import AudioLoader, available_formats, write_audio
+try:
+    from thunderfish import DataLoader
+except ImportError:
+    from audioio import AudioLoader as DataLoader
+from audioio import available_formats, write_audio
 from audioio import fade
 from .version import __version__, __year__
 from .fulltraceplot import FullTracePlot, secs_to_str
@@ -161,7 +165,7 @@ class DataBrowser(QWidget):
         if not self.data is None:
             self.data.close()
         try:
-            self.data = AudioLoader(self.file_path, 60.0, 10.0)
+            self.data = DataLoader(self.file_path, 60.0, 10.0)
         except IOError:
             self.data = None
             return
