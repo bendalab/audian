@@ -408,6 +408,24 @@ class DataBrowser(QWidget):
 
 
     def show_metadata(self):
+        
+        def format_section(md):
+            mdtable = ''
+            if isinstance(md, dict):
+                for k in md:
+                    if isinstance(md[k], dict):
+                        mdtable += f'<tr><td colspan=2><b>{k}:</b></td></tr>'
+                        mdtable += format_section(md[k])
+                    else:
+                        mdtable += f'<tr><td><b>{k}</b></td><td>{md[k]}</td></tr>'
+            else:
+                if hasattr(md, '__getitem__') and len(md) > 0 and md[0] == '<':
+                    dom = xml.dom.minidom.parseString(md)
+                    md = dom.toprettyxml(indent='    ')
+                    md = f'<pre>{md.replace("<", "&lt;").replace(">", "&gt;")}</pre>'
+                    mdtable += f'<tr><td colspan=2>{md}</td></tr>'
+            return mdtable
+
         w = xwidth = self.fontMetrics().averageCharWidth()
         mdtable = f'<style>td {{padding: 0 {w}px 0 0; }}</style><table>'
         for i, sk in enumerate(self.meta_data):
@@ -415,15 +433,8 @@ class DataBrowser(QWidget):
             if i > 0:
                 mdtable += '<tr><td colspan=2></td></tr>'
             mdtable += f'<tr><td colspan=2><font size="+1"><b>{sk}:</b></font></td></tr>'
-            if isinstance(md, dict):
-                for k in md:
-                    mdtable += f'<tr><td><b>{k}</b></td><td>{md[k]}</td></tr>'
-            else:
-                if hasattr(md, '__getitem__') and len(md) > 0 and md[0] == '<':
-                    dom = xml.dom.minidom.parseString(md)
-                    md = dom.toprettyxml(indent='    ')
-                    md = f'<pre>{md.replace("<", "&lt;").replace(">", "&gt;")}</pre>'
-                mdtable += f'<tr><td colspan=2>{md}</td></tr>'
+            mdtable += format_section(md)
+        mdtable += '</table>'
         dialog = QDialog(self)
         dialog.setWindowTitle('Meta data')
         vbox = QVBoxLayout()
