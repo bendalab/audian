@@ -414,16 +414,21 @@ class DataBrowser(QWidget):
             if isinstance(md, dict):
                 for k in md:
                     if isinstance(md[k], dict):
+                        # new section:
+                        pads = ''
                         if level > 0:
-                            mdtable += f'<tr><td colspan=2 style="padding-left: {level*30:d}px;"><b>{k}:</b></td></tr>'
-                        else:
-                            mdtable += f'<tr><td colspan=2><b>{k}:</b></td></tr>'
+                            pads = f' style="padding-left: {level*30:d}px;"'
+                        mdtable += f'<tr><td colspan=2{pads}><b>{k}:</b></td></tr>'
                         mdtable += format_section(md[k], level+1)
                     else:
+                        # key-value pair:
+                        pads = ''
                         if level > 0:
-                            mdtable += f'<tr><td style="padding-left: {level*30:d}px;"><b>{k}</b></td><td>{md[k]}</td></tr>'
-                        else:
-                            mdtable += f'<tr><td><b>{k}</b></td><td>{md[k]}</td></tr>'
+                            pads = f' style="padding-left: {level*30:d}px;"'
+                        value = md[k]
+                        if isinstance(value, (list, tuple)):
+                            value = ', '.join(value)
+                        mdtable += f'<tr><td{pads}><b>{k}</b></td><td>{value}</td></tr>'
             else:
                 if hasattr(md, '__getitem__') and len(md) > 0 and md[0] == '<':
                     dom = xml.dom.minidom.parseString(md)
