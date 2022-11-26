@@ -960,6 +960,7 @@ class Audian(QMainWindow):
                     QMessageBox.critical(self, 'Error', f'''
 Can not open file <b>{browser.file_path}</b>!''')
                     break
+                self.tabs.setTabText(self.tabs.indexOf(browser), os.path.basename(browser.file_path))
                 if browser is self.browser():
                     self.adapt_menu(self.tabs.currentIndex())
                 browser.sigTimesChanged.connect(self.dispatch_times)

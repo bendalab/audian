@@ -169,6 +169,7 @@ class DataBrowser(QWidget):
         except IOError:
             self.data = None
             return
+        self.file_path = self.data.filepath
         self.rate = self.data.samplerate
         self.marker_data.file_path = self.file_path
 
@@ -197,7 +198,7 @@ class DataBrowser(QWidget):
                       channels=self.data.channels,
                       frames=self.data.frames,
                       duration=f'{self.data.frames/self.rate:.3f}s')
-        md, cues = self.data.metadata(store_empty=False)
+        md, cues = self.data.metadata(store_empty=False, first_only=False)
         self.meta_data = dict(format=fmt_md)
         self.meta_data.update(md)
         for c in cues:
