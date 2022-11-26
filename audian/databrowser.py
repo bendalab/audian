@@ -409,15 +409,21 @@ class DataBrowser(QWidget):
 
     def show_metadata(self):
         
-        def format_section(md):
+        def format_section(md, level):
             mdtable = ''
             if isinstance(md, dict):
                 for k in md:
                     if isinstance(md[k], dict):
-                        mdtable += f'<tr><td colspan=2><b>{k}:</b></td></tr>'
-                        mdtable += format_section(md[k])
+                        if level > 0:
+                            mdtable += f'<tr><td colspan=2 style="padding-left: {level*30:d}px;"><b>{k}:</b></td></tr>'
+                        else:
+                            mdtable += f'<tr><td colspan=2><b>{k}:</b></td></tr>'
+                        mdtable += format_section(md[k], level+1)
                     else:
-                        mdtable += f'<tr><td><b>{k}</b></td><td>{md[k]}</td></tr>'
+                        if level > 0:
+                            mdtable += f'<tr><td style="padding-left: {level*30:d}px;"><b>{k}</b></td><td>{md[k]}</td></tr>'
+                        else:
+                            mdtable += f'<tr><td><b>{k}</b></td><td>{md[k]}</td></tr>'
             else:
                 if hasattr(md, '__getitem__') and len(md) > 0 and md[0] == '<':
                     dom = xml.dom.minidom.parseString(md)
@@ -427,13 +433,14 @@ class DataBrowser(QWidget):
             return mdtable
 
         w = xwidth = self.fontMetrics().averageCharWidth()
+        level = 0
         mdtable = f'<style>td {{padding: 0 {w}px 0 0; }}</style><table>'
         for i, sk in enumerate(self.meta_data):
             md = self.meta_data[sk]
             if i > 0:
                 mdtable += '<tr><td colspan=2></td></tr>'
             mdtable += f'<tr><td colspan=2><font size="+1"><b>{sk}:</b></font></td></tr>'
-            mdtable += format_section(md)
+            mdtable += format_section(md, level)
         mdtable += '</table>'
         dialog = QDialog(self)
         dialog.setWindowTitle('Meta data')
