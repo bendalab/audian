@@ -323,11 +323,11 @@ class DataBrowser(QWidget):
             axt.getAxis('bottom').showLabel(c == self.show_channels[-1])
             axt.getAxis('bottom').setStyle(showValues=(c == self.show_channels[-1]))
             axt.setLimits(xMin=0, xMax=self.tmax,
-                          yMin=trace.ymin, yMax=trace.ymax,
-                          minXRange=10/self.rate, maxXRange=self.tmax,
-                          minYRange=1/2**16,
-                          maxYRange=trace.ymax - trace.ymin)
-        
+                          minXRange=10/self.rate, maxXRange=self.tmax)
+            if np.isfinite(self.data.ampl_min) and np.isfinite(self.data.ampl_max):
+                axt.setLimits(yMin=self.data.ampl_min, yMax=self.data.ampl_max,
+                              minYRange=1/2**16,
+                              maxYRange=self.data.ampl_max - self.data.ampl_min)
 
             axt.setXRange(self.toffset, self.toffset + self.twindow)
             axt.sigXRangeChanged.connect(self.update_times)
