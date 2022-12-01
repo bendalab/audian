@@ -146,11 +146,11 @@ class TraceItem(pg.PlotDataItem):
         c = 0.5*(self.ymax + self.ymin)
         self.ymin = c - h
         self.ymax = c + h
-        if self.ymax > 1:
-            self.ymax = 1
+        if self.ymax > self.data.ampl_max:
+            self.ymax = self.data.ampl_max
             self.ymin = 1 - 2*h
-        if self.ymin < -1:
-            self.ymin = -1
+        if self.ymin < self.data.ampl_min:
+            self.ymin = self.data.ampl_min
         
         
     def auto_ampl(self, toffset, twindow):
