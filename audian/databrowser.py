@@ -776,7 +776,7 @@ class DataBrowser(QWidget):
         xwidth = self.fontMetrics().averageCharWidth()
         xheight = self.fontMetrics().ascent()
         # subtract full data plot:
-        data_height = 2.5*xheight if len(self.show_channels) <= 1 else 1.5*xheight
+        data_height = 5*xheight//2 if len(self.show_channels) <= 1 else 3*xheight//2
         if not self.show_fulldata:
             data_height = 0
         height -= len(self.show_channels)*data_height
