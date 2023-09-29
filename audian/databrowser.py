@@ -79,8 +79,8 @@ class DataBrowser(QWidget):
         
         self.grids = 0
         self.show_traces = True
-        self.show_specs = 2
-        self.show_cbars = True
+        self.show_specs = 4
+        self.show_cbars = False
         self.show_fulldata = True
         
         # auto scroll:
@@ -1500,7 +1500,12 @@ class DataBrowser(QWidget):
     def play_region(self, t0, t1):
         i0 = int(np.round(t0*self.rate))
         i1 = int(np.round(t1*self.rate))
-        playdata = 1.0*self.data[i0:i1, self.selected_channels]
+        n2 = (len(self.selected_channels)+1)//2
+        playdata = np.zeros((i1-i0, min(2, len(self.selected_channels))))
+        playdata[:,0] = np.mean(self.data[i0:i1, self.selected_channels[:n2]], 1)
+        if len(self.selected_channels) > 1:
+            playdata[:,1] = np.mean(self.data[i0:i1, self.selected_channels[n2:]], 1)
+        #playdata = 1.0*self.data[i0:i1, self.selected_channels]
         fade(playdata, self.rate, 0.1)
         self.audio.play(playdata, self.rate, blocking=False)
         self.audio_time = t0

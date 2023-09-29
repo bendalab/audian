@@ -1050,7 +1050,15 @@ def main(cargs):
     args, qt_args = parser.parse_known_args(cargs)
 
     cs = [s.strip() for s in args.channels.split(',')]
-    channels = [int(c) for c in cs if len(c)>0]
+    channels = []
+    for c in cs:
+        if len(c) == 0:
+            continue
+        css = [s.strip() for s in c.split('-')]
+        if len(css) == 2:
+            channels.extend(list(range(int(css[0]), int(css[1])+1)))
+        else:
+            channels.append(int(c))
     
     app = QApplication(sys.argv[:1] + qt_args)
     main = Audian(args.files, channels, args.high_pass, args.low_pass)
