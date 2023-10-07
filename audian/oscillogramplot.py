@@ -14,7 +14,7 @@ class OscillogramPlot(pg.PlotItem):
     sigSelectedRegion = Signal(object, object, object)
 
     
-    def __init__(self, channel, xwidth):
+    def __init__(self, channel, xwidth, short_label=False):
 
         # view box:
         view = SelectViewBox(channel)
@@ -26,7 +26,10 @@ class OscillogramPlot(pg.PlotItem):
         bottom_axis.setTextPen('black')
         top_axis = TimeAxisItem(orientation='top', showValues=False)
         left_axis = YAxisItem(orientation='left', showValues=True)
-        left_axis.setLabel(f'channel {channel}', color='black')
+        if short_label:
+            left_axis.setLabel(f'C{channel}', color='black')
+        else:
+            left_axis.setLabel(f'channel {channel}', color='black')
         left_axis.setPen('white')
         left_axis.setTextPen('black')
         left_axis.setWidth(8*xwidth)

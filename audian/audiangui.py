@@ -14,7 +14,7 @@ from .databrowser import DataBrowser
 
 
 class Audian(QMainWindow):
-    def __init__(self, file_paths, channels, high_pass, low_pass):
+    def __init__(self, file_paths, channels, high_pass, low_pass, unwrap):
         super().__init__()
 
         class acts: pass
@@ -68,6 +68,7 @@ class Audian(QMainWindow):
         self.startup_active = False
         
         # data:
+        self.unwrap = unwrap
         self.load_files(file_paths)
 
         # init widgets to show:
@@ -703,18 +704,21 @@ class Audian(QMainWindow):
 
         self.acts.channels = []
         self.acts.select_channels = []
-        for c in range(10):
+        # TODO: maximum number of channels should depend on what is in the files!
+        for c in range(20):
             channel = QAction(f'Channel &{c}', self)
             channel.setToolTip(f'Toggle channel {c} ({c})')
             channel.setIconText(f'{c}')
-            channel.setShortcut(f'{c}')
+            if c <= 9:
+                channel.setShortcut(f'{c}')
             channel.setCheckable(True)
             channel.setChecked(True)
             channel.toggled.connect(lambda x, channel=c: self.toggle_channel(channel))
             self.acts.channels.append(channel)
             
             channel = QAction(f'Select channel {c}', self)
-            channel.setShortcut(f'Ctrl+{c}')
+            if c <= 9:
+                channel.setShortcut(f'Ctrl+{c}')
             channel.triggered.connect(lambda x, channel=c: self.show_channel(channel))
             setattr(self.acts, f'select_channel{c}', channel)
             self.acts.select_channels.append(channel)
@@ -953,7 +957,7 @@ class Audian(QMainWindow):
     def load_data(self):
         for browser in self.browsers:
             if browser.data is None:
-                browser.open()
+                browser.open(self.unwrap)
                 if browser.data is None:
                     self.tabs.removeTab(self.tabs.indexOf(browser))
                     self.browsers.remove(browser)
@@ -1047,6 +1051,8 @@ def main(cargs):
     parser.add_argument('-l', dest='low_pass', type=float, metavar='FREQ', default=None,
                         help='Cutoff frequency of lowpass filter in Hz')
     parser.add_argument('files', nargs='*', default=[], type=str, help='name of the file with the time series data')
+    parser.add_argument('-u', dest='unwrap', action='store_true', 
+                        help='Unwrap clipped data using unwrap() from audioio package')
     args, qt_args = parser.parse_known_args(cargs)
 
     cs = [s.strip() for s in args.channels.split(',')]
@@ -1061,7 +1067,8 @@ def main(cargs):
             channels.append(int(c))
     
     app = QApplication(sys.argv[:1] + qt_args)
-    main = Audian(args.files, channels, args.high_pass, args.low_pass)
+    main = Audian(args.files, channels, args.high_pass, args.low_pass,
+                  args.unwrap)
     main.show()
     app.exec_()
 

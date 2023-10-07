@@ -161,7 +161,7 @@ class DataBrowser(QWidget):
             self.data.close()
 
         
-    def open(self):
+    def open(self, unwrap):
         if not self.data is None:
             self.data.close()
         try:
@@ -169,6 +169,7 @@ class DataBrowser(QWidget):
         except IOError:
             self.data = None
             return
+        self.data.unwrap = unwrap
         self.file_path = self.data.filepath
         self.rate = self.data.samplerate
         self.marker_data.file_path = self.file_path
@@ -247,6 +248,8 @@ class DataBrowser(QWidget):
             fig.ci.layout.setVerticalSpacing(0)
             fig.ci.layout.setHorizontalSpacing(xwidth)
             fig.setVisible(c in self.show_channels)
+            self.acts.channels[c].setChecked(c in self.show_channels)
+
             self.vbox.addWidget(fig)
             self.figs.append(fig)
             
@@ -309,7 +312,7 @@ class DataBrowser(QWidget):
             # trace plot:
             trace = TraceItem(self.data, self.rate, c)
             self.traces.append(trace)
-            axt = OscillogramPlot(c, xwidth)
+            axt = OscillogramPlot(c, xwidth, self.data.channels > 4)
             axt.addItem(trace)
             labels = []
             for l in self.marker_labels:
