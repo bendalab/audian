@@ -694,6 +694,15 @@ class Audian(QMainWindow):
                 if not b is self.browser():
                     b.select_channels(self.browser().selected_channels)
 
+        
+    def hide_selected_channels(self):
+        if self.link_channels:
+            for b in self.browsers:
+                if not b is self.browser():
+                    b.select_channels(self.browser().selected_channels)
+                    b.hide_selected_channels()
+        self.browser().hide_selected_channels()
+
                     
     def setup_channel_actions(self, menu):
         self.acts.link_channels = QAction('Link &channels', self)
@@ -743,6 +752,10 @@ class Audian(QMainWindow):
         self.acts.select_previous_channel.setShortcuts(QKeySequence.SelectPreviousPage)
         self.acts.select_previous_channel.triggered.connect(lambda x: self.select_channels('select_previous_channel'))
 
+        self.acts.hide_selected_channels = QAction('Hide selected channels', self)
+        self.acts.hide_selected_channels.setShortcuts(QKeySequence.Delete)
+        self.acts.hide_selected_channels.triggered.connect(self.hide_selected_channels)
+
         channel_menu = menu.addMenu('&Channels')
         channel_menu.addAction(self.acts.link_channels)
         channel_menu.addAction(self.acts.select_all_channels)
@@ -750,6 +763,7 @@ class Audian(QMainWindow):
         channel_menu.addAction(self.acts.previous_channel)
         channel_menu.addAction(self.acts.select_next_channel)
         channel_menu.addAction(self.acts.select_previous_channel)
+        channel_menu.addAction(self.acts.hide_selected_channels)
         toggle_menu = channel_menu.addMenu('&Toggle channels')
         for act in self.acts.channels:
             toggle_menu.addAction(act)
