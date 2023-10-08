@@ -123,8 +123,13 @@ class SpecItem(pg.ImageItem):
         self.tresolution = time[1] - time[0]
         self.fresolution = freq[1] - freq[0]
         self.spectrum = decibel(Sxx)
-        #print(np.max(self.spectrum))
-        zmax = np.percentile(self.spectrum, 99.9) + 5.0
+        #print(np.min(self.spectrum), np.max(self.spectrum))
+        zmin = np.min(self.spectrum)
+        zmax = np.max(self.spectrum)
+        if np.isfinite(zmin) and np.isfinite(zmax) and zmax - zmin > 0.0:
+            zmax = np.percentile(self.spectrum, 99.9) + 5.0
+        else:
+            zmax = -80.0
         #zmin = np.percentile(self.spectrum, 70.0)
         #zmax = -20
         zmin = zmax - 60
