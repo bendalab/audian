@@ -1,6 +1,7 @@
 import os
 import xml.dom.minidom
 from math import fabs, ceil, floor, log, log10
+import datetime as dt
 import numpy as np
 try:
     from PyQt5.QtCore import Signal
@@ -202,6 +203,9 @@ class DataBrowser(QWidget):
         md, cues = self.data.metadata(store_empty=False, first_only=False)
         self.meta_data = dict(format=fmt_md)
         self.meta_data.update(md)
+        starttime = None
+        if 'INFO' in self.meta_data and 'DateTimeOriginal' in self.meta_data['INFO']:
+            starttime = dt.datetime.fromisoformat(self.meta_data['INFO']['DateTimeOriginal'])
         for c in cues:
             self.marker_data.add_data(0, float(c['pos'])/self.rate, label=c.get('label', ''))
         labels = [c['label'] for c in cues if 'label' in c]
@@ -312,7 +316,7 @@ class DataBrowser(QWidget):
             # trace plot:
             trace = TraceItem(self.data, self.rate, c)
             self.traces.append(trace)
-            axt = OscillogramPlot(c, xwidth, self.data.channels > 4)
+            axt = OscillogramPlot(c, xwidth, starttime, self.data.channels > 4)
             axt.addItem(trace)
             labels = []
             for l in self.marker_labels:

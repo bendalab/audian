@@ -1,4 +1,5 @@
 from math import ceil, floor, log10
+import datetime as dt
 import numpy as np
 from PyQt5.QtGui import QFontMetrics
 import pyqtgraph as pg
@@ -9,11 +10,24 @@ class TimeAxisItem(pg.AxisItem):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setPen('white')
+        self.StartTime = None
 
 
     def setLogMode(self, *args, **kwargs):
         # no log mode!
         pass
+
+
+    def setStartTime(self, time):
+        """ Set time of first data element.
+
+        Parameters
+        ----------
+        time: datetime or None
+            A datetime object for the data and time of the first data element. 
+        """
+        self.enableAutoSIPrefix(time is None)
+        self.StartTime = time
 
 
     def tickSpacing(self, minVal, maxVal, size):
@@ -23,7 +37,9 @@ class TimeAxisItem(pg.AxisItem):
 
         # estimate width of xtick labels:
         xwidth = QFontMetrics(self.font()).averageCharWidth()
-        if maxVal < 1.0:
+        if self.StartTime:
+            nx = 8
+        elif maxVal < 1.0:
             nx = 0
         elif maxVal >= 3600:
             nx = 8
@@ -72,10 +88,10 @@ class TimeAxisItem(pg.AxisItem):
             self.setLabel('Time', units='s')
             return [f'{v*scale:.5g}' for v in values]
 
-        if np.max(values) >= 3600:
+        if self.StartTime or np.max(values) > 3600:
             self.setLabel('Time (h:m:s)', units=None)
             fs = '{hours:.0f}:{mins:02.0f}:{secs:02.0f}'
-        elif np.max(values) >= 60:
+        elif np.max(values) > 60:
             self.setLabel('Time (m:s)', units=None)
             fs = '{mins:.0f}:{secs:02.0f}'
         else:
@@ -84,22 +100,21 @@ class TimeAxisItem(pg.AxisItem):
         if spacing < 1:
             fs += '.{micros}'
         
+        basetime = dt.datetime(1, 1, 1, 0, 0, 0, 0)
+        if self.StartTime:
+            basetime = self.StartTime
         vals = []
         for time in values:
-            hours = np.floor(time/3600)
-            time -= hours*3600
-            mins = np.floor(time/60)
-            time -= mins*60
-            secs = np.floor(time)
-            time -= secs
+            t = basetime + dt.timedelta(seconds=time)
             if spacing < 0.00001:
-                micros = f'{1000000*time:06.0f}'
+                micros = f'{1.0*t.microsecond:06.0f}'
             elif spacing < 0.0001:
-                micros = f'{100000*time:05.0f}'
+                micros = f'{0.1*t.microsecond:05.0f}'
             elif spacing < 0.001:
-                micros = f'{10000*time:04.0f}'
+                micros = f'{0.01*t.microsecond:04.0f}'
             else:
-                micros = f'{1000*time:03.0f}'
-            time = dict(hours=hours, mins=mins, secs=secs, micros=micros)
+                micros = f'{0.001*t.microsecond:03.0f}'
+            time = dict(hours=t.hour, mins=t.minute, secs=t.second,
+                        micros=micros)
             vals.append(fs.format(**time))
         return vals
