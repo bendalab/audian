@@ -718,16 +718,20 @@ class Audian(QMainWindow):
             channel = QAction(f'Channel &{c}', self)
             channel.setToolTip(f'Toggle channel {c} ({c})')
             channel.setIconText(f'{c}')
-            if c <= 9:
-                channel.setShortcut(f'{c}')
+            #if c <= 9:
+            #    channel.setShortcut(f'{c}')
+            #else
+            channel.setShortcut(f'{c//10},{c%10}')
             channel.setCheckable(True)
             channel.setChecked(True)
             channel.toggled.connect(lambda x, channel=c: self.toggle_channel(channel))
             self.acts.channels.append(channel)
             
             channel = QAction(f'Select channel {c}', self)
-            if c <= 9:
-                channel.setShortcut(f'Ctrl+{c}')
+            #if c <= 9:
+            #    channel.setShortcut(f'Ctrl+{c}')
+            #else
+            channel.setShortcut(f'Ctrl+{c//10},Ctrl+{c%10}')
             channel.triggered.connect(lambda x, channel=c: self.show_channel(channel))
             setattr(self.acts, f'select_channel{c}', channel)
             self.acts.select_channels.append(channel)

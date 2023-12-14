@@ -381,7 +381,10 @@ class DataBrowser(QWidget):
         self.toolbar.addWidget(self.nfftw)
         self.toolbar.addSeparator()
         self.toolbar.addWidget(QLabel('Channel:'))
-        for act in self.acts.channels[:self.data.channels]:
+        for c, act in enumerate(self.acts.channels[:self.data.channels]):
+            if self.data.channels < 10:
+                act.setShortcut(f'{c}')
+                self.acts.select_channels[c].setShortcut(f'CTRL+{c}')
             self.toolbar.addAction(act)
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
@@ -1343,8 +1346,13 @@ class DataBrowser(QWidget):
     def show_channel(self, channel):
         if channel < 0 or channel >= len(self.figs):
             return
-        self.current_channel = channel
-        self.set_channels([channel], [channel])
+        if self.current_channel == channel and \
+           self.show_channels == [channel] and \
+           self.selected_channels == [channel]:
+            self.set_channels(list(range(len(self.figs))), list(range(len(self.figs))))
+        else:
+            self.current_channel = channel
+            self.set_channels([channel], [channel])
 
         
     def hide_selected_channels(self):
