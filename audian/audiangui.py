@@ -62,6 +62,7 @@ class Audian(QMainWindow):
         self.keys = ['<h1>Audian key shortcuts</h1>']
         for menu in [file_menu, region_menu, spec_menu, view_menu, help_menu]:
             self.menu_shortcuts(menu)
+        # TODO: the channel keybindings should switch for each file!
         
         # default widget:
         self.setup_startup()
@@ -718,9 +719,6 @@ class Audian(QMainWindow):
             channel = QAction(f'Channel &{c}', self)
             channel.setToolTip(f'Toggle channel {c} ({c})')
             channel.setIconText(f'{c}')
-            #if c <= 9:
-            #    channel.setShortcut(f'{c}')
-            #else
             channel.setShortcut(f'{c//10},{c%10}')
             channel.setCheckable(True)
             channel.setChecked(True)
@@ -728,9 +726,6 @@ class Audian(QMainWindow):
             self.acts.channels.append(channel)
             
             channel = QAction(f'Select channel {c}', self)
-            #if c <= 9:
-            #    channel.setShortcut(f'Ctrl+{c}')
-            #else
             channel.setShortcut(f'Ctrl+{c//10},Ctrl+{c%10}')
             channel.triggered.connect(lambda x, channel=c: self.show_channel(channel))
             setattr(self.acts, f'select_channel{c}', channel)
