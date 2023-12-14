@@ -53,16 +53,16 @@ class Audian(QMainWindow):
         self.setCentralWidget(self.tabs)
 
         # actions:
+        self.toggle_menu = None
+        self.select_menu = None
         self.data_menus = []
         file_menu = self.setup_file_actions(self.menuBar())
         region_menu = self.setup_region_actions(self.menuBar())
         spec_menu = self.setup_spectrogram_actions(self.menuBar())
         view_menu = self.setup_view_actions(self.menuBar())
         help_menu = self.setup_help_actions(self.menuBar())
-        self.keys = ['<h1>Audian key shortcuts</h1>']
-        for menu in [file_menu, region_menu, spec_menu, view_menu, help_menu]:
-            self.menu_shortcuts(menu)
-        # TODO: the channel keybindings should switch for each file!
+        self.menus = [file_menu, region_menu, spec_menu, view_menu, help_menu]
+        self.keys = []   # list of key shortcuts
         
         # default widget:
         self.setup_startup()
@@ -127,7 +127,7 @@ class Audian(QMainWindow):
         title = menu.title().replace('&', '')
         s = ''
         for act in menu.actions():
-            if not act.menu():
+            if not act.menu() and act.isEnabled():
                 name = act.text().replace('&', '')
                 keys = ', '.join([key.toString() for key in act.shortcuts()])
                 if name and keys:
@@ -704,7 +704,43 @@ class Audian(QMainWindow):
                     b.hide_selected_channels()
         self.browser().hide_selected_channels()
 
-                    
+
+    def set_channel_action(self, c, n, checked=True, active=True):
+        if c >= len(self.acts.channels):
+            cact = QAction(f'Channel &{c}', self)
+            cact.setIconText(f'{c}')
+            cact.setCheckable(True)
+            cact.setChecked(True)
+            cact.toggled.connect(lambda x, channel=c: self.toggle_channel(channel))
+            if self.toggle_menu:
+                self.toggle_menu.addAction(cact)
+            self.acts.channels.append(cact)
+            sact = QAction(f'Select channel {c}', self)
+            sact.triggered.connect(lambda x, channel=c: self.show_channel(channel))
+            setattr(self.acts, f'select_channel{c}', sact)
+            if self.select_menu:
+                self.select_menu.addAction(sact)
+            self.acts.select_channels.append(sact)
+        else:
+            cact = self.acts.channels[c]
+            sact = self.acts.select_channels[c]
+        if active:
+            cact.setChecked(checked)
+            cact.setEnabled(c < n)
+            cact.setVisible(c < n)
+            sact.setEnabled(c < n)
+            sact.setVisible(c < n)
+            if c < n:
+                if n < 10:
+                    cact.setShortcut(f'{c}')
+                    sact.setShortcut(f'Ctrl+{c}')
+                else:
+                    cact.setShortcut(f'{c//10}, {c%10}')
+                    sact.setShortcut(f'Ctrl+{c//10}, Ctrl+{c%10}')
+                keys = ', '.join([key.toString() for key in cact.shortcuts()])
+                cact.setToolTip(f'Toggle channel {c} ({keys})')
+
+
     def setup_channel_actions(self, menu):
         self.acts.link_channels = QAction('Link &channels', self)
         self.acts.link_channels.setShortcut('Alt+C')
@@ -714,22 +750,6 @@ class Audian(QMainWindow):
 
         self.acts.channels = []
         self.acts.select_channels = []
-        # TODO: maximum number of channels should depend on what is in the files!
-        for c in range(20):
-            channel = QAction(f'Channel &{c}', self)
-            channel.setToolTip(f'Toggle channel {c} ({c})')
-            channel.setIconText(f'{c}')
-            channel.setShortcut(f'{c//10},{c%10}')
-            channel.setCheckable(True)
-            channel.setChecked(True)
-            channel.toggled.connect(lambda x, channel=c: self.toggle_channel(channel))
-            self.acts.channels.append(channel)
-            
-            channel = QAction(f'Select channel {c}', self)
-            channel.setShortcut(f'Ctrl+{c//10},Ctrl+{c%10}')
-            channel.triggered.connect(lambda x, channel=c: self.show_channel(channel))
-            setattr(self.acts, f'select_channel{c}', channel)
-            self.acts.select_channels.append(channel)
 
         self.acts.select_all_channels = QAction('Select &all channels', self)
         self.acts.select_all_channels.setShortcuts(QKeySequence.SelectAll)
@@ -763,16 +783,16 @@ class Audian(QMainWindow):
         channel_menu.addAction(self.acts.select_next_channel)
         channel_menu.addAction(self.acts.select_previous_channel)
         channel_menu.addAction(self.acts.hide_selected_channels)
-        toggle_menu = channel_menu.addMenu('&Toggle channels')
+        self.toggle_menu = channel_menu.addMenu('&Toggle channels')
         for act in self.acts.channels:
-            toggle_menu.addAction(act)
-        select_menu = channel_menu.addMenu('&Select channels')
+            self.toggle_menu.addAction(act)
+        self.select_menu = channel_menu.addMenu('&Select channels')
         for act in self.acts.select_channels:
-            select_menu.addAction(act)
+            self.select_menu.addAction(act)
 
         self.data_menus.append(channel_menu)
-        self.data_menus.append(toggle_menu)
-        self.data_menus.append(select_menu)
+        self.data_menus.append(self.toggle_menu)
+        self.data_menus.append(self.select_menu)
         
         return channel_menu
 
@@ -917,10 +937,9 @@ class Audian(QMainWindow):
     def adapt_menu(self, index):
         browser = self.tabs.widget(index)
         if isinstance(browser, DataBrowser) and not browser.data is None:
-            for i, act in enumerate(self.acts.channels):
-                act.setVisible(i < browser.data.channels)
-            for i, act in enumerate(self.acts.select_channels):
-                act.setVisible(i < browser.data.channels)
+            for c in range(len(self.acts.channels)):
+                self.set_channel_action(c, browser.data.channels,
+                                        c in browser.show_channels, True)
             browser.update()
 
         
@@ -970,7 +989,7 @@ class Audian(QMainWindow):
     def load_data(self):
         for browser in self.browsers:
             if browser.data is None:
-                browser.open(self.unwrap)
+                browser.open(self, self.unwrap)
                 if browser.data is None:
                     self.tabs.removeTab(self.tabs.indexOf(browser))
                     self.browsers.remove(browser)
@@ -978,6 +997,11 @@ class Audian(QMainWindow):
 Can not open file <b>{browser.file_path}</b>!''')
                     break
                 self.tabs.setTabText(self.tabs.indexOf(browser), os.path.basename(browser.file_path))
+                for b in self.browsers:
+                    if not b.data is None and \
+                       b.data.channels != browser.data.channels:
+                        self.link_channels = False
+                        self.acts.link_channels.setChecked(self.link_channels)
                 if browser is self.browser():
                     self.adapt_menu(self.tabs.currentIndex())
                 browser.sigTimesChanged.connect(self.dispatch_times)
@@ -999,6 +1023,9 @@ Can not open file <b>{browser.file_path}</b>!''')
 
 
     def shortcuts(self):
+        self.keys = ['<h1>Audian key shortcuts</h1>']
+        for menu in self.menus:
+            self.menu_shortcuts(menu)
         dialog = QDialog(self)
         dialog.setWindowTitle('Audian Key Shortcuts')
         mvbox = QVBoxLayout(dialog)

@@ -162,7 +162,7 @@ class DataBrowser(QWidget):
             self.data.close()
 
         
-    def open(self, unwrap):
+    def open(self, gui, unwrap):
         if not self.data is None:
             self.data.close()
         try:
@@ -252,7 +252,6 @@ class DataBrowser(QWidget):
             fig.ci.layout.setVerticalSpacing(0)
             fig.ci.layout.setHorizontalSpacing(xwidth)
             fig.setVisible(c in self.show_channels)
-            self.acts.channels[c].setChecked(c in self.show_channels)
 
             self.vbox.addWidget(fig)
             self.figs.append(fig)
@@ -381,18 +380,12 @@ class DataBrowser(QWidget):
         self.toolbar.addWidget(self.nfftw)
         self.toolbar.addSeparator()
         self.toolbar.addWidget(QLabel('Channel:'))
-        for c, act in enumerate(self.acts.channels[:self.data.channels]):
-            # TODO: We need to switch the keybinding for each file!
-            if self.data.channels < 10:
-                act.setShortcut(f'{c}')
-                self.acts.select_channels[c].setShortcut(f'CTRL+{c}')
-            else:
-                act.setShortcut(f'{c//10},{c%10}')
-                self.acts.select_channels[c].setShortcut(f'Ctrl+{c//10},Ctrl+{c%10}')
-            self.toolbar.addAction(act)
-        for c, act in enumerate(self.acts.channels[self.data.channels:]):
-            act.setShortcut('')
-            self.acts.select_channels[c].setShortcut('')
+        for c in range(max(self.data.channels, len(self.acts.channels))):
+            gui.set_channel_action(c, self.data.channels,
+                                   c in self.show_channels,
+                                   gui.browser() is self)
+            if c < self.data.channels:
+                self.toolbar.addAction(self.acts.channels[c])
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         self.toolbar.addWidget(spacer)
