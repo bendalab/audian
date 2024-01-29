@@ -200,17 +200,20 @@ class DataBrowser(QWidget):
                       channels=self.data.channels,
                       frames=self.data.frames,
                       duration=f'{self.data.frames/self.rate:.3f}s')
-        md, cues = self.data.metadata(store_empty=False, first_only=False)
+        md = self.data.metadata(store_empty=False)
         self.meta_data = dict(format=fmt_md)
         self.meta_data.update(md)
         starttime = None
         if 'INFO' in self.meta_data and 'DateTimeOriginal' in self.meta_data['INFO']:
             starttime = dt.datetime.fromisoformat(self.meta_data['INFO']['DateTimeOriginal'])
-        for c in cues:
-            self.marker_data.add_data(0, float(c['pos'])/self.rate, label=c.get('label', ''))
-        labels = [c['label'] for c in cues if 'label' in c]
-        for i, l in enumerate(labels):
-            self.marker_labels.append(MarkerLabel(l, '', list(colors.keys())[i % len(colors.keys())]))
+        locs, labels = self.data.markers()
+        for i in range(len(locs)):
+            l = labels[i,0] if i < len(labels) else ''
+            self.marker_data.add_data(0, float(locs[i,0])/self.rate, l)
+        if len(labels) > 0:
+            lbls = np.unique(labels[:,0])
+            for i, l in enumerate(lbls):
+                self.marker_labels.append(MarkerLabel(l, '', list(colors.keys())[i % len(colors.keys())]))
         self.data[0,:]
 
         self.figs = []     # all GraphicsLayoutWidgets - one for each channel
