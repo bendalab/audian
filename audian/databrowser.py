@@ -162,7 +162,7 @@ class DataBrowser(QWidget):
             self.data.close()
 
         
-    def open(self, gui, unwrap):
+    def open(self, gui, unwrap, unwrap_clip):
         if not self.data is None:
             self.data.close()
         try:
@@ -170,7 +170,7 @@ class DataBrowser(QWidget):
         except IOError:
             self.data = None
             return
-        self.data.unwrap = unwrap
+        self.data.set_unwrap(unwrap, unwrap_clip)
         self.file_path = self.data.filepath
         self.rate = self.data.samplerate
         self.marker_data.file_path = self.file_path

@@ -14,7 +14,8 @@ from .databrowser import DataBrowser
 
 
 class Audian(QMainWindow):
-    def __init__(self, file_paths, channels, high_pass, low_pass, unwrap):
+    def __init__(self, file_paths, channels, high_pass, low_pass,
+                 unwrap, unwrap_clip):
         super().__init__()
 
         class acts: pass
@@ -70,6 +71,7 @@ class Audian(QMainWindow):
         
         # data:
         self.unwrap = unwrap
+        self.unwrap_clip = unwrap_clip
         self.load_files(file_paths)
 
         # init widgets to show:
@@ -989,7 +991,7 @@ class Audian(QMainWindow):
     def load_data(self):
         for browser in self.browsers:
             if browser.data is None:
-                browser.open(self, self.unwrap)
+                browser.open(self, self.unwrap, self.unwrap_clip)
                 if browser.data is None:
                     self.tabs.removeTab(self.tabs.indexOf(browser))
                     self.browsers.remove(browser)
@@ -1091,8 +1093,12 @@ def main(cargs):
     parser.add_argument('-l', dest='low_pass', type=float, metavar='FREQ', default=None,
                         help='Cutoff frequency of lowpass filter in Hz')
     parser.add_argument('files', nargs='*', default=[], type=str, help='name of the file with the time series data')
-    parser.add_argument('-u', dest='unwrap', action='store_true', 
-                        help='Unwrap clipped data using unwrap() from audioio package')
+    parser.add_argument('-u', dest='unwrap', default=0, type=float,
+                        metavar='UNWRAP', const=0.5, nargs='?',
+                        help='unwrap clipped data with threshold and divide by two using unwrap() from audioio package')
+    parser.add_argument('-U', dest='unwrap_clip', default=0, type=float,
+                        metavar='UNWRAP', const=0.5, nargs='?',
+                        help='unwrap clipped data with threshold and clip using unwrap() from audioio package')
     args, qt_args = parser.parse_known_args(cargs)
 
     cs = [s.strip() for s in args.channels.split(',')]
@@ -1105,10 +1111,16 @@ def main(cargs):
             channels.extend(list(range(int(css[0]), int(css[1])+1)))
         else:
             channels.append(int(c))
+
+    if args.unwrap_clip > 1e-3:
+        args.unwrap = args.unwrap_clip
+        args.unwrap_clip = True
+    else:
+        args.unwrap_clip = False
     
     app = QApplication(sys.argv[:1] + qt_args)
     main = Audian(args.files, channels, args.high_pass, args.low_pass,
-                  args.unwrap)
+                  args.unwrap, args.unwrap_clip)
     main.show()
     app.exec_()
 
