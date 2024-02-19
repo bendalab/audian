@@ -34,8 +34,8 @@ class TraceItem(pg.PlotDataItem):
         self.channel = channel
         self.step = 1
         self.color = color
-        self.ymin = -1.0
-        self.ymax = +1.0
+        self.ymin = self.data.ampl_min
+        self.ymax = self.data.ampl_max
         self.highpass_cutoff = None
         self.lowpass_cutoff = None
         self.sos = None
@@ -168,8 +168,8 @@ class TraceItem(pg.PlotDataItem):
 
         
     def reset_ampl(self):
-        self.ymin = -1.0
-        self.ymax = +1.0
+        self.ymin = self.data.ampl_min
+        self.ymax = self.data.ampl_max
 
 
     def center_ampl(self):

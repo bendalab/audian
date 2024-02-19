@@ -1094,11 +1094,11 @@ def main(cargs):
                         help='Cutoff frequency of lowpass filter in Hz')
     parser.add_argument('files', nargs='*', default=[], type=str, help='name of the file with the time series data')
     parser.add_argument('-u', dest='unwrap', default=0, type=float,
-                        metavar='UNWRAP', const=0.5, nargs='?',
-                        help='unwrap clipped data with threshold and divide by two using unwrap() from audioio package')
+                        metavar='UNWRAP', const=1.5, nargs='?',
+                        help='unwrap clipped data with threshold relative to maximum input range and divide by two using unwrap() from audioio package')
     parser.add_argument('-U', dest='unwrap_clip', default=0, type=float,
-                        metavar='UNWRAP', const=0.5, nargs='?',
-                        help='unwrap clipped data with threshold and clip using unwrap() from audioio package')
+                        metavar='UNWRAP', const=1.5, nargs='?',
+                        help='unwrap clipped data with threshold relative to maximum input range and clip using unwrap() from audioio package')
     args, qt_args = parser.parse_known_args(cargs)
 
     cs = [s.strip() for s in args.channels.split(',')]
