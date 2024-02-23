@@ -170,7 +170,7 @@ class DataBrowser(QWidget):
         except IOError:
             self.data = None
             return
-        self.data.set_unwrap(unwrap, unwrap_clip)
+        self.data.set_unwrap(unwrap, unwrap_clip, False, self.data.unit)
         self.file_path = self.data.filepath
         self.rate = self.data.samplerate
         self.marker_data.file_path = self.file_path
