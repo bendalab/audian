@@ -208,8 +208,13 @@ class DataBrowser(QWidget):
             starttime = dt.datetime.fromisoformat(self.meta_data['INFO']['DateTimeOriginal'])
         locs, labels = self.data.markers()
         for i in range(len(locs)):
-            l = labels[i,0] if i < len(labels) else ''
-            self.marker_data.add_data(0, float(locs[i,0])/self.rate, l)
+            l = ''
+            t = ''
+            if i < len(labels):
+                l = labels[i,0]
+                t = labels[i,1]
+            self.marker_data.add_data(0, float(locs[i,0])/self.rate,
+                                      label=l, text=t)
         if len(labels) > 0:
             lbls = np.unique(labels[:,0])
             for i, l in enumerate(lbls):
@@ -412,13 +417,13 @@ class DataBrowser(QWidget):
 
         # add marker data to plot:
         labels = [l.label for l in self.marker_labels]
-        for t, l in zip(self.marker_data.times, self.marker_data.labels):
-            lidx = labels.index(l)
+        for t, ls, ts in zip(self.marker_data.times, self.marker_data.labels, self.marker_data.texts):
+            lidx = labels.index(ls)
             for c, tl in enumerate(self.trace_labels):
                 tidx = int(t*self.rate)
-                tl[lidx].addPoints((t,), (self.data[tidx, c],), data=(l,))
+                tl[lidx].addPoints((t,), (self.data[tidx, c],), data=(ts if ts else ls,))
             for c, sl in enumerate(self.spec_labels):
-                sl[lidx].addPoints((t,), (0.0,), data=(l,))
+                sl[lidx].addPoints((t,), (0.0,), data=(ts if ts else ls,))
 
 
     def show_metadata(self):

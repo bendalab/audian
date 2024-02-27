@@ -337,14 +337,15 @@ class MarkerData:
         self.delta_frequencies = []
         self.delta_powers = []
         self.labels = []
+        self.texts = []
         self.keys = ['channels', 'times', 'amplitudes',
                      'frequencies', 'powers',
                      'delta_times', 'delta_amplitudes',
-                     'delta_frequencies', 'delta_powers', 'labels']
+                     'delta_frequencies', 'delta_powers', 'labels', 'texts']
         self.headers = ['channel', 'time/s', 'amplitude',
                        'frequency/Hz', 'power/dB',
                        'time-diff/s', 'ampl-diff',
-                       'freq-diff/Hz', 'power-diff/dB', 'label']
+                        'freq-diff/Hz', 'power-diff/dB', 'label', 'text']
 
         
     def clear(self):
@@ -358,12 +359,14 @@ class MarkerData:
         self.delta_frequencies = []
         self.delta_powers = []
         self.labels = []
+        self.texts = []
 
 
     def add_data(self, channel, time, amplitude=None,
                  frequency=None, power=None,
                  delta_time=None, delta_amplitude=None,
-                 delta_frequency=None, delta_power=None, label=''):
+                 delta_frequency=None, delta_power=None,
+                 label='', text=''):
         self.channels.append(channel)
         self.times.append(time if not time is None else np.nan)
         self.amplitudes.append(amplitude if not amplitude is None else np.nan)
@@ -374,10 +377,15 @@ class MarkerData:
         self.delta_frequencies.append(delta_frequency if not delta_frequency is None else np.nan)
         self.delta_powers.append(delta_power if not delta_power is None else np.nan)
         self.labels.append(label)
+        self.texts.append(text)
 
         
     def set_label(self, index, label):
         self.labels[index] = label
+
+        
+    def set_text(self, index, text):
+        self.texts[index] = text
 
 
     def data_frame(self):
@@ -420,7 +428,7 @@ class MarkerDataModel(QAbstractTableModel):
         
         # data:
         if role == Qt.DisplayRole or role == Qt.EditRole:
-            if key == 'labels':
+            if key == 'labels' or key == 'texts':
                 return item
             else:
                 if item is np.nan:
@@ -430,7 +438,7 @@ class MarkerDataModel(QAbstractTableModel):
                 
         # alignment:
         if role == Qt.TextAlignmentRole:
-            if key == 'labels':
+            if key == 'labels' or key == 'texts':
                 return Qt.AlignLeft | Qt.AlignVCenter
             else:
                 if item is np.nan:
