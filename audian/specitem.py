@@ -123,16 +123,11 @@ class SpecItem(pg.ImageItem):
         self.tresolution = time[1] - time[0]
         self.fresolution = freq[1] - freq[0]
         self.spectrum = decibel(Sxx)
-        #print(np.min(self.spectrum), np.max(self.spectrum))
-        zmin = np.min(self.spectrum)
-        zmax = np.max(self.spectrum)
-        if np.isfinite(zmin) and np.isfinite(zmax) and zmax - zmin > 0.0:
-            zmax = np.percentile(self.spectrum, 99.9) + 5.0
-        else:
-            zmax = -80.0
-        #zmin = np.percentile(self.spectrum, 70.0)
-        #zmax = -20
-        zmin = zmax - 60
+        # define 25% of the spectrogram data as noise floor:
+        zmin = np.nanpercentile(self.spectrum, 25.0)
+        if not np.isfinite(zmin):
+            zmin = -100.0
+        zmax = zmin + 60.0
         self.fmax = freq[-1]
         self.setImage(self.spectrum, autoLevels=False)
         self.setRect(QRectF(self.data.offset/self.rate, 0, time[-1], freq[-1]))
