@@ -402,7 +402,7 @@ class DataBrowser(QWidget):
         self.toolbar.addWidget(spacer)
         self.xpos_action = self.toolbar.addAction('xpos')
         self.xpos_action.setVisible(False)
-        self.toolbar.widgetForAction(self.xpos_action).setFixedWidth(10*xwidth)
+        self.toolbar.widgetForAction(self.xpos_action).setFixedWidth(20*xwidth)
         self.ypos_action = self.toolbar.addAction('ypos')
         self.ypos_action.setVisible(False)
         self.toolbar.widgetForAction(self.ypos_action).setFixedWidth(10*xwidth)
@@ -679,6 +679,8 @@ class DataBrowser(QWidget):
         if self.delta_time is not None:
             sign = '-' if self.delta_time < 0 else ''
             s = f'\u0394t={sign}{secs_to_str(fabs(self.delta_time))}'
+            if fabs(self.delta_time) > 1e-6:
+                s += f': f={1/fabs(self.delta_time):.5g}Hz'
             self.xpos_action.setText(s)
         elif self.marker_time is not None:
             sign = '-' if self.marker_time < 0 else ''

@@ -19,8 +19,12 @@ def secs_to_str(time):
         return f'{mins:02d}:{secs:02d}'
     elif secs > 0:
         return f'{secs}.{1000*time:03.0f}s'
-    else:
+    elif time >= 0.01:
         return f'{1000*time:03.0f}ms'
+    elif time >= 0.001:
+        return f'{1000*time:.2f}ms'
+    else:
+        return f'{1e6*time:.0f}\u00b5s'
 
 
 def secs_format(time):
