@@ -213,13 +213,16 @@ class DataBrowser(QWidget):
             if i < len(labels):
                 l = labels[i,0]
                 t = labels[i,1]
-            self.marker_data.add_data(0, float(locs[i,0])/self.rate,
+            tstart = float(locs[i,0])/self.rate
+            tspan = float(locs[i,1])/self.rate
+            self.marker_data.add_data(0, tstart + tspan, delta_time=tspan,
                                       label=l, text=t)
         if len(labels) > 0:
             lbls = np.unique(labels[:,0])
             for i, l in enumerate(lbls):
-                self.marker_labels.append(MarkerLabel(l, '', list(colors.keys())[i % len(colors.keys())]))
-        self.data[0,:]
+                self.marker_labels.append(MarkerLabel(l, l[0].lower(),
+                                list(colors.keys())[i % len(colors.keys())]))
+        self.data[0,:]     # load first frame
 
         self.figs = []     # all GraphicsLayoutWidgets - one for each channel
         self.borders = []
@@ -417,13 +420,28 @@ class DataBrowser(QWidget):
 
         # add marker data to plot:
         labels = [l.label for l in self.marker_labels]
-        for t, ls, ts in zip(self.marker_data.times, self.marker_data.labels, self.marker_data.texts):
+        for t1, dt, ls, ts in zip(self.marker_data.times,
+                                  self.marker_data.delta_times,
+                                  self.marker_data.labels,
+                                  self.marker_data.texts):
             lidx = labels.index(ls)
             for c, tl in enumerate(self.trace_labels):
-                tidx = int(t*self.rate)
-                tl[lidx].addPoints((t,), (self.data[tidx, c],), data=(ts if ts else ls,))
+                ds = ts if ts else ls
+                t0 = t1 - dt
+                idx0 = int(t0*self.rate)
+                idx1 = int(t1*self.rate)
+                if dt > 0:
+                    tl[lidx].addPoints((t0, t1),
+                                       (self.data[idx0, c], self.data[idx1, c]),
+                                       data=(f'start: {ds}', f'end: {ds}'))
+                else:
+                    tl[lidx].addPoints((t1,), (self.data[idx1, c],), data=(ds,))
             for c, sl in enumerate(self.spec_labels):
-                sl[lidx].addPoints((t,), (0.0,), data=(ts if ts else ls,))
+                if dt > 0:
+                    sl[lidx].addPoints((t0, t1), (0.0, 0.0),
+                                       data=(f'start: {ds}', f'end: {ds}'))
+                else:
+                    sl[lidx].addPoints((t1,), (0.0,), data=(ds,))
 
 
     def show_metadata(self):
