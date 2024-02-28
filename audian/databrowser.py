@@ -154,6 +154,7 @@ class DataBrowser(QWidget):
         self.specs = []     # spectrograms
         self.cbars = []     # color bars
         self.trace_labels = [] # labels on traces
+        self.trace_region_labels = [] # regions with labels on traces
         self.spec_labels = []  # labels on spectrograms
 
 
@@ -240,6 +241,7 @@ class DataBrowser(QWidget):
         self.axspecs = []   # spectrogram plots
         self.traces = []    # traces
         self.trace_labels = [] # labels on traces
+        self.trace_region_labels = [] # regions with labels on traces
         self.specs = []     # spectrograms
         self.spec_labels = []  # labels on spectrograms
         self.cbars = []     # color bars
@@ -337,6 +339,7 @@ class DataBrowser(QWidget):
                 axt.addItem(label)
                 labels.append(label)
             self.trace_labels.append(labels)
+            self.trace_region_labels.append([])
             axt.getAxis('bottom').showLabel(c == self.show_channels[-1])
             axt.getAxis('bottom').setStyle(showValues=(c == self.show_channels[-1]))
             axt.setLimits(xMin=0, xMax=self.tmax,
@@ -431,9 +434,21 @@ class DataBrowser(QWidget):
                 idx0 = int(t0*self.rate)
                 idx1 = int(t1*self.rate)
                 if dt > 0:
-                    tl[lidx].addPoints((t0, t1),
-                                       (self.data[idx0, c], self.data[idx1, c]),
-                                       data=(f'start: {ds}', f'end: {ds}'))
+                    region = pg.LinearRegionItem((t0, t1),
+                                                 orientation='vertical',
+                                                 pen=pg.mkPen(self.marker_labels[lidx].color),
+                                                 brush=pg.mkBrush(self.marker_labels[lidx].color),
+                                                 movable=False,
+                                                 span=(0.02, 0.05))
+                    region.setZValue(-10)
+                    self.axtraces[c].addItem(region)
+                    #text = pg.TextItem(ds, color='green', anchor=(0, 0))
+                    #text.setPos(t0, 0)
+                    #self.axtraces[c].addItem(text)
+                    self.trace_region_labels[c].append(region)
+                    #tl[lidx].addPoints((t0, t1),
+                    #                   (self.data[idx0, c], self.data[idx1, c]),
+                    #                   data=(f'start: {ds}', f'end: {ds}'))
                 else:
                     tl[lidx].addPoints((t1,), (self.data[idx1, c],), data=(ds,))
             for c, sl in enumerate(self.spec_labels):
