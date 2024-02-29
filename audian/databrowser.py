@@ -82,7 +82,7 @@ class DataBrowser(QWidget):
         
         # view:
         self.toffset = 0.0
-        self.twindow = 2.0
+        self.twindow = 10.0
 
         self.setting = False
         
@@ -297,7 +297,7 @@ class DataBrowser(QWidget):
                 axs.addItem(label)
                 labels.append(label)
             self.spec_labels.append(labels)
-            axs.setLimits(xMax=self.tmax,
+            axs.setLimits(xMin=0, xMax=self.tmax,
                          minXRange=10/self.rate, maxXRange=self.tmax)
             axs.setXRange(self.toffset, self.toffset + self.twindow)
             axs.sigXRangeChanged.connect(self.update_times)
@@ -896,11 +896,8 @@ class DataBrowser(QWidget):
             self.toffset = toffset
         if not twindow is None:
             self.twindow = twindow
-        n2 = ceil(self.tmax / (0.5*self.twindow))
-        ttmax = max(self.twindow, n2*0.5*self.twindow)
         for axs in self.axts:
             for ax in axs:
-                ax.setLimits(xMax=ttmax, maxXRange=ttmax)
                 if self.isVisible():
                     ax.setXRange(self.toffset, self.toffset + self.twindow)
         self.setting = False

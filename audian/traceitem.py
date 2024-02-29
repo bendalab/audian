@@ -70,8 +70,9 @@ class TraceItem(pg.PlotDataItem):
         trange = vb.viewRange()[0]
         start = max(0, int(trange[0]*self.rate))
         stop = min(len(self.data), int(trange[1]*self.rate+1))
+        sstop = max(len(self.data), int(trange[1]*self.rate+1))
         max_pixel = QApplication.desktop().screenGeometry().width()
-        self.step = max(1, (stop - start)//max_pixel)
+        self.step = max(1, (sstop - start)//max_pixel)
         if self.step > 1:
             step2 = self.step//2
             self.step = step2*2
@@ -94,6 +95,7 @@ class TraceItem(pg.PlotDataItem):
                 #else:
                 #    data = np.array([(np.min(self.data[start+k*self.step:start+(k+1)*self.step, self.channel]), np.max(self.data[start+k*self.step:start+(k+1)*self.step, self.channel])) for k in range(n)]).reshape((-1))
             time = np.arange(start, start + len(data)*step2, step2)/self.rate
+            #print('T', time[0], time[-1])
             self.setData(time, data) #, connect='pairs')???
         elif self.step > 1:  # TODO: not used
             # subsample:

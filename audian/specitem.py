@@ -115,7 +115,7 @@ class SpecItem(pg.ImageItem):
            self.buffer_size == len(self.data.buffer) and \
            self.current_nfft == self.nfft and \
            self.current_step == self.step:
-            return
+            return 0, 1
         
         freq, time, Sxx = spectrogram(self.data.buffer[:, self.channel],
                                       self.rate, nperseg=self.nfft,
@@ -130,7 +130,9 @@ class SpecItem(pg.ImageItem):
         zmax = zmin + 60.0
         self.fmax = freq[-1]
         self.setImage(self.spectrum, autoLevels=False)
-        self.setRect(QRectF(self.data.offset/self.rate, 0, time[-1], freq[-1]))
+        self.setRect(QRectF(self.data.offset/self.rate, 0,
+                            time[-1] + self.tresolution,
+                            freq[-1] + self.fresolution))
         self.offset = self.data.offset
         self.buffer_size = len(self.data.buffer)
         self.current_nfft = self.nfft
