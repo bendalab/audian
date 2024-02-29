@@ -423,17 +423,17 @@ class DataBrowser(QWidget):
 
         # add marker data to plot:
         labels = [l.label for l in self.marker_labels]
-        for t1, dt, ls, ts in zip(self.marker_data.times,
+        for t1, ddt, ls, ts in zip(self.marker_data.times,
                                   self.marker_data.delta_times,
                                   self.marker_data.labels,
                                   self.marker_data.texts):
             lidx = labels.index(ls)
             for c, tl in enumerate(self.trace_labels):
                 ds = ts if ts else ls
-                t0 = t1 - dt
+                t0 = t1 - ddt
                 idx0 = int(t0*self.rate)
                 idx1 = int(t1*self.rate)
-                if dt > 0:
+                if ddt > 0:
                     region = pg.LinearRegionItem((t0, t1),
                                                  orientation='vertical',
                                                  pen=pg.mkPen(self.marker_labels[lidx].color),
@@ -452,7 +452,7 @@ class DataBrowser(QWidget):
                 else:
                     tl[lidx].addPoints((t1,), (self.data[idx1, c],), data=(ds,))
             for c, sl in enumerate(self.spec_labels):
-                if dt > 0:
+                if ddt > 0:
                     sl[lidx].addPoints((t0, t1), (0.0, 0.0),
                                        data=(f'start: {ds}', f'end: {ds}'))
                 else:
