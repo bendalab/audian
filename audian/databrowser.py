@@ -34,6 +34,14 @@ from .markerdata import MarkerData, MarkerDataModel
 pg.setConfigOption('useNumba', True)
 
 
+def marker_tip(x, y, data):
+    s = ''
+    if data:
+        s += data + '\n'
+    s += 'time=' + secs_to_str(x)
+    return s
+
+
 class DataBrowser(QWidget):
 
     zoom_region = 0
@@ -450,13 +458,13 @@ class DataBrowser(QWidget):
                     #                   (self.data[idx0, c], self.data[idx1, c]),
                     #                   data=(f'start: {ds}', f'end: {ds}'))
                 else:
-                    tl[lidx].addPoints((t1,), (self.data[idx1, c],), data=(ds,))
+                    tl[lidx].addPoints((t1,), (self.data[idx1, c],), data=(ds,), tip=marker_tip)
             for c, sl in enumerate(self.spec_labels):
                 if ddt > 0:
                     sl[lidx].addPoints((t0, t1), (0.0, 0.0),
                                        data=(f'start: {ds}', f'end: {ds}'))
                 else:
-                    sl[lidx].addPoints((t1,), (0.0,), data=(ds,))
+                    sl[lidx].addPoints((t1,), (0.0,), data=(ds,), tip=marker_tip)
 
 
     def show_metadata(self):
