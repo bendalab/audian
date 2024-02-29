@@ -136,8 +136,7 @@ class DataBrowser(QWidget):
         self.marker_data = MarkerData()
         self.marker_model = MarkerDataModel(self.marker_data)
         self.marker_labels = []
-        self.marker_labels.append(MarkerLabel('start', 's', 'magenta'))
-        self.marker_labels.append(MarkerLabel('peak', 'p', 'yellow'))
+        self.marker_labels.append(MarkerLabel('start', 's', 'yellow'))
         self.marker_labels.append(MarkerLabel('end', 'e', 'blue'))
         self.marker_labels_model = MarkerLabelsModel(self.marker_labels,
                                                      self.acts)
@@ -297,6 +296,7 @@ class DataBrowser(QWidget):
                 axs.addItem(label)
                 labels.append(label)
             self.spec_labels.append(labels)
+            self.spec_region_labels.append([])
             axs.setLimits(xMin=0, xMax=self.tmax,
                          minXRange=10/self.rate, maxXRange=self.tmax)
             axs.setXRange(self.toffset, self.toffset + self.twindow)
@@ -454,9 +454,6 @@ class DataBrowser(QWidget):
                     #text.setPos(t0, 0)
                     #self.axtraces[c].addItem(text)
                     self.trace_region_labels[c].append(region)
-                    #tl[lidx].addPoints((t0, t1),
-                    #                   (self.data[idx0, c], self.data[idx1, c]),
-                    #                   data=(f'start: {ds}', f'end: {ds}'))
                 else:
                     tl[lidx].addPoints((t1,), (self.data[idx1, c],), data=(ds,), tip=marker_tip)
             for c, sl in enumerate(self.spec_labels):
