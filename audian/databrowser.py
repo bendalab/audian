@@ -44,6 +44,18 @@ def marker_tip(x, y, data):
 
 class DataBrowser(QWidget):
 
+    color_maps = [
+                  'CET-R4',   # jet
+                  'CET-L8',   # blue-pink-yellow
+                  'CET-L16',  # black-blue-green-white
+                  'CET-CBL2', # black-blue-yellow-white
+                  'CET-L1',   # black-white
+                  #pg.colormap.get('CET-L1').reverse(),   # white-black
+                  'CET-L3',   # inferno
+                  ]
+    # see https://colorcet.holoviz.org/
+    # and pyqtgraph.colormap module for useful functions.
+
     zoom_region = 0
     play_region = 1
     save_region = 2
@@ -53,6 +65,7 @@ class DataBrowser(QWidget):
     sigAmplitudesChanged = Signal(object, object)
     sigFrequenciesChanged = Signal(object, object)
     sigResolutionChanged = Signal()
+    sigColorMapChanged = Signal()
     sigFilterChanged = Signal()
     sigPowerChanged = Signal()
 
@@ -143,6 +156,7 @@ class DataBrowser(QWidget):
         self.marker_orig_acts = []
         
         # plots:
+        self.color_map = 0  # index into color_maps
         self.figs = []      # all GraphicsLayoutWidgets - one for each channel
         self.borders = []
         self.sig_proxies = []
@@ -312,9 +326,9 @@ class DataBrowser(QWidget):
             self.audio_markers[-1].append(axs.vmarker)
             fig.addItem(axs, row=0, col=0)
             
-            # color bar: CET-R4 CET-L3 CET-L1 CET-L8 CET-L16 CET-CBL2
-            # see ~/.local/lib/python3.10/site-packages/pyqtgraph/colors/maps
-            cbar = pg.ColorBarItem(colorMap='CET-R4', interactive=True,
+            # color bar:
+            cbar = pg.ColorBarItem(colorMap=self.color_maps[self.color_map],
+                                   interactive=True,
                                    rounding=1, limits=(-200, 20))
             cbar.setLabel('right', 'Power (dB)')
             cbar.getAxis('right').setTextPen('black')
@@ -1124,6 +1138,22 @@ class DataBrowser(QWidget):
         for c in self.selected_channels:
             self.specs[c].step_frac_up()
         self.set_resolution()
+
+        
+    def set_color_map(self, color_map=None, dispatch=True):
+        if color_map is not None:
+            self.color_map = color_map
+        for cb in self.cbars:
+            cb.setColorMap(self.color_maps[self.color_map])
+        if dispatch:
+            self.sigColorMapChanged.emit()
+
+            
+    def color_map_cycler(self):
+        self.color_map += 1
+        if self.color_map >= len(self.color_maps):
+            self.color_map = 0
+        self.set_color_map()
 
 
     def set_power(self, zmin=None, zmax=None, dispatch=True):

@@ -542,6 +542,13 @@ class Audian(QMainWindow):
                     b.set_resolution(nfft, sfrac, False)
 
         
+    def dispatch_colormap(self):
+        cm = self.browser().color_map
+        for b in self.browsers:
+            if not b is self.browser():
+                b.set_color_map(cm, False)
+
+        
     def toggle_link_filter(self):
         self.link_filter = not self.link_filter
 
@@ -571,6 +578,10 @@ class Audian(QMainWindow):
         self.acts.overlap_down = QAction('Decrease &overlap', self)
         self.acts.overlap_down.setShortcut('O')
         self.acts.overlap_down.triggered.connect(lambda x: self.browser().step_frac_up())
+        
+        self.acts.color_map_cycler = QAction('&Color map', self)
+        self.acts.color_map_cycler.setShortcut('Shift+C')
+        self.acts.color_map_cycler.triggered.connect(lambda x: self.browser().color_map_cycler())
 
         self.acts.link_filter = QAction('Link &filter', self)
         #self.acts.link_filter.setShortcut('Alt+F')
@@ -599,6 +610,7 @@ class Audian(QMainWindow):
         spec_menu.addAction(self.acts.frequency_resolution_down)
         spec_menu.addAction(self.acts.overlap_up)
         spec_menu.addAction(self.acts.overlap_down)
+        spec_menu.addAction(self.acts.color_map_cycler)
         spec_menu.addSeparator()
         spec_menu.addAction(self.acts.link_filter)
         spec_menu.addAction(self.acts.highpass_up)
@@ -1010,6 +1022,7 @@ Can not open file <b>{browser.file_path}</b>!''')
                 browser.sigAmplitudesChanged.connect(self.dispatch_amplitudes)
                 browser.sigFrequenciesChanged.connect(self.dispatch_frequencies)
                 browser.sigResolutionChanged.connect(self.dispatch_resolution)
+                browser.sigColorMapChanged.connect(self.dispatch_colormap)
                 browser.sigFilterChanged.connect(self.dispatch_filter)
                 browser.sigPowerChanged.connect(self.dispatch_power)
                 browser.init_filter(self.high_pass, self.low_pass)
