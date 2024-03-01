@@ -188,7 +188,7 @@ class DataBrowser(QWidget):
         self.twindow = 10.0
         self.tmax = len(self.data)/self.rate
         if self.twindow > self.tmax:
-            self.twindow = np.round(2**(floor(log(self.tmax) / log(2.0)) + 1.0))
+            self.twindow = self.tmax
 
         if self.show_channels is None:
             if len(self.channels) == 0:

@@ -102,7 +102,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             self.step = max(1, len(self.data)//max_pixel)
             self.index = 0
             self.nblock = int(20.0*self.rate//self.step)*self.step
-            self.times = np.arange(0, len(self.data), self.step//2)/self.rate
+            self.times = np.arange(0, len(self.data), self.step/2)/self.rate
             self.datas = np.zeros((len(self.times), self.data.channels))
             
             # add data:
