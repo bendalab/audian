@@ -1338,12 +1338,13 @@ class DataBrowser(QWidget):
         
             
     def set_channels(self, show_channels=None, selected_channels=None):
-        if not show_channels is None:
+        if show_channels is not None:
             if self.data is None:
                 self.channels = show_channels
                 return
             self.show_channels = [c for c in show_channels if c < len(self.figs)]
-            self.selected_channels = [c for c in selected_channels if c < len(self.figs)]
+            if selected_channels is not None:
+                self.selected_channels = [c for c in selected_channels if c < len(self.figs)]
         if not self.current_channel in self.selected_channels:
             for c in self.selected_channels:
                 if c >= self.current_channel:
@@ -1397,12 +1398,14 @@ class DataBrowser(QWidget):
         if channel < 0 or channel >= len(self.figs):
             return
         if self.current_channel == channel and \
-           self.show_channels == [channel] and \
-           self.selected_channels == [channel]:
-            self.set_channels(list(range(len(self.figs))), list(range(len(self.figs))))
+           self.show_channels == [channel]:
+            self.set_channels(list(range(len(self.figs))))
         else:
             self.current_channel = channel
-            self.set_channels([channel], [channel])
+            if not channel in self.selected_channels:
+                self.selected_channels.append(channel)
+                self.selected_channels.sort()
+            self.set_channels([channel])
 
         
     def hide_selected_channels(self):
