@@ -287,6 +287,7 @@ class DataBrowser(QWidget):
             self.borders.append(border)
             
             # spectrogram:
+            # takes a long time:
             spec = SpecItem(self.data, self.rate, c, 256, 0.5)
             self.specs.append(spec)
             axs = SpectrumPlot(c, xwidth, spec.fmax)
@@ -311,7 +312,8 @@ class DataBrowser(QWidget):
             self.audio_markers[-1].append(axs.vmarker)
             fig.addItem(axs, row=0, col=0)
             
-            # color bar:
+            # color bar: CET-R4 CET-L3 CET-L1 CET-L8 CET-L16 CET-CBL2
+            # see ~/.local/lib/python3.10/site-packages/pyqtgraph/colors/maps
             cbar = pg.ColorBarItem(colorMap='CET-R4', interactive=True,
                                    rounding=1, limits=(-200, 20))
             cbar.setLabel('right', 'Power (dB)')
@@ -338,6 +340,7 @@ class DataBrowser(QWidget):
             # trace plot:
             trace = TraceItem(self.data, self.rate, c)
             self.traces.append(trace)
+            # takes some time:
             axt = OscillogramPlot(c, xwidth, starttime, self.data.channels > 4)
             axt.addItem(trace)
             labels = []

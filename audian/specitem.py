@@ -117,14 +117,18 @@ class SpecItem(pg.ImageItem):
            self.current_step == self.step:
             return 0, 1
         
+        # takes very long:
         freq, time, Sxx = spectrogram(self.data.buffer[:, self.channel],
                                       self.rate, nperseg=self.nfft,
                                       noverlap=self.nfft-self.step)
         self.tresolution = time[1] - time[0]
         self.fresolution = freq[1] - freq[0]
         self.spectrum = decibel(Sxx)
-        # define 25% of the spectrogram data as noise floor:
-        zmin = np.nanpercentile(self.spectrum, 25.0)
+        # estimate noise floor for color map:
+        nf = len(freq)//16
+        if nf < 1:
+            nf = 1
+        zmin = np.percentile(self.spectrum[-nf:,:], 95.0)
         if not np.isfinite(zmin):
             zmin = -100.0
         zmax = zmin + 60.0
