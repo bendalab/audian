@@ -107,7 +107,7 @@ class TraceItem(pg.PlotDataItem):
             self.setData(np.arange(start, stop)/self.rate,
                          self.data[start:stop, self.channel])
             self.setPen(dict(color=self.color, width=2))
-            if stop - start <= 100:
+            if max_pixel/(stop - start) >= 10:
                 self.setSymbol('o')
             else:
                 self.setSymbol(None)
