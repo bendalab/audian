@@ -606,11 +606,13 @@ class DataBrowser(QWidget):
             for c, tl in enumerate(self.trace_labels):
                 if c == self.marker_channel and not self.marker_ampl is None:
                     tl[lidx].addPoints((self.marker_time,),
-                                      (self.marker_ampl,))
+                                      (self.marker_ampl,),
+                                       tip=marker_tip)
                 else:
                     tidx = int(self.marker_time*self.rate)
                     tl[lidx].addPoints((self.marker_time,),
-                                       (self.data[tidx, c],))
+                                       (self.data[tidx, c],),
+                                       tip=marker_tip)
             for c, sl in enumerate(self.spec_labels):
                 y = 0.0 if self.marker_freq is None else self.marker_freq
                 sl[lidx].addPoints((self.marker_time,), (y,))
@@ -1557,7 +1559,7 @@ class DataBrowser(QWidget):
 
     def auto_scroll(self):
         if self.scroll_step == 0:
-            self.scroll_step = 0.05
+            self.scroll_step = 0.005
         elif self.scroll_step > 1.0:
             if self.scroll_timer.isActive():
                 self.scroll_timer.stop()
@@ -1566,7 +1568,7 @@ class DataBrowser(QWidget):
         else:
             self.scroll_step *= 2
         if not self.scroll_timer.isActive():
-            self.scroll_timer.start(20)
+            self.scroll_timer.start(50)
 
         
     def scroll_further(self):
@@ -1574,7 +1576,7 @@ class DataBrowser(QWidget):
             self.scroll_timer.stop()
             self.scroll_step /= 2
         else:
-            self.set_times(self.toffset + self.scroll_step)
+            self.set_times(self.toffset + self.twindow*self.scroll_step)
 
 
     def play_region(self, t0, t1):
