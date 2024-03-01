@@ -163,6 +163,7 @@ class DataBrowser(QWidget):
         self.trace_labels = [] # labels on traces
         self.trace_region_labels = [] # regions with labels on traces
         self.spec_labels = []  # labels on spectrograms
+        self.spec_region_labels = [] # regions with labels on spectrograms
 
 
     def __del__(self):
@@ -251,6 +252,7 @@ class DataBrowser(QWidget):
         self.trace_region_labels = [] # regions with labels on traces
         self.specs = []     # spectrograms
         self.spec_labels = []  # labels on spectrograms
+        self.spec_region_labels = [] # regions with labels on spectrograms
         self.cbars = []     # color bars
         self.audio_markers = [] # vertical line showing position while playing
         # font size:
@@ -458,6 +460,7 @@ class DataBrowser(QWidget):
                     tl[lidx].addPoints((t1,), (self.data[idx1, c],), data=(ds,), tip=marker_tip)
             for c, sl in enumerate(self.spec_labels):
                 if ddt > 0:
+                    # TODO: self.spec_region_labels
                     sl[lidx].addPoints((t0, t1), (0.0, 0.0),
                                        data=(f'start: {ds}', f'end: {ds}'))
                 else:

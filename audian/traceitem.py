@@ -70,7 +70,7 @@ class TraceItem(pg.PlotDataItem):
         trange = vb.viewRange()[0]
         start = max(0, int(trange[0]*self.rate))
         stop = min(len(self.data), int(trange[1]*self.rate+1))
-        sstop = max(len(self.data), int(trange[1]*self.rate+1))
+        sstop = int(trange[1]*self.rate+1)
         max_pixel = QApplication.desktop().screenGeometry().width()
         self.step = max(1, (sstop - start)//max_pixel)
         if self.step > 1:
@@ -107,7 +107,7 @@ class TraceItem(pg.PlotDataItem):
             self.setData(np.arange(start, stop)/self.rate,
                          self.data[start:stop, self.channel])
             self.setPen(dict(color=self.color, width=2))
-            if stop - start <= 50:
+            if stop - start <= 100:
                 self.setSymbol('o')
             else:
                 self.setSymbol(None)
