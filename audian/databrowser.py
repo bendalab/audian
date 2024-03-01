@@ -1408,7 +1408,7 @@ class DataBrowser(QWidget):
     def hide_selected_channels(self):
         show_channels = [c for c in range(self.data.channels) if not c in self.selected_channels and c in self.show_channels]
         if len(show_channels) == 0:
-            show_channels = self.show_channels[0]
+            show_channels = [self.show_channels[0]]
         selected_channels = []
         for c in show_channels:
             if c >= self.selected_channels[0] and c <= self.selected_channels[-1]:
