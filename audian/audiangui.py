@@ -280,7 +280,7 @@ class Audian(QMainWindow):
         self.acts.label_editor.triggered.connect(lambda x: self.browser().label_editor())
         
         self.acts.marker_table = QAction('&Marker table', self)
-        self.acts.marker_table.setShortcut('M')
+        self.acts.marker_table.setShortcut('Ctrl+M')
         self.acts.marker_table.triggered.connect(lambda x: self.browser().marker_table())
 
         region_menu = menu.addMenu('&Region')
@@ -914,7 +914,7 @@ class Audian(QMainWindow):
         self.acts.previous_file.triggered.connect(self.previous_tab)
 
         self.acts.maximize_window = QAction('Toggle &maximize', self)
-        self.acts.maximize_window.setShortcut('Ctrl+M')
+        self.acts.maximize_window.setShortcut('Ctrl+Shift+M')
         self.acts.maximize_window.triggered.connect(self.toggle_maximize)
 
         view_menu = menu.addMenu('&View')
