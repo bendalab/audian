@@ -685,7 +685,9 @@ class DataBrowser(QWidget):
                         spec = self.specs[self.axspecs.index(ax)]
                         fi = int(floor(self.marker_freq/spec.fresolution))
                         ti = int(floor((self.marker_time - spec.offset/spec.rate) / spec.tresolution))
-                        self.marker_power = spec.spectrum[fi, ti]
+                        if fi < spec.spectrum.shape[0] and \
+                           ti < spec.spectrum.shape[1]:
+                            self.marker_power = spec.spectrum[fi, ti]
                 break
             
         # set cross-hair positions:
