@@ -1,4 +1,3 @@
-from collections import OrderedDict
 import os
 import numpy as np
 import pandas as pd
@@ -16,7 +15,7 @@ except ImportError:
 
 
 """ Colors from https://github.com/bendalab/plottools/colors.py """
-colors_vivid = OrderedDict()
+colors_vivid = dict()
 colors_vivid['red'] = '#D71000'
 colors_vivid['orange'] = '#FF9000'
 colors_vivid['yellow'] = '#FFF700'
@@ -395,7 +394,33 @@ class MarkerData:
         return pd.DataFrame(table_dict)
 
 
+    def set_markers(self, locs, labels, rate):
+        for i in range(len(locs)):
+            l = ''
+            t = ''
+            if i < len(labels):
+                l = labels[i,0]
+                t = labels[i,1]
+            tstart = float(locs[i,0])/rate
+            tspan = float(locs[i,1])/rate
+            self.add_data(0, tstart + tspan, delta_time=tspan,
+                          label=l, text=t)
+
+            
+    def get_markers(self, rate):
+        n = len(self.times)
+        locs = np.zeros((n, 2), dtype=int)
+        labels = np.zeros((n, 3), dtype=object)
+        for k in range(n):
+            ispan = int(np.round(self.delta_times[k]*rate))
+            i1 = int(np.round(self.times[k]*rate))
+            locs[k,0] = i1 - ispan
+            locs[k,1] = ispan
+            labels[k,0] = self.labels[k]
+            labels[k,1] = self.texts[k]
+        return locs, labels
     
+            
 class MarkerDataModel(QAbstractTableModel):
     
     def __init__(self, data, parent=None):

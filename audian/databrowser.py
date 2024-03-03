@@ -237,16 +237,7 @@ class DataBrowser(QWidget):
         if 'INFO' in self.meta_data and 'DateTimeOriginal' in self.meta_data['INFO']:
             starttime = dt.datetime.fromisoformat(self.meta_data['INFO']['DateTimeOriginal'])
         locs, labels = self.data.markers()
-        for i in range(len(locs)):
-            l = ''
-            t = ''
-            if i < len(labels):
-                l = labels[i,0]
-                t = labels[i,1]
-            tstart = float(locs[i,0])/self.rate
-            tspan = float(locs[i,1])/self.rate
-            self.marker_data.add_data(0, tstart + tspan, delta_time=tspan,
-                                      label=l, text=t)
+        self.marker_data.set_markers(locs, labels, self.rate)
         if len(labels) > 0:
             lbls = np.unique(labels[:,0])
             for i, l in enumerate(lbls):
@@ -1754,7 +1745,12 @@ class DataBrowser(QWidget):
                                                 file_path,
                                                 ';;'.join(filters))[0]
         if file_path:
-            write_audio(file_path, self.data[i0:i1,:], self.rate)
+            locs, labels = self.marker_data.get_markers(self.rate)
+            sel = (locs[:,0] + locs[:,1] >= i0) & (locs[:,0] <= i1)
+            locs = locs[sel]
+            labels = labels[sel]
+            write_audio(file_path, self.data[i0:i1,:], self.rate,
+                        self.data.metadata(), locs, labels)
             print('saved region to: ' , file_path)
 
         
