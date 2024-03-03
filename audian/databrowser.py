@@ -3,6 +3,7 @@ import xml.dom.minidom
 from math import fabs, ceil, floor, log, log10
 import datetime as dt
 import numpy as np
+from scipy.signal import butter, sosfiltfilt
 try:
     from PyQt5.QtCore import Signal
 except ImportError:
@@ -11,6 +12,7 @@ from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QCursor, QKeySequence
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QScrollArea
 from PyQt5.QtWidgets import QAction, QMenu, QToolBar, QComboBox
+from PyQt5.QtWidgets import QCheckBox, QSpinBox
 from PyQt5.QtWidgets import QLabel, QSizePolicy, QTableView
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFileDialog
 from PyQt5.QtWidgets import QAbstractItemView, QGraphicsRectItem
@@ -68,6 +70,7 @@ class DataBrowser(QWidget):
     sigColorMapChanged = Signal()
     sigFilterChanged = Signal()
     sigPowerChanged = Signal()
+    sigAudioChanged = Signal(object, object, object)
 
     
     def __init__(self, file_path, channels, show_channels, audio,
@@ -115,6 +118,8 @@ class DataBrowser(QWidget):
         self.audio_timer = QTimer(self)
         self.audio_timer.timeout.connect(self.mark_audio)
         self.audio_time = 0.0
+        self.audio_use_heterodyne = False
+        self.audio_heterodyne_freq = 40000.0
         self.audio_rate_fac = 1.0
         self.audio_tmax = 0.0
         self.audio_markers = [] # vertical lines showing position while playing
@@ -414,8 +419,22 @@ class DataBrowser(QWidget):
         self.audiofacw.addItems(['0.1', '0.2', '0.5', '1', '2', '5', '10', '20', '50', '100'])
         self.audiofacw.setEditable(False)
         self.audiofacw.setCurrentText(f'{self.audio_rate_fac:g}')
-        self.audiofacw.currentTextChanged.connect(lambda s: self.set_audio_modification(rate_fac=float(s)))
+        self.audiofacw.currentTextChanged.connect(lambda s: self.set_audio(rate_fac=float(s)))
         self.toolbar.addWidget(self.audiofacw)
+        self.audiohetfw = QSpinBox(self)
+        self.audiohetfw.setToolTip('Audio heterodyne frequency')
+        self.audiohetfw.setRange(10, 100)
+        self.audiohetfw.setSingleStep(5)
+        self.audiohetfw.setSuffix('kHz')
+        self.audiohetfw.setValue(int(self.audio_heterodyne_freq/1000))
+        self.audiohetfw.valueChanged.connect(lambda v: self.set_audio(heterodyne_freq=1000*v))
+        if self.data.samplerate > 50000:
+            self.toolbar.addWidget(self.audiohetfw)
+        self.audiohetcw = QCheckBox(self)
+        self.audiohetcw.setChecked(self.audio_use_heterodyne)
+        self.audiohetcw.stateChanged.connect(lambda v: self.set_audio(use_heterodyne=bool(v)))
+        if self.data.samplerate > 50000:
+            self.toolbar.addWidget(self.audiohetcw)
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.acts.zoom_home)
         self.toolbar.addAction(self.acts.zoom_back)
@@ -1121,7 +1140,8 @@ class DataBrowser(QWidget):
         for c in self.selected_channels:
             self.specs[c].set_resolution(nfft[c], step_frac[c],
                                          self.isVisible())
-        self.nfftw.setCurrentText(f'{self.specs[self.current_channel].nfft}')
+        if not dispatch:
+            self.nfftw.setCurrentText(f'{self.specs[self.current_channel].nfft}')
         self.setting = False
         if dispatch:
             self.sigResolutionChanged.emit()
@@ -1626,21 +1646,50 @@ class DataBrowser(QWidget):
             self.set_times(self.toffset + self.twindow*self.scroll_step)
 
 
-    def set_audio_modification(self, rate_fac):
-        self.audio_rate_fac = rate_fac
+    def set_audio(self, rate_fac=None,
+                  use_heterodyne=None, heterodyne_freq=None,
+                  dispatch=True):
+        if rate_fac is not None:
+            self.audio_rate_fac = rate_fac
+            if not dispatch:
+                self.audiofacw.setCurrentText(f'{self.audio_rate_fac:g}')
+        if use_heterodyne is not None:
+            self.audio_use_heterodyne = use_heterodyne
+            if not dispatch:
+                self.audiohetcw.setChecked(self.audio_use_heterodyne)
+        if heterodyne_freq is not None:
+            self.audio_heterodyne_freq = float(heterodyne_freq)
+            if not dispatch:
+                self.audiohetfw.setValue(int(self.audio_heterodyne_freq/1000))
+        if dispatch:
+            self.sigAudioChanged.emit(self.audio_rate_fac,
+                                      self.audio_use_heterodyne,
+                                      self.audio_heterodyne_freq)
 
 
     def play_region(self, t0, t1):
-        i0 = int(np.round(t0*self.rate))
-        i1 = int(np.round(t1*self.rate))
+        rate = self.rate
+        i0 = int(np.round(t0*rate))
+        i1 = int(np.round(t1*rate))
         n2 = (len(self.selected_channels)+1)//2
         playdata = np.zeros((i1-i0, min(2, len(self.selected_channels))))
         playdata[:,0] = np.mean(self.data[i0:i1, self.selected_channels[:n2]], 1)
         if len(self.selected_channels) > 1:
             playdata[:,1] = np.mean(self.data[i0:i1, self.selected_channels[n2:]], 1)
-        #playdata = 1.0*self.data[i0:i1, self.selected_channels]
-        fade(playdata, self.rate/self.audio_rate_fac, 0.1)
-        self.audio.play(playdata, self.rate/self.audio_rate_fac, blocking=False)
+        if self.audio_use_heterodyne:
+            # multiply with heterodyne frequency:
+            heterodyne = np.sin(2*np.pi*self.audio_heterodyne_freq*np.arange(len(playdata))/rate)
+            playdata = (playdata.T * heterodyne).T
+            # low-pass filter and downsample:
+            fcutoff = 20000.0
+            sos = butter(2, 20000, 'low', output='sos', fs=rate)
+            nstep = int(np.round(self.rate/(2*fcutoff)))
+            if nstep < 1:
+                nstep = 1
+            playdata = sosfiltfilt(sos, playdata, 0)[::nstep]
+            rate /= nstep
+        fade(playdata, rate/self.audio_rate_fac, 0.1)
+        self.audio.play(playdata, rate/self.audio_rate_fac, blocking=False)
         self.audio_time = t0
         self.audio_tmax = t1
         self.audio_timer.start(50)

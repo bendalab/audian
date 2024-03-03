@@ -37,6 +37,7 @@ class Audian(QMainWindow):
         self.link_power = True
         self.link_channels = True
         self.link_panels = True
+        self.link_audio = True
 
         # window:
         rec = QApplication.desktop().screenGeometry()
@@ -887,6 +888,14 @@ class Audian(QMainWindow):
         
         return panel_menu
 
+
+    def dispatch_audio(self, rate_fac, use_heterodyne, heterodyne_freq):
+        if self.link_audio:
+            for b in self.browsers:
+                if not b is self.browser():
+                    b.set_audio(rate_fac, use_heterodyne, heterodyne_freq,
+                                False)
+
     
     def next_tab(self):
         idx = self.tabs.currentIndex()
@@ -1025,6 +1034,7 @@ Can not open file <b>{browser.file_path}</b>!''')
                 browser.sigColorMapChanged.connect(self.dispatch_colormap)
                 browser.sigFilterChanged.connect(self.dispatch_filter)
                 browser.sigPowerChanged.connect(self.dispatch_power)
+                browser.sigAudioChanged.connect(self.dispatch_audio)
                 browser.init_filter(self.high_pass, self.low_pass)
                 QTimer.singleShot(100, self.load_data)
                 break
