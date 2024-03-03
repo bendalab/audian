@@ -23,6 +23,7 @@ except ImportError:
     from audioio import AudioLoader as DataLoader
 from audioio import available_formats, write_audio
 from audioio import fade
+from audioio import get_datetime
 from .version import __version__, __year__
 from .fulltraceplot import FullTracePlot, secs_to_str
 from .oscillogramplot import OscillogramPlot
@@ -233,9 +234,7 @@ class DataBrowser(QWidget):
         md = self.data.metadata(store_empty=False)
         self.meta_data = dict(format=fmt_md)
         self.meta_data.update(md)
-        starttime = None
-        if 'INFO' in self.meta_data and 'DateTimeOriginal' in self.meta_data['INFO']:
-            starttime = dt.datetime.fromisoformat(self.meta_data['INFO']['DateTimeOriginal'])
+        starttime = get_datetime(self.meta_data)
         locs, labels = self.data.markers()
         self.marker_data.set_markers(locs, labels, self.rate)
         if len(labels) > 0:
