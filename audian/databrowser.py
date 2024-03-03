@@ -115,7 +115,7 @@ class DataBrowser(QWidget):
         self.audio_timer = QTimer(self)
         self.audio_timer.timeout.connect(self.mark_audio)
         self.audio_time = 0.0
-        self.audio_fac = 1.0
+        self.audio_rate_fac = 1.0
         self.audio_tmax = 0.0
         self.audio_markers = [] # vertical lines showing position while playing
 
@@ -410,11 +410,11 @@ class DataBrowser(QWidget):
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.acts.play_window)
         self.audiofacw = QComboBox(self)
-        self.audiofacw.setToolTip('Audio slow-down factor')
+        self.audiofacw.setToolTip('Audio time expansion factor')
         self.audiofacw.addItems(['0.1', '0.2', '0.5', '1', '2', '5', '10', '20', '50', '100'])
         self.audiofacw.setEditable(False)
-        self.audiofacw.setCurrentText(f'{self.audio_fac:g}')
-        self.audiofacw.currentTextChanged.connect(lambda s: self.set_audio_fac(fac=float(s)))
+        self.audiofacw.setCurrentText(f'{self.audio_rate_fac:g}')
+        self.audiofacw.currentTextChanged.connect(lambda s: self.set_audio_modification(rate_fac=float(s)))
         self.toolbar.addWidget(self.audiofacw)
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.acts.zoom_home)
@@ -1626,8 +1626,8 @@ class DataBrowser(QWidget):
             self.set_times(self.toffset + self.twindow*self.scroll_step)
 
 
-    def set_audio_fac(self, fac):
-        self.audio_fac = fac
+    def set_audio_modification(self, rate_fac):
+        self.audio_rate_fac = rate_fac
 
 
     def play_region(self, t0, t1):
@@ -1639,8 +1639,8 @@ class DataBrowser(QWidget):
         if len(self.selected_channels) > 1:
             playdata[:,1] = np.mean(self.data[i0:i1, self.selected_channels[n2:]], 1)
         #playdata = 1.0*self.data[i0:i1, self.selected_channels]
-        fade(playdata, self.rate/self.audio_fac, 0.1)
-        self.audio.play(playdata, self.rate/self.audio_fac, blocking=False)
+        fade(playdata, self.rate/self.audio_rate_fac, 0.1)
+        self.audio.play(playdata, self.rate/self.audio_rate_fac, blocking=False)
         self.audio_time = t0
         self.audio_tmax = t1
         self.audio_timer.start(50)
@@ -1655,7 +1655,7 @@ class DataBrowser(QWidget):
 
         
     def mark_audio(self):
-        self.audio_time += 0.05 / self.audio_fac
+        self.audio_time += 0.05 / self.audio_rate_fac
         for amarkers in self.audio_markers:
             for vmarker in amarkers:
                 if vmarker.value() >= 0:
