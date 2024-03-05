@@ -420,11 +420,8 @@ class DataBrowser(QWidget):
         self.audiohetfw.valueChanged.connect(lambda v: self.set_audio(heterodyne_freq=1000*v))
         if self.data.samplerate > 50000:
             self.toolbar.addWidget(self.audiohetfw)
-        self.audiohetcw = QCheckBox(self)
-        self.audiohetcw.setChecked(self.audio_use_heterodyne)
-        self.audiohetcw.stateChanged.connect(lambda v: self.set_audio(use_heterodyne=bool(v)))
         if self.data.samplerate > 50000:
-            self.toolbar.addWidget(self.audiohetcw)
+            self.toolbar.addAction(self.acts.use_heterodyne)
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.acts.zoom_home)
         self.toolbar.addAction(self.acts.zoom_back)
@@ -1645,8 +1642,6 @@ class DataBrowser(QWidget):
                 self.audiofacw.setCurrentText(f'{self.audio_rate_fac:g}')
         if use_heterodyne is not None:
             self.audio_use_heterodyne = use_heterodyne
-            if not dispatch:
-                self.audiohetcw.setChecked(self.audio_use_heterodyne)
         if heterodyne_freq is not None:
             self.audio_heterodyne_freq = float(heterodyne_freq)
             if not dispatch:

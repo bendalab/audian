@@ -269,6 +269,18 @@ class Audian(QMainWindow):
         self.acts.zoom_rect_mode.addAction(self.acts.save_region)
         self.acts.zoom_rect_mode.addAction(self.acts.ask_region)
         self.acts.ask_region.setChecked(True)
+
+        self.acts.play_window = QAction('&Play window', self)
+        self.acts.play_window.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
+        self.acts.play_window.setToolTip('Play window (Space)')
+        self.acts.play_window.setShortcut(' ')
+        self.acts.play_window.triggered.connect(lambda x=0: self.browser().play_scroll())
+
+        self.acts.use_heterodyne = QAction('&Use heterodyne', self)
+        self.acts.use_heterodyne.setIconText('h')
+        self.acts.use_heterodyne.setCheckable(True)
+        self.acts.use_heterodyne.setChecked(False)
+        self.acts.use_heterodyne.toggled.connect(lambda v: self.browser().set_audio(use_heterodyne=bool(v)))
         
         self.acts.cross_hair = QAction('&Cross hair', self)
         self.acts.cross_hair.setCheckable(True)
@@ -296,6 +308,9 @@ class Audian(QMainWindow):
         region_menu.addAction(self.acts.play_region)
         region_menu.addAction(self.acts.save_region)
         region_menu.addAction(self.acts.ask_region)
+        region_menu.addSeparator()
+        region_menu.addAction(self.acts.play_window)
+        region_menu.addAction(self.acts.use_heterodyne)
         region_menu.addSeparator()
         region_menu.addAction(self.acts.cross_hair)
         region_menu.addAction(self.acts.label_editor)
@@ -325,12 +340,6 @@ class Audian(QMainWindow):
 
 
     def setup_time_actions(self, menu):
-        self.acts.play_window = QAction('&Play window', self)
-        self.acts.play_window.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
-        self.acts.play_window.setToolTip('Play window (space)')
-        self.acts.play_window.setShortcut(' ')
-        self.acts.play_window.triggered.connect(lambda x=0: self.browser().play_scroll())
-        
         self.acts.link_time_zoom = QAction('Link time &zoom', self)
         self.acts.link_time_zoom.setShortcut('Alt+Z')
         self.acts.link_time_zoom.setCheckable(True)
@@ -392,7 +401,6 @@ class Audian(QMainWindow):
         self.acts.auto_scroll.triggered.connect(lambda x=0: self.browser().auto_scroll())
 
         time_menu = menu.addMenu('&Time')
-        time_menu.addAction(self.acts.play_window)
         time_menu.addAction(self.acts.link_time_zoom)
         time_menu.addAction(self.acts.zoom_time_in)
         time_menu.addAction(self.acts.zoom_time_out)
