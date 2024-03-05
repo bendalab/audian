@@ -64,7 +64,7 @@ class DataBrowser(QWidget):
     save_region = 2
     ask_region = 3
     
-    sigTimesChanged = Signal(object, object)
+    sigTimesChanged = Signal(object, object, object)
     sigAmplitudesChanged = Signal(object, object)
     sigFrequenciesChanged = Signal(object, object)
     sigResolutionChanged = Signal()
@@ -301,7 +301,7 @@ class DataBrowser(QWidget):
             # takes a long time:
             spec = SpecItem(self.data, self.rate, c, 256, 0.5)
             self.specs.append(spec)
-            axs = SpectrumPlot(c, xwidth, spec.fmax)
+            axs = SpectrumPlot(c, xwidth, starttime, spec.fmax)
             axs.addItem(spec)
             labels = []
             for l in self.marker_labels:
@@ -926,7 +926,8 @@ class DataBrowser(QWidget):
             self.axspecs[channel].getAxis('bottom').setStyle(showValues=show_ticks)
 
 
-    def set_times(self, toffset=None, twindow=None, dispatch=True):
+    def set_times(self, toffset=None, twindow=None, enable_starttime=None,
+                  dispatch=True):
         self.setting = True
         if not toffset is None:
             self.toffset = toffset
@@ -934,11 +935,14 @@ class DataBrowser(QWidget):
             self.twindow = twindow
         for axs in self.axts:
             for ax in axs:
+                if enable_starttime is not None:
+                    ax.enableStartTime(enable_starttime)
                 if self.isVisible():
                     ax.setXRange(self.toffset, self.toffset + self.twindow)
         self.setting = False
         if dispatch:
-            self.sigTimesChanged.emit(self.toffset, self.twindow)
+            self.sigTimesChanged.emit(self.toffset, self.twindow,
+                                      enable_starttime)
 
             
     def update_times(self, viewbox, trange):

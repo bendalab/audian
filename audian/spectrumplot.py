@@ -15,7 +15,7 @@ class SpectrumPlot(pg.PlotItem):
     sigUpdateFilter = Signal(object, object, object)
 
 
-    def __init__(self, channel, xwidth, fmax):
+    def __init__(self, channel, xwidth, starttime, fmax):
 
         self.channel = channel
 
@@ -29,7 +29,9 @@ class SpectrumPlot(pg.PlotItem):
         bottom_axis.setStyle(showValues=False)
         bottom_axis.setPen('white')
         bottom_axis.setTextPen('black')
+        bottom_axis.setStartTime(starttime)
         top_axis = TimeAxisItem(orientation='top', showValues=False)
+        top_axis.setStartTime(starttime)
         left_axis = YAxisItem(orientation='left', showValues=True)
         left_axis.setLabel('Frequency', 'Hz', color='black')
         left_axis.setPen('white')
@@ -110,6 +112,18 @@ class SpectrumPlot(pg.PlotItem):
 
         # signals:
         view.sigSelectedRegion.connect(self.sigSelectedRegion)
+
+
+    def enableStartTime(self, enable):
+        """ Enable addition of start time to tick labels.
+
+        Parameters
+        ----------
+        enable: bool
+            If True enable addition of start time to tick labels.
+        """
+        self.getAxis('bottom').enableStartTime(enable)
+        self.getAxis('top').enableStartTime(enable)
 
 
     def set_filter(self, highpass_cutoff=None, lowpass_cutoff=None):

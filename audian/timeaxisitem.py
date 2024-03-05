@@ -11,6 +11,7 @@ class TimeAxisItem(pg.AxisItem):
         super().__init__(*args, **kwargs)
         self.setPen('white')
         self.StartTime = None
+        self.EnableStartTime = False
 
 
     def setLogMode(self, *args, **kwargs):
@@ -26,8 +27,22 @@ class TimeAxisItem(pg.AxisItem):
         time: datetime or None
             A datetime object for the data and time of the first data element. 
         """
-        self.enableAutoSIPrefix(time is None)
         self.StartTime = time
+        self.enableAutoSIPrefix(self.StartTime is None or
+                                not self.EnableStartTime)
+
+
+    def enableStartTime(self, enable):
+        """ Enable addition of start time to tick labels.
+
+        Parameters
+        ----------
+        enable: bool
+            If True enable addition of start time to tick labels.
+        """
+        self.EnableStartTime = enable
+        self.enableAutoSIPrefix(self.StartTime is None or
+                                not self.EnableStartTime)
 
 
     def tickSpacing(self, minVal, maxVal, size):
@@ -37,7 +52,7 @@ class TimeAxisItem(pg.AxisItem):
 
         # estimate width of xtick labels:
         xwidth = QFontMetrics(self.font()).averageCharWidth()
-        if self.StartTime:
+        if self.StartTime and self.EnableStartTime:
             nx = 8
         elif maxVal < 1.0:
             nx = 0
@@ -88,7 +103,7 @@ class TimeAxisItem(pg.AxisItem):
             self.setLabel('Time', units='s')
             return [f'{v*scale:.5g}' for v in values]
 
-        if self.StartTime or np.max(values) > 3600:
+        if (self.StartTime and self.EnableStartTime) or np.max(values) > 3600:
             self.setLabel('Time (h:m:s)', units=None)
             fs = '{hours:.0f}:{mins:02.0f}:{secs:02.0f}'
         elif np.max(values) > 60:
@@ -101,7 +116,7 @@ class TimeAxisItem(pg.AxisItem):
             fs += '.{micros}'
         
         basetime = dt.datetime(1, 1, 1, 0, 0, 0, 0)
-        if self.StartTime:
+        if self.StartTime and self.EnableStartTime:
             basetime = self.StartTime
         vals = []
         for time in values:

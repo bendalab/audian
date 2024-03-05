@@ -14,7 +14,7 @@ class OscillogramPlot(pg.PlotItem):
     sigSelectedRegion = Signal(object, object, object)
 
     
-    def __init__(self, channel, xwidth, starttime=None, short_label=False):
+    def __init__(self, channel, xwidth, starttime, short_label=False):
 
         # view box:
         view = SelectViewBox(channel)
@@ -86,4 +86,16 @@ class OscillogramPlot(pg.PlotItem):
 
         # signals:
         view.sigSelectedRegion.connect(self.sigSelectedRegion)
+
+
+    def enableStartTime(self, enable):
+        """ Enable addition of start time to tick labels.
+
+        Parameters
+        ----------
+        enable: bool
+            If True enable addition of start time to tick labels.
+        """
+        self.getAxis('bottom').enableStartTime(enable)
+        self.getAxis('top').enableStartTime(enable)
 

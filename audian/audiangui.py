@@ -329,14 +329,14 @@ class Audian(QMainWindow):
         self.link_timescroll = not self.link_timescroll
 
 
-    def dispatch_times(self, toffset, twindow):
+    def dispatch_times(self, toffset, twindow, enable_starttime):
         if not self.link_timescroll:
             toffset = None
         if not self.link_timezoom:
             twindow = None
         for b in self.browsers:
             if not b is self.browser():
-                b.set_times(toffset, twindow, False)
+                b.set_times(toffset, twindow, enable_starttime, False)
 
 
     def setup_time_actions(self, menu):
@@ -345,6 +345,12 @@ class Audian(QMainWindow):
         self.acts.link_time_zoom.setCheckable(True)
         self.acts.link_time_zoom.setChecked(self.link_timezoom)
         self.acts.link_time_zoom.toggled.connect(self.toggle_link_timezoom)
+
+        self.acts.toggle_start_time = QAction('Toggle &start time', self)
+        self.acts.toggle_start_time.setCheckable(True)
+        self.acts.toggle_start_time.setShortcut('Ctrl+Shift+T')
+        self.acts.toggle_start_time.setChecked(True)
+        self.acts.toggle_start_time.toggled.connect(lambda x: self.browser().set_times(enable_starttime=x))
 
         self.acts.zoom_time_in = QAction('Zoom &in', self)
         self.acts.zoom_time_in.setShortcuts([QKeySequence.ZoomIn, '+', '=', 'Shift+X'])
@@ -402,6 +408,7 @@ class Audian(QMainWindow):
 
         time_menu = menu.addMenu('&Time')
         time_menu.addAction(self.acts.link_time_zoom)
+        time_menu.addAction(self.acts.toggle_start_time)
         time_menu.addAction(self.acts.zoom_time_in)
         time_menu.addAction(self.acts.zoom_time_out)
         time_menu.addAction(self.acts.link_time_scroll)
@@ -1044,6 +1051,7 @@ Can not open file <b>{browser.file_path}</b>!''')
                 browser.sigPowerChanged.connect(self.dispatch_power)
                 browser.sigAudioChanged.connect(self.dispatch_audio)
                 browser.init_filter(self.high_pass, self.low_pass)
+                browser.set_times(enable_starttime=self.acts.toggle_start_time.isChecked(), dispatch=False)
                 QTimer.singleShot(100, self.load_data)
                 break
 
