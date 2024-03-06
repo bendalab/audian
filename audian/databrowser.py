@@ -24,7 +24,7 @@ except ImportError:
     from audioio import AudioLoader as DataLoader
 from audioio import available_formats, write_audio
 from audioio import fade
-from audioio import get_datetime
+from audioio import get_datetime, update_starttime
 from .version import __version__, __year__
 from .fulltraceplot import FullTracePlot, secs_to_str
 from .oscillogramplot import OscillogramPlot
@@ -1745,13 +1745,13 @@ class DataBrowser(QWidget):
                                                 ';;'.join(filters))[0]
         if file_path:
             md = deepcopy(self.data.metadata())
-            # TODO: adapt timestamps in metadata
+            update_starttime(md, t0, self.rate)
             locs, labels = self.marker_data.get_markers(self.rate)
             sel = (locs[:,0] + locs[:,1] >= i0) & (locs[:,0] <= i1)
             locs = locs[sel]
             labels = labels[sel]
-            write_audio(file_path, self.data[i0:i1,:], self.rate,
-                        md, locs, labels)
+            write_audio(file_path, self.data[i0:i1,self.selected_channels],
+                        self.rate, md, locs, labels)
             print('saved region to: ' , file_path)
 
         
