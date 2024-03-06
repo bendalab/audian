@@ -1,9 +1,10 @@
 import os
-import xml.dom.minidom
+from copy import deepcopy
 from math import fabs, ceil, floor, log, log10
 import datetime as dt
 import numpy as np
 from scipy.signal import butter, sosfiltfilt
+import xml.dom.minidom
 try:
     from PyQt5.QtCore import Signal
 except ImportError:
@@ -1743,12 +1744,14 @@ class DataBrowser(QWidget):
                                                 file_path,
                                                 ';;'.join(filters))[0]
         if file_path:
+            md = deepcopy(self.data.metadata())
+            # TODO: adapt timestamps in metadata
             locs, labels = self.marker_data.get_markers(self.rate)
             sel = (locs[:,0] + locs[:,1] >= i0) & (locs[:,0] <= i1)
             locs = locs[sel]
             labels = labels[sel]
             write_audio(file_path, self.data[i0:i1,:], self.rate,
-                        self.data.metadata(), locs, labels)
+                        md, locs, labels)
             print('saved region to: ' , file_path)
 
         
