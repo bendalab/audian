@@ -24,7 +24,7 @@ except ImportError:
     from audioio import AudioLoader as DataLoader
 from audioio import available_formats, write_audio
 from audioio import fade
-from audioio import get_datetime, update_starttime
+from audioio import get_datetime, update_starttime, add_history
 from .version import __version__, __year__
 from .fulltraceplot import FullTracePlot, secs_to_str
 from .oscillogramplot import OscillogramPlot
@@ -1746,6 +1746,10 @@ class DataBrowser(QWidget):
         if file_path:
             md = deepcopy(self.data.metadata())
             update_starttime(md, t0, self.rate)
+            hkey = 'CodingHistory'
+            if 'BEXT' in md:
+                hkey = 'BEXT__' + hkey
+            add_history(md, f'cut out {t0s}-{t1s}', hkey)
             locs, labels = self.marker_data.get_markers(self.rate)
             sel = (locs[:,0] + locs[:,1] >= i0) & (locs[:,0] <= i1)
             locs = locs[sel]
