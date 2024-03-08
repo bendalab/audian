@@ -1749,7 +1749,7 @@ class DataBrowser(QWidget):
             hkey = 'CodingHistory'
             if 'BEXT' in md:
                 hkey = 'BEXT__' + hkey
-            add_history(md, f'cut out {t0s}-{t1s}', hkey)
+            add_history(md, f'cut out {t0s}-{t1s} from {self.file_path}', hkey)
             locs, labels = self.marker_data.get_markers(self.rate)
             sel = (locs[:,0] + locs[:,1] >= i0) & (locs[:,0] <= i1)
             locs = locs[sel]
