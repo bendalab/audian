@@ -421,6 +421,8 @@ class DataBrowser(QWidget):
         self.audiohetfw.valueChanged.connect(lambda v: self.set_audio(heterodyne_freq=1000*v))
         if self.data.samplerate > 50000:
             self.toolbar.addWidget(self.audiohetfw)
+        else:
+            self.audiohetfw.setVisible(False)
         if self.data.samplerate > 50000:
             self.toolbar.addAction(self.acts.use_heterodyne)
         self.toolbar.addSeparator()
@@ -1329,90 +1331,132 @@ class DataBrowser(QWidget):
 
         
     def all_channels(self):
-        self.selected_channels = list(self.show_channels)
+        if self.selected_channels == self.show_channels:
+            self.selected_channels = list(range(self.data.channels))
+        else:
+            self.selected_channels = list(self.show_channels)
         self.update_borders()
 
 
     def next_channel(self):
-        if len(self.show_channels) == 1:
-            self.show_channel(self.current_channel + 1)
-        else:
-            idx = self.show_channels.index(self.current_channel)
-            if idx + 1 < len(self.show_channels):
-                self.current_channel = self.show_channels[idx + 1]
-            self.selected_channels = [self.current_channel]
-            self.update_borders()
+        idx = self.show_channels.index(self.current_channel)
+        if idx + 1 < len(self.show_channels):
+            self.current_channel = self.show_channels[idx + 1]
+        elif self.show_channels[-1] < self.data.channels - 1:
+            n = len(self.show_channels)
+            if n > 1:
+                n -= 1
+            if self.show_channels[-1] + n >= self.data.channels:
+                n = self.data.channels - 1 - self.show_channels[-1]
+            self.show_channels += list(range(self.show_channels[-1] + 1,
+                                             self.show_channels[-1] + 1 + n))
+            del self.show_channels[:n]
+            self.current_channel += 1
+        self.selected_channels = [self.current_channel]
+        self.set_channels()
 
 
     def previous_channel(self):
-        if len(self.show_channels) == 1:
-            self.show_channel(self.current_channel - 1)
-        else:
-            idx = self.show_channels.index(self.current_channel)
-            if idx > 0:
-                self.current_channel = self.show_channels[idx - 1]
-            self.selected_channels = [self.current_channel]
-            self.update_borders()
+        idx = self.show_channels.index(self.current_channel)
+        if idx > 0:
+            self.current_channel = self.show_channels[idx - 1]
+        elif self.show_channels[0] > 0:
+            n = len(self.show_channels)
+            if n > 1:
+                n -= 1
+            if self.show_channels[0] < n:
+                n = self.show_channels[0]
+            self.show_channels = list(range(self.show_channels[0] - n,
+                                            self.show_channels[0])) + self.show_channels
+            del self.show_channels[-n:]
+            self.current_channel -= 1
+        self.selected_channels = [self.current_channel]
+        self.set_channels()
 
 
     def select_next_channel(self):
-        if len(self.show_channels) == 1:
-            self.show_channel(self.current_channel + 1)
-        else:
-            idx = self.show_channels.index(self.current_channel)
-            if idx + 1 < len(self.show_channels):
-                self.current_channel = self.show_channels[idx + 1]
+        show_selected_channels = [c for c in range(self.data.channels) if c in self.show_channels and c in self.selected_channels]
+        if len(show_selected_channels) > 0:
+            self.current_channel = show_selected_channels[-1]
+        if self.current_channel >= self.data.channels - 1:
+            return
+        idx = self.show_channels.index(self.current_channel)
+        if idx + 1 < len(self.show_channels):
+            self.current_channel = self.show_channels[idx + 1]
+            if not self.current_channel in self.selected_channels:
                 self.selected_channels.append(self.current_channel)
-                self.update_borders()
+                self.selected_channels.sort()
+            self.update_borders()
+        elif self.show_channels[-1] < self.data.channels - 1:
+            n = len(self.show_channels)
+            if n > 1:
+                n -= 1
+            if self.show_channels[-1] + n >= self.data.channels:
+                n = self.data.channels - 1 - self.show_channels[-1]
+            self.show_channels += list(range(self.show_channels[-1] + 1,
+                                             self.show_channels[-1] + 1 + n))
+            del self.show_channels[:n]
+            self.current_channel += 1
+            if not self.current_channel in self.selected_channels:
+                self.selected_channels.append(self.current_channel)
+                self.selected_channels.sort()
+            self.set_channels()
 
 
     def select_previous_channel(self):
-        if len(self.show_channels) == 1:
-            self.show_channel(self.current_channel - 1)
-        else:
-            idx = self.show_channels.index(self.current_channel)
-            if idx > 0:
-                self.current_channel = self.show_channels[idx - 1]
-            self.selected_channels.append(self.current_channel)
+        show_selected_channels = [c for c in range(self.data.channels) if c in self.show_channels and c in self.selected_channels]
+        if len(show_selected_channels) > 0:
+            self.current_channel = show_selected_channels[0]
+        if self.current_channel == 0:
+            return
+        idx = self.show_channels.index(self.current_channel)
+        if idx > 0:
+            self.current_channel = self.show_channels[idx - 1]
+            if not self.current_channel in self.selected_channels:
+                self.selected_channels.append(self.current_channel)
+                self.selected_channels.sort()
             self.update_borders()
+        elif self.show_channels[0] > 0:
+            n = len(self.show_channels)
+            if n > 1:
+                n -= 1
+            if self.show_channels[0] < n:
+                n = self.show_channels[0]
+            self.show_channels = list(range(self.show_channels[0] - n,
+                                            self.show_channels[0])) + self.show_channels
+            del self.show_channels[-n:]
+            self.current_channel -= 1
+            if not self.current_channel in self.selected_channels:
+                self.selected_channels.append(self.current_channel)
+                self.selected_channels.sort()
+            self.set_channels()
 
             
-    def select_channels(self, channels):
-        sc = [c for c in range(self.data.channels) if c in channels]
-        if len(sc) == 0:
-            return
-        self.selected_channels = sc
-        if not self.current_channel in self.selected_channels:
-            for c in self.selected_channels:
-                if c >= self.current_channel:
-                    self.current_channel = c
-                    break
-            else:
-                if len(self.selected_channels) > 0:
-                    self.current_channel = self.selected_channels[0]
-        self.update_borders()
-        
-            
-    def set_channels(self, show_channels=None, selected_channels=None):
+    def set_channels(self, show_channels=None, selected_channels=None,
+                     current_channel=None):
         if show_channels is not None:
             if self.data is None:
                 self.channels = show_channels
                 return
-            self.show_channels = [c for c in show_channels if c < len(self.figs)]
-            if selected_channels is not None:
-                self.selected_channels = [c for c in selected_channels if c < len(self.figs)]
-        if not self.current_channel in self.selected_channels:
-            for c in self.selected_channels:
+            self.show_channels = [c for c in show_channels if c < self.data.channels]
+        if selected_channels is not None:
+            self.selected_channels = [c for c in selected_channels if c < self.data.channels]
+        if current_channel is not None:
+            self.current_channel = current_channel
+        # current channel must be in shown and selected channels:
+        show_selected_channels = [c for c in range(self.data.channels) if c in self.show_channels and c in self.selected_channels]
+        if not self.current_channel in show_selected_channels:
+            for c in show_selected_channels:
                 if c >= self.current_channel:
                     self.current_channel = c
                     break
-            if not self.current_channel in self.selected_channels:
-                self.current_channel = self.selected_channels[-1]
-        for c in range(len(self.figs)):
+            if not self.current_channel in show_selected_channels:
+                self.current_channel = show_selected_channels[-1]
+        for c in range(self.data.channels):
             self.figs[c].setVisible(c in self.show_channels)
             self.show_xticks(c, c == self.show_channels[-1])
             self.acts.channels[c].setChecked(c in self.show_channels)
-        print(self.show_channels)
+        #print(self.show_channels)
         self.adjust_layout(self.width(), self.height())
         self.update_borders()
             
@@ -1452,11 +1496,11 @@ class DataBrowser(QWidget):
 
         
     def show_channel(self, channel):
-        if channel < 0 or channel >= len(self.figs):
+        if channel < 0 or channel >= self.data.channels:
             return
         if self.current_channel == channel and \
            self.show_channels == [channel]:
-            self.set_channels(list(range(len(self.figs))))
+            self.set_channels(list(range(self.data.channels)))
         else:
             self.current_channel = channel
             if not channel in self.selected_channels:

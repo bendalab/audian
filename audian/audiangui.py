@@ -707,7 +707,8 @@ class Audian(QMainWindow):
             for b in self.browsers:
                 if not b is self.browser():
                     b.set_channels(self.browser().show_channels,
-                                   self.browser().selected_channels)
+                                   self.browser().selected_channels,
+                                   self.browser().current_channel)
 
         
     def show_channel(self, channel):
@@ -715,7 +716,9 @@ class Audian(QMainWindow):
         if self.link_channels:
             for b in self.browsers:
                 if not b is self.browser():
-                    b.show_channel(channel)
+                    b.set_channels(self.browser().show_channels,
+                                   self.browser().selected_channels,
+                                   self.browser().current_channel)
 
         
     def select_channels(self, selectfunc):
@@ -723,7 +726,9 @@ class Audian(QMainWindow):
         if self.link_channels:
             for b in self.browsers:
                 if not b is self.browser():
-                    b.select_channels(self.browser().selected_channels)
+                    b.set_channels(self.browser().show_channels,
+                                   self.browser().selected_channels,
+                                   self.browser().current_channel)
 
         
     def hide_deselected_channels(self):
@@ -731,8 +736,9 @@ class Audian(QMainWindow):
         if self.link_channels:
             for b in self.browsers:
                 if not b is self.browser():
-                    b.select_channels(self.browser().selected_channels)
-                    b.hide_deselected_channels()
+                    b.set_channels(self.browser().show_channels,
+                                   self.browser().selected_channels,
+                                   self.browser().current_channel)
 
 
     def set_channel_action(self, c, n, checked=True, active=True):
