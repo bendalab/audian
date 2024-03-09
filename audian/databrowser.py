@@ -1378,7 +1378,7 @@ class DataBrowser(QWidget):
 
             
     def select_channels(self, channels):
-        sc = [c for c in channels if c in self.show_channels]
+        sc = [c for c in range(self.data.channels) if c in channels]
         if len(sc) == 0:
             return
         self.selected_channels = sc
@@ -1412,6 +1412,7 @@ class DataBrowser(QWidget):
             self.figs[c].setVisible(c in self.show_channels)
             self.show_xticks(c, c == self.show_channels[-1])
             self.acts.channels[c].setChecked(c in self.show_channels)
+        print(self.show_channels)
         self.adjust_layout(self.width(), self.height())
         self.update_borders()
             
@@ -1464,21 +1465,11 @@ class DataBrowser(QWidget):
             self.set_channels([channel])
 
         
-    def hide_selected_channels(self):
-        show_channels = [c for c in range(self.data.channels) if not c in self.selected_channels and c in self.show_channels]
+    def hide_deselected_channels(self):
+        show_channels = [c for c in self.show_channels if c in self.selected_channels]
         if len(show_channels) == 0:
             show_channels = [self.show_channels[0]]
-        selected_channels = []
-        for c in show_channels:
-            if c >= self.selected_channels[0] and c <= self.selected_channels[-1]:
-                selected_channels.append(c)
-                break
-        if len(selected_channels) == 0:
-            if self.selected_channels[-1] < self.data.channels - 1:
-                selected_channels.append(self.selected_channels[-1] + 1)
-            elif self.selected_channels[0] > 0:
-                selected_channels.append(self.selected_channels[0] - 1)
-        self.set_channels(show_channels, selected_channels)
+        self.set_channels(show_channels)
         
         
     def set_panels(self, traces=None, specs=None, cbars=None):

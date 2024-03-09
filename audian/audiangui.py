@@ -56,7 +56,7 @@ class Audian(QMainWindow):
 
         # actions:
         self.toggle_menu = None
-        self.select_menu = None
+        self.show_menu = None
         self.data_menus = []
         file_menu = self.setup_file_actions(self.menuBar())
         region_menu = self.setup_region_actions(self.menuBar())
@@ -726,13 +726,13 @@ class Audian(QMainWindow):
                     b.select_channels(self.browser().selected_channels)
 
         
-    def hide_selected_channels(self):
+    def hide_deselected_channels(self):
+        self.browser().hide_deselected_channels()
         if self.link_channels:
             for b in self.browsers:
                 if not b is self.browser():
                     b.select_channels(self.browser().selected_channels)
-                    b.hide_selected_channels()
-        self.browser().hide_selected_channels()
+                    b.hide_deselected_channels()
 
 
     def set_channel_action(self, c, n, checked=True, active=True):
@@ -745,15 +745,15 @@ class Audian(QMainWindow):
             if self.toggle_menu:
                 self.toggle_menu.addAction(cact)
             self.acts.channels.append(cact)
-            sact = QAction(f'Select channel {c}', self)
+            sact = QAction(f'Show channel {c}', self)
             sact.triggered.connect(lambda x, channel=c: self.show_channel(channel))
             setattr(self.acts, f'select_channel{c}', sact)
-            if self.select_menu:
-                self.select_menu.addAction(sact)
-            self.acts.select_channels.append(sact)
+            if self.show_menu:
+                self.show_menu.addAction(sact)
+            self.acts.show_channels.append(sact)
         else:
             cact = self.acts.channels[c]
-            sact = self.acts.select_channels[c]
+            sact = self.acts.show_channels[c]
         if active:
             cact.setChecked(checked)
             cact.setEnabled(c < n)
@@ -764,9 +764,14 @@ class Audian(QMainWindow):
                 if n < 10:
                     cact.setShortcut(f'{c}')
                     sact.setShortcut(f'Ctrl+{c}')
-                else:
+                elif n < 100:
                     cact.setShortcut(f'{c//10}, {c%10}')
                     sact.setShortcut(f'Ctrl+{c//10}, Ctrl+{c%10}')
+                else:
+                    nt = c//1000
+                    rc = c - 1000*nt
+                    cact.setShortcut(f'{nt}, {rc//10}, {rc%10}')
+                    sact.setShortcut(f'Ctrl+{nt}, Ctrl+{rc//10}, Ctrl+{rc%10}')
                 keys = ', '.join([key.toString() for key in cact.shortcuts()])
                 cact.setToolTip(f'Toggle channel {c} ({keys})')
 
@@ -779,7 +784,7 @@ class Audian(QMainWindow):
         self.acts.link_channels.toggled.connect(self.toggle_link_channels)
 
         self.acts.channels = []
-        self.acts.select_channels = []
+        self.acts.show_channels = []
 
         self.acts.select_all_channels = QAction('Select &all channels', self)
         self.acts.select_all_channels.setShortcuts(QKeySequence.SelectAll)
@@ -801,9 +806,9 @@ class Audian(QMainWindow):
         self.acts.select_previous_channel.setShortcuts(QKeySequence.SelectPreviousPage)
         self.acts.select_previous_channel.triggered.connect(lambda x: self.select_channels('select_previous_channel'))
 
-        self.acts.hide_selected_channels = QAction('Hide selected channels', self)
-        self.acts.hide_selected_channels.setShortcuts(QKeySequence.Delete)
-        self.acts.hide_selected_channels.triggered.connect(self.hide_selected_channels)
+        self.acts.hide_deselected_channels = QAction('Hide deselected channels', self)
+        self.acts.hide_deselected_channels.setShortcuts(QKeySequence.Delete)
+        self.acts.hide_deselected_channels.triggered.connect(self.hide_deselected_channels)
 
         channel_menu = menu.addMenu('&Channels')
         channel_menu.addAction(self.acts.link_channels)
@@ -812,17 +817,17 @@ class Audian(QMainWindow):
         channel_menu.addAction(self.acts.previous_channel)
         channel_menu.addAction(self.acts.select_next_channel)
         channel_menu.addAction(self.acts.select_previous_channel)
-        channel_menu.addAction(self.acts.hide_selected_channels)
+        channel_menu.addAction(self.acts.hide_deselected_channels)
         self.toggle_menu = channel_menu.addMenu('&Toggle channels')
         for act in self.acts.channels:
             self.toggle_menu.addAction(act)
-        self.select_menu = channel_menu.addMenu('&Select channels')
-        for act in self.acts.select_channels:
-            self.select_menu.addAction(act)
+        self.show_menu = channel_menu.addMenu('&Show channels')
+        for act in self.acts.show_channels:
+            self.show_menu.addAction(act)
 
         self.data_menus.append(channel_menu)
         self.data_menus.append(self.toggle_menu)
-        self.data_menus.append(self.select_menu)
+        self.data_menus.append(self.show_menu)
         
         return channel_menu
 
