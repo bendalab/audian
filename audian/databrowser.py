@@ -75,7 +75,7 @@ class DataBrowser(QWidget):
     sigAudioChanged = Signal(object, object, object)
 
     
-    def __init__(self, file_path, channels, show_channels, audio,
+    def __init__(self, file_path, channels, audio,
                  acts, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -90,7 +90,7 @@ class DataBrowser(QWidget):
         self.tmax = 0.0
         self.meta_data = {}
 
-        self.show_channels = show_channels
+        self.show_channels = None
         self.current_channel = 0
         self.selected_channels = []
         
@@ -187,8 +187,9 @@ class DataBrowser(QWidget):
         self.trace_region_labels = [] # regions with labels on traces
         self.spec_labels = []  # labels on spectrograms
         self.spec_region_labels = [] # regions with labels on spectrograms
+        self.datafig = None   # full traces
 
-
+        
     def __del__(self):
         if not self.data is None:
             self.data.close()
@@ -873,6 +874,8 @@ class DataBrowser(QWidget):
         
 
     def adjust_layout(self, width, height):
+        if self.show_channels is None:
+            return
         xwidth = self.fontMetrics().averageCharWidth()
         xheight = self.fontMetrics().ascent()
         # subtract full data plot:
@@ -1529,13 +1532,15 @@ class DataBrowser(QWidget):
         self.set_channels(show_channels)
         
         
-    def set_panels(self, traces=None, specs=None, cbars=None):
+    def set_panels(self, traces=None, specs=None, cbars=None, fulldata=None):
         if not traces is None:
             self.show_traces = traces
         if not specs is None:
             self.show_specs = specs
         if not cbars is None:
             self.show_cbars = cbars
+        if not fulldata is None:
+            self.show_fulldata = fulldata
         for axt, axs, cb in zip(self.axtraces, self.axspecs, self.cbars):
             axt.setVisible(self.show_traces)
             axs.setVisible(self.show_specs > 0)
@@ -1545,6 +1550,8 @@ class DataBrowser(QWidget):
                 axs.getAxis('bottom').setStyle(showValues=not self.show_traces)
                 axt.getAxis('bottom').showLabel(self.show_traces)
                 axt.getAxis('bottom').setStyle(showValues=self.show_traces)
+        if self.datafig is not None:
+            self.datafig.setVisible(self.show_fulldata)
         self.adjust_layout(self.width(), self.height())
             
 
@@ -1566,20 +1573,12 @@ class DataBrowser(QWidget):
                 
     def toggle_colorbars(self):
         self.show_cbars = not self.show_cbars
-        for cb, axs in zip(self.cbars, self.axspecs):
-            if axs.isVisible():
-                cb.setVisible(self.show_cbars)
-            
-                
-    def set_fulldata(self, show):
-        self.show_fulldata = show
-        self.datafig.setVisible(self.show_fulldata)
-        self.adjust_layout(self.width(), self.height())
+        self.set_panels()
             
                 
     def toggle_fulldata(self):
         self.show_fulldata = not self.show_fulldata
-        self.set_fulldata(self.show_fulldata)
+        self.set_panels()
             
             
     def toggle_grids(self):

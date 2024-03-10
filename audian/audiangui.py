@@ -849,7 +849,8 @@ class Audian(QMainWindow):
                 if not b is self.browser():
                     b.set_panels(self.browser().show_traces,
                                  self.browser().show_specs,
-                                 self.browser().show_cbars)
+                                 self.browser().show_cbars,
+                                 self.browser().show_fulldata)
 
         
     def toggle_spectrograms(self):
@@ -859,7 +860,8 @@ class Audian(QMainWindow):
                 if not b is self.browser():
                     b.set_panels(self.browser().show_traces,
                                  self.browser().show_specs,
-                                 self.browser().show_cbars)
+                                 self.browser().show_cbars,
+                                 self.browser().show_fulldata)
 
         
     def toggle_colorbars(self):
@@ -869,7 +871,8 @@ class Audian(QMainWindow):
                 if not b is self.browser():
                     b.set_panels(self.browser().show_traces,
                                  self.browser().show_specs,
-                                 self.browser().show_cbars)
+                                 self.browser().show_cbars,
+                                 self.browser().show_fulldata)
 
         
     def toggle_fulldata(self):
@@ -877,7 +880,10 @@ class Audian(QMainWindow):
         if self.link_panels:
             for b in self.browsers:
                 if not b is self.browser():
-                    b.set_fulldata(self.browser().show_fulldata)
+                    b.set_panels(self.browser().show_traces,
+                                 self.browser().show_specs,
+                                 self.browser().show_cbars,
+                                 self.browser().show_fulldata)
 
                     
     def setup_panel_actions(self, menu):
@@ -1017,15 +1023,11 @@ class Audian(QMainWindow):
 
     def load_files(self, file_paths):
         # prepare open files:
-        show_channels = None
-        if self.link_channels and len(self.browsers) > 0:
-            show_channels = self.browser().show_channels
         first = True
         for file_path in file_paths:
             if not os.path.isfile(file_path):
                 continue
-            browser = DataBrowser(file_path, self.channels,
-                                  show_channels, self.audio,
+            browser = DataBrowser(file_path, self.channels, self.audio,
                                   self.acts)
             self.tabs.addTab(browser, os.path.basename(file_path))
             self.browsers.append(browser)
@@ -1063,6 +1065,12 @@ Can not open file <b>{browser.file_path}</b>!''')
                 browser.sigAudioChanged.connect(self.dispatch_audio)
                 browser.init_filter(self.high_pass, self.low_pass)
                 browser.set_times(enable_starttime=self.acts.toggle_start_time.isChecked(), dispatch=False)
+                if self.link_channels:
+                    browser.set_channels(self.browser().show_channels,
+                                         self.browser().selected_channels)
+                else:
+                    browser.set_channels()
+                browser.set_panels()
                 QTimer.singleShot(100, self.load_data)
                 break
 
