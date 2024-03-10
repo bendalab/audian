@@ -992,8 +992,18 @@ class DataBrowser(QWidget):
 
                 
     def time_backward(self):
-        if self.toffset > 0.0:
-            self.toffset -= 0.05*self.twindow
+        axt = None
+        for axs in self.axts:
+            if len(axs) > 0:
+                axt = axs[0]
+        if axt is None:
+            return
+        rect = axt.getViewBox().viewRect()
+        toffs = self.toffset
+        if toffs > rect.left():
+            toffs = rect.left()
+        if toffs > 0.0:
+            self.toffset = toffs - 0.05*self.twindow
             if self.toffset < 0.0:
                 self.toffset = 0.0
             self.set_times()
@@ -1708,6 +1718,9 @@ class DataBrowser(QWidget):
         rate = self.rate
         i0 = int(np.round(t0*rate))
         i1 = int(np.round(t1*rate))
+        if i1 > len(self.data):
+            i1 = len(self.data)
+            t1 = i1/rate
         n2 = (len(self.selected_channels)+1)//2
         playdata = np.zeros((i1-i0, min(2, len(self.selected_channels))))
         playdata[:,0] = np.mean(self.data[i0:i1, self.selected_channels[:n2]], 1)
@@ -1737,7 +1750,14 @@ class DataBrowser(QWidget):
 
 
     def play_window(self):
-        self.play_region(self.toffset, self.toffset + self.twindow)
+        axt = None
+        for axs in self.axts:
+            if len(axs) > 0:
+                axt = axs[0]
+        if axt is None:
+            return
+        rect = axt.getViewBox().viewRect()
+        self.play_region(rect.left(), rect.right())
 
         
     def mark_audio(self):
