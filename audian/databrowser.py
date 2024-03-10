@@ -225,7 +225,7 @@ class DataBrowser(QWidget):
             self.show_channels = [0]
         
         self.current_channel = self.show_channels[0]
-        self.selected_channels = list(self.show_channels)
+        self.selected_channels = list(range(self.data.channels))
 
         # load data:
         fmt_md = dict(filepath=self.file_path,
