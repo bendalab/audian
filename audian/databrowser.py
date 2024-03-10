@@ -914,8 +914,9 @@ class DataBrowser(QWidget):
             s_height = max(0, int(ns*spec_height + (1-nt)*add_height))
             self.figs[c].ci.layout.setRowFixedHeight(0, s_height)
         # fix full data plot:
-        self.datafig.update_layout(self.show_channels, data_height)
-        self.datafig.setVisible(self.show_fulldata)
+        if self.datafig is not None:
+            self.datafig.update_layout(self.show_channels, data_height)
+            self.datafig.setVisible(self.show_fulldata)
         # update:
         for c in self.show_channels:
             self.figs[c].update()

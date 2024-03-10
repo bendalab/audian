@@ -22,6 +22,7 @@ class Audian(QMainWindow):
         self.acts = acts
 
         self.browsers = []
+        self.prev_browser = None   # for load_data()
 
         self.channels = channels
         self.high_pass = high_pass
@@ -746,7 +747,7 @@ class Audian(QMainWindow):
             cact = QAction(f'Channel &{c}', self)
             cact.setIconText(f'{c}')
             cact.setCheckable(True)
-            cact.setChecked(True)
+            cact.setChecked(checked)
             cact.toggled.connect(lambda x, channel=c: self.toggle_channel(channel))
             if self.toggle_menu:
                 self.toggle_menu.addAction(cact)
@@ -761,7 +762,9 @@ class Audian(QMainWindow):
             cact = self.acts.channels[c]
             sact = self.acts.show_channels[c]
         if active:
+            cact.toggled.disconnect()
             cact.setChecked(checked)
+            cact.toggled.connect(lambda x, channel=c: self.toggle_channel(channel))
             cact.setEnabled(c < n)
             cact.setVisible(c < n)
             sact.setEnabled(c < n)
@@ -1022,6 +1025,8 @@ class Audian(QMainWindow):
 
 
     def load_files(self, file_paths):
+        if len(self.browsers) > 0:
+            self.prev_browser = self.browser()
         # prepare open files:
         first = True
         for file_path in file_paths:
@@ -1065,12 +1070,18 @@ Can not open file <b>{browser.file_path}</b>!''')
                 browser.sigAudioChanged.connect(self.dispatch_audio)
                 browser.init_filter(self.high_pass, self.low_pass)
                 browser.set_times(enable_starttime=self.acts.toggle_start_time.isChecked(), dispatch=False)
+                pb = self.browser() if self.prev_browser is None else self.prev_browser
+                if self.link_panels:
+                    browser.set_panels(pb.show_traces, pb.show_specs,
+                                       pb.show_cbars, pb.show_fulldata)
+                else:
+                    browser.set_panels()
                 if self.link_channels:
-                    browser.set_channels(self.browser().show_channels,
-                                         self.browser().selected_channels)
+                    browser.set_channels(pb.show_channels,
+                                         pb.selected_channels,
+                                         pb.current_channel)
                 else:
                     browser.set_channels()
-                browser.set_panels()
                 QTimer.singleShot(100, self.load_data)
                 break
 
