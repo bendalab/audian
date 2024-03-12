@@ -233,7 +233,7 @@ class DataBrowser(QWidget):
                       channels=self.data.channels,
                       frames=self.data.frames,
                       duration=f'{self.data.frames/self.rate:.3f}s')
-        md = self.data.metadata(store_empty=False)
+        md = self.data.metadata()
         self.meta_data = dict(format=fmt_md)
         self.meta_data.update(md)
         starttime = get_datetime(self.meta_data)
