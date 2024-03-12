@@ -18,13 +18,10 @@ from PyQt5.QtWidgets import QLabel, QSizePolicy, QTableView
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFileDialog
 from PyQt5.QtWidgets import QAbstractItemView, QGraphicsRectItem
 import pyqtgraph as pg
-try:
-    from thunderfish.dataloader import DataLoader
-except ImportError:
-    from audioio import AudioLoader as DataLoader
-from audioio import available_formats, write_audio
 from audioio import fade
 from audioio import get_datetime, update_starttime, add_history
+from thunderfish.dataloader import DataLoader
+from thunderfish.datawriter import available_formats, write_data
 from .version import __version__, __year__
 from .fulltraceplot import FullTracePlot, secs_to_str
 from .oscillogramplot import OscillogramPlot
@@ -1816,14 +1813,16 @@ class DataBrowser(QWidget):
             update_starttime(md, t0, self.rate)
             hkey = 'CodingHistory'
             if 'BEXT' in md:
-                hkey = 'BEXT__' + hkey
+                hkey = 'BEXT.' + hkey
             add_history(md, f'cut out {t0s}-{t1s} from {self.file_path}', hkey)
+            # TODO: wriing markers not supported yet!
             locs, labels = self.marker_data.get_markers(self.rate)
             sel = (locs[:,0] + locs[:,1] >= i0) & (locs[:,0] <= i1)
             locs = locs[sel]
             labels = labels[sel]
-            write_audio(file_path, self.data[i0:i1,self.selected_channels],
-                        self.rate, md, locs, labels)
+            write_data(file_path, self.data[i0:i1,self.selected_channels],
+                       self.rate, self.data.ampl_max, self.data.unit, md)
+                       #locs, labels)
             print('saved region to: ' , file_path)
 
         
