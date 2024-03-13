@@ -1815,14 +1815,13 @@ class DataBrowser(QWidget):
             if 'BEXT' in md:
                 hkey = 'BEXT.' + hkey
             add_history(md, f'cut out {t0s}-{t1s} from {self.file_path}', hkey)
-            # TODO: wriing markers not supported yet!
             locs, labels = self.marker_data.get_markers(self.rate)
             sel = (locs[:,0] + locs[:,1] >= i0) & (locs[:,0] <= i1)
             locs = locs[sel]
             labels = labels[sel]
             write_data(file_path, self.data[i0:i1,self.selected_channels],
-                       self.rate, self.data.ampl_max, self.data.unit, md)
-                       #locs, labels)
+                       self.rate, self.data.ampl_max, self.data.unit,
+                       md, locs, labels)
             print('saved region to: ' , file_path)
 
         
