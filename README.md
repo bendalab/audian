@@ -33,6 +33,9 @@ audiangui data.wav
 I currently explore various possibilities for interactive analysis
 of audio signals. Here an incomplete list of ToDos:
 
+- Handle all data in one class
+- Implement a proper layout for showing the plot panels, allowing also for
+  an optional grid layout.
 - FullTracePlot:
   - fix offset problem,
   - indicate time under mouse cursor.
@@ -42,8 +45,8 @@ of audio signals. Here an incomplete list of ToDos:
   - filter original signal in trace plot and spectrogram plot.
   - play should filter its data on its own.
   - add a toolbar widget for setting filter order.
-- Improve downsampling and filtering of traces (also non-numba support).
-- Implement downsampling of spectrograms!
+- Improve downsampling and filtering of traces
+- Implement downsampling of spectrograms! Or make it even dependent on window size.
 - New plot widget showing power spectrum of visible range
   or slice at current cursor position.
 - Improve on the concept of current cursor:
@@ -72,9 +75,7 @@ of audio signals. Here an incomplete list of ToDos:
     - But should be editable.
 - Define interface for analysis on full data, visible range, selected range.
 - Have a dockable sidebar for showing metadata, cue tables etc.
-- Implement a proper layout for showing the plot panels, allowing also for
-  an optional grid layout.
-- Improve key shortcuts.
+
 
 ### Installation of audiangui in Anaconda3 on windows
 
@@ -110,7 +111,6 @@ pip install .
 This installs many other packages (numpy, scipy, etc.).
 
 Then you should be able to run `audiangui` from the power shell
-(currently the spectrogram does not work yet...).
 
 For updating audian do
 ``` sh
@@ -162,5 +162,10 @@ optional arguments:
 version 1.0 by Jan Benda (2015-2022)
 ```
 
+## Other scientific software for working on timeseries data
 
+- [BioSPPy](https://github.com/scientisst/BioSPPy): The toolbox
+  bundles together various signal processing and pattern recognition
+  methods geared towards the analysis of biosignals.
+  
 
