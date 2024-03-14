@@ -576,19 +576,28 @@ class DataBrowser(QWidget):
                     self.addAction(l.action)
                 l.action.setShortcut(l.key_shortcut)
                 l.action.setEnabled(True)
+            for axts in self.axts:
+                for ax in axts:
+                    ax.xline.setVisible(True)
+            for axys in self.axys:
+                for ax in axys:
+                    ax.yline.setVisible(True)
+            for axfys in self.axfys:
+                for ax in axfys:
+                    ax.yline.setVisible(True)
         else:
             self.xpos_action.setVisible(False)
             self.ypos_action.setVisible(False)
             self.zpos_action.setVisible(False)
             for axts in self.axts:
                 for ax in axts:
-                    ax.xline.setPos(-1)
+                    ax.xline.setVisible(False)
             for axys in self.axys:
                 for ax in axys:
-                    ax.yline.setPos(-1000)
+                    ax.yline.setVisible(False)
             for axfys in self.axfys:
                 for ax in axfys:
-                    ax.yline.setPos(-1)
+                    ax.yline.setVisible(False)
             self.clear_marker()
             # disable marker actions:
             for l in self.marker_labels:
@@ -707,15 +716,18 @@ class DataBrowser(QWidget):
                 break
             
         # set cross-hair positions:
-        for axts in self.axts:
-            for axt in axts:
-                axt.xline.setPos(-1 if self.marker_time is None else self.marker_time)
-        for axys in self.axys:
-            for axy in axys:
-                axy.yline.setPos(-1000 if self.marker_ampl is None else self.marker_ampl)
-        for axfys in self.axfys:
-            for axf in axfys:
-                axf.yline.setPos(-1 if self.marker_freq is None else self.marker_freq)
+        if self.marker_time:
+            for axts in self.axts:
+                for axt in axts:
+                    axt.xline.setPos(self.marker_time)
+        if self.marker_ampl:
+            for axys in self.axys:
+                for axy in axys:
+                    axy.yline.setPos(self.marker_ampl)
+        if self.marker_freq:
+            for axfys in self.axfys:
+                for axf in axfys:
+                    axf.yline.setPos(self.marker_freq)
                 
         # compute deltas:
         self.delta_time = None

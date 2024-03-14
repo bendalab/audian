@@ -64,13 +64,15 @@ class OscillogramPlot(pg.PlotItem):
         self.xline = pg.InfiniteLine(angle=90, movable=False)
         self.xline.setPen(pg.mkPen('white', width=1))
         self.xline.setZValue(100)
-        self.xline.setValue(-1)
+        self.xline.setValue(0)
+        self.xline.setVisible(False)
         self.addItem(self.xline, ignoreBounds=True)
         
         self.yline = pg.InfiniteLine(angle=0, movable=False)
         self.yline.setPen(pg.mkPen('white', width=1))
         self.yline.setZValue(100)
-        self.yline.setValue(-1000)
+        self.yline.setValue(0)
+        self.yline.setVisible(False)
         self.addItem(self.yline, ignoreBounds=True)
 
         # previous cross hair marker:
