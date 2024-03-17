@@ -19,7 +19,8 @@ from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFileDialog
 from PyQt5.QtWidgets import QAbstractItemView, QGraphicsRectItem
 import pyqtgraph as pg
 from audioio import fade
-from audioio import get_datetime, update_starttime, add_history
+from audioio import get_datetime, update_starttime
+from audioio import bext_history_str, add_history
 from thunderfish.dataloader import DataLoader
 from thunderfish.datawriter import available_formats, write_data
 from .version import __version__, __year__
@@ -1826,14 +1827,16 @@ class DataBrowser(QWidget):
             hkey = 'CodingHistory'
             if 'BEXT' in md:
                 hkey = 'BEXT.' + hkey
-            add_history(md, f'cut out {t0s}-{t1s} from {self.file_path}', hkey)
+            bext_code = bext_history_str(self.data.encoding,
+                                         self.rate, self.data.channels)
+            add_history(md, bext_code + f',T=cut out {t0s}-{t1s} from {self.file_path}', hkey, bext_code)
             locs, labels = self.marker_data.get_markers(self.rate)
             sel = (locs[:,0] + locs[:,1] >= i0) & (locs[:,0] <= i1)
             locs = locs[sel]
             labels = labels[sel]
             write_data(file_path, self.data[i0:i1,self.selected_channels],
                        self.rate, self.data.ampl_max, self.data.unit,
-                       md, locs, labels)
+                       md, locs, labels, encoding=self.data.encoding)
             print('saved region to: ' , file_path)
 
         
