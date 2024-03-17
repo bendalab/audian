@@ -1823,7 +1823,7 @@ class DataBrowser(QWidget):
                 hkey = 'BEXT.' + hkey
             bext_code = bext_history_str(self.data.encoding,
                                          self.rate, self.data.channels)
-            add_history(md, bext_code + f',T=cut out {t0s}-{t1s} from {self.file_path}', hkey, bext_code)
+            add_history(md, bext_code + f',T=cut out {t0s}-{t1s}: {os.path.basename(file_path)}', hkey, bext_code + f',T={self.file_path}')
             locs, labels = self.marker_data.get_markers(self.rate)
             sel = (locs[:,0] + locs[:,1] >= i0) & (locs[:,0] <= i1)
             locs = locs[sel]
