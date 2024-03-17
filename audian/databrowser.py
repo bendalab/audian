@@ -226,14 +226,8 @@ class DataBrowser(QWidget):
         self.selected_channels = list(range(self.data.channels))
 
         # load data:
-        fmt_md = dict(filepath=self.file_path,
-                      samplingrate=f'{self.rate:.1f}Hz',
-                      channels=self.data.channels,
-                      frames=self.data.frames,
-                      duration=f'{self.data.frames/self.rate:.3f}s')
-        md = self.data.metadata()
-        self.meta_data = dict(format=fmt_md)
-        self.meta_data.update(md)
+        self.meta_data = dict(Format=self.data.format_dict())
+        self.meta_data.update(self.data.metadata())
         starttime = get_datetime(self.meta_data)
         locs, labels = self.data.markers()
         self.marker_data.set_markers(locs, labels, self.rate)
@@ -539,7 +533,7 @@ class DataBrowser(QWidget):
             if i > 0:
                 mdtable += '<tr><td colspan=2></td></tr>'
             mdtable += f'<tr><td colspan=2><font size="+1"><b>{sk}:</b></font></td></tr>'
-            mdtable += format_section(md, level)
+            mdtable += format_section(md, level + 1)
         mdtable += '</table>'
         dialog = QDialog(self)
         dialog.setWindowTitle('Meta data')
