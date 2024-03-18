@@ -497,43 +497,37 @@ class DataBrowser(QWidget):
 
     def show_metadata(self):
         
-        def format_section(md, level):
+        def format_dict(md, level):
             mdtable = ''
-            if isinstance(md, dict):
-                for k in md:
-                    if isinstance(md[k], dict):
-                        # new section:
-                        pads = ''
-                        if level > 0:
-                            pads = f' style="padding-left: {level*30:d}px;"'
-                        mdtable += f'<tr><td colspan=2{pads}><b>{k}:</b></td></tr>'
-                        mdtable += format_section(md[k], level+1)
+            for k in md:
+                pads = ''
+                if level > 0:
+                    pads = f' style="padding-left: {level*30:d}px;"'
+                if isinstance(md[k], dict):
+                    # new section:
+                    if level == 0:
+                        mdtable += f'<tr><td colspan=2><font size="+1"><b>{k}:</b></font></td></tr>'
                     else:
-                        # key-value pair:
-                        pads = ''
-                        if level > 0:
-                            pads = f' style="padding-left: {level*30:d}px;"'
-                        value = md[k]
-                        if isinstance(value, (list, tuple)):
-                            value = ', '.join(value)
-                        mdtable += f'<tr><td{pads}><b>{k}</b></td><td>{value}</td></tr>'
-            else:
-                if hasattr(md, '__getitem__') and len(md) > 0 and md[0] == '<':
-                    dom = xml.dom.minidom.parseString(md)
-                    md = dom.toprettyxml(indent='    ')
-                    md = f'<pre>{md.replace("<", "&lt;").replace(">", "&gt;")}</pre>'
-                    mdtable += f'<tr><td colspan=2>{md}</td></tr>'
+                        mdtable += f'<tr><td colspan=2{pads}><b>{k}:</b></td></tr>'
+                    mdtable += format_dict(md[k], level+1)
+                    if level == 0:
+                        mdtable += '<tr><td colspan=2></td></tr>'
+                else:
+                    # key-value pair:
+                    value = md[k]
+                    if isinstance(value, (list, tuple)):
+                        value = ', '.join([f'{v}' for v in value])
+                    else:
+                        value = f'{value}'
+                    value = value.replace('\r\n', '\n')
+                    value = value.replace('\r', '\n')
+                    value = value.replace('\n', '<br>')
+                    mdtable += f'<tr><td{pads}><b>{k}</b></td><td>{value}</td></tr>'
             return mdtable
 
         w = xwidth = self.fontMetrics().averageCharWidth()
-        level = 0
         mdtable = f'<style>td {{padding: 0 {w}px 0 0; }}</style><table>'
-        for i, sk in enumerate(self.meta_data):
-            md = self.meta_data[sk]
-            if i > 0:
-                mdtable += '<tr><td colspan=2></td></tr>'
-            mdtable += f'<tr><td colspan=2><font size="+1"><b>{sk}:</b></font></td></tr>'
-            mdtable += format_section(md, level + 1)
+        mdtable += format_dict(self.meta_data, 0)
         mdtable += '</table>'
         dialog = QDialog(self)
         dialog.setWindowTitle('Meta data')
