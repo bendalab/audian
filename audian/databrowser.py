@@ -1822,10 +1822,13 @@ class DataBrowser(QWidget):
             sel = (locs[:,0] + locs[:,1] >= i0) & (locs[:,0] <= i1)
             locs = locs[sel]
             labels = labels[sel]
-            write_data(file_path, self.data[i0:i1,self.selected_channels],
-                       self.rate, self.data.ampl_max, self.data.unit,
-                       md, locs, labels, encoding=self.data.encoding)
-            print('saved region to: ' , file_path)
+            try:
+                write_data(file_path, self.data[i0:i1,self.selected_channels],
+                           self.rate, self.data.ampl_max, self.data.unit,
+                           md, locs, labels, encoding=self.data.encoding)
+                print(f'saved region to "{os.path.relpath(file_path)}"')
+            except PermissionError as e:
+                print(f'failed to save region to "{os.path.relpath(file_path)}": permission denied')
 
         
     def save_window(self):
