@@ -1138,6 +1138,8 @@ class DataBrowser(QWidget):
 
 
     def set_resolution(self, nfft=None, step_frac=None, dispatch=True):
+        if self.setting:
+            return
         self.setting = True
         if not isinstance(nfft, list):
             nfft = [nfft] * (np.max(self.selected_channels) + 1)
@@ -1146,8 +1148,7 @@ class DataBrowser(QWidget):
         for c in self.selected_channels:
             self.specs[c].set_resolution(nfft[c], step_frac[c],
                                          self.isVisible())
-        if not dispatch:
-            self.nfftw.setCurrentText(f'{self.specs[self.current_channel].nfft}')
+        self.nfftw.setCurrentText(f'{self.specs[self.current_channel].nfft}')
         self.setting = False
         if dispatch:
             self.sigResolutionChanged.emit()

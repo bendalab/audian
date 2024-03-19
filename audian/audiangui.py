@@ -277,7 +277,7 @@ class Audian(QMainWindow):
         self.acts.play_window.setShortcut(' ')
         self.acts.play_window.triggered.connect(lambda x=0: self.browser().play_scroll())
 
-        self.acts.use_heterodyne = QAction('&Use heterodyne', self)
+        self.acts.use_heterodyne = QAction('&Use heterodyne frequency', self)
         self.acts.use_heterodyne.setIconText('h')
         self.acts.use_heterodyne.setCheckable(True)
         self.acts.use_heterodyne.setChecked(False)
