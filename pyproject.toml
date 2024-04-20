@@ -13,7 +13,7 @@ dependencies = [
   "matplotlib",
   "PyQt5",
   "pyqtgraph",
-  "audioio>=2.1"
+  "thunderfish>=2.0.0"
 ]
 requires-python = ">=3.4"
 authors = [
