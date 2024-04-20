@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "audian"
+dynamic = ["version"]
+dependencies = [
+  "scipy",
+  "numpy",
+  "numba",
+  "pandas",
+  "matplotlib",
+  "PyQt5",
+  "pyqtgraph",
+  "audioio>=2.1"
+]
+requires-python = ">=3.4"
+authors = [
+  {name = "Jan Benda", email = "jan.benda@uni-tuebingen.de"},
+]
+maintainers = [
+  {name = "Jan Benda", email = "jan.benda@uni-tuebingen.de"},
+]
+description = "GUI for viewing and analyzing recordings of animal vocalizations."
+readme = "README.md"
+license = {file = "LICENSE"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Topic :: Multimedia :: Sound/Audio",
+    "Topic :: Multimedia :: Sound/Audio :: Analysis",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.urls]
+Repository    = "https://github.com/bendalab/audian"
+
+[project.scripts]
+audian    = "audian.audian:run"
+audiangui = "audian.audiangui:run"
+
+[tool.setuptools.dynamic]
+version = {attr = "audian.version.__version__"}
+
+[tool.pytest.ini_options]
+pythonpath = "src"
