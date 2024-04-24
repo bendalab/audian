@@ -8,7 +8,6 @@ import matplotlib.mlab as ml
 import matplotlib.colors as mc
 import matplotlib.widgets as widgets
 import scipy.signal as sig
-from collections import OrderedDict
 from audioio import load_audio, write_audio, PlayAudio, fade
 from .version import __version__, __year__
 from .configfile import ConfigFile
@@ -72,7 +71,7 @@ def envelope(data, rate, freq=100.0):
 def detect_peaks_fixed(data, threshold):
     """Detect peaks and troughs using a fixed, relative threshold.
 
-    From https://github.com/bendalab/thunderfish/blob/master/thunderfish/eventdetection.py
+    From https://github.com/bendalab/thunderlab/blob/master/thunderlab/eventdetection.py
 
     Parameters
     ----------

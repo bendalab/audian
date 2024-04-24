@@ -21,8 +21,8 @@ import pyqtgraph as pg
 from audioio import fade
 from audioio import get_datetime, update_starttime
 from audioio import bext_history_str, add_history
-from thunderfish.dataloader import DataLoader
-from thunderfish.datawriter import available_formats, write_data
+from thunderlab.dataloader import DataLoader
+from thunderlab.datawriter import available_formats, write_data
 from .version import __version__, __year__
 from .fulltraceplot import FullTracePlot, secs_to_str
 from .oscillogramplot import OscillogramPlot

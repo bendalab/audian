@@ -13,7 +13,7 @@ dependencies = [
   "matplotlib",
   "PyQt5",
   "pyqtgraph",
-  "thunderfish>=2.0.0"
+  "thunderlab"
 ]
 requires-python = ">=3.4"
 authors = [
