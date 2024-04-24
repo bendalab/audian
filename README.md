@@ -136,6 +136,10 @@ Simply run (as superuser):
 pip install audian
 ```
 
+This should also install:
+- [ThunderLab](https://github.com/bendalab/thunderlab)
+- [AudioIO](https://github.com/bendalab/audioio)
+
 
 ## Options
 
