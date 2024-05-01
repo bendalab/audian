@@ -1,8 +1,5 @@
 """TraceItem
 
-## TODO
-
-- Move filter variables and related functions to Data class.
 """
 
 from math import fabs, floor, ceil

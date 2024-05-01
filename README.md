@@ -71,18 +71,17 @@ handles all GUI aspects.
 
 - `audiangui.py`: Main GUI, handles DataBrowser widgets and key shortcuts.
 - `databrowser.py`: Each data file is displayed in a DataBrowser widget.
+- `data.py`: All the raw data traces, filtered traces, and spectrogram data.
 - `fulltraceplot.py`: GraphicsLayoutWidget showing the full raw data traces.
-- `oscillogramplot.py`: PlotItem for plotting traces. Does not use data.
+- `oscillogramplot.py`: PlotItem for plotting traces.
 - `traceitem.py`: PlotDataItem for OscillogramPlot.
-   Handles trace data and filtering.
-   Provides `down_sample_peak()`.
-- `spectrumplot.py`: PlotItem for spectrograms. Does not use data.
-- `specitem.py`: ImageItem for SpectrumPlot. Computes spectrogram from data.
+- `spectrumplot.py`: PlotItem for spectrograms.
+- `specitem.py`: ImageItem for SpectrumPlot.
 - `selectviewbox.py`: Handles zooming and selection on OscillogramPlot
   and SpectrumPlot.
 - `timeaxisitem.py`: Label time-axis of OscillogramPlot and SpectrumPlot.
 - `yaxisitem.py`: Label y-axis of OscillogramPlot and SpectrumPlot.
-- `markerdata.py`: All marker related stuff. Split it into widgets and marker data.
+- `markerdata.py`: All marker related stuff. TODO: Split it into widgets and marker data.
 
 ## Old matplotlib-based version
 

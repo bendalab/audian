@@ -556,7 +556,9 @@ class Audian(QMainWindow):
             sfrac = [s.step_frac for s in self.browser().specs]
             for b in self.browsers:
                 if not b is self.browser():
-                    b.set_resolution(nfft, sfrac, False)
+                    b.set_resolution(self.browser().data.nfft,
+                                     self.browser().data.step_frac,
+                                     False)
 
         
     def dispatch_colormap(self):

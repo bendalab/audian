@@ -263,7 +263,7 @@ class DataBrowser(QWidget):
             
             # spectrogram:
             # takes a long time:
-            spec = SpecItem(self.data, c, 256, 0.5)
+            spec = SpecItem(self.data, c)
             self.specs.append(spec)
             axs = SpectrumPlot(c, xwidth, starttime, spec.fmax)
             axs.addItem(spec)
@@ -389,7 +389,7 @@ class DataBrowser(QWidget):
         self.toolbar.addSeparator()
         self.nfftw = QComboBox(self)
         self.nfftw.setToolTip('NFFT (R, Shift+R)')
-        self.nfftw.addItems([f'{2**i}' for i in range(4, 16)])
+        self.nfftw.addItems([f'{2**i}' for i in range(3, 20)])
         self.nfftw.setEditable(False)
         self.nfftw.setCurrentText(f'{self.specs[self.current_channel].nfft}')
         self.nfftw.currentTextChanged.connect(lambda s: self.set_resolution(nfft=int(s)))
@@ -1089,41 +1089,40 @@ class DataBrowser(QWidget):
             return
         self.setting = True
         if not isinstance(nfft, list):
-            nfft = [nfft] * (np.max(self.selected_channels) + 1)
+            nfft = [nfft]*self.data.channels
         if not isinstance(step_frac, list):
-            step_frac = [step_frac] * (np.max(self.selected_channels) + 1)
+            step_frac = [step_frac]*self.data.channels
         for c in self.selected_channels:
-            # TODO: this should go to Data:
-            self.specs[c].set_resolution(nfft[c], step_frac[c],
-                                         self.isVisible())
-        self.nfftw.setCurrentText(f'{self.specs[self.current_channel].nfft}')
+            self.data.set_resolution(c, nfft[c], step_frac[c])
+        self.nfftw.setCurrentText(f'{self.data.nfft[self.current_channel]}')
+        for c in range(self.data.channels):
+            self.specs[c].update_spectrum()
         self.setting = False
         if dispatch:
             self.sigResolutionChanged.emit()
 
         
-    # TODO: the nfft and step_frac functions should go to Data:
     def freq_resolution_down(self):
         for c in self.selected_channels:
-            self.specs[c].freq_resolution_down()
+            self.data.freq_resolution_down(c)
         self.set_resolution()
 
         
     def freq_resolution_up(self):
         for c in self.selected_channels:
-            self.specs[c].freq_resolution_up()
+            self.data.freq_resolution_up(c)
         self.set_resolution()
 
 
     def step_frac_down(self):
         for c in self.selected_channels:
-            self.specs[c].step_frac_down()
+            self.data.step_frac_down(c)
         self.set_resolution()
 
 
     def step_frac_up(self):
         for c in self.selected_channels:
-            self.specs[c].step_frac_up()
+            self.data.step_frac_up(c)
         self.set_resolution()
 
         
@@ -1146,9 +1145,9 @@ class DataBrowser(QWidget):
     def set_power(self, zmin=None, zmax=None, dispatch=True):
         self.setting = True
         if not isinstance(zmin, list):
-            zmin = [zmin] * (np.max(self.selected_channels) + 1)
+            zmin = [zmin]*self.data.channels
         if not isinstance(zmax, list):
-            zmax = [zmax] * (np.max(self.selected_channels) + 1)
+            zmax = [zmax]*self.data.channels
         for c in self.selected_channels:
             self.specs[c].set_power(zmin[c], zmax[c])
         self.setting = False
@@ -1279,6 +1278,9 @@ class DataBrowser(QWidget):
         in spectrum plots.
 
         """
+        if self.setting:
+            return
+        self.setting = True
         if channel is None or channel in self.selected_channels:
             for c in self.selected_channels:
                 self.data.set_filter(highpass_cutoff,
@@ -1290,6 +1292,7 @@ class DataBrowser(QWidget):
         else:
             self.data.set_filter(highpass_cutoff,
                                  lowpass_cutoff, channel)
+        self.setting = False
         self.sigFilterChanged.emit()  # dispatch
 
 
