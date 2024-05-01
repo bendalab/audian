@@ -1,18 +1,16 @@
+"""TraceItem
+
+## TODO
+
+- Move filter variables and related functions to Data class.
+"""
+
 from math import fabs, floor, ceil
 import numpy as np
 import scipy.signal as sig
+from numba import jit
 from PyQt5.QtWidgets import QApplication
 import pyqtgraph as pg
-
-has_numba = False
-try:
-    from numba import jit
-    has_numba = True
-except ImportError:
-    def jit(*args, **kwargs):
-        def decorator_jit(func):
-            return func
-        return decorator_jit
 
 
 @jit(nopython=True)
@@ -25,20 +23,18 @@ def down_sample_peak(data, step):
         ddata[2*k+1] = np.max(dd)
     return ddata
 
-    
+
 class TraceItem(pg.PlotDataItem):
     
-    def __init__(self, data, rate, channel, *args, color='#00ee00', **kwargs):
-        self.data = data
-        self.rate = rate
+    def __init__(self, data, channel, *args, color='#00ee00', **kwargs):
+        # TODO: add a flag selecting whether to who filtered, unfiltered or both
+        self.data = data.filtered
+        self.rate = self.data.rate
         self.channel = channel
         self.step = 1
         self.color = color
         self.ymin = self.data.ampl_min
         self.ymax = self.data.ampl_max
-        self.highpass_cutoff = None
-        self.lowpass_cutoff = None
-        self.sos = None
         
         pg.PlotDataItem.__init__(self, *args, connect='all',
                                  antialias=False, skipFiniteCheck=True,
@@ -58,10 +54,10 @@ class TraceItem(pg.PlotDataItem):
 
         
     def viewRangeChanged(self):
-        self.updateTrace()
+        self.update_trace()
     
 
-    def updateTrace(self):
+    def update_trace(self):
         vb = self.getViewBox()
         if not isinstance(vb, pg.ViewBox):
             return
@@ -84,19 +80,11 @@ class TraceItem(pg.PlotDataItem):
             i = 0
             nb = int(60*self.rate//self.step)*self.step
             for dd in self.data.blocks(nb, 0, start, stop):
-                db = dd[:, self.channel]
-                if self.sos is not None:
-                    # TODO: extend data!!!
-                    db = sig.sosfiltfilt(self.sos, db)
-                if has_numba:
-                    dsd = down_sample_peak(db, self.step)
-                    data[i:i+len(dsd)] = dsd
-                    i += len(dsd)
-                #else:
-                #    data = np.array([(np.min(self.data[start+k*self.step:start+(k+1)*self.step, self.channel]), np.max(self.data[start+k*self.step:start+(k+1)*self.step, self.channel])) for k in range(n)]).reshape((-1))
+                dsd = down_sample_peak(dd[:, self.channel], self.step)
+                data[i:i+len(dsd)] = dsd
+                i += len(dsd)
             time = np.arange(start, start + len(data)*step2, step2)/self.rate
-            #print('T', time[0], time[-1])
-            self.setData(time, data) #, connect='pairs')???
+            self.setData(time, data)
         elif self.step > 1:  # TODO: not used
             # subsample:
             self.setData(np.arange(start, stop, self.step)/self.rate,
@@ -179,23 +167,3 @@ class TraceItem(pg.PlotDataItem):
         self.ymin = -dy/2
         self.ymax = +dy/2
 
-
-    def set_filter(self, highpass_cutoff, lowpass_cutoff):
-        if highpass_cutoff is not None:
-            self.highpass_cutoff = highpass_cutoff
-        if lowpass_cutoff is not None:
-            self.lowpass_cutoff = lowpass_cutoff
-        if self.highpass_cutoff < 1e-8 and \
-           self.lowpass_cutoff >= self.rate/2-1e-8:
-            self.sos = None
-        elif self.highpass_cutoff < 1e-8:
-            self.sos = sig.butter(2, self.lowpass_cutoff,
-                                  'lowpass', fs=self.rate, output='sos')
-        elif self.lowpass_cutoff >= self.rate/2-1e-8:
-            self.sos = sig.butter(2, self.highpass_cutoff,
-                                  'highpass', fs=self.rate, output='sos')
-        else:
-            self.sos = sig.butter(2, (self.highpass_cutoff, self.lowpass_cutoff),
-                                  'bandpass', fs=self.rate, output='sos')
-        self.updateTrace()
-        

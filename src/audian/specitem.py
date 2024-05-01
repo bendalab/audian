@@ -7,12 +7,12 @@ import pyqtgraph as pg
 
 class SpecItem(pg.ImageItem):
     
-    def __init__(self, data, rate, channel, nfft, *args, **kwargs):
+    def __init__(self, data, channel, nfft, *args, **kwargs):
         pg.ImageItem.__init__(self, **kwargs)
         self.setOpts(axisOrder='row-major')
         
-        self.data = data
-        self.rate = rate
+        self.data = data.data  # or data.filtered?
+        self.rate = self.data.rate
         self.channel = channel
         self.offset = -1
         self.buffer_size = 0

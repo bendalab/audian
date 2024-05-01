@@ -14,7 +14,7 @@ from .databrowser import DataBrowser
 
 
 class Audian(QMainWindow):
-    def __init__(self, file_paths, channels, high_pass, low_pass,
+    def __init__(self, file_paths, channels, highpass_cutoff, lowpass_cutoff,
                  unwrap, unwrap_clip):
         super().__init__()
 
@@ -25,8 +25,8 @@ class Audian(QMainWindow):
         self.prev_browser = None   # for load_data()
 
         self.channels = channels
-        self.high_pass = high_pass
-        self.low_pass = low_pass
+        self.highpass_cutoff = highpass_cutoff
+        self.lowpass_cutoff = lowpass_cutoff
         
         self.audio = PlayAudio()
 
@@ -572,11 +572,11 @@ class Audian(QMainWindow):
         
     def dispatch_filter(self):
         if self.link_filter:
-            highpass_cutoff = [t.highpass_cutoff for t in self.browser().traces]
-            lowpass_cutoff = [t.lowpass_cutoff for t in self.browser().traces]
+            highpass_cutoffs = self.browser().data.highpass_cutoffs
+            lowpass_cutoffs = self.browser().data.lowpass_cutoffs
             for b in self.browsers:
                 if not b is self.browser():
-                    b.set_filter(highpass_cutoff, lowpass_cutoff)
+                    b.set_filter(highpass_cutoffs, lowpass_cutoffs)
 
 
     def setup_spectrogram_actions(self, menu):
@@ -1045,14 +1045,16 @@ class Audian(QMainWindow):
     def load_data(self):
         for browser in self.browsers:
             if browser.data is None:
-                browser.open(self, self.unwrap, self.unwrap_clip)
+                browser.open(self, self.unwrap, self.unwrap_clip,
+                             self.highpass_cutoff, self.lowpass_cutoff)
                 if browser.data is None:
                     self.tabs.removeTab(self.tabs.indexOf(browser))
                     self.browsers.remove(browser)
                     QMessageBox.critical(self, 'Error', f'''
 Can not open file <b>{browser.file_path}</b>!''')
                     break
-                self.tabs.setTabText(self.tabs.indexOf(browser), os.path.basename(browser.file_path))
+                self.tabs.setTabText(self.tabs.indexOf(browser),
+                                     os.path.basename(browser.file_path))
                 for b in self.browsers:
                     if not b.data is None and \
                        b.data.channels != browser.data.channels:
@@ -1068,7 +1070,6 @@ Can not open file <b>{browser.file_path}</b>!''')
                 browser.sigFilterChanged.connect(self.dispatch_filter)
                 browser.sigPowerChanged.connect(self.dispatch_power)
                 browser.sigAudioChanged.connect(self.dispatch_audio)
-                browser.init_filter(self.high_pass, self.low_pass)
                 browser.set_times(enable_starttime=self.acts.toggle_start_time.isChecked(), dispatch=False)
                 pb = self.browser() if self.prev_browser is None else self.prev_browser
                 if self.link_panels:
@@ -1152,16 +1153,20 @@ def main(cargs):
     parser.add_argument('--version', action='version', version=__version__)
     parser.add_argument('-v', action='count', dest='verbose',
                         help='Print debug information')
-    parser.add_argument('--config', nargs='?', default='', const=cfgfile, type=str, metavar='CFGFILE',
+    parser.add_argument('--config', nargs='?', default='',
+                        const=cfgfile, type=str, metavar='CFGFILE',
                         help='Save configuration to file cfgfile (defaults to {0})'.format(cfgfile))
     parser.add_argument('-c', dest='channels', default='',
                         type=str, metavar='CHANNELS',
                         help='Comma separated list of channels to be displayed (first channel is 0).')
-    parser.add_argument('-f', dest='high_pass', type=float, metavar='FREQ', default=None,
+    parser.add_argument('-f', dest='highpass_cutoff', type=float,
+                        metavar='FREQ', default=None,
                         help='Cutoff frequency of highpass filter in Hz')
-    parser.add_argument('-l', dest='low_pass', type=float, metavar='FREQ', default=None,
+    parser.add_argument('-l', dest='lowpass_cutoff', type=float,
+                        metavar='FREQ', default=None,
                         help='Cutoff frequency of lowpass filter in Hz')
-    parser.add_argument('files', nargs='*', default=[], type=str, help='name of the file with the time series data')
+    parser.add_argument('files', nargs='*', default=[], type=str,
+                        help='name of the file with the time series data')
     parser.add_argument('-u', dest='unwrap', default=0, type=float,
                         metavar='UNWRAP', const=1.5, nargs='?',
                         help='unwrap clipped data with threshold relative to maximum input range and divide by two using unwrap() from audioio package')
@@ -1188,8 +1193,8 @@ def main(cargs):
         args.unwrap_clip = False
     
     app = QApplication(sys.argv[:1] + qt_args)
-    main = Audian(args.files, channels, args.high_pass, args.low_pass,
-                  args.unwrap, args.unwrap_clip)
+    main = Audian(args.files, channels, args.highpass_cutoff,
+                  args.lowpass_cutoff, args.unwrap, args.unwrap_clip)
     main.show()
     app.exec_()
 

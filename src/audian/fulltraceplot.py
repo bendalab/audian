@@ -3,6 +3,7 @@
 ## TODO
 - secs_to_str and secs_format to extra module or even thunderlab?
 - Have a class for a single channel that we could add to the toolbar.
+- Only use Data class
 """
 
 from math import floor, fabs

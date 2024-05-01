@@ -138,13 +138,13 @@ class SpectrumPlot(pg.PlotItem):
 
 
     def highpass_changed(self):
-        self.set_filter(highpass_cutoff=self.highpass_handle.value())
+        self.highpass_cutoff = self.highpass_handle.value()
         self.sigUpdateFilter.emit(self.channel, self.highpass_cutoff,
                                   self.lowpass_cutoff)
         
 
     def lowpass_changed(self):
-        self.set_filter(lowpass_cutoff=self.lowpass_handle.value())
+        self.lowpass_cutoff = self.lowpass_handle.value()
         self.sigUpdateFilter.emit(self.channel, self.highpass_cutoff,
                                   self.lowpass_cutoff)
 
