@@ -4,7 +4,6 @@
 
 from math import fabs, floor, ceil
 import numpy as np
-import scipy.signal as sig
 from numba import jit
 from PyQt5.QtWidgets import QApplication
 import pyqtgraph as pg
@@ -26,7 +25,7 @@ class TraceItem(pg.PlotDataItem):
     def __init__(self, data, channel, *args, color='#00ee00', **kwargs):
         # TODO: add a flag selecting whether to who filtered, unfiltered or both
         self.data = data.filtered
-        self.rate = self.data.rate
+        self.rate = self.data.samplerate
         self.channel = channel
         self.step = 1
         self.color = color

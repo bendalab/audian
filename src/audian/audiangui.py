@@ -552,8 +552,6 @@ class Audian(QMainWindow):
         
     def dispatch_resolution(self):
         if self.link_frequency:
-            nfft = [s.nfft for s in self.browser().specs]
-            sfrac = [s.step_frac for s in self.browser().specs]
             for b in self.browsers:
                 if not b is self.browser():
                     b.set_resolution(self.browser().data.nfft,
@@ -574,8 +572,8 @@ class Audian(QMainWindow):
         
     def dispatch_filter(self):
         if self.link_filter:
-            highpass_cutoffs = self.browser().data.highpass_cutoffs
-            lowpass_cutoffs = self.browser().data.lowpass_cutoffs
+            highpass_cutoffs = self.browser().data.highpass_cutoff
+            lowpass_cutoffs = self.browser().data.lowpass_cutoff
             for b in self.browsers:
                 if not b is self.browser():
                     b.set_filter(highpass_cutoffs, lowpass_cutoffs)
@@ -1010,7 +1008,7 @@ class Audian(QMainWindow):
                 formats.remove(f)
                 formats.insert(0, f)
         filters = ['All files (*)'] + [f'{f} files (*.{f}, *.{f.lower()})' for f in formats]
-        path = '.' if self.startup_active else os.path.dirname(self.browser().file_path)
+        path = '.' if self.startup_active else os.path.dirname(self.browser().data.file_path)
         if len(path) == 0:
             path = '.'
         file_paths = QFileDialog.getOpenFileNames(self, directory=path, filter=';;'.join(filters))[0]
@@ -1046,7 +1044,7 @@ class Audian(QMainWindow):
             
     def load_data(self):
         for browser in self.browsers:
-            if browser.data is None:
+            if browser.data.data is None:
                 browser.open(self, self.unwrap, self.unwrap_clip,
                              self.highpass_cutoff, self.lowpass_cutoff)
                 if browser.data is None:
@@ -1056,7 +1054,7 @@ class Audian(QMainWindow):
 Can not open file <b>{browser.file_path}</b>!''')
                     break
                 self.tabs.setTabText(self.tabs.indexOf(browser),
-                                     os.path.basename(browser.file_path))
+                                     os.path.basename(browser.data.file_path))
                 for b in self.browsers:
                     if not b.data is None and \
                        b.data.channels != browser.data.channels:

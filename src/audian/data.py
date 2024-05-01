@@ -10,6 +10,7 @@ and the time window shown.
 
 import numpy as np
 from scipy.signal import spectrogram
+from scipy.signal import butter, sosfiltfilt
 from audioio import get_datetime
 from audioio import BufferArray
 from thunderlab.dataloader import DataLoader
@@ -62,10 +63,10 @@ class Data(object):
         # filter:
         if self.filtered is not None and self.filtered is not self.data:
             self.filtered.update_buffer(offset, offset + size)
-        # spectrum:    
+        # spectrum:
         if len(self.data.buffer) == 0 or \
            (self.offset == self.data.offset and \
-            self.buffer_size == len(self.data.buffer):
+            self.buffer_size == len(self.data.buffer)):
             return
         self.spec_update[:] = True
         self.update_spectra()
@@ -93,9 +94,9 @@ class Data(object):
         else:
             self.highpass_cutoff = [highpass_cutoff]*self.channels
         if lowpass_cutoff is None:
-            self.lowpass_cutoff = [lowpass_cutoff]*self.channels
-        else:
             self.lowpass_cutoff = [self.rate/2]*self.channels
+        else:
+            self.lowpass_cutoff = [lowpass_cutoff]*self.channels
         self.filter_order = [2]*self.channels
         self.sos = [None]*self.channels
         self.filtered = self.data
@@ -123,6 +124,7 @@ class Data(object):
         self.use_spec = np.ones(self.channels, dtype=bool)
         self.spec_update = np.ones(self.channels, dtype=bool)
         # load data, apply filter, and compute spectrograms:
+        self.data.allocate_buffer()
         self.data.reload_buffer()
 
         
@@ -219,8 +221,9 @@ class Data(object):
             if self.sos[c] is None:
                 buffer[:, c] = self.data[offset:offset + nframes, c]
             else:
-                buffer[:, c] = sig.sosfiltfilt(self.sos[c],
-                                               self.data[offset:offset + nframes, c])
+                buffer[:, c] = sosfiltfilt(self.sos[c],
+                                           self.data[offset:offset
+                                                     + nframes, c])
 
 
     def make_filter(self, channel):
@@ -228,24 +231,24 @@ class Data(object):
            self.lowpass_cutoff[channel] >= self.rate/2 - 1e-8:
             self.sos[channel] = None
         elif self.highpass_cutoff[channel] < 1e-8:
-            self.sos[channel] = sig.butter(self.filter_order[channel],
-                                           self.lowpass_cutoff[channel],
-                                           'lowpass', fs=self.rate,
-                                           output='sos')
+            self.sos[channel] = butter(self.filter_order[channel],
+                                       self.lowpass_cutoff[channel],
+                                       'lowpass', fs=self.rate,
+                                       output='sos')
         elif self.lowpass_cutoff[channel] >= self.rate/2-1e-8:
-            self.sos[channel] = sig.butter(self.filter_order[channel],
-                                           self.highpass_cutoff[channel],
-                                           'highpass', fs=self.rate,
-                                           output='sos')
+            self.sos[channel] = butter(self.filter_order[channel],
+                                       self.highpass_cutoff[channel],
+                                       'highpass', fs=self.rate,
+                                       output='sos')
         else:
-            self.sos[channel] = sig.butter(self.filter_order[channel],
-                                           (self.highpass_cutoff[channel],
-                                            self.lowpass_cutoff[channel]),
-                                           'bandpass', fs=self.rate,
-                                           output='sos')
+            self.sos[channel] = butter(self.filter_order[channel],
+                                       (self.highpass_cutoff[channel],
+                                        self.lowpass_cutoff[channel]),
+                                       'bandpass', fs=self.rate,
+                                       output='sos')
 
         
-    def set_filter(self, highpass_cutoffs=None, lowpass_cutoffs=None,
+    def set_filter(self, highpass_cutoff=None, lowpass_cutoff=None,
                    channel=None):
         do_filter = False
         if channel is None:
@@ -279,8 +282,9 @@ class Data(object):
                                             self.data.frames,
                                             self.data.ampl_min,
                                             self.data.ampl_max,
-                                            self.buffersize,
-                                            self.backsize)
+                                            self.data.buffersize,
+                                            self.data.backsize)
+                self.filtered.allocate_buffer()
                 self.filtered.load_buffer = self.filter_buffer
             self.filtered.reload_buffer()
             # still need to update plots!
@@ -311,7 +315,7 @@ class Data(object):
 
 
     def set_resolution(self, channel, nfft=None, step_frac=None):
-        if nnft is not None:
+        if nfft is not None:
             if nfft < 8:
                 nfft = 8
             if nfft > 2**30:
@@ -330,7 +334,7 @@ class Data(object):
         if self.step[channel] != step:
             self.step[channel] = step
             self.spec_update[channel] = True
-        self.tresolution[channel] = self.step/self.rate
+        self.tresolution[channel] = self.step[channel]/self.rate
         self.fresolution[channel] = self.rate/self.nfft[channel]
 
 

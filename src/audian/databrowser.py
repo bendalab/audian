@@ -200,8 +200,8 @@ class DataBrowser(QWidget):
         self.selected_channels = list(range(self.data.channels))
 
         # load data:
-        locs, labels = self.data.markers()
-        self.marker_data.set_markers(locs, labels, self.rate)
+        locs, labels = self.data.data.markers()
+        self.marker_data.set_markers(locs, labels, self.data.rate)
         if len(labels) > 0:
             lbls = np.unique(labels[:,0])
             for i, l in enumerate(lbls):
@@ -262,10 +262,10 @@ class DataBrowser(QWidget):
             self.borders.append(border)
             
             # spectrogram:
-            # takes a long time:
             spec = SpecItem(self.data, c)
             self.specs.append(spec)
-            axs = SpectrumPlot(c, xwidth, starttime, spec.fmax)
+            axs = SpectrumPlot(c, xwidth, self.data.start_time,
+                               spec.fmax)
             axs.addItem(spec)
             labels = []
             for l in self.marker_labels:
@@ -391,7 +391,7 @@ class DataBrowser(QWidget):
         self.nfftw.setToolTip('NFFT (R, Shift+R)')
         self.nfftw.addItems([f'{2**i}' for i in range(3, 20)])
         self.nfftw.setEditable(False)
-        self.nfftw.setCurrentText(f'{self.specs[self.current_channel].nfft}')
+        self.nfftw.setCurrentText(f'{self.data.nfft[self.current_channel]}')
         self.nfftw.currentTextChanged.connect(lambda s: self.set_resolution(nfft=int(s)))
         self.toolbar.addWidget(self.nfftw)
         self.toolbar.addSeparator()
@@ -433,8 +433,8 @@ class DataBrowser(QWidget):
             for c, tl in enumerate(self.trace_labels):
                 ds = ts if ts else ls
                 t0 = t1 - ddt
-                idx0 = int(t0*self.rate)
-                idx1 = int(t1*self.rate)
+                idx0 = int(t0*self.data.rate)
+                idx1 = int(t1*self.data.rate)
                 if ddt > 0:
                     region = pg.LinearRegionItem((t0, t1),
                                                  orientation='vertical',
@@ -604,7 +604,7 @@ class DataBrowser(QWidget):
                                       (self.marker_ampl,),
                                        tip=marker_tip)
                 else:
-                    tidx = int(self.marker_time*self.rate)
+                    tidx = int(self.marker_time*self.data.rate)
                     tl[lidx].addPoints((self.marker_time,),
                                        (self.data[tidx, c],),
                                        tip=marker_tip)
@@ -953,7 +953,7 @@ class DataBrowser(QWidget):
         if axt is None:
             return
         rect = axt.getViewBox().viewRect()
-        toffs = self.toffset
+        toffs = self.data.toffset
         if toffs > rect.left():
             toffs = rect.left()
         if self.data.time_backward(toffs):
@@ -1234,8 +1234,8 @@ class DataBrowser(QWidget):
         if lowpass_cutoff >= 1.0:
             step = 0.5*10**(floor(log10(lowpass_cutoff)))
         lowpass_cutoff += step
-        if lowpass_cutoff > self.rate/2:
-            lowpass_cutoff = self.rate/2
+        if lowpass_cutoff > self.data.rate/2:
+            lowpass_cutoff = self.data.rate/2
         self.update_filter(self.current_channel, None, lowpass_cutoff,
                            True)
 
@@ -1264,6 +1264,7 @@ class DataBrowser(QWidget):
         self.setting = True
         self.data.set_filter(highpass_cutoffs, lowpass_cutoffs)
         for c in range(self.data.channels):
+            self.traces[c].update_trace()
             # update handle positions:
             cf = c if c < len(highpass_cutoffs) else -1
             self.axspecs[c].set_filter(highpass_cutoffs[cf],
@@ -1284,6 +1285,7 @@ class DataBrowser(QWidget):
             for c in self.selected_channels:
                 self.data.set_filter(highpass_cutoff,
                                      lowpass_cutoff, c)
+                self.traces[c].update_trace()
                 if c != channel or set_spec:
                     # update handle positions:
                     self.axspecs[c].set_filter(highpass_cutoff,
@@ -1291,6 +1293,7 @@ class DataBrowser(QWidget):
         else:
             self.data.set_filter(highpass_cutoff,
                                  lowpass_cutoff, channel)
+            self.traces[channel].update_trace()
         self.setting = False
         self.sigFilterChanged.emit()  # dispatch
 
@@ -1640,11 +1643,11 @@ class DataBrowser(QWidget):
 
         
     def scroll_further(self):
-        if self.toffset + self.twindow > self.tmax:
+        if self.data.toffset + self.data.twindow > self.data.tmax:
             self.scroll_timer.stop()
             self.scroll_step /= 2
         else:
-            self.set_times(self.toffset + self.twindow*self.scroll_step)
+            self.set_times(self.data.toffset + self.data.twindow*self.scroll_step)
 
 
     def set_audio(self, rate_fac=None,
@@ -1667,17 +1670,17 @@ class DataBrowser(QWidget):
 
 
     def play_region(self, t0, t1):
-        rate = self.rate
+        rate = self.data.rate
         i0 = int(np.round(t0*rate))
         i1 = int(np.round(t1*rate))
-        if i1 > len(self.data):
-            i1 = len(self.data)
+        if i1 > len(self.data.data):
+            i1 = len(self.data.data)
             t1 = i1/rate
         n2 = (len(self.selected_channels)+1)//2
         playdata = np.zeros((i1-i0, min(2, len(self.selected_channels))))
-        playdata[:,0] = np.mean(self.data[i0:i1, self.selected_channels[:n2]], 1)
+        playdata[:,0] = np.mean(self.data.data[i0:i1, self.selected_channels[:n2]], 1)
         if len(self.selected_channels) > 1:
-            playdata[:,1] = np.mean(self.data[i0:i1, self.selected_channels[n2:]], 1)
+            playdata[:,1] = np.mean(self.data.data[i0:i1, self.selected_channels[n2:]], 1)
         if self.audio_use_heterodyne:
             # multiply with heterodyne frequency:
             heterodyne = np.sin(2*np.pi*self.audio_heterodyne_freq*np.arange(len(playdata))/rate)
@@ -1685,7 +1688,7 @@ class DataBrowser(QWidget):
             # low-pass filter and downsample:
             fcutoff = 20000.0
             sos = butter(2, 20000, 'low', output='sos', fs=rate)
-            nstep = int(np.round(self.rate/(2*fcutoff)))
+            nstep = int(np.round(self.data.rate/(2*fcutoff)))
             if nstep < 1:
                 nstep = 1
             playdata = sosfiltfilt(sos, playdata, 0)[::nstep]
@@ -1744,9 +1747,9 @@ class DataBrowser(QWidget):
             else:
                 return msecs
 
-        i0 = int(np.round(t0*self.rate))
-        i1 = int(np.round(t1*self.rate))
-        name = os.path.splitext(os.path.basename(self.file_path))[0]
+        i0 = int(np.round(t0*self.data.rate))
+        i1 = int(np.round(t1*self.data.rate))
+        name = os.path.splitext(os.path.basename(self.data.file_path))[0]
         #if self.channel > 0:
         #    filename = f'{name}-{channel:d}-{t0:.4g}s-{t1s:.4g}s.wav'
         t0s = secs_to_str(t0)
@@ -1758,31 +1761,34 @@ class DataBrowser(QWidget):
                 formats.remove(f)
                 formats.insert(0, f)
         filters = ['All files (*)'] + [f'{f} files (*.{f}, *.{f.lower()})' for f in formats]
-        file_path = os.path.join(os.path.dirname(self.file_path), file_name)
+        file_path = os.path.join(os.path.dirname(self.data.file_path), file_name)
         file_path = QFileDialog.getSaveFileName(self, 'Save region as',
                                                 file_path,
                                                 ';;'.join(filters))[0]
         if file_path:
-            md = deepcopy(self.data.metadata())
-            update_starttime(md, t0, self.rate)
+            md = deepcopy(self.data.data.metadata())
+            update_starttime(md, t0, self.data.rate)
             hkey = 'CodingHistory'
             if 'BEXT' in md:
                 hkey = 'BEXT.' + hkey
-            bext_code = bext_history_str(self.data.encoding,
-                                         self.rate, self.data.channels)
-            add_history(md, bext_code + f',T=cut out {t0s}-{t1s}: {os.path.basename(file_path)}', hkey, bext_code + f',T={self.file_path}')
-            locs, labels = self.marker_data.get_markers(self.rate)
+            bext_code = bext_history_str(self.data.data.encoding,
+                                         self.data.rate, self.data.channels)
+            add_history(md, bext_code + f',T=cut out {t0s}-{t1s}: {os.path.basename(file_path)}', hkey, bext_code + f',T={self.data.file_path}')
+            locs, labels = self.marker_data.get_markers(self.data.rate)
             sel = (locs[:,0] + locs[:,1] >= i0) & (locs[:,0] <= i1)
             locs = locs[sel]
             labels = labels[sel]
             try:
-                write_data(file_path, self.data[i0:i1,self.selected_channels],
-                           self.rate, self.data.ampl_max, self.data.unit,
-                           md, locs, labels, encoding=self.data.encoding)
+                write_data(file_path,
+                           self.data.data[i0:i1, self.selected_channels],
+                           self.data.rate, self.data.data.ampl_max,
+                           self.data.data.unit, md, locs, labels,
+                           encoding=self.data.data.encoding)
                 print(f'saved region to "{os.path.relpath(file_path)}"')
             except PermissionError as e:
                 print(f'failed to save region to "{os.path.relpath(file_path)}": permission denied')
 
         
     def save_window(self):
-        self.save_region(self.toffset, self.toffset + self.twindow)
+        self.save_region(self.data.toffset, self.data.toffset +
+                         self.data.twindow)

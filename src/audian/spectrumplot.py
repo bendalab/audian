@@ -51,7 +51,7 @@ class SpectrumPlot(pg.PlotItem):
         self.getViewBox().setDefaultPadding(padding=0.0)
 
         # ranges:
-        self.setLimits(xMin=0, yMin=0.0, yMax=fmax,
+        self.setLimits(yMin=0.0, yMax=fmax,
                        minYRange=0.1, maxYRange=fmax)
 
         # functionality:
