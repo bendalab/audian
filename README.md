@@ -6,34 +6,23 @@
 Python-based GUI for viewing and analyzing recordings of animal
 vocalizations.
 
-Simply run it from a terminal:
-``` sh
-audian data.wav
-```
+## New pyqtgraph based version
 
-or call it from a script (see `runfile.py`):
-
-``` py
-import audian
-
-filepath = 'data.wav'
-high_pass = 500.0
-audian.main(['-f', f'{high_pass}', filepath])
-```
-
-## audiangui
-
-Still experimental new implementation of `audian` based on
-[pyqtgraph](https://pyqtgraph.readthedocs.io):
+New implementation of `audian` based on
+[pyqtgraph](https://pyqtgraph.readthedocs.io).
 
 ``` sh
 audiangui data.wav
 ```
 
-I currently explore various possibilities for interactive analysis
-of audio signals. Here an incomplete list of ToDos:
+I currently explore various possibilities for interactive analysis of
+audio signals. In the end, audian should be easily extensible via
+plugins that provide processing and analysis algorithms, and audian
+handles all GUI aspects.
 
-- Handle all data in one class
+### Incomplete list of ToDos:
+
+- Handle all data in one class!
 - Implement a proper layout for showing the plot panels, allowing also for
   an optional grid layout.
 - FullTracePlot:
@@ -43,7 +32,7 @@ of audio signals. Here an incomplete list of ToDos:
   - high- and low-pass filter lines must not cross! Update limits.
   - databrowser should provide the filtered traces to both traceitems and specitems.
   - filter original signal in trace plot and spectrogram plot.
-  - play should filter its data on its own.
+  - play should filter its data on its own?
   - add a toolbar widget for setting filter order.
 - Improve downsampling and filtering of traces
 - Implement downsampling of spectrograms! Or make it even dependent on window size.
@@ -73,9 +62,44 @@ of audio signals. Here an incomplete list of ToDos:
     - Plotted as lines on top of data.
     - Result from some analysis.
     - But should be editable.
-- Define interface for analysis on full data, visible range, selected range.
+- Define plugin interfaces for analysis on full data, visible range,
+  selected range.
 - Have a dockable sidebar for showing metadata, cue tables etc.
 
+
+### Structure
+
+- `audiangui.py`: Main GUI, handles DataBrowser widgets and key shortcuts.
+- `databrowser.py`: Each data file is displayed in a DataBrowser widget.
+- `fulltraceplot.py`: GraphicsLayoutWidget showing the full raw data traces.
+- `oscillogramplot.py`: PlotItem for plotting traces. Does not use data.
+- `traceitem.py`: PlotDataItem for OscillogramPlot.
+   Handles trace data and filtering.
+   Provides `down_sample_peak()`.
+- `spectrumplot.py`: PlotItem for spectrograms. Does not use data.
+- `specitem.py`: ImageItem for SpectrumPlot. Computes spectrogram from data.
+- `selectviewbox.py`: Handles zooming and selection on OscillogramPlot
+  and SpectrumPlot.
+- `timeaxisitem.py`: Label time-axis of OscillogramPlot and SpectrumPlot.
+- `yaxisitem.py`: Label y-axis of OscillogramPlot and SpectrumPlot.
+- `markerdata.py`: All marker related stuff. Split it into widgets and marker data.
+
+## Old matplotlib-based version
+
+Simply run it from a terminal:
+``` sh
+audian data.wav
+```
+
+or call it from a script (see `runfile.py`):
+
+``` py
+import audian
+
+filepath = 'data.wav'
+high_pass = 500.0
+audian.main(['-f', f'{high_pass}', filepath])
+```
 
 ### Installation of audiangui in Anaconda3 on windows
 

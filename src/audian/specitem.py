@@ -1,44 +1,8 @@
 import numpy as np
 from scipy.signal import spectrogram
+from thunderlab.powerspectrum import decibel
 from PyQt5.QtCore import QRectF
 import pyqtgraph as pg
-
-
-def decibel(power, ref_power=1.0, min_power=1e-20):
-    """Transform power to decibel relative to ref_power.
-
-    \\[ decibel = 10 \\cdot \\log_{10}(power/ref\\_power) \\]
-    Power values smaller than `min_power` are set to `-np.inf`.
-
-    Parameters
-    ----------
-    power: float or array
-        Power values, for example from a power spectrum or spectrogram.
-    ref_power: float or None or 'peak'
-        Reference power for computing decibel.
-        If set to `None` or 'peak', the maximum power is used.
-    min_power: float
-        Power values smaller than `min_power` are set to `-np.inf`.
-
-    Returns
-    -------
-    decibel_psd: array
-        Power values in decibel relative to `ref_power`.
-    """
-    if isinstance(power, (list, tuple, np.ndarray)):
-        tmp_power = power
-        decibel_psd = power.copy()
-    else:
-        tmp_power = np.array([power])
-        decibel_psd = np.array([power])
-    if ref_power is None or ref_power == 'peak':
-        ref_power = np.max(decibel_psd)
-    decibel_psd[tmp_power <= min_power] = float('-inf')
-    decibel_psd[tmp_power > min_power] = 10.0 * np.log10(decibel_psd[tmp_power > min_power]/ref_power)
-    if isinstance(power, (list, tuple, np.ndarray)):
-        return decibel_psd
-    else:
-        return decibel_psd[0]
 
 
 class SpecItem(pg.ImageItem):

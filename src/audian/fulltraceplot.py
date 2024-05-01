@@ -1,3 +1,10 @@
+"""FullTracePlot
+
+## TODO
+- secs_to_str and secs_format to extra module or even thunderlab?
+- Have a class for a single channel that we could add to the toolbar.
+"""
+
 from math import floor, fabs
 import numpy as np
 from PyQt5.QtCore import Qt, QTimer
@@ -136,6 +143,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
         if self.index < len(self.data):
             QTimer.singleShot(10, self.load_data)
         else:
+            # TODO: do we really datas? Couldn't we take it from lines? 
             for c in range(self.data.channels):
                 ymin = np.min(self.datas[:,c])
                 ymax = np.max(self.datas[:,c])
