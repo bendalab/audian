@@ -417,8 +417,7 @@ class DataBrowser(QWidget):
         self.vbox.addWidget(self.toolbar)
         
         # full data:
-        # TODO: only pass data:
-        self.datafig = FullTracePlot(self.data, self.rate, self.axtraces)
+        self.datafig = FullTracePlot(self.data, self.axtraces)
         self.vbox.addWidget(self.datafig)
 
         self.setEnabled(True)

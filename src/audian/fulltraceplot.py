@@ -49,12 +49,11 @@ def secs_format(time):
 class FullTracePlot(pg.GraphicsLayoutWidget):
 
     
-    def __init__(self, data, rate, axtraces, *args, **kwargs):
+    def __init__(self, data, axtraces, *args, **kwargs):
         pg.GraphicsLayoutWidget.__init__(self, *args, **kwargs)
 
-        self.data = data
-        self.rate = rate
-        self.tmax = len(self.data)/self.rate
+        self.data = data.data
+        self.tmax = len(self.data)/self.data.rate
         self.axtraces = axtraces
         self.no_signal = False
 
@@ -109,8 +108,8 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             max_pixel = QApplication.desktop().screenGeometry().width()
             self.step = max(1, len(self.data)//max_pixel)
             self.index = 0
-            self.nblock = int(20.0*self.rate//self.step)*self.step
-            self.times = np.arange(0, len(self.data), self.step/2)/self.rate
+            self.nblock = int(20.0*self.data.rate//self.step)*self.step
+            self.times = np.arange(0, len(self.data), self.step/2)/self.data.rate
             self.datas = np.zeros((len(self.times), self.data.channels))
             
             # add data:
