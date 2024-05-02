@@ -12,7 +12,7 @@ import numpy as np
 from scipy.signal import spectrogram
 from scipy.signal import butter, sosfiltfilt
 from audioio import get_datetime
-from audioio import BufferArray
+from audioio import BufferedArray
 from thunderlab.dataloader import DataLoader
 from thunderlab.powerspectrum import decibel
 
@@ -278,12 +278,13 @@ class Data(object):
                 do_filter = True
         if do_filter:
             if self.filtered is self.data:
-                self.filtered = BufferArray(self.rate, self.channels,
-                                            self.data.frames,
-                                            self.data.ampl_min,
-                                            self.data.ampl_max,
-                                            self.data.bufferframes,
-                                            self.data.backframes)
+                self.filtered = BufferedArray(self.rate,
+                                              self.channels,
+                                              self.data.frames,
+                                              self.data.ampl_min,
+                                              self.data.ampl_max,
+                                              self.data.bufferframes,
+                                              self.data.backframes)
                 self.filtered.allocate_buffer()
                 self.filtered.load_buffer = self.filter_buffer
             self.filtered.reload_buffer()
