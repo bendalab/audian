@@ -264,8 +264,7 @@ class DataBrowser(QWidget):
             # spectrogram:
             spec = SpecItem(self.data, c)
             self.specs.append(spec)
-            axs = SpectrumPlot(c, xwidth, self.data.start_time,
-                               spec.fmax)
+            axs = SpectrumPlot(self.data, c, xwidth, spec.fmax)
             axs.addItem(spec)
             labels = []
             for l in self.marker_labels:

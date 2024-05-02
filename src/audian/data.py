@@ -216,7 +216,8 @@ class Data(object):
                          maxYRange=self.data.ampl_max - self.data.ampl_min)
 
 
-    def filter_buffer(self, offset, nframes, buffer):
+    def filter_buffer(self, offset, nsamples, buffer):
+        nframes = nsamples #// self.channels ???? is offset also in frames?
         for c in range(self.channels):
             if self.sos[c] is None:
                 buffer[:, c] = self.data[offset:offset + nframes, c]
@@ -287,7 +288,7 @@ class Data(object):
                 self.filtered.allocate_buffer()
                 self.filtered.load_buffer = self.filter_buffer
             self.filtered.reload_buffer()
-            # still need to update plots!
+            # still need to update plots?
         elif not do_filter and self.filtered is not self.data:
             self.filtered = self.data
 
