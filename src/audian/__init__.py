@@ -1,5 +1,6 @@
 """
-GUI for viewing biosignals.
+Python-based GUI for viewing and analyzing recordings of animal
+vocalizations.
 """
 
 from .version import __version__

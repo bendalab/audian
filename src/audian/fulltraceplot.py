@@ -1,3 +1,11 @@
+"""FullTracePlot
+
+## TODO
+- secs_to_str and secs_format to extra module or even thunderlab?
+- Have a class for a single channel that we could add to the toolbar.
+- Only use Data class
+"""
+
 from math import floor, fabs
 import numpy as np
 from PyQt5.QtCore import Qt, QTimer
@@ -41,12 +49,11 @@ def secs_format(time):
 class FullTracePlot(pg.GraphicsLayoutWidget):
 
     
-    def __init__(self, data, rate, axtraces, *args, **kwargs):
+    def __init__(self, data, axtraces, *args, **kwargs):
         pg.GraphicsLayoutWidget.__init__(self, *args, **kwargs)
 
-        self.data = data
-        self.rate = rate
-        self.tmax = len(self.data)/self.rate
+        self.data = data.data
+        self.tmax = len(self.data)/self.data.samplerate
         self.axtraces = axtraces
         self.no_signal = False
 
@@ -101,8 +108,8 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             max_pixel = QApplication.desktop().screenGeometry().width()
             self.step = max(1, len(self.data)//max_pixel)
             self.index = 0
-            self.nblock = int(20.0*self.rate//self.step)*self.step
-            self.times = np.arange(0, len(self.data), self.step/2)/self.rate
+            self.nblock = int(20.0*self.data.samplerate//self.step)*self.step
+            self.times = np.arange(0, len(self.data), self.step/2)/self.data.samplerate
             self.datas = np.zeros((len(self.times), self.data.channels))
             
             # add data:
@@ -136,6 +143,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
         if self.index < len(self.data):
             QTimer.singleShot(10, self.load_data)
         else:
+            # TODO: do we really datas? Couldn't we take it from lines? 
             for c in range(self.data.channels):
                 ymin = np.min(self.datas[:,c])
                 ymax = np.max(self.datas[:,c])

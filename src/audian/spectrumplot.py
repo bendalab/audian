@@ -15,7 +15,7 @@ class SpectrumPlot(pg.PlotItem):
     sigUpdateFilter = Signal(object, object, object)
 
 
-    def __init__(self, channel, xwidth, starttime, fmax):
+    def __init__(self, data, channel, xwidth, fmax):
 
         self.channel = channel
 
@@ -29,9 +29,9 @@ class SpectrumPlot(pg.PlotItem):
         bottom_axis.setStyle(showValues=False)
         bottom_axis.setPen('white')
         bottom_axis.setTextPen('black')
-        bottom_axis.setStartTime(starttime)
+        bottom_axis.setStartTime(data.start_time)
         top_axis = TimeAxisItem(orientation='top', showValues=False)
-        top_axis.setStartTime(starttime)
+        top_axis.setStartTime(data.start_time)
         left_axis = YAxisItem(orientation='left', showValues=True)
         left_axis.setLabel('Frequency', 'Hz', color='black')
         left_axis.setPen('white')
@@ -51,7 +51,7 @@ class SpectrumPlot(pg.PlotItem):
         self.getViewBox().setDefaultPadding(padding=0.0)
 
         # ranges:
-        self.setLimits(xMin=0, yMin=0.0, yMax=fmax,
+        self.setLimits(yMin=0.0, yMax=fmax,
                        minYRange=0.1, maxYRange=fmax)
 
         # functionality:
@@ -60,8 +60,8 @@ class SpectrumPlot(pg.PlotItem):
         self.setMenuEnabled(False)
 
         # filter handles:
-        self.highpass_cutoff = 0
-        self.lowpass_cutoff = 0
+        self.highpass_cutoff = data.highpass_cutoff[channel]
+        self.lowpass_cutoff = data.lowpass_cutoff[channel]
         self.highpass_handle = pg.InfiniteLine(angle=0, movable=True)
         self.highpass_handle.setPen(pg.mkPen('white', width=2))
         self.highpass_handle.addMarker('o', position=0.75, size=6)
@@ -138,13 +138,13 @@ class SpectrumPlot(pg.PlotItem):
 
 
     def highpass_changed(self):
-        self.set_filter(highpass_cutoff=self.highpass_handle.value())
+        self.highpass_cutoff = self.highpass_handle.value()
         self.sigUpdateFilter.emit(self.channel, self.highpass_cutoff,
                                   self.lowpass_cutoff)
         
 
     def lowpass_changed(self):
-        self.set_filter(lowpass_cutoff=self.lowpass_handle.value())
+        self.lowpass_cutoff = self.lowpass_handle.value()
         self.sigUpdateFilter.emit(self.channel, self.highpass_cutoff,
                                   self.lowpass_cutoff)
 

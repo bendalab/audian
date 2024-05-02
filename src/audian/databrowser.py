@@ -4,7 +4,6 @@ from math import fabs, ceil, floor, log, log10
 import datetime as dt
 import numpy as np
 from scipy.signal import butter, sosfiltfilt
-import xml.dom.minidom
 try:
     from PyQt5.QtCore import Signal
 except ImportError:
@@ -21,9 +20,9 @@ import pyqtgraph as pg
 from audioio import fade
 from audioio import get_datetime, update_starttime
 from audioio import bext_history_str, add_history
-from thunderlab.dataloader import DataLoader
 from thunderlab.datawriter import available_formats, write_data
 from .version import __version__, __year__
+from .data import Data
 from .fulltraceplot import FullTracePlot, secs_to_str
 from .oscillogramplot import OscillogramPlot
 from .spectrumplot import SpectrumPlot
@@ -81,12 +80,8 @@ class DataBrowser(QWidget):
         self.acts = acts
 
         # data:
-        self.file_path = file_path
+        self.data = Data(file_path)
         self.channels = channels
-        self.data = None
-        self.rate = None
-        self.tmax = 0.0
-        self.meta_data = {}
 
         self.show_channels = None
         self.current_channel = 0
@@ -97,9 +92,6 @@ class DataBrowser(QWidget):
         self.region_mode = DataBrowser.ask_region
         
         # view:
-        self.toffset = 0.0
-        self.twindow = 10.0
-
         self.setting = False
         
         self.grids = 0
@@ -188,29 +180,11 @@ class DataBrowser(QWidget):
         self.datafig = None   # full traces
 
         
-    def __del__(self):
-        if not self.data is None:
-            self.data.close()
-
-        
-    def open(self, gui, unwrap, unwrap_clip):
-        if not self.data is None:
-            self.data.close()
-        try:
-            self.data = DataLoader(self.file_path, 60.0, 10.0)
-        except IOError:
-            self.data = None
+    def open(self, gui, unwrap, unwrap_clip, highpass_cutoff, lowpass_cutoff):
+        self.data.open(unwrap, unwrap_clip, highpass_cutoff, lowpass_cutoff)
+        if self.data.data is None:
             return
-        self.data.set_unwrap(unwrap, unwrap_clip, False, self.data.unit)
-        self.file_path = self.data.filepath
-        self.rate = self.data.samplerate
-        self.marker_data.file_path = self.file_path
-
-        self.toffset = 0.0
-        self.twindow = 10.0
-        self.tmax = len(self.data)/self.rate
-        if self.twindow > self.tmax:
-            self.twindow = self.tmax
+        self.marker_data.file_path = self.data.file_path
 
         if self.show_channels is None:
             if len(self.channels) == 0:
@@ -226,17 +200,13 @@ class DataBrowser(QWidget):
         self.selected_channels = list(range(self.data.channels))
 
         # load data:
-        self.meta_data = dict(Format=self.data.format_dict())
-        self.meta_data.update(self.data.metadata())
-        starttime = get_datetime(self.meta_data)
-        locs, labels = self.data.markers()
-        self.marker_data.set_markers(locs, labels, self.rate)
+        locs, labels = self.data.data.markers()
+        self.marker_data.set_markers(locs, labels, self.data.rate)
         if len(labels) > 0:
             lbls = np.unique(labels[:,0])
             for i, l in enumerate(lbls):
                 self.marker_labels.append(MarkerLabel(l, l[0].lower(),
                                 list(colors.keys())[i % len(colors.keys())]))
-        self.data[0,:]     # load first frame
 
         self.figs = []     # all GraphicsLayoutWidgets - one for each channel
         self.borders = []
@@ -292,10 +262,9 @@ class DataBrowser(QWidget):
             self.borders.append(border)
             
             # spectrogram:
-            # takes a long time:
-            spec = SpecItem(self.data, self.rate, c, 256, 0.5)
+            spec = SpecItem(self.data, c)
             self.specs.append(spec)
-            axs = SpectrumPlot(c, xwidth, starttime, spec.fmax)
+            axs = SpectrumPlot(self.data, c, xwidth, spec.fmax)
             axs.addItem(spec)
             labels = []
             for l in self.marker_labels:
@@ -305,9 +274,8 @@ class DataBrowser(QWidget):
                 labels.append(label)
             self.spec_labels.append(labels)
             self.spec_region_labels.append([])
-            axs.setLimits(xMin=0, xMax=self.tmax,
-                         minXRange=10/self.rate, maxXRange=self.tmax)
-            axs.setXRange(self.toffset, self.toffset + self.twindow)
+            self.data.set_time_limits(axs)
+            self.data.set_time_range(axs)
             axs.sigXRangeChanged.connect(self.update_times)
             axs.setYRange(self.specs[c].f0, self.specs[c].f1)
             axs.sigYRangeChanged.connect(self.update_frequencies)
@@ -343,10 +311,11 @@ class DataBrowser(QWidget):
             self.axspacers.append(axsp)
             
             # trace plot:
-            trace = TraceItem(self.data, self.rate, c)
+            trace = TraceItem(self.data, c)
             self.traces.append(trace)
             # takes some time:
-            axt = OscillogramPlot(c, xwidth, starttime, self.data.channels > 4)
+            axt = OscillogramPlot(c, xwidth, self.data.start_time,
+                                  self.data.channels > 4)
             axt.addItem(trace)
             labels = []
             for l in self.marker_labels:
@@ -360,16 +329,11 @@ class DataBrowser(QWidget):
             self.trace_region_labels.append([])
             axt.getAxis('bottom').showLabel(c == self.show_channels[-1])
             axt.getAxis('bottom').setStyle(showValues=(c == self.show_channels[-1]))
-            axt.setLimits(xMin=0, xMax=self.tmax,
-                          minXRange=10/self.rate, maxXRange=self.tmax)
-            if np.isfinite(self.data.ampl_min) and np.isfinite(self.data.ampl_max):
-                axt.setLimits(yMin=self.data.ampl_min, yMax=self.data.ampl_max,
-                              minYRange=1/2**16,
-                              maxYRange=self.data.ampl_max - self.data.ampl_min)
-
-            axt.setXRange(self.toffset, self.toffset + self.twindow)
-            axt.sigXRangeChanged.connect(self.update_times)
+            self.data.set_time_limits(axt)
+            self.data.set_time_range(axt)
+            self.data.set_amplitude_limits(axt)
             axt.setYRange(self.traces[c].ymin, self.traces[c].ymax)
+            axt.sigXRangeChanged.connect(self.update_times)
             axt.sigYRangeChanged.connect(self.update_amplitudes)
             axt.sigSelectedRegion.connect(self.region_menu)
             axt.getViewBox().init_zoom_history()
@@ -412,12 +376,11 @@ class DataBrowser(QWidget):
         self.audiohetfw.setSuffix('kHz')
         self.audiohetfw.setValue(int(self.audio_heterodyne_freq/1000))
         self.audiohetfw.valueChanged.connect(lambda v: self.set_audio(heterodyne_freq=1000*v))
-        if self.data.samplerate > 50000:
+        if self.data.rate > 50000:
             self.toolbar.addWidget(self.audiohetfw)
+            self.toolbar.addAction(self.acts.use_heterodyne)
         else:
             self.audiohetfw.setVisible(False)
-        if self.data.samplerate > 50000:
-            self.toolbar.addAction(self.acts.use_heterodyne)
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.acts.zoom_home)
         self.toolbar.addAction(self.acts.zoom_back)
@@ -425,9 +388,9 @@ class DataBrowser(QWidget):
         self.toolbar.addSeparator()
         self.nfftw = QComboBox(self)
         self.nfftw.setToolTip('NFFT (R, Shift+R)')
-        self.nfftw.addItems([f'{2**i}' for i in range(4, 16)])
+        self.nfftw.addItems([f'{2**i}' for i in range(3, 20)])
         self.nfftw.setEditable(False)
-        self.nfftw.setCurrentText(f'{self.specs[self.current_channel].nfft}')
+        self.nfftw.setCurrentText(f'{self.data.nfft[self.current_channel]}')
         self.nfftw.currentTextChanged.connect(lambda s: self.set_resolution(nfft=int(s)))
         self.toolbar.addWidget(self.nfftw)
         self.toolbar.addSeparator()
@@ -453,7 +416,7 @@ class DataBrowser(QWidget):
         self.vbox.addWidget(self.toolbar)
         
         # full data:
-        self.datafig = FullTracePlot(self.data, self.rate, self.axtraces)
+        self.datafig = FullTracePlot(self.data, self.axtraces)
         self.vbox.addWidget(self.datafig)
 
         self.setEnabled(True)
@@ -469,8 +432,8 @@ class DataBrowser(QWidget):
             for c, tl in enumerate(self.trace_labels):
                 ds = ts if ts else ls
                 t0 = t1 - ddt
-                idx0 = int(t0*self.rate)
-                idx1 = int(t1*self.rate)
+                idx0 = int(t0*self.data.rate)
+                idx1 = int(t1*self.data.rate)
                 if ddt > 0:
                     region = pg.LinearRegionItem((t0, t1),
                                                  orientation='vertical',
@@ -527,7 +490,7 @@ class DataBrowser(QWidget):
 
         w = xwidth = self.fontMetrics().averageCharWidth()
         mdtable = f'<style>td {{padding: 0 {w}px 0 0; }}</style><table>'
-        mdtable += format_dict(self.meta_data, 0)
+        mdtable += format_dict(self.data.meta_data, 0)
         mdtable += '</table>'
         dialog = QDialog(self)
         dialog.setWindowTitle('Meta data')
@@ -640,7 +603,7 @@ class DataBrowser(QWidget):
                                       (self.marker_ampl,),
                                        tip=marker_tip)
                 else:
-                    tidx = int(self.marker_time*self.rate)
+                    tidx = int(self.marker_time*self.data.rate)
                     tl[lidx].addPoints((self.marker_time,),
                                        (self.data[tidx, c],),
                                        tip=marker_tip)
@@ -851,15 +814,15 @@ class DataBrowser(QWidget):
         for c in range(self.data.channels):
             # update time ranges:
             for ax in self.axts[c]:
-                ax.setXRange(self.toffset, self.toffset + self.twindow)
+                self.data.set_time_range(ax)
             # update amplitude ranges:
             for ax in self.axys[c]:
                 ax.setYRange(self.traces[c].ymin, self.traces[c].ymax)
             # update frequency ranges:
             for ax in self.axfys[c]:
-                ax.setYRange(self.specs[c].f0, self.specs[c].f1)
-            for ax in self.axfxs[c]:
                 ax.setXRange(self.specs[c].f0, self.specs[c].f1)
+            for ax in self.axfxs[c]:
+                ax.setYRange(self.specs[c].f0, self.specs[c].f1)
             # update spectrograms:
             self.specs[c].update_spectrum()
         self.setting = False
@@ -935,58 +898,49 @@ class DataBrowser(QWidget):
                   dispatch=True):
         self.setting = True
         if not toffset is None:
-            self.toffset = toffset
+            self.data.toffset = toffset
         if not twindow is None:
-            self.twindow = twindow
+            self.data.twindow = twindow
         for axs in self.axts:
             for ax in axs:
                 if enable_starttime is not None:
                     ax.enableStartTime(enable_starttime)
                 if self.isVisible():
-                    ax.setXRange(self.toffset, self.toffset + self.twindow)
+                    self.data.set_time_range(ax)
         self.setting = False
         if dispatch:
-            self.sigTimesChanged.emit(self.toffset, self.twindow,
+            self.sigTimesChanged.emit(self.data.toffset, self.data.twindow,
                                       enable_starttime)
 
             
     def update_times(self, viewbox, trange):
         if self.setting:
             return
-        self.toffset = trange[0]
-        self.twindow = trange[1] - trange[0]
-        self.set_times()
+        self.set_times(trange[0], trange[1] - trange[0])
         
         
     def zoom_time_in(self):
-        if self.twindow * self.rate >= 20:
-            self.twindow *= 0.5
+        if self.data.zoom_time_in():
             self.set_times()
         
         
     def zoom_time_out(self):
-        if self.toffset + self.twindow < self.tmax:
-            self.twindow *= 2.0
+        if self.data.zoom_time_out():
             self.set_times()
 
                 
     def time_seek_forward(self):
-        if self.toffset + self.twindow < self.tmax:
-            self.toffset += 0.5*self.twindow
+        if self.data.time_seek_forward():
             self.set_times()
 
             
     def time_seek_backward(self):
-        if self.toffset > 0:
-            self.toffset -= 0.5*self.twindow
-            if self.toffset < 0.0:
-                self.toffset = 0.0
+        if self.data.time_seek_backward():
             self.set_times()
 
                 
     def time_forward(self):
-        if self.toffset + self.twindow < self.tmax:
-            self.toffset += 0.05*self.twindow
+        if self.data.time_forward():
             self.set_times()
 
                 
@@ -998,35 +952,26 @@ class DataBrowser(QWidget):
         if axt is None:
             return
         rect = axt.getViewBox().viewRect()
-        toffs = self.toffset
+        toffs = self.data.toffset
         if toffs > rect.left():
             toffs = rect.left()
-        if toffs > 0.0:
-            self.toffset = toffs - 0.05*self.twindow
-            if self.toffset < 0.0:
-                self.toffset = 0.0
+        if self.data.time_backward(toffs):
             self.set_times()
 
                 
     def time_home(self):
-        if self.toffset > 0.0:
-            self.toffset = 0.0
+        if self.data.time_home():
             self.set_times()
 
                 
     def time_end(self):
-        n2 = np.floor(self.tmax / (0.5*self.twindow))
-        toffs = max(0, n2-1)  * 0.5*self.twindow
-        if self.toffset < toffs:
-            self.toffset = toffs
+        if self.data.time_end():
             self.set_times()
 
                 
     def snap_time(self):
-        twindow = 10.0 * 2**np.round(log(self.twindow/10.0)/log(2.0))
-        toffset = np.round(self.toffset / (0.5*twindow)) * (0.5*twindow)
-        if twindow != self.twindow or toffset != self.toffset:
-            self.set_times(toffset, twindow)
+        if self.data.snap_time():
+            self.set_times()
 
 
     def set_amplitudes(self, ymin=None, ymax=None):
@@ -1063,7 +1008,7 @@ class DataBrowser(QWidget):
         
     def auto_ampl(self):
         for c in self.selected_channels:
-            self.traces[c].auto_ampl(self.toffset, self.twindow)
+            self.traces[c].auto_ampl(self.data.toffset, self.data.twindow)
         self.set_amplitudes()
 
         
@@ -1142,13 +1087,14 @@ class DataBrowser(QWidget):
             return
         self.setting = True
         if not isinstance(nfft, list):
-            nfft = [nfft] * (np.max(self.selected_channels) + 1)
+            nfft = [nfft]*self.data.channels
         if not isinstance(step_frac, list):
-            step_frac = [step_frac] * (np.max(self.selected_channels) + 1)
+            step_frac = [step_frac]*self.data.channels
         for c in self.selected_channels:
-            self.specs[c].set_resolution(nfft[c], step_frac[c],
-                                         self.isVisible())
-        self.nfftw.setCurrentText(f'{self.specs[self.current_channel].nfft}')
+            self.data.set_resolution(c, nfft[c], step_frac[c])
+        self.nfftw.setCurrentText(f'{self.data.nfft[self.current_channel]}')
+        for c in range(self.data.channels):
+            self.specs[c].update_spectrum()
         self.setting = False
         if dispatch:
             self.sigResolutionChanged.emit()
@@ -1156,25 +1102,25 @@ class DataBrowser(QWidget):
         
     def freq_resolution_down(self):
         for c in self.selected_channels:
-            self.specs[c].freq_resolution_down()
+            self.data.freq_resolution_down(c)
         self.set_resolution()
 
         
     def freq_resolution_up(self):
         for c in self.selected_channels:
-            self.specs[c].freq_resolution_up()
+            self.data.freq_resolution_up(c)
         self.set_resolution()
 
 
     def step_frac_down(self):
         for c in self.selected_channels:
-            self.specs[c].step_frac_down()
+            self.data.step_frac_down(c)
         self.set_resolution()
 
 
     def step_frac_up(self):
         for c in self.selected_channels:
-            self.specs[c].step_frac_up()
+            self.data.step_frac_up(c)
         self.set_resolution()
 
         
@@ -1197,9 +1143,9 @@ class DataBrowser(QWidget):
     def set_power(self, zmin=None, zmax=None, dispatch=True):
         self.setting = True
         if not isinstance(zmin, list):
-            zmin = [zmin] * (np.max(self.selected_channels) + 1)
+            zmin = [zmin]*self.data.channels
         if not isinstance(zmax, list):
-            zmax = [zmax] * (np.max(self.selected_channels) + 1)
+            zmax = [zmax]*self.data.channels
         for c in self.selected_channels:
             self.specs[c].set_power(zmin[c], zmax[c])
         self.setting = False
@@ -1252,8 +1198,8 @@ class DataBrowser(QWidget):
 
 
     def highpass_cutoff_up(self):
-        highpass_cutoff = self.traces[self.current_channel].highpass_cutoff
-        lowpass_cutoff = self.traces[self.current_channel].lowpass_cutoff
+        highpass_cutoff = self.data.highpass_cutoff[self.current_channel]
+        lowpass_cutoff = self.data.lowpass_cutoff[self.current_channel]
         step = 1.0
         if highpass_cutoff >= 1.0:
             step = 0.5*10**(floor(log10(highpass_cutoff)))
@@ -1269,7 +1215,7 @@ class DataBrowser(QWidget):
 
 
     def highpass_cutoff_down(self):
-        highpass_cutoff = self.traces[self.current_channel].highpass_cutoff
+        highpass_cutoff = self.data.highpass_cutoff[self.current_channel]
         step = 1.0
         if highpass_cutoff >= 1.0:
             step = 0.5*10**(floor(log10(highpass_cutoff)))
@@ -1282,20 +1228,20 @@ class DataBrowser(QWidget):
 
 
     def lowpass_cutoff_up(self):
-        lowpass_cutoff = self.traces[self.current_channel].lowpass_cutoff
+        lowpass_cutoff = self.data.lowpass_cutoff[self.current_channel]
         step = 1.0
         if lowpass_cutoff >= 1.0:
             step = 0.5*10**(floor(log10(lowpass_cutoff)))
         lowpass_cutoff += step
-        if lowpass_cutoff > self.rate/2:
-            lowpass_cutoff = self.rate/2
-        self.update_filter(self.current_channel, None,
-                           lowpass_cutoff, True)
+        if lowpass_cutoff > self.data.rate/2:
+            lowpass_cutoff = self.data.rate/2
+        self.update_filter(self.current_channel, None, lowpass_cutoff,
+                           True)
 
 
     def lowpass_cutoff_down(self):
-        highpass_cutoff = self.traces[self.current_channel].highpass_cutoff
-        lowpass_cutoff = self.traces[self.current_channel].lowpass_cutoff
+        highpass_cutoff = self.data.highpass_cutoff[self.current_channel]
+        lowpass_cutoff = self.data.lowpass_cutoff[self.current_channel]
         step = 1.0
         if lowpass_cutoff >= 1.0:
             step = 0.5*10**(floor(log10(lowpass_cutoff)))
@@ -1305,16 +1251,21 @@ class DataBrowser(QWidget):
         lowpass_cutoff -= step
         if lowpass_cutoff < highpass_cutoff + step:
             lowpass_cutoff = highpass_cutoff + step
-        self.update_filter(self.current_channel, None,
-                           lowpass_cutoff, True)
+        self.update_filter(self.current_channel, None, lowpass_cutoff,
+                           True)
 
 
     def set_filter(self, highpass_cutoffs, lowpass_cutoffs):
+        """Called for dispatching cutoff frequencies.
+        """
+        if self.setting:
+            return
         self.setting = True
+        self.data.set_filter(highpass_cutoffs, lowpass_cutoffs)
         for c in range(self.data.channels):
+            self.traces[c].update_trace()
+            # update handle positions:
             cf = c if c < len(highpass_cutoffs) else -1
-            self.traces[c].set_filter(highpass_cutoffs[cf],
-                                      lowpass_cutoffs[cf])
             self.axspecs[c].set_filter(highpass_cutoffs[cf],
                                        lowpass_cutoffs[cf])
         self.setting = False
@@ -1322,25 +1273,28 @@ class DataBrowser(QWidget):
 
     def update_filter(self, channel, highpass_cutoff,
                       lowpass_cutoff, set_spec=False):
-        if channel in self.selected_channels:
+        """Called when filter cutoffs were changed by key shortcuts or handles
+        in spectrum plots.
+
+        """
+        if self.setting:
+            return
+        self.setting = True
+        if channel is None or channel in self.selected_channels:
             for c in self.selected_channels:
-                self.traces[c].set_filter(highpass_cutoff, lowpass_cutoff)
+                self.data.set_filter(highpass_cutoff,
+                                     lowpass_cutoff, c)
+                self.traces[c].update_trace()
                 if c != channel or set_spec:
-                    self.axspecs[c].set_filter(highpass_cutoff, lowpass_cutoff)
+                    # update handle positions:
+                    self.axspecs[c].set_filter(highpass_cutoff,
+                                               lowpass_cutoff)
         else:
-            self.traces[channel].set_filter(highpass_cutoff, lowpass_cutoff)
-        self.sigFilterChanged.emit()
-
-
-    def init_filter(self, highpass_cutoff, lowpass_cutoff):
-        if highpass_cutoff is None:
-            highpass_cutoff = 0.0
-        if lowpass_cutoff is None:
-            lowpass_cutoff = self.rate/2
-        for t in self.traces:
-            t.set_filter(highpass_cutoff, lowpass_cutoff)
-        for axs in self.axspecs:
-            axs.set_filter(highpass_cutoff, lowpass_cutoff)
+            self.data.set_filter(highpass_cutoff,
+                                 lowpass_cutoff, channel)
+            self.traces[channel].update_trace()
+        self.setting = False
+        self.sigFilterChanged.emit()  # dispatch
 
 
     def add_to_show_channels(self, channels):
@@ -1688,11 +1642,11 @@ class DataBrowser(QWidget):
 
         
     def scroll_further(self):
-        if self.toffset + self.twindow > self.tmax:
+        if self.data.toffset + self.data.twindow > self.data.tmax:
             self.scroll_timer.stop()
             self.scroll_step /= 2
         else:
-            self.set_times(self.toffset + self.twindow*self.scroll_step)
+            self.set_times(self.data.toffset + self.data.twindow*self.scroll_step)
 
 
     def set_audio(self, rate_fac=None,
@@ -1715,17 +1669,17 @@ class DataBrowser(QWidget):
 
 
     def play_region(self, t0, t1):
-        rate = self.rate
+        rate = self.data.rate
         i0 = int(np.round(t0*rate))
         i1 = int(np.round(t1*rate))
-        if i1 > len(self.data):
-            i1 = len(self.data)
+        if i1 > len(self.data.data):
+            i1 = len(self.data.data)
             t1 = i1/rate
         n2 = (len(self.selected_channels)+1)//2
         playdata = np.zeros((i1-i0, min(2, len(self.selected_channels))))
-        playdata[:,0] = np.mean(self.data[i0:i1, self.selected_channels[:n2]], 1)
+        playdata[:,0] = np.mean(self.data.data[i0:i1, self.selected_channels[:n2]], 1)
         if len(self.selected_channels) > 1:
-            playdata[:,1] = np.mean(self.data[i0:i1, self.selected_channels[n2:]], 1)
+            playdata[:,1] = np.mean(self.data.data[i0:i1, self.selected_channels[n2:]], 1)
         if self.audio_use_heterodyne:
             # multiply with heterodyne frequency:
             heterodyne = np.sin(2*np.pi*self.audio_heterodyne_freq*np.arange(len(playdata))/rate)
@@ -1733,7 +1687,7 @@ class DataBrowser(QWidget):
             # low-pass filter and downsample:
             fcutoff = 20000.0
             sos = butter(2, 20000, 'low', output='sos', fs=rate)
-            nstep = int(np.round(self.rate/(2*fcutoff)))
+            nstep = int(np.round(self.data.rate/(2*fcutoff)))
             if nstep < 1:
                 nstep = 1
             playdata = sosfiltfilt(sos, playdata, 0)[::nstep]
@@ -1792,9 +1746,9 @@ class DataBrowser(QWidget):
             else:
                 return msecs
 
-        i0 = int(np.round(t0*self.rate))
-        i1 = int(np.round(t1*self.rate))
-        name = os.path.splitext(os.path.basename(self.file_path))[0]
+        i0 = int(np.round(t0*self.data.rate))
+        i1 = int(np.round(t1*self.data.rate))
+        name = os.path.splitext(os.path.basename(self.data.file_path))[0]
         #if self.channel > 0:
         #    filename = f'{name}-{channel:d}-{t0:.4g}s-{t1s:.4g}s.wav'
         t0s = secs_to_str(t0)
@@ -1806,31 +1760,34 @@ class DataBrowser(QWidget):
                 formats.remove(f)
                 formats.insert(0, f)
         filters = ['All files (*)'] + [f'{f} files (*.{f}, *.{f.lower()})' for f in formats]
-        file_path = os.path.join(os.path.dirname(self.file_path), file_name)
+        file_path = os.path.join(os.path.dirname(self.data.file_path), file_name)
         file_path = QFileDialog.getSaveFileName(self, 'Save region as',
                                                 file_path,
                                                 ';;'.join(filters))[0]
         if file_path:
-            md = deepcopy(self.data.metadata())
-            update_starttime(md, t0, self.rate)
+            md = deepcopy(self.data.data.metadata())
+            update_starttime(md, t0, self.data.rate)
             hkey = 'CodingHistory'
             if 'BEXT' in md:
                 hkey = 'BEXT.' + hkey
-            bext_code = bext_history_str(self.data.encoding,
-                                         self.rate, self.data.channels)
-            add_history(md, bext_code + f',T=cut out {t0s}-{t1s}: {os.path.basename(file_path)}', hkey, bext_code + f',T={self.file_path}')
-            locs, labels = self.marker_data.get_markers(self.rate)
+            bext_code = bext_history_str(self.data.data.encoding,
+                                         self.data.rate, self.data.channels)
+            add_history(md, bext_code + f',T=cut out {t0s}-{t1s}: {os.path.basename(file_path)}', hkey, bext_code + f',T={self.data.file_path}')
+            locs, labels = self.marker_data.get_markers(self.data.rate)
             sel = (locs[:,0] + locs[:,1] >= i0) & (locs[:,0] <= i1)
             locs = locs[sel]
             labels = labels[sel]
             try:
-                write_data(file_path, self.data[i0:i1,self.selected_channels],
-                           self.rate, self.data.ampl_max, self.data.unit,
-                           md, locs, labels, encoding=self.data.encoding)
+                write_data(file_path,
+                           self.data.data[i0:i1, self.selected_channels],
+                           self.data.rate, self.data.data.ampl_max,
+                           self.data.data.unit, md, locs, labels,
+                           encoding=self.data.data.encoding)
                 print(f'saved region to "{os.path.relpath(file_path)}"')
             except PermissionError as e:
                 print(f'failed to save region to "{os.path.relpath(file_path)}": permission denied')
 
         
     def save_window(self):
-        self.save_region(self.toffset, self.toffset + self.twindow)
+        self.save_region(self.data.toffset, self.data.toffset +
+                         self.data.twindow)
