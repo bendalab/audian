@@ -23,14 +23,13 @@ def down_sample_peak(data, step):
 class TraceItem(pg.PlotDataItem):
     
     def __init__(self, data, channel, *args, color='#00ee00', **kwargs):
-        # TODO: add a flag selecting whether to who filtered, unfiltered or both
-        self.data = data.filtered
-        self.rate = self.data.samplerate
+        self.data = data
+        self.rate = self.data.rate
         self.channel = channel
         self.step = 1
         self.color = color
-        self.ymin = self.data.ampl_min
-        self.ymax = self.data.ampl_max
+        self.ymin = self.data.data.ampl_min
+        self.ymax = self.data.data.ampl_max
         
         pg.PlotDataItem.__init__(self, *args, connect='all',
                                  antialias=False, skipFiniteCheck=True,
@@ -57,10 +56,12 @@ class TraceItem(pg.PlotDataItem):
         vb = self.getViewBox()
         if not isinstance(vb, pg.ViewBox):
             return
-
+        
+        # TODO: add a flag selecting whether to who filtered, unfiltered or both
+        data = self.data.filtered
         trange = vb.viewRange()[0]
         start = max(0, int(trange[0]*self.rate))
-        stop = min(len(self.data), int(trange[1]*self.rate+1))
+        stop = min(len(data), int(trange[1]*self.rate+1))
         sstop = int(trange[1]*self.rate+1)
         max_pixel = QApplication.desktop().screenGeometry().width()
         self.step = max(1, (sstop - start)//max_pixel)
@@ -71,24 +72,24 @@ class TraceItem(pg.PlotDataItem):
             stop = int(ceil(stop/self.step)*self.step)
             self.setPen(dict(color=self.color, width=1.1))
             n = (stop-start)//self.step
-            data = np.zeros(2*n)
+            pdata = np.zeros(2*n)
             i = 0
             nb = int(60*self.rate//self.step)*self.step
-            for dd in self.data.blocks(nb, 0, start, stop):
+            for dd in data.blocks(nb, 0, start, stop):
                 dsd = down_sample_peak(dd[:, self.channel], self.step)
-                data[i:i+len(dsd)] = dsd
+                pdata[i:i+len(dsd)] = dsd
                 i += len(dsd)
-            time = np.arange(start, start + len(data)*step2, step2)/self.rate
-            self.setData(time, data)
+            time = np.arange(start, start + len(pdata)*step2, step2)/self.rate
+            self.setData(time, pdata)
         elif self.step > 1:  # TODO: not used
             # subsample:
             self.setData(np.arange(start, stop, self.step)/self.rate,
-                         self.data[start:stop:self.step, self.channel])
+                         data[start:stop:self.step, self.channel])
             self.setPen(dict(color=self.color, width=1.1))
         else:
             # all data:
             self.setData(np.arange(start, stop)/self.rate,
-                         self.data[start:stop, self.channel])
+                         data[start:stop, self.channel])
             self.setPen(dict(color=self.color, width=2))
             if max_pixel/(stop - start) >= 10:
                 self.setSymbol('o')
@@ -98,6 +99,8 @@ class TraceItem(pg.PlotDataItem):
 
     def get_amplitude(self, x, y, x1=None):
         """Get trace amplitude next to cursor position. """
+        # TODO: add a flag selecting whether to who filtered, unfiltered or both
+        data = self.data.filtered
         idx = int(np.round(x*self.rate))
         step = self.step
         if x1 is not None:
@@ -105,7 +108,7 @@ class TraceItem(pg.PlotDataItem):
             step = max(1, idx1 - idx)
         if step > 1:
             idx = (idx//step)*step
-            data_block = self.data[idx:idx + step, self.channel]
+            data_block = data[idx:idx + step, self.channel]
             mini = np.argmin(data_block)
             maxi = np.argmax(data_block)
             amin = data_block[mini]
@@ -115,7 +118,7 @@ class TraceItem(pg.PlotDataItem):
             else:
                 return (idx+mini)/self.rate, amin
         else:
-            return idx/self.rate, self.data[idx, self.channel]
+            return idx/self.rate, data[idx, self.channel]
 
         
     def zoom_ampl_in(self):
@@ -131,18 +134,20 @@ class TraceItem(pg.PlotDataItem):
         c = 0.5*(self.ymax + self.ymin)
         self.ymin = c - h
         self.ymax = c + h
-        if self.ymax > self.data.ampl_max:
-            self.ymax = self.data.ampl_max
+        if self.ymax > self.data.data.ampl_max:
+            self.ymax = self.data.data.ampl_max
             self.ymin = 1 - 2*h
-        if self.ymin < self.data.ampl_min:
-            self.ymin = self.data.ampl_min
+        if self.ymin < self.data.data.ampl_min:
+            self.ymin = self.data.data.ampl_min
         
         
     def auto_ampl(self, toffset, twindow):
+        # TODO: add a flag selecting whether to who filtered, unfiltered or both
+        data = self.data.filtered
         t0 = int(np.round(toffset * self.rate))
         t1 = int(np.round((toffset + twindow) * self.rate))
-        ymin = np.min(self.data[t0:t1, self.channel])
-        ymax = np.max(self.data[t0:t1, self.channel])
+        ymin = np.min(data[t0:t1, self.channel])
+        ymax = np.max(data[t0:t1, self.channel])
         h = 0.5*(ymax - ymin)
         
         c = 0.5*(ymax + ymin)
@@ -153,8 +158,8 @@ class TraceItem(pg.PlotDataItem):
 
         
     def reset_ampl(self):
-        self.ymin = self.data.ampl_min
-        self.ymax = self.data.ampl_max
+        self.ymin = self.data.data.ampl_min
+        self.ymax = self.data.data.ampl_max
 
 
     def center_ampl(self):
