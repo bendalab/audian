@@ -31,13 +31,14 @@ class Data(object):
         self.start_time = None
         self.meta_data = {}
         # filter:
+        self.filtered = None
         self.highpass_cutoff = []
         self.lowpass_cutoff = []
         self.filter_order = []
         self.sos = []
-        self.filtered = None
+        self.need_filter = False
         # spectrogram:
-        self.spectrum = []
+        self.spectrum = None
         self.nfft = []
         self.step_frac = []
         self.step = []
@@ -56,23 +57,6 @@ class Data(object):
         if not self.data is None:
             self.data.close()
 
-            
-    def load_buffer(self, offset, nframes, buffer):
-        # data:
-        self.load_buffer_orig(offset, nframes, buffer)
-        # filter:
-        if self.filtered is not None and self.filtered is not self.data:
-            self.filtered.update_buffer(offset, offset + nframes)
-        # spectrum:
-        if len(self.data.buffer) == 0 or \
-           (self.offset == self.data.offset and \
-            self.bufferframes == len(self.data.buffer)):
-            return
-        self.spec_update[:] = True
-        self.update_spectra()
-        self.offset = self.data.offset
-        self.bufferframes = len(self.data.buffer)
-        
         
     def open(self, unwrap, unwrap_clip, highpass_cutoff, lowpass_cutoff):
         if not self.data is None:
@@ -89,6 +73,13 @@ class Data(object):
         self.rate = self.data.samplerate
         self.channels = self.data.channels
         # filter:
+        self.filtered = BufferedArray(self.rate, self.channels,
+                                      self.data.frames,
+                                      self.data.bufferframes,
+                                      self.data.backframes)
+        self.filtered.ampl_min = self.data.ampl_min
+        self.filtered.ampl_max = self.data.ampl_max
+        self.filtered.load_buffer = self.filter_buffer
         if highpass_cutoff is None:
             self.highpass_cutoff = [0]*self.channels
         else:
@@ -99,7 +90,7 @@ class Data(object):
             self.lowpass_cutoff = [lowpass_cutoff]*self.channels
         self.filter_order = [2]*self.channels
         self.sos = [None]*self.channels
-        self.filtered = self.data
+        self.need_filter = False
         self.set_filter()
         
         self.toffset = 0.0
@@ -215,15 +206,36 @@ class Data(object):
                          minYRange=1/2**16,
                          maxYRange=self.data.ampl_max - self.data.ampl_min)
 
+            
+    def load_buffer(self, offset, nframes, buffer):
+        # data:
+        self.load_buffer_orig(offset, nframes, buffer)
+        # filter:
+        if self.filtered is not None and self.filtered is not self.data:
+            self.filtered.update_buffer(offset, offset + nframes)
+        # spectrum:
+        if len(self.data.buffer) == 0 or \
+           (self.offset == self.data.offset and \
+            self.bufferframes == len(self.data.buffer)):
+            return
+        self.spec_update[:] = True
+        self.update_spectra()
+        self.offset = self.data.offset
+        self.bufferframes = len(self.data.buffer)
+        
 
     def filter_buffer(self, offset, nframes, buffer):
-        for c in range(self.channels):
-            if self.sos[c] is None:
-                buffer[:, c] = self.data[offset:offset + nframes, c]
-            else:
-                buffer[:, c] = sosfiltfilt(self.sos[c],
-                                           self.data[offset:offset
-                                                     + nframes, c])
+        if self.need_filter:
+            for c in range(self.channels):
+                if self.sos[c] is None:
+                    buffer[:, c] = self.data[offset:offset + nframes, c]
+                else:
+                    buffer[:, c] = sosfiltfilt(self.sos[c],
+                                               self.data[offset:offset
+                                                         + nframes, c])
+        else:
+            self.filtered.buffer = self.data.buffer
+            self.filtered.offset = self.data.offset
 
 
     def make_filter(self, channel):
@@ -248,49 +260,16 @@ class Data(object):
                                        output='sos')
 
         
-    def set_filter(self, highpass_cutoff=None, lowpass_cutoff=None,
-                   channel=None):
-        do_filter = False
-        if channel is None:
-            if highpass_cutoff is not None:
-                for c in range(min(len(highpass_cutoff), self.channels)):
-                    self.highpass_cutoff[c] = highpass_cutoff[c]
-                else:
-                    for cf in range(c + 1, self.channels):
-                        self.highpass_cutoff[c] = highpass_cutoff[-1]
-            if lowpass_cutoff is not None:
-                for c in range(min(len(lowpass_cutoff), self.channels)):
-                    self.lowpass_cutoff[c] = lowpass_cutoff[c]
-                else:
-                    for cf in range(c + 1, self.channels):
-                        self.lowpass_cutoff[c] = lowpass_cutoff[-1]
-            for c in range(self.channels):
-                self.make_filter(c)
-                if self.sos[c] is not None:
-                    do_filter = True
-        else:
-            if highpass_cutoff is not None:
-                self.highpass_cutoff[channel] = highpass_cutoff
-            if lowpass_cutoff is not None:
-                self.lowpass_cutoff[channel] = lowpass_cutoff
-            self.make_filter(channel)
-            if self.sos[channel] is not None:
-                do_filter = True
-        if do_filter:
-            if self.filtered is self.data:
-                self.filtered = BufferedArray(self.rate,
-                                              self.channels,
-                                              self.data.frames,
-                                              self.data.ampl_min,
-                                              self.data.ampl_max,
-                                              self.data.bufferframes,
-                                              self.data.backframes)
-                self.filtered.allocate_buffer()
-                self.filtered.load_buffer = self.filter_buffer
-            self.filtered.reload_buffer()
-            # still need to update plots?
-        elif not do_filter and self.filtered is not self.data:
-            self.filtered = self.data
+    def set_filter(self):
+        need_filter = False
+        for c in range(self.channels):
+            self.make_filter(c)
+            if self.sos[c] is not None:
+                need_filter = True
+        if need_filter != self.need_filter and need_filter:
+            self.filtered.allocate_buffer(self.data.bufferframes, True)
+        self.need_filter = need_filter
+        self.filtered.reload_buffer()
 
         
     def freq_resolution_down(self, channel):

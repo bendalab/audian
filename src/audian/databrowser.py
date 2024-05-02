@@ -1210,12 +1210,12 @@ class DataBrowser(QWidget):
             highpass_cutoff = lowpass_cutoff - step
         if highpass_cutoff < 0:
             highpass_cutoff = 0
-        self.update_filter(self.current_channel, highpass_cutoff,
-                           None, True)
+        self.update_filter(highpass_cutoff, lowpass_cutoff)
 
 
     def highpass_cutoff_down(self):
         highpass_cutoff = self.data.highpass_cutoff[self.current_channel]
+        lowpass_cutoff = self.data.lowpass_cutoff[self.current_channel]
         step = 1.0
         if highpass_cutoff >= 1.0:
             step = 0.5*10**(floor(log10(highpass_cutoff)))
@@ -1223,11 +1223,11 @@ class DataBrowser(QWidget):
         highpass_cutoff -= step
         if highpass_cutoff < 0:
             highpass_cutoff = 0
-        self.update_filter(self.current_channel, highpass_cutoff,
-                           None, True)
+        self.update_filter(highpass_cutoff, lowpass_cutoff)
 
 
     def lowpass_cutoff_up(self):
+        highpass_cutoff = self.data.highpass_cutoff[self.current_channel]
         lowpass_cutoff = self.data.lowpass_cutoff[self.current_channel]
         step = 1.0
         if lowpass_cutoff >= 1.0:
@@ -1235,8 +1235,7 @@ class DataBrowser(QWidget):
         lowpass_cutoff += step
         if lowpass_cutoff > self.data.rate/2:
             lowpass_cutoff = self.data.rate/2
-        self.update_filter(self.current_channel, None, lowpass_cutoff,
-                           True)
+        self.update_filter(highpass_cutoff, lowpass_cutoff)
 
 
     def lowpass_cutoff_down(self):
@@ -1251,8 +1250,7 @@ class DataBrowser(QWidget):
         lowpass_cutoff -= step
         if lowpass_cutoff < highpass_cutoff + step:
             lowpass_cutoff = highpass_cutoff + step
-        self.update_filter(self.current_channel, None, lowpass_cutoff,
-                           True)
+        self.update_filter(highpass_cutoff, lowpass_cutoff)
 
 
     def set_filter(self, highpass_cutoffs, lowpass_cutoffs):
@@ -1261,18 +1259,19 @@ class DataBrowser(QWidget):
         if self.setting:
             return
         self.setting = True
-        self.data.set_filter(highpass_cutoffs, lowpass_cutoffs)
+        for c in self.selected_channels:
+            cf = c if c < len(highpass_cutoffs) else -1
+            self.data.highpass_cutoff[c] = highpass_cutoff[cf]
+            self.data.lowpass_cutoff[c] = lowpass_cutoff[cf]
+            self.axspecs[c].set_filter_handles(highpass_cutoffs[cf],
+                                               lowpass_cutoffs[cf])
+        self.data.set_filter()
         for c in range(self.data.channels):
             self.traces[c].update_trace()
-            # update handle positions:
-            cf = c if c < len(highpass_cutoffs) else -1
-            self.axspecs[c].set_filter(highpass_cutoffs[cf],
-                                       lowpass_cutoffs[cf])
         self.setting = False
 
 
-    def update_filter(self, channel, highpass_cutoff,
-                      lowpass_cutoff, set_spec=False):
+    def update_filter(self, highpass_cutoff, lowpass_cutoff, channel=None):
         """Called when filter cutoffs were changed by key shortcuts or handles
         in spectrum plots.
 
@@ -1282,17 +1281,18 @@ class DataBrowser(QWidget):
         self.setting = True
         if channel is None or channel in self.selected_channels:
             for c in self.selected_channels:
-                self.data.set_filter(highpass_cutoff,
-                                     lowpass_cutoff, c)
-                self.traces[c].update_trace()
-                if c != channel or set_spec:
-                    # update handle positions:
-                    self.axspecs[c].set_filter(highpass_cutoff,
-                                               lowpass_cutoff)
+                self.data.highpass_cutoff[c] = highpass_cutoff
+                self.data.lowpass_cutoff[c] = lowpass_cutoff
+                self.axspecs[c].set_filter_handles(highpass_cutoff,
+                                                   lowpass_cutoff)
         else:
-            self.data.set_filter(highpass_cutoff,
-                                 lowpass_cutoff, channel)
-            self.traces[channel].update_trace()
+            self.data.highpass_cutoff[channel] = highpass_cutoff
+            self.data.lowpass_cutoff[channel] = lowpass_cutoff
+            self.axspecs[channel].set_filter_handles(highpass_cutoff,
+                                                     lowpass_cutoff)
+        self.data.set_filter()
+        for c in range(self.data.channels):
+            self.traces[c].update_trace()
         self.setting = False
         self.sigFilterChanged.emit()  # dispatch
 
