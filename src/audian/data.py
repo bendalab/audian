@@ -49,7 +49,7 @@ class Data(object):
         self.use_spec = np.zeros(0, dtype=bool)
         self.spec_update = np.zeros(0, dtype=bool)
         self.offset = -1
-        self.buffer_size = 0
+        self.bufferframes = 0
 
         
     def __del__(self):
@@ -57,21 +57,21 @@ class Data(object):
             self.data.close()
 
             
-    def load_buffer(self, offset, size, buffer):
+    def load_buffer(self, offset, nframes, buffer):
         # data:
-        self.load_buffer_orig(offset, size, buffer)
+        self.load_buffer_orig(offset, nframes, buffer)
         # filter:
         if self.filtered is not None and self.filtered is not self.data:
-            self.filtered.update_buffer(offset, offset + size)
+            self.filtered.update_buffer(offset, offset + nframes)
         # spectrum:
         if len(self.data.buffer) == 0 or \
            (self.offset == self.data.offset and \
-            self.buffer_size == len(self.data.buffer)):
+            self.bufferframes == len(self.data.buffer)):
             return
         self.spec_update[:] = True
         self.update_spectra()
         self.offset = self.data.offset
-        self.buffer_size = len(self.data.buffer)
+        self.bufferframes = len(self.data.buffer)
         
         
     def open(self, unwrap, unwrap_clip, highpass_cutoff, lowpass_cutoff):
@@ -216,8 +216,7 @@ class Data(object):
                          maxYRange=self.data.ampl_max - self.data.ampl_min)
 
 
-    def filter_buffer(self, offset, nsamples, buffer):
-        nframes = nsamples #// self.channels ???? is offset also in frames?
+    def filter_buffer(self, offset, nframes, buffer):
         for c in range(self.channels):
             if self.sos[c] is None:
                 buffer[:, c] = self.data[offset:offset + nframes, c]
@@ -283,8 +282,8 @@ class Data(object):
                                             self.data.frames,
                                             self.data.ampl_min,
                                             self.data.ampl_max,
-                                            self.data.buffersize,
-                                            self.data.backsize)
+                                            self.data.bufferframes,
+                                            self.data.backframes)
                 self.filtered.allocate_buffer()
                 self.filtered.load_buffer = self.filter_buffer
             self.filtered.reload_buffer()
