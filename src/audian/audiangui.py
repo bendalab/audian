@@ -1056,7 +1056,7 @@ Can not open file <b>{browser.file_path}</b>!''')
                 self.tabs.setTabText(self.tabs.indexOf(browser),
                                      os.path.basename(browser.data.file_path))
                 for b in self.browsers:
-                    if not b.data is None and \
+                    if not b.data.data is None and \
                        b.data.channels != browser.data.channels:
                         self.link_channels = False
                         self.acts.link_channels.setChecked(self.link_channels)

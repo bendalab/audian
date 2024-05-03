@@ -1261,8 +1261,8 @@ class DataBrowser(QWidget):
         self.setting = True
         for c in self.selected_channels:
             cf = c if c < len(highpass_cutoffs) else -1
-            self.data.highpass_cutoff[c] = highpass_cutoff[cf]
-            self.data.lowpass_cutoff[c] = lowpass_cutoff[cf]
+            self.data.highpass_cutoff[c] = highpass_cutoffs[cf]
+            self.data.lowpass_cutoff[c] = lowpass_cutoffs[cf]
             self.axspecs[c].set_filter_handles(highpass_cutoffs[cf],
                                                lowpass_cutoffs[cf])
         self.data.set_filter()
