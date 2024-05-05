@@ -262,7 +262,7 @@ class DataBrowser(QWidget):
             self.borders.append(border)
             
             # spectrogram:
-            spec = SpecItem(self.data, c)
+            spec = SpecItem(self.data.spectrum, c)
             self.specs.append(spec)
             axs = SpectrumPlot(self.data, c, xwidth, spec.fmax)
             axs.addItem(spec)
@@ -390,7 +390,7 @@ class DataBrowser(QWidget):
         self.nfftw.setToolTip('NFFT (R, Shift+R)')
         self.nfftw.addItems([f'{2**i}' for i in range(3, 20)])
         self.nfftw.setEditable(False)
-        self.nfftw.setCurrentText(f'{self.data.nfft}')
+        self.nfftw.setCurrentText(f'{self.data.spectrum.nfft}')
         self.nfftw.currentTextChanged.connect(lambda s: self.set_resolution(nfft=int(s)))
         self.toolbar.addWidget(self.nfftw)
         self.toolbar.addSeparator()
@@ -1082,12 +1082,14 @@ class DataBrowser(QWidget):
         self.set_frequencies()
 
 
-    def set_resolution(self, nfft=None, step_frac=None, dispatch=True):
+    def set_resolution(self, nfft=None, hop_frac=None, dispatch=True):
         if self.setting:
             return
         self.setting = True
-        self.data.set_resolution(nfft, step_frac)
-        self.nfftw.setCurrentText(f'{self.data.nfft}')
+        self.data.spectrum.set_resolution(nfft, hop_frac)
+        self.nfftw.setCurrentText(f'{self.data.spectrum.nfft}')
+        for s in self.specs:
+            s.update_spectrum()
         self.setting = False
         if dispatch:
             self.sigResolutionChanged.emit()
@@ -1103,13 +1105,13 @@ class DataBrowser(QWidget):
         self.set_resolution()
 
 
-    def step_frac_down(self):
-        self.data.step_frac_down()
+    def hop_frac_down(self):
+        self.data.hop_frac_down()
         self.set_resolution()
 
 
-    def step_frac_up(self):
-        self.data.step_frac_up()
+    def hop_frac_up(self):
+        self.data.hop_frac_up()
         self.set_resolution()
 
         

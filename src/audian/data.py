@@ -7,12 +7,10 @@ and the time window shown.
 """
 
 import numpy as np
-from scipy.signal import spectrogram
 from audioio import get_datetime
-from audioio import BufferedArray
 from thunderlab.dataloader import DataLoader
-from thunderlab.powerspectrum import decibel
 from .bufferedfilter import BufferedFilter
+from .bufferedspectrogram import BufferedSpectrogram
 
 
 class Data(object):
@@ -28,19 +26,8 @@ class Data(object):
         self.twindow = 10.0
         self.start_time = None
         self.meta_data = {}
-        # filter:
         self.filtered = BufferedFilter()
-        # spectrogram:
-        self.spectrum = None
-        self.nfft = []
-        self.step_frac = []
-        self.step = []
-        self.fresolution = []
-        self.tresolution = []
-        self.spec_rect = []
-        self.zmin = []
-        self.zmax = []
-        self.use_spec = True
+        self.spectrum = BufferedSpectrogram()
 
         
     def __del__(self):
@@ -75,25 +62,7 @@ class Data(object):
         # filter:
         self.filtered.open(self.data, highpass_cutoff, lowpass_cutoff)
         # spectrogram:
-        self.nfft = 256
-        self.step_frac = 0.5
-        self.step = 256//2
-        self.fresolution = self.rate/self.nfft
-        self.tresolution = self.step/self.rate
-        self.spec_rect = []
-        self.zmin = [None]*self.channels
-        self.zmax = [None]*self.channels
-        self.use_spec = True
-        self.spectrum = BufferedArray(self.rate/self.step,
-                                      self.channels,
-                                      self.data.frames//self.step,
-                                      self.data.bufferframes//self.step,
-                                      self.data.backframes//self.step)
-        self.spectrum.shape = (self.data.frames//self.step - 1,
-                               self.channels, self.nfft//2 + 1)
-        self.spectrum.ndim = 3
-        self.spectrum.init_buffer()
-        self.spectrum.load_buffer = self.spectrum_buffer
+        self.spectrum.open(self.data, 256, 0.5)
         # load data, apply filter, and compute spectrograms:
         self.data.reload_buffer()
 
@@ -193,89 +162,22 @@ class Data(object):
         # filter:
         self.filtered.update_buffer(offset, offset + nframes)
         # spectrum:
-        self.spectrum.update_buffer(int(offset/self.spectrum.rate),
-                                    int((offset + nframes)/self.spectrum.rate) - 1)
+        self.spectrum.update_buffer(offset//self.spectrum.hop,
+                                    (offset + nframes)//self.spectrum.hop - 1)
         
         
     def freq_resolution_down(self):
-        self.set_resolution(nfft=self.nfft//2)
+        self.spectrum.set_resolution(nfft=self.spectrum.nfft//2)
 
         
     def freq_resolution_up(self):
-        self.set_resolution(nfft=2*self.nfft)
+        self.spectrum.set_resolution(nfft=2*self.spectrum.nfft)
 
 
-    def step_frac_down(self, channel):
-        self.set_resolution(step_frac=self.step_frac/2)
+    def hop_frac_down(self):
+        self.spectrum.set_resolution(hop_frac=self.spectrum.hop_frac/2)
 
 
-    def step_frac_up(self, channel):
-        self.set_resolution(channel, step_frac=2*self.step_frac)
+    def hop_frac_up(self):
+        self.spectrum.set_resolution(hop_frac=2*self.spectrum.hop_frac)
 
-
-    def set_resolution(self, nfft=None, step_frac=None):
-        if nfft is not None:
-            if nfft < 8:
-                nfft = 8
-            max_nfft = min(len(self.data)//2, 2**30)
-            if nfft > max_nfft:
-                nfft = max_nfft
-            if self.nfft != nfft:
-                self.nfft = nfft
-                spec_update = True
-        if step_frac is not None:
-            if step_frac > 1.0:
-                step_frac = 1.0
-            self.step_frac = step_frac
-        step = int(np.round(self.step_frac*self.nfft))
-        if step < 1:
-            step = 1
-        if step > self.nfft:
-            step = self.nfft
-        if self.step != step:
-            self.step = step
-            spec_update = True
-        if spec_update:
-            self.spectrum.shape = (self.data.frames//self.step - 1,
-                                   self.channels, self.nfft//2 + 1)
-            self.tresolution = self.step/self.rate
-            self.fresolution = self.rate/self.nfft
-            self.spectrum.allocate_bufer()
-            self.spectrum.reload_bufer()
-
-
-    def estimate_noiselevels(self, nf):
-        if nf < 1:
-            nf = 1
-        for c in range(self.channels):
-            if zmin[c] is not None:
-                continue
-            zmin = np.percentile(self.spectrum.buffer[:, c, -nf:], 95)
-            if not np.isfinite(zmin):
-                zmin = -100.0
-            self.zmin[c] = zmin
-            self.zmax[c] = zmin + 60.0
-
-
-    def update_spectra(self):
-        # called from SpecItem when viewRange is changed.
-        pass
-
-
-    def spectrum_buffer(self, offset, nframes, buffer):
-        return
-        # bound method, self is Data instance!
-        #t0 = offset/self.rate
-        #t1 = t0 + nframes/self.rate
-        freq, time, Sxx = spectrogram(self.data.buffer, self.data.rate,
-                                      nperseg=self.nfft,
-                                      noverlap=self.nfft - self.step,
-                                      axis=0)
-        self.tresolution = time[1] - time[0]
-        self.fresolution = freq[1] - freq[0]
-        buffer[:,:,:] = decibel(Sxx).transpose((2, 1, 0))
-        self.spec_rect = [self.data.offset/self.data.rate, 0,
-                          time[-1] + self.tresolution,
-                          freq[-1] + self.fresolution]
-        # estimate noise floor for color map:
-        self.estimate_noiselevels(len(freq)//16)

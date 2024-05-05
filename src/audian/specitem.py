@@ -40,15 +40,14 @@ class SpecItem(pg.ImageItem):
         
         trange = vb.viewRange()[0]
         start = max(0, int(trange[0]*self.rate))
-        stop = min(len(self.data.data), int(trange[1]*self.rate+1))
-        if start < self.data.data.offset or stop >= self.data.data.offset + len(self.data.data.buffer):
-            self.data.data.update_buffer(start, stop)
+        stop = min(len(self.data), int(trange[1]*self.rate+1))
+        if start < self.data.offset or stop >= self.data.offset + len(self.data.buffer):
+            self.data.update_buffer(start, stop)
         self.update_spectrum()
     
 
     def update_spectrum(self):
-        self.data.update_spectra()
-        self.setImage(self.data.spectrum[:, self.channel, :],
+        self.setImage(self.data[:, self.channel, :].T,
                       autoLevels=False)
         self.setRect(QRectF(*self.data.spec_rect))
 

@@ -555,7 +555,7 @@ class Audian(QMainWindow):
             for b in self.browsers:
                 if not b is self.browser():
                     b.set_resolution(self.browser().data.nfft,
-                                     self.browser().data.step_frac,
+                                     self.browser().data.hop_frac,
                                      False)
 
         
@@ -590,11 +590,11 @@ class Audian(QMainWindow):
 
         self.acts.overlap_up = QAction('Increase overlap', self)
         self.acts.overlap_up.setShortcut('Shift+O')
-        self.acts.overlap_up.triggered.connect(lambda x: self.browser().step_frac_down())
+        self.acts.overlap_up.triggered.connect(lambda x: self.browser().hop_frac_down())
 
         self.acts.overlap_down = QAction('Decrease &overlap', self)
         self.acts.overlap_down.setShortcut('O')
-        self.acts.overlap_down.triggered.connect(lambda x: self.browser().step_frac_up())
+        self.acts.overlap_down.triggered.connect(lambda x: self.browser().hop_frac_up())
         
         self.acts.color_map_cycler = QAction('&Color map', self)
         self.acts.color_map_cycler.setShortcut('Shift+C')
