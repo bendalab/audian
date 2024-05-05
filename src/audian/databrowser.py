@@ -390,7 +390,7 @@ class DataBrowser(QWidget):
         self.nfftw.setToolTip('NFFT (R, Shift+R)')
         self.nfftw.addItems([f'{2**i}' for i in range(3, 20)])
         self.nfftw.setEditable(False)
-        self.nfftw.setCurrentText(f'{self.data.nfft[self.current_channel]}')
+        self.nfftw.setCurrentText(f'{self.data.nfft}')
         self.nfftw.currentTextChanged.connect(lambda s: self.set_resolution(nfft=int(s)))
         self.toolbar.addWidget(self.nfftw)
         self.toolbar.addSeparator()
@@ -1086,41 +1086,30 @@ class DataBrowser(QWidget):
         if self.setting:
             return
         self.setting = True
-        if not isinstance(nfft, list):
-            nfft = [nfft]*self.data.channels
-        if not isinstance(step_frac, list):
-            step_frac = [step_frac]*self.data.channels
-        for c in self.selected_channels:
-            self.data.set_resolution(c, nfft[c], step_frac[c])
-        self.nfftw.setCurrentText(f'{self.data.nfft[self.current_channel]}')
-        for c in range(self.data.channels):
-            self.specs[c].update_spectrum()
+        self.data.set_resolution(nfft, step_frac)
+        self.nfftw.setCurrentText(f'{self.data.nfft}')
         self.setting = False
         if dispatch:
             self.sigResolutionChanged.emit()
 
         
     def freq_resolution_down(self):
-        for c in self.selected_channels:
-            self.data.freq_resolution_down(c)
+        self.data.freq_resolution_down()
         self.set_resolution()
 
         
     def freq_resolution_up(self):
-        for c in self.selected_channels:
-            self.data.freq_resolution_up(c)
+        self.data.freq_resolution_up()
         self.set_resolution()
 
 
     def step_frac_down(self):
-        for c in self.selected_channels:
-            self.data.step_frac_down(c)
+        self.data.step_frac_down()
         self.set_resolution()
 
 
     def step_frac_up(self):
-        for c in self.selected_channels:
-            self.data.step_frac_up(c)
+        self.data.step_frac_up()
         self.set_resolution()
 
         
@@ -1198,8 +1187,8 @@ class DataBrowser(QWidget):
 
 
     def highpass_cutoff_up(self):
-        highpass_cutoff = self.data.highpass_cutoff[self.current_channel]
-        lowpass_cutoff = self.data.lowpass_cutoff[self.current_channel]
+        highpass_cutoff = self.data.filtered.highpass_cutoff[self.current_channel]
+        lowpass_cutoff = self.data.filtered.lowpass_cutoff[self.current_channel]
         step = 1.0
         if highpass_cutoff >= 1.0:
             step = 0.5*10**(floor(log10(highpass_cutoff)))
@@ -1214,8 +1203,8 @@ class DataBrowser(QWidget):
 
 
     def highpass_cutoff_down(self):
-        highpass_cutoff = self.data.highpass_cutoff[self.current_channel]
-        lowpass_cutoff = self.data.lowpass_cutoff[self.current_channel]
+        highpass_cutoff = self.data.filtered.highpass_cutoff[self.current_channel]
+        lowpass_cutoff = self.data.filtered.lowpass_cutoff[self.current_channel]
         step = 1.0
         if highpass_cutoff >= 1.0:
             step = 0.5*10**(floor(log10(highpass_cutoff)))
@@ -1227,8 +1216,8 @@ class DataBrowser(QWidget):
 
 
     def lowpass_cutoff_up(self):
-        highpass_cutoff = self.data.highpass_cutoff[self.current_channel]
-        lowpass_cutoff = self.data.lowpass_cutoff[self.current_channel]
+        highpass_cutoff = self.data.filtered.highpass_cutoff[self.current_channel]
+        lowpass_cutoff = self.data.filtered.lowpass_cutoff[self.current_channel]
         step = 1.0
         if lowpass_cutoff >= 1.0:
             step = 0.5*10**(floor(log10(lowpass_cutoff)))
@@ -1239,8 +1228,8 @@ class DataBrowser(QWidget):
 
 
     def lowpass_cutoff_down(self):
-        highpass_cutoff = self.data.highpass_cutoff[self.current_channel]
-        lowpass_cutoff = self.data.lowpass_cutoff[self.current_channel]
+        highpass_cutoff = self.data.filtered.highpass_cutoff[self.current_channel]
+        lowpass_cutoff = self.data.filtered.lowpass_cutoff[self.current_channel]
         step = 1.0
         if lowpass_cutoff >= 1.0:
             step = 0.5*10**(floor(log10(lowpass_cutoff)))
@@ -1261,11 +1250,11 @@ class DataBrowser(QWidget):
         self.setting = True
         for c in self.selected_channels:
             cf = c if c < len(highpass_cutoffs) else -1
-            self.data.highpass_cutoff[c] = highpass_cutoffs[cf]
-            self.data.lowpass_cutoff[c] = lowpass_cutoffs[cf]
+            self.data.filtered.highpass_cutoff[c] = highpass_cutoffs[cf]
+            self.data.filtered.lowpass_cutoff[c] = lowpass_cutoffs[cf]
             self.axspecs[c].set_filter_handles(highpass_cutoffs[cf],
                                                lowpass_cutoffs[cf])
-        self.data.set_filter()
+        self.data.filtered.set_filter()
         for c in range(self.data.channels):
             self.traces[c].update_trace()
         self.setting = False
@@ -1281,16 +1270,16 @@ class DataBrowser(QWidget):
         self.setting = True
         if channel is None or channel in self.selected_channels:
             for c in self.selected_channels:
-                self.data.highpass_cutoff[c] = highpass_cutoff
-                self.data.lowpass_cutoff[c] = lowpass_cutoff
+                self.data.filtered.highpass_cutoff[c] = highpass_cutoff
+                self.data.filtered.lowpass_cutoff[c] = lowpass_cutoff
                 self.axspecs[c].set_filter_handles(highpass_cutoff,
                                                    lowpass_cutoff)
         else:
-            self.data.highpass_cutoff[channel] = highpass_cutoff
-            self.data.lowpass_cutoff[channel] = lowpass_cutoff
+            self.data.filtered.highpass_cutoff[channel] = highpass_cutoff
+            self.data.filtered.lowpass_cutoff[channel] = lowpass_cutoff
             self.axspecs[channel].set_filter_handles(highpass_cutoff,
                                                      lowpass_cutoff)
-        self.data.set_filter()
+        self.data.filtered.set_filter()
         for c in range(self.data.channels):
             self.traces[c].update_trace()
         self.setting = False

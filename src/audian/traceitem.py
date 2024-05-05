@@ -25,7 +25,7 @@ class TraceItem(pg.PlotDataItem):
     def __init__(self, data, channel, *args, color='#00ee00', **kwargs):
         # TODO: add a flag selecting whether to who filtered, unfiltered or both
         self.data = data.filtered
-        self.rate = self.data.samplerate
+        self.rate = self.data.rate
         self.channel = channel
         self.step = 1
         self.color = color

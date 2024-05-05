@@ -53,7 +53,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
         pg.GraphicsLayoutWidget.__init__(self, *args, **kwargs)
 
         self.data = data.data
-        self.tmax = len(self.data)/self.data.samplerate
+        self.tmax = len(self.data)/self.data.rate
         self.axtraces = axtraces
         self.no_signal = False
 
@@ -108,8 +108,8 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             max_pixel = QApplication.desktop().screenGeometry().width()
             self.step = max(1, len(self.data)//max_pixel)
             self.index = 0
-            self.nblock = int(20.0*self.data.samplerate//self.step)*self.step
-            self.times = np.arange(0, len(self.data), self.step/2)/self.data.samplerate
+            self.nblock = int(20.0*self.data.rate//self.step)*self.step
+            self.times = np.arange(0, len(self.data), self.step/2)/self.data.rate
             self.datas = np.zeros((len(self.times), self.data.channels))
             
             # add data:

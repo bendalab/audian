@@ -1,6 +1,4 @@
-"""Data
-
-Class managing all raw data, spectrograms, filtered and derived data
+"""Class managing all raw data, spectrograms, filtered and derived data
 and the time window shown.
 
 ## TODO
@@ -10,11 +8,11 @@ and the time window shown.
 
 import numpy as np
 from scipy.signal import spectrogram
-from scipy.signal import butter, sosfiltfilt
 from audioio import get_datetime
 from audioio import BufferedArray
 from thunderlab.dataloader import DataLoader
 from thunderlab.powerspectrum import decibel
+from .bufferedfilter import BufferedFilter
 
 
 class Data(object):
@@ -31,12 +29,7 @@ class Data(object):
         self.start_time = None
         self.meta_data = {}
         # filter:
-        self.filtered = None
-        self.highpass_cutoff = []
-        self.lowpass_cutoff = []
-        self.filter_order = []
-        self.sos = []
-        self.need_filter = False
+        self.filtered = BufferedFilter()
         # spectrogram:
         self.spectrum = None
         self.nfft = []
@@ -47,10 +40,7 @@ class Data(object):
         self.spec_rect = []
         self.zmin = []
         self.zmax = []
-        self.use_spec = np.zeros(0, dtype=bool)
-        self.spec_update = np.zeros(0, dtype=bool)
-        self.offset = -1
-        self.bufferframes = 0
+        self.use_spec = True
 
         
     def __del__(self):
@@ -67,32 +57,12 @@ class Data(object):
             self.data = None
             return
         self.load_buffer_orig = self.data.load_buffer
-        self.data.load_buffer = self.load_buffer
+        self.data.load_buffer = self.data_buffer
         self.data.set_unwrap(unwrap, unwrap_clip, False, self.data.unit)
+        self.data.allocate_buffer()
         self.file_path = self.data.filepath
-        self.rate = self.data.samplerate
+        self.rate = self.data.rate
         self.channels = self.data.channels
-        # filter:
-        self.filtered = BufferedArray(self.rate, self.channels,
-                                      self.data.frames,
-                                      self.data.bufferframes,
-                                      self.data.backframes)
-        self.filtered.ampl_min = self.data.ampl_min
-        self.filtered.ampl_max = self.data.ampl_max
-        self.filtered.load_buffer = self.filter_buffer
-        if highpass_cutoff is None:
-            self.highpass_cutoff = [0]*self.channels
-        else:
-            self.highpass_cutoff = [highpass_cutoff]*self.channels
-        if lowpass_cutoff is None:
-            self.lowpass_cutoff = [self.rate/2]*self.channels
-        else:
-            self.lowpass_cutoff = [lowpass_cutoff]*self.channels
-        self.filter_order = [2]*self.channels
-        self.sos = [None]*self.channels
-        self.need_filter = False
-        self.set_filter()
-        
         self.toffset = 0.0
         self.twindow = 10.0
         self.tmax = len(self.data)/self.rate
@@ -102,20 +72,29 @@ class Data(object):
         self.meta_data = dict(Format=self.data.format_dict())
         self.meta_data.update(self.data.metadata())
         self.start_time = get_datetime(self.meta_data)
+        # filter:
+        self.filtered.open(self.data, highpass_cutoff, lowpass_cutoff)
         # spectrogram:
-        self.spectrum = [None]*self.channels
-        self.nfft = [256]*self.channels
-        self.step_frac = [0.5]*self.channels
-        self.step = [256//2]*self.channels
-        self.fresolution = [1]*self.channels
-        self.tresolution = [1]*self.channels
-        self.spec_rect = [None]*self.channels
+        self.nfft = 256
+        self.step_frac = 0.5
+        self.step = 256//2
+        self.fresolution = self.rate/self.nfft
+        self.tresolution = self.step/self.rate
+        self.spec_rect = []
         self.zmin = [None]*self.channels
         self.zmax = [None]*self.channels
-        self.use_spec = np.ones(self.channels, dtype=bool)
-        self.spec_update = np.ones(self.channels, dtype=bool)
+        self.use_spec = True
+        self.spectrum = BufferedArray(self.rate/self.step,
+                                      self.channels,
+                                      self.data.frames//self.step,
+                                      self.data.bufferframes//self.step,
+                                      self.data.backframes//self.step)
+        self.spectrum.shape = (self.data.frames//self.step - 1,
+                               self.channels, self.nfft//2 + 1)
+        self.spectrum.ndim = 3
+        self.spectrum.init_buffer()
+        self.spectrum.load_buffer = self.spectrum_buffer
         # load data, apply filter, and compute spectrograms:
-        self.data.allocate_buffer()
         self.data.reload_buffer()
 
         
@@ -207,146 +186,96 @@ class Data(object):
                          maxYRange=self.data.ampl_max - self.data.ampl_min)
 
             
-    def load_buffer(self, offset, nframes, buffer):
+    def data_buffer(self, offset, nframes, buffer):
+        # bound method, self is Data instance!
         # data:
         self.load_buffer_orig(offset, nframes, buffer)
         # filter:
-        if self.filtered is not None and self.filtered is not self.data:
-            self.filtered.update_buffer(offset, offset + nframes)
+        self.filtered.update_buffer(offset, offset + nframes)
         # spectrum:
-        if len(self.data.buffer) == 0 or \
-           (self.offset == self.data.offset and \
-            self.bufferframes == len(self.data.buffer)):
-            return
-        self.spec_update[:] = True
-        self.update_spectra()
-        self.offset = self.data.offset
-        self.bufferframes = len(self.data.buffer)
+        self.spectrum.update_buffer(int(offset/self.spectrum.rate),
+                                    int((offset + nframes)/self.spectrum.rate) - 1)
         
-
-    def filter_buffer(self, offset, nframes, buffer):
-        if self.need_filter:
-            for c in range(self.channels):
-                if self.sos[c] is None:
-                    buffer[:, c] = self.data[offset:offset + nframes, c]
-                else:
-                    buffer[:, c] = sosfiltfilt(self.sos[c],
-                                               self.data[offset:offset
-                                                         + nframes, c])
-        else:
-            self.filtered.buffer = self.data.buffer
-            self.filtered.offset = self.data.offset
-
-
-    def make_filter(self, channel):
-        if self.highpass_cutoff[channel] < 1e-8 and \
-           self.lowpass_cutoff[channel] >= self.rate/2 - 1e-8:
-            self.sos[channel] = None
-        elif self.highpass_cutoff[channel] < 1e-8:
-            self.sos[channel] = butter(self.filter_order[channel],
-                                       self.lowpass_cutoff[channel],
-                                       'lowpass', fs=self.rate,
-                                       output='sos')
-        elif self.lowpass_cutoff[channel] >= self.rate/2-1e-8:
-            self.sos[channel] = butter(self.filter_order[channel],
-                                       self.highpass_cutoff[channel],
-                                       'highpass', fs=self.rate,
-                                       output='sos')
-        else:
-            self.sos[channel] = butter(self.filter_order[channel],
-                                       (self.highpass_cutoff[channel],
-                                        self.lowpass_cutoff[channel]),
-                                       'bandpass', fs=self.rate,
-                                       output='sos')
+        
+    def freq_resolution_down(self):
+        self.set_resolution(nfft=self.nfft//2)
 
         
-    def set_filter(self):
-        need_filter = False
-        for c in range(self.channels):
-            self.make_filter(c)
-            if self.sos[c] is not None:
-                need_filter = True
-        if need_filter != self.need_filter and need_filter:
-            self.filtered.allocate_buffer(self.data.bufferframes, True)
-        self.need_filter = need_filter
-        self.filtered.reload_buffer()
-
-        
-    def freq_resolution_down(self, channel):
-        if self.nfft[channel] > 8:
-            self.set_resolution(channel, nfft=self.nfft[channel]//2)
-
-        
-    def freq_resolution_up(self, channel):
-        if 2*self.nfft[channel] < min(len(self.data)//2, 2**30):
-            self.set_resolution(channel, nfft=2*self.nfft[channel])
+    def freq_resolution_up(self):
+        self.set_resolution(nfft=2*self.nfft)
 
 
     def step_frac_down(self, channel):
-        sfrac = self.step_frac[channel]
-        if 0.5*sfrac*self.nfft[channel] >= 1:
-            self.set_resolution(channel, step_frac=sfrac/2)
+        self.set_resolution(step_frac=self.step_frac/2)
 
 
     def step_frac_up(self, channel):
-        sfrac = self.step_frac[channel]
-        if sfrac < 1:
-            self.set_resolution(channel, step_frac=2*sfrac)
+        self.set_resolution(channel, step_frac=2*self.step_frac)
 
 
-    def set_resolution(self, channel, nfft=None, step_frac=None):
+    def set_resolution(self, nfft=None, step_frac=None):
         if nfft is not None:
             if nfft < 8:
                 nfft = 8
-            if nfft > 2**30:
-                nfft = 2**30
-            if self.nfft[channel] != nfft:
-                self.nfft[channel] = nfft
-                self.spec_update[channel] = True
+            max_nfft = min(len(self.data)//2, 2**30)
+            if nfft > max_nfft:
+                nfft = max_nfft
+            if self.nfft != nfft:
+                self.nfft = nfft
+                spec_update = True
         if step_frac is not None:
             if step_frac > 1.0:
                 step_frac = 1.0
-            self.step_frac[channel] = step_frac
-        step = int(np.round(self.step_frac[channel]* \
-                            self.nfft[channel]))
+            self.step_frac = step_frac
+        step = int(np.round(self.step_frac*self.nfft))
         if step < 1:
             step = 1
-        if self.step[channel] != step:
-            self.step[channel] = step
-            self.spec_update[channel] = True
-        self.tresolution[channel] = self.step[channel]/self.rate
-        self.fresolution[channel] = self.rate/self.nfft[channel]
+        if step > self.nfft:
+            step = self.nfft
+        if self.step != step:
+            self.step = step
+            spec_update = True
+        if spec_update:
+            self.spectrum.shape = (self.data.frames//self.step - 1,
+                                   self.channels, self.nfft//2 + 1)
+            self.tresolution = self.step/self.rate
+            self.fresolution = self.rate/self.nfft
+            self.spectrum.allocate_bufer()
+            self.spectrum.reload_bufer()
 
 
-    def estimate_noiselevel(self, channel, nf):
+    def estimate_noiselevels(self, nf):
         if nf < 1:
             nf = 1
-        zmin = np.percentile(self.spectrum[channel][-nf:, :], 95.0)
-        if not np.isfinite(zmin):
-            zmin = -100.0
-        self.zmin[channel] = zmin
-        self.zmax[channel] = zmin + 60.0
+        for c in range(self.channels):
+            if zmin[c] is not None:
+                continue
+            zmin = np.percentile(self.spectrum.buffer[:, c, -nf:], 95)
+            if not np.isfinite(zmin):
+                zmin = -100.0
+            self.zmin[c] = zmin
+            self.zmax[c] = zmin + 60.0
 
 
     def update_spectra(self):
-        for c in range(len(self.spec_update)):
-            if not self.use_spec[c] or not self.spec_update[c]:
-                continue
-            # compute spectrum for channel c:
-            # takes very long:
-            freq, time, Sxx = spectrogram(self.data.buffer[:, c],
-                                          self.rate,
-                                          nperseg=self.nfft[c],
-                                          noverlap=self.nfft[c] -
-                                            self.step[c])
-            self.tresolution[c] = time[1] - time[0]
-            self.fresolution[c] = freq[1] - freq[0]
-            self.spectrum[c] = decibel(Sxx)
-            self.spec_rect[c] = [self.data.offset/self.rate, 0,
-                                 time[-1] + self.tresolution[c],
-                                 freq[-1] + self.fresolution[c]]
-            # estimate noise floor for color map:
-            if self.zmin[c] is None:
-                self.estimate_noiselevel(c, len(freq)//16)
-            self.spec_update[c] = False
-            # somehow notify spectrum plots to update!
+        # called from SpecItem when viewRange is changed.
+        pass
+
+
+    def spectrum_buffer(self, offset, nframes, buffer):
+        return
+        # bound method, self is Data instance!
+        #t0 = offset/self.rate
+        #t1 = t0 + nframes/self.rate
+        freq, time, Sxx = spectrogram(self.data.buffer, self.data.rate,
+                                      nperseg=self.nfft,
+                                      noverlap=self.nfft - self.step,
+                                      axis=0)
+        self.tresolution = time[1] - time[0]
+        self.fresolution = freq[1] - freq[0]
+        buffer[:,:,:] = decibel(Sxx).transpose((2, 1, 0))
+        self.spec_rect = [self.data.offset/self.data.rate, 0,
+                          time[-1] + self.tresolution,
+                          freq[-1] + self.fresolution]
+        # estimate noise floor for color map:
+        self.estimate_noiselevels(len(freq)//16)

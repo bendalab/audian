@@ -60,8 +60,8 @@ class SpectrumPlot(pg.PlotItem):
         self.setMenuEnabled(False)
 
         # filter handles:
-        self.highpass_cutoff = data.highpass_cutoff[channel]
-        self.lowpass_cutoff = data.lowpass_cutoff[channel]
+        self.highpass_cutoff = data.filtered.highpass_cutoff[channel]
+        self.lowpass_cutoff = data.filtered.lowpass_cutoff[channel]
         self.highpass_handle = pg.InfiniteLine(angle=0, movable=True)
         self.highpass_handle.setPen(pg.mkPen('white', width=2))
         self.highpass_handle.addMarker('o', position=0.75, size=6)

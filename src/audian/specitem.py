@@ -48,9 +48,9 @@ class SpecItem(pg.ImageItem):
 
     def update_spectrum(self):
         self.data.update_spectra()
-        self.setImage(self.data.spectrum[self.channel],
+        self.setImage(self.data.spectrum[:, self.channel, :],
                       autoLevels=False)
-        self.setRect(QRectF(*self.data.spec_rect[self.channel]))
+        self.setRect(QRectF(*self.data.spec_rect))
 
                 
     def zoom_freq_in(self):
