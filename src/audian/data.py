@@ -158,6 +158,7 @@ class Data(object):
     def data_buffer(self, offset, nframes, buffer):
         # bound method, self is Data instance!
         # data:
+        print('data_buffer', offset, nframes)
         self.load_buffer_orig(offset, nframes, buffer)
         # filter:
         self.filtered.update_buffer(offset, offset + nframes)

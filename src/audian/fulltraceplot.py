@@ -52,8 +52,9 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
     def __init__(self, data, axtraces, *args, **kwargs):
         pg.GraphicsLayoutWidget.__init__(self, *args, **kwargs)
 
-        self.data = data.data
-        self.tmax = len(self.data)/self.data.rate
+        self.data = data
+        self.frames = len(self.data.data)
+        self.tmax = self.frames/self.data.rate
         self.axtraces = axtraces
         self.no_signal = False
 
@@ -106,10 +107,10 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
 
             # init data:
             max_pixel = QApplication.desktop().screenGeometry().width()
-            self.step = max(1, len(self.data)//max_pixel)
+            self.step = max(1, self.frames//max_pixel)
             self.index = 0
             self.nblock = int(20.0*self.data.rate//self.step)*self.step
-            self.times = np.arange(0, len(self.data), self.step/2)/self.data.rate
+            self.times = np.arange(0, self.frames, self.step/2)/self.data.rate
             self.datas = np.zeros((len(self.times), self.data.channels))
             
             # add data:
@@ -132,15 +133,15 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
 
     def load_data(self):
         i = 2*self.index//self.step
-        n = min(self.nblock, len(self.data) - self.index)
+        n = min(self.nblock, self.frames - self.index)
         buffer = np.zeros((n, self.data.channels))
-        self.data.load_buffer(self.index, n, buffer)
+        self.data.load_buffer_orig(self.index, n, buffer)
         for c in range(self.data.channels):
             data = down_sample_peak(buffer[:,c], self.step)
             self.datas[i:i+len(data), c] = data
             self.lines[c].setData(self.times, self.datas[:,c])
         self.index += n
-        if self.index < len(self.data):
+        if self.index < self.frames:
             QTimer.singleShot(10, self.load_data)
         else:
             # TODO: do we really datas? Couldn't we take it from lines? 

@@ -32,7 +32,7 @@ class BufferedSpectrogram(BufferedArray):
         self.hop = 256//2
         self.rate = self.source.rate
         self.channels = self.source.channels
-        self.frames = self.source.frames//self.hop - 1 # TODO ?
+        self.frames = self.source.frames//self.hop
         self.shape = (self.frames, self.channels, self.nfft//2 + 1)
         self.ndim = 3
         self.size = np.prod(self.shape)
@@ -47,16 +47,19 @@ class BufferedSpectrogram(BufferedArray):
         self.init_buffer()
                 
     def load_buffer(self, offset, nframes, buffer):
-        #t0 = offset/self.rate
-        #t1 = t0 + nframes/self.rate
-        freq, time, Sxx = spectrogram(self.source.buffer, self.source.rate,
+        print('compute spectrum', offset, nframes)
+        start = offset*self.hop
+        stop = start + nframes*self.hop
+        print('    buffer', start, stop - start, len(self.source.buffer))
+        freq, time, Sxx = spectrogram(self.source[start:stop],
+                                      self.source.rate,
                                       nperseg=self.nfft,
                                       noverlap=self.nfft - self.hop,
                                       axis=0)
-        self.tresolution = time[1] - time[0]
-        self.fresolution = freq[1] - freq[0]
-        buffer[:, :, :] = decibel(Sxx).transpose((2, 1, 0))
-        self.spec_rect = [self.source.offset/self.source.rate, 0,
+        n = Sxx.shape[2]
+        buffer[:n, :, :] = Sxx.transpose((2, 1, 0))
+        buffer[n:, :, :] = 0
+        self.spec_rect = [start/self.source.rate, 0,
                           time[-1] + self.tresolution,
                           freq[-1] + self.fresolution]
         # estimate noise floor for color map:
@@ -68,7 +71,7 @@ class BufferedSpectrogram(BufferedArray):
         for c in range(self.channels):
             if self.zmin[c] is not None:
                 continue
-            zmin = np.percentile(self.buffer[:, c, -nf:], 95)
+            zmin = np.percentile(decibel(self.buffer[:, c, -nf:]), 95)
             if not np.isfinite(zmin):
                 zmin = -100.0
             self.zmin[c] = zmin
@@ -98,7 +101,7 @@ class BufferedSpectrogram(BufferedArray):
             self.hop = hop
             spec_update = True
         if spec_update:
-            self.frames = self.source.frames//self.hop - 1 # TODO ?
+            self.frames = self.source.frames//self.hop
             self.shape = (self.frames, self.channels, self.nfft//2 + 1)
             self.size = np.prod(self.shape)
             self.bufferframes = self.source.bufferframes//self.hop

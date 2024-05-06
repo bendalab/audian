@@ -1,5 +1,6 @@
 from PyQt5.QtCore import QRectF
 import pyqtgraph as pg
+from thunderlab.powerspectrum import decibel
 
 
 class SpecItem(pg.ImageItem):
@@ -17,6 +18,7 @@ class SpecItem(pg.ImageItem):
         self.f0 = 0.0
         self.f1 = self.fmax
         self.cbar = None
+        self.update_spectrum()
 
 
     def setCBar(self, cbar):
@@ -34,6 +36,8 @@ class SpecItem(pg.ImageItem):
 
         
     def viewRangeChanged(self):
+        return   # TODO
+        print('spec view changed', self.channel)
         vb = self.getViewBox()
         if not isinstance(vb, pg.ViewBox):
             return
@@ -43,11 +47,12 @@ class SpecItem(pg.ImageItem):
         stop = min(len(self.data), int(trange[1]*self.rate+1))
         if start < self.data.offset or stop >= self.data.offset + len(self.data.buffer):
             self.data.update_buffer(start, stop)
-        self.update_spectrum()
+            self.update_spectrum()
     
 
     def update_spectrum(self):
-        self.setImage(self.data[:, self.channel, :].T,
+        print('spec update', self.channel)
+        self.setImage(decibel(self.data[:, self.channel, :].T),
                       autoLevels=False)
         self.setRect(QRectF(*self.data.spec_rect))
 

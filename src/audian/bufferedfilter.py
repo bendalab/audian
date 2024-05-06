@@ -51,6 +51,7 @@ class BufferedFilter(BufferedArray):
                                                self.source[offset:offset
                                                            + nframes, c])
         else:
+            self.source.update_buffer(offset, offset + nframes)
             self.buffer = self.source.buffer
             self.offset = self.source.offset
 
