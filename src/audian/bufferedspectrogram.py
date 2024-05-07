@@ -29,8 +29,12 @@ class BufferedSpectrogram(BufferedArray):
         self.source = source
         self.nfft = nfft
         self.hop_frac = hop_frac
-        self.hop = 256//2
-        self.rate = self.source.rate
+        self.hop = int(self.nfft*self.hop_frac)
+        if self.hop < 1:
+            self.hop = 1
+        if self.hop > self.nfft:
+            self.hop = self.nfft
+        self.rate = self.source.rate/self.hop
         self.channels = self.source.channels
         self.frames = self.source.frames//self.hop
         self.shape = (self.frames, self.channels, self.nfft//2 + 1)
@@ -38,8 +42,8 @@ class BufferedSpectrogram(BufferedArray):
         self.size = np.prod(self.shape)
         self.bufferframes = self.source.bufferframes//self.hop
         self.backframes = self.source.backframes//self.hop
-        self.fresolution = self.rate/self.nfft
-        self.tresolution = self.hop/self.rate
+        self.fresolution = self.source.rate/self.nfft
+        self.tresolution = self.hop/self.source.rate
         self.spec_rect = []
         self.zmin = [None]*self.channels
         self.zmax = [None]*self.channels
@@ -59,8 +63,8 @@ class BufferedSpectrogram(BufferedArray):
         n = Sxx.shape[2]
         buffer[:n, :, :] = Sxx.transpose((2, 1, 0))
         buffer[n:, :, :] = 0
-        self.spec_rect = [start/self.source.rate, 0,
-                          time[-1] + self.tresolution,
+        self.spec_rect = [self.offset/self.rate, 0,
+                          (self.offset + len(self.buffer))/self.rate + self.tresolution,
                           freq[-1] + self.fresolution]
         # estimate noise floor for color map:
         self.estimate_noiselevels(len(freq)//16)
@@ -101,13 +105,14 @@ class BufferedSpectrogram(BufferedArray):
             self.hop = hop
             spec_update = True
         if spec_update:
+            self.rate = self.source.rate/self.hop
             self.frames = self.source.frames//self.hop
             self.shape = (self.frames, self.channels, self.nfft//2 + 1)
             self.size = np.prod(self.shape)
             self.bufferframes = self.source.bufferframes//self.hop
             self.backframes = self.source.backframes//self.hop
-            self.tresolution = self.hop/self.rate
-            self.fresolution = self.rate/self.nfft
+            self.tresolution = self.hop/self.source.rate
+            self.fresolution = self.source.rate/self.nfft
             self.allocate_buffer()
             self.reload_buffer()
 

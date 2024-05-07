@@ -10,7 +10,7 @@ class SpecItem(pg.ImageItem):
         self.setOpts(axisOrder='row-major')
         
         self.data = data
-        self.rate = self.data.rate
+        self.rate = self.data.source.rate
         self.channel = channel
         self.zmin = data.zmin[channel]
         self.zmax = data.zmax[channel]
@@ -52,7 +52,7 @@ class SpecItem(pg.ImageItem):
 
     def update_spectrum(self):
         print('spec update', self.channel)
-        self.setImage(decibel(self.data[:, self.channel, :].T),
+        self.setImage(decibel(self.data.buffer[:, self.channel, :].T),
                       autoLevels=False)
         self.setRect(QRectF(*self.data.spec_rect))
 
