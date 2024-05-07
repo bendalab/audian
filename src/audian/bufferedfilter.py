@@ -6,6 +6,7 @@ from audioio import BufferedArray
 
 
 class BufferedFilter(BufferedArray):
+
     def __init_(self, verbose=0):
         self.verbose = verbose
         self.highpass_cutoff = []
@@ -14,6 +15,7 @@ class BufferedFilter(BufferedArray):
         self.sos = []
         self.need_filter = False
 
+        
     def open(self, source, highpass_cutoff=None, lowpass_cutoff=None):
         self.source = source
         self.rate = self.source.rate
@@ -40,6 +42,7 @@ class BufferedFilter(BufferedArray):
         self.sos = [None]*self.channels
         self.need_filter = False
         self.set_filter()
+
         
     def load_buffer(self, offset, nframes, buffer):
         if self.need_filter:
@@ -55,6 +58,7 @@ class BufferedFilter(BufferedArray):
             self.buffer = self.source.buffer
             self.offset = self.source.offset
 
+            
     def make_filter(self, channel):
         if self.highpass_cutoff[channel] < 1e-8 and \
            self.lowpass_cutoff[channel] >= self.rate/2 - 1e-8:
@@ -75,7 +79,8 @@ class BufferedFilter(BufferedArray):
                                         self.lowpass_cutoff[channel]),
                                        'bandpass', fs=self.rate,
                                        output='sos')
-        
+
+            
     def set_filter(self):
         need_filter = False
         for c in range(self.channels):

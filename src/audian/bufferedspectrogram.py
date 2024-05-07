@@ -13,6 +13,7 @@ from thunderlab.powerspectrum import decibel
 
 
 class BufferedSpectrogram(BufferedArray):
+
     def __init_(self, verbose=0):
         self.verbose = verbose
         self.nfft = []
@@ -21,10 +22,9 @@ class BufferedSpectrogram(BufferedArray):
         self.fresolution = []
         self.tresolution = []
         self.spec_rect = []
-        self.zmin = []
-        self.zmax = []
         self.use_spec = True
 
+        
     def open(self, source, nfft=256, hop_frac=0.5):
         self.source = source
         self.nfft = nfft
@@ -45,11 +45,10 @@ class BufferedSpectrogram(BufferedArray):
         self.fresolution = self.source.rate/self.nfft
         self.tresolution = self.hop/self.source.rate
         self.spec_rect = []
-        self.zmin = [None]*self.channels
-        self.zmax = [None]*self.channels
         self.use_spec = True
         self.init_buffer()
-                
+
+        
     def load_buffer(self, offset, nframes, buffer):
         print('compute spectrum', offset, nframes)
         start = offset*self.hop - self.source.offset
@@ -70,21 +69,8 @@ class BufferedSpectrogram(BufferedArray):
         self.spec_rect = [self.offset/self.rate, 0,
                           (self.offset + len(self.buffer))/self.rate + self.tresolution,
                           freq[-1] + self.fresolution]
-        # estimate noise floor for color map:
-        self.estimate_noiselevels(len(freq)//16)
 
-    def estimate_noiselevels(self, nf):
-        if nf < 1:
-            nf = 1
-        for c in range(self.channels):
-            if self.zmin[c] is not None:
-                continue
-            zmin = np.percentile(decibel(self.buffer[:, c, -nf:]), 95)
-            if not np.isfinite(zmin):
-                zmin = -100.0
-            self.zmin[c] = zmin
-            self.zmax[c] = zmin + 60.0
-
+        
     def set_resolution(self, nfft=None, hop_frac=None):
         spec_update = False
         if nfft is not None:

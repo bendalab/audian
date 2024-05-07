@@ -1,3 +1,4 @@
+import numpy as np
 from PyQt5.QtCore import QRectF
 import pyqtgraph as pg
 from thunderlab.powerspectrum import decibel
@@ -10,22 +11,34 @@ class SpecItem(pg.ImageItem):
         self.setOpts(axisOrder='row-major')
         
         self.data = data
-        self.rate = self.data.source.rate
         self.channel = channel
-        self.zmin = data.zmin[channel]
-        self.zmax = data.zmax[channel]
-        self.fmax = 0.5*self.rate
+        self.zmin = -100
+        self.zmax = 0
+        self.fmax = 0.5*self.data.source.rate
         self.f0 = 0.0
         self.f1 = self.fmax
         self.cbar = None
         self.update_spectrum()
+        self.estimate_noiselevels()
+        self.set_power()
 
 
+    def estimate_noiselevels(self):
+        nf = self.data.buffer.shape[2]//16
+        if nf < 1:
+            nf = 1
+        zmin = np.percentile(decibel(self.data.buffer[:, self.channel, -nf:]), 95)
+        if not np.isfinite(zmin):
+            zmin = -100.0
+        self.zmin = zmin
+        self.zmax = zmin + 60.0
+
+            
     def setCBar(self, cbar):
         self.cbar = cbar
 
 
-    def set_power(self, zmin, zmax):
+    def set_power(self, zmin=None, zmax=None):
         if not zmin is None:
             self.zmin = zmin
         if not zmax is None:
@@ -43,8 +56,8 @@ class SpecItem(pg.ImageItem):
             return
         
         trange = vb.viewRange()[0]
-        start = max(0, int(trange[0]*self.rate))
-        stop = min(len(self.data), int(trange[1]*self.rate+1))
+        start = max(0, int(trange[0]*self.data.rate))
+        stop = min(len(self.data), int(trange[1]*self.data.rate+1))
         if start < self.data.offset or stop >= self.data.offset + len(self.data.buffer):
             self.data.update_buffer(start, stop)
             self.update_spectrum()
