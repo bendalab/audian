@@ -23,8 +23,7 @@ def down_sample_peak(data, step):
 class TraceItem(pg.PlotDataItem):
     
     def __init__(self, data, channel, *args, color='#00ee00', **kwargs):
-        # TODO: add a flag selecting whether to who filtered, unfiltered or both
-        self.data = data.filtered
+        self.data = data
         self.rate = self.data.rate
         self.channel = channel
         self.step = 1
@@ -50,6 +49,7 @@ class TraceItem(pg.PlotDataItem):
 
         
     def viewRangeChanged(self):
+        #print('TraceItem:viewRangeChanged()', self.channel)
         self.update_trace()
     
 
@@ -60,24 +60,23 @@ class TraceItem(pg.PlotDataItem):
         
         trange = vb.viewRange()[0]
         start = max(0, int(trange[0]*self.rate))
-        stop = min(len(self.data), int(trange[1]*self.rate+1))
-        sstop = int(trange[1]*self.rate+1)
+        tstop = int(trange[1]*self.rate+1)
+        stop = min(len(self.data), tstop)
         max_pixel = QApplication.desktop().screenGeometry().width()
-        self.step = max(1, (sstop - start)//max_pixel)
+        self.step = max(1, (tstop - start)//max_pixel)
         if self.step > 1:
-            step2 = self.step//2
-            self.step = step2*2
             start = int(floor(start/self.step)*self.step)
             stop = int(ceil(stop/self.step)*self.step)
             self.setPen(dict(color=self.color, width=1.1))
-            n = (stop-start)//self.step
+            n = (stop - start)//self.step
             pdata = np.zeros(2*n)
             i = 0
-            nb = int(60*self.rate//self.step)*self.step
+            nb = (self.data.bufferframes//self.step)*self.step
             for dd in self.data.blocks(nb, 0, start, stop):
                 dsd = down_sample_peak(dd[:, self.channel], self.step)
                 pdata[i:i+len(dsd)] = dsd
                 i += len(dsd)
+            step2 = self.step//2
             time = np.arange(start, start + len(pdata)*step2, step2)/self.rate
             self.setData(time, pdata)
         elif self.step > 1:  # TODO: not used

@@ -49,7 +49,6 @@ class SpecItem(pg.ImageItem):
 
         
     def viewRangeChanged(self):
-        return   # TODO
         print('spec view changed', self.channel)
         vb = self.getViewBox()
         if not isinstance(vb, pg.ViewBox):
@@ -59,7 +58,7 @@ class SpecItem(pg.ImageItem):
         start = max(0, int(trange[0]*self.data.rate))
         stop = min(len(self.data), int(trange[1]*self.data.rate+1))
         if start < self.data.offset or stop >= self.data.offset + len(self.data.buffer):
-            self.data.update_buffer(start, stop)
+            #self.data.update_buffer(start, stop)
             self.update_spectrum()
     
 

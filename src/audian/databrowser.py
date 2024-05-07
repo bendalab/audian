@@ -277,7 +277,7 @@ class DataBrowser(QWidget):
             self.data.set_time_limits(axs)
             self.data.set_time_range(axs)
             axs.sigXRangeChanged.connect(self.update_times)
-            axs.setYRange(self.specs[c].f0, self.specs[c].f1)
+            axs.setYRange(spec.f0, spec.f1)
             axs.sigYRangeChanged.connect(self.update_frequencies)
             axs.sigSelectedRegion.connect(self.region_menu)
             axs.sigUpdateFilter.connect(self.update_filter)
@@ -311,7 +311,7 @@ class DataBrowser(QWidget):
             self.axspacers.append(axsp)
             
             # trace plot:
-            trace = TraceItem(self.data, c)
+            trace = TraceItem(self.data.filtered, c)
             self.traces.append(trace)
             # takes some time:
             axt = OscillogramPlot(c, xwidth, self.data.start_time,
@@ -416,7 +416,7 @@ class DataBrowser(QWidget):
         self.vbox.addWidget(self.toolbar)
         
         # full data:
-        self.datafig = FullTracePlot(self.data, self.axtraces)
+        self.datafig = FullTracePlot(self.data.data, self.axtraces)
         self.vbox.addWidget(self.datafig)
 
         self.setEnabled(True)
@@ -901,6 +901,7 @@ class DataBrowser(QWidget):
             self.data.toffset = toffset
         if not twindow is None:
             self.data.twindow = twindow
+        self.data.update_times()
         for axs in self.axts:
             for ax in axs:
                 if enable_starttime is not None:

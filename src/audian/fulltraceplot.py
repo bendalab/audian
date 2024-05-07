@@ -53,7 +53,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
         pg.GraphicsLayoutWidget.__init__(self, *args, **kwargs)
 
         self.data = data
-        self.frames = len(self.data.data)
+        self.frames = self.data.frames
         self.tmax = self.frames/self.data.rate
         self.axtraces = axtraces
         self.no_signal = False
@@ -135,7 +135,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
         i = 2*self.index//self.step
         n = min(self.nblock, self.frames - self.index)
         buffer = np.zeros((n, self.data.channels))
-        self.data.load_buffer_orig(self.index, n, buffer)
+        self.data.load_buffer(self.index, n, buffer)
         for c in range(self.data.channels):
             data = down_sample_peak(buffer[:,c], self.step)
             self.datas[i:i+len(data), c] = data

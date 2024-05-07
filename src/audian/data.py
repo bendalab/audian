@@ -1,9 +1,6 @@
 """Class managing all raw data, spectrograms, filtered and derived data
 and the time window shown.
 
-## TODO
-- update use_spec on visibility of databrowser, and whether spectra are shown at all
-
 """
 
 import numpy as np
@@ -43,8 +40,6 @@ class Data(object):
         except IOError:
             self.data = None
             return
-        self.load_buffer_orig = self.data.load_buffer
-        self.data.load_buffer = self.data_buffer
         self.data.set_unwrap(unwrap, unwrap_clip, False, self.data.unit)
         self.data.allocate_buffer()
         self.file_path = self.data.filepath
@@ -65,6 +60,7 @@ class Data(object):
         self.spectrum.open(self.data, 256, 0.5)
         # load data, apply filter, and compute spectrograms:
         self.data.reload_buffer()
+        self.update_times()
 
         
     def set_time_limits(self, ax):
@@ -154,17 +150,11 @@ class Data(object):
                          minYRange=1/2**16,
                          maxYRange=self.data.ampl_max - self.data.ampl_min)
 
-            
-    def data_buffer(self, offset, nframes, buffer):
-        # bound method, self is Data instance!
-        # data:
-        print('data_buffer', offset, nframes)
-        self.load_buffer_orig(offset, nframes, buffer)
-        # filter:
-        self.filtered.update_buffer(offset, offset + nframes)
-        # spectrum:
-        self.spectrum.update_buffer(offset//self.spectrum.hop,
-                                    (offset + nframes)//self.spectrum.hop - 1)
+
+    def update_times(self):
+        self.data.update_time(self.toffset, self.toffset + self.twindow)
+        self.filtered.update_time(self.toffset, self.toffset + self.twindow)
+        self.spectrum.update_time(self.toffset, self.toffset + self.twindow)
         
         
     def freq_resolution_down(self):
