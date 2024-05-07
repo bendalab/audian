@@ -52,10 +52,13 @@ class BufferedSpectrogram(BufferedArray):
                 
     def load_buffer(self, offset, nframes, buffer):
         print('compute spectrum', offset, nframes)
-        start = offset*self.hop
+        start = offset*self.hop - self.source.offset
         stop = start + nframes*self.hop
+        if stop > len(self.source.buffer):
+            print('    source buffer overflow', stop, len(self.source.buffer))
+            stop = len(self.source.buffer)
         print('    buffer', start, stop - start, len(self.source.buffer))
-        freq, time, Sxx = spectrogram(self.source[start:stop],
+        freq, time, Sxx = spectrogram(self.source.buffer[start:stop],
                                       self.source.rate,
                                       nperseg=self.nfft,
                                       noverlap=self.nfft - self.hop,
@@ -63,6 +66,7 @@ class BufferedSpectrogram(BufferedArray):
         n = Sxx.shape[2]
         buffer[:n, :, :] = Sxx.transpose((2, 1, 0))
         buffer[n:, :, :] = 0
+        # extent of the full buffer:
         self.spec_rect = [self.offset/self.rate, 0,
                           (self.offset + len(self.buffer))/self.rate + self.tresolution,
                           freq[-1] + self.fresolution]
