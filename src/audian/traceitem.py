@@ -139,11 +139,10 @@ class TraceItem(pg.PlotDataItem):
         
     def auto_ampl(self, toffset, twindow):
         # TODO: add a flag selecting whether to who filtered, unfiltered or both
-        data = self.data.filtered
-        t0 = int(np.round(toffset * self.rate))
-        t1 = int(np.round((toffset + twindow) * self.rate))
-        ymin = np.min(data[t0:t1, self.channel])
-        ymax = np.max(data[t0:t1, self.channel])
+        t0 = int(np.round(toffset*self.rate))
+        t1 = int(np.round((toffset + twindow)*self.rate))
+        ymin = np.min(self.data[t0:t1, self.channel])
+        ymax = np.max(self.data[t0:t1, self.channel])
         h = 0.5*(ymax - ymin)
         
         c = 0.5*(ymax + ymin)
