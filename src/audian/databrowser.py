@@ -24,7 +24,7 @@ from thunderlab.datawriter import available_formats, write_data
 from .version import __version__, __year__
 from .data import Data
 from .fulltraceplot import FullTracePlot, secs_to_str
-from .oscillogramplot import OscillogramPlot
+from .timeplot import TimePlot
 from .spectrumplot import SpectrumPlot
 from .traceitem import TraceItem
 from .specitem import SpecItem
@@ -313,9 +313,11 @@ class DataBrowser(QWidget):
             # trace plot:
             trace = TraceItem(self.data.filtered, c)
             self.traces.append(trace)
-            # takes some time:
-            axt = OscillogramPlot(c, xwidth, self.data.start_time,
-                                  self.data.channels > 4)
+            axt = TimePlot(c, xwidth, self.data.start_time)
+            if self.data.channels > 4:
+                axt.setLabel('left', f'C{c}', color='black')
+            else:
+                axt.setLabel('left', f'channel {c}', color='black')
             axt.addItem(trace)
             labels = []
             for l in self.marker_labels:

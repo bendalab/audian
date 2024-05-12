@@ -8,13 +8,15 @@ from .timeaxisitem import TimeAxisItem
 from .yaxisitem import YAxisItem
 
 
-class OscillogramPlot(pg.PlotItem):
+class TimePlot(pg.PlotItem):
 
     
     sigSelectedRegion = Signal(object, object, object)
 
-    
-    def __init__(self, channel, xwidth, starttime, short_label=False):
+
+    def __init__(self, channel, xwidth, starttime):
+
+        self.channel = channel
 
         # view box:
         view = SelectViewBox(channel)
@@ -28,17 +30,13 @@ class OscillogramPlot(pg.PlotItem):
         top_axis = TimeAxisItem(orientation='top', showValues=False)
         top_axis.setStartTime(starttime)
         left_axis = YAxisItem(orientation='left', showValues=True)
-        if short_label:
-            left_axis.setLabel(f'C{channel}', color='black')
-        else:
-            left_axis.setLabel(f'channel {channel}', color='black')
         left_axis.setPen('white')
         left_axis.setTextPen('black')
         left_axis.setWidth(8*xwidth)
         right_axis = YAxisItem(orientation='right', showValues=False)
 
         # plot:
-        pg.PlotItem.__init__(self, viewBox=view,
+        pg.PlotItem.__init__(self,  viewBox=view,
                              axisItems={'bottom': bottom_axis,
                                         'top': top_axis,
                                         'left': left_axis,
@@ -46,7 +44,7 @@ class OscillogramPlot(pg.PlotItem):
 
         # design:
         self.getViewBox().setBackgroundColor('black')
-        self.getViewBox().setDefaultPadding(padding=0.0)
+        self.getViewBox().setDefaultPadding(padding=0)
 
         # functionality:
         self.hideButtons()
