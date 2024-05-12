@@ -105,4 +105,3 @@ class BufferedSpectrogram(BufferedArray):
             self.fresolution = self.source.rate/self.nfft
             self.allocate_buffer()
             self.reload_buffer()
-

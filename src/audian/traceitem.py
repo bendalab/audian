@@ -52,15 +52,15 @@ class TraceItem(pg.PlotDataItem):
         if not isinstance(vb, pg.ViewBox):
             return
         
-        trange = vb.viewRange()[0]
-        start = max(0, int(trange[0]*self.rate))
-        tstop = int(trange[1]*self.rate+1)
+        t0, t1 = vb.viewRange()[0]
+        start = max(0, int(t0*self.rate))
+        tstop = int(t1*self.rate+1)
         stop = min(len(self.data), tstop)
         max_pixel = QApplication.desktop().screenGeometry().width()
         self.step = max(1, (tstop - start)//max_pixel)
         if self.step > 1:
             start = int(floor(start/self.step)*self.step)
-            stop = int(ceil(stop/self.step)*self.step)
+            stop = int(ceil(stop/self.step + 1)*self.step)
             self.setPen(dict(color=self.color, width=1.1))
             n = (stop - start)//self.step
             pdata = np.zeros(2*n)
@@ -70,7 +70,8 @@ class TraceItem(pg.PlotDataItem):
                 dsd = down_sample_peak(dd[:, self.channel], self.step)
                 pdata[i:i+len(dsd)] = dsd
                 i += len(dsd)
-            step2 = self.step//2
+            #pdata = down_sample_peak(self.data[start:stop, self.channel], self.step)
+            step2 = self.step/2
             time = np.arange(start, start + len(pdata)*step2, step2)/self.rate
             self.setData(time, pdata)
         elif self.step > 1:  # TODO: not used
