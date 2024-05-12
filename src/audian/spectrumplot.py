@@ -1,3 +1,6 @@
+"""PlotItem for interactive display of spectrograms.
+"""
+
 try:
     from PyQt5.QtCore import Signal
 except ImportError:

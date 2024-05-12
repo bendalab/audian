@@ -75,9 +75,9 @@ handles all GUI aspects.
 - `bufferedfilter.py`: Filter source data on the fly.
 - `bufferedspectrogram.py`: Spectrogram of source data on the fly.
 - `fulltraceplot.py`: GraphicsLayoutWidget showing the full raw data traces.
-- `oscillogramplot.py`: PlotItem for plotting traces.
+- `timeplot.py`: Panel for displaying any data as a function of time.
 - `traceitem.py`: PlotDataItem for OscillogramPlot.
-- `spectrumplot.py`: PlotItem for spectrograms.
+- `spectrumplot.py`: PlotItem for interactive display of spectrograms.
 - `specitem.py`: ImageItem for SpectrumPlot.
 - `selectviewbox.py`: Handles zooming and selection on OscillogramPlot
   and SpectrumPlot.

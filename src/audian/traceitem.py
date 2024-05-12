@@ -1,5 +1,4 @@
-"""TraceItem
-
+"""PlotDataItem for time series trace as a function of time.
 """
 
 from math import fabs, floor, ceil

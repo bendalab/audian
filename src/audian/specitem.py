@@ -1,3 +1,6 @@
+"""PlotDataItem for spectrogram.
+"""
+
 import numpy as np
 from PyQt5.QtCore import QRectF
 import pyqtgraph as pg

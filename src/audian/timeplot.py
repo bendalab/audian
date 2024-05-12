@@ -1,3 +1,6 @@
+"""PlotItem for displaying any data as a function of time.
+"""
+
 try:
     from PyQt5.QtCore import Signal
 except ImportError:
@@ -26,9 +29,9 @@ class TimePlot(pg.PlotItem):
         bottom_axis.setLabel('Time', 's', color='black')
         bottom_axis.setPen('white')
         bottom_axis.setTextPen('black')
-        bottom_axis.setStartTime(starttime)
+        bottom_axis.set_start_time(starttime)
         top_axis = TimeAxisItem(orientation='top', showValues=False)
-        top_axis.setStartTime(starttime)
+        top_axis.set_start_time(starttime)
         left_axis = YAxisItem(orientation='left', showValues=True)
         left_axis.setPen('white')
         left_axis.setTextPen('black')
@@ -88,7 +91,7 @@ class TimePlot(pg.PlotItem):
         view.sigSelectedRegion.connect(self.sigSelectedRegion)
 
 
-    def enableStartTime(self, enable):
+    def enable_start_time(self, enable):
         """ Enable addition of start time to tick labels.
 
         Parameters
@@ -96,6 +99,6 @@ class TimePlot(pg.PlotItem):
         enable: bool
             If True enable addition of start time to tick labels.
         """
-        self.getAxis('bottom').enableStartTime(enable)
-        self.getAxis('top').enableStartTime(enable)
+        self.getAxis('bottom').enable_start_time(enable)
+        self.getAxis('top').enable_start_time(enable)
 

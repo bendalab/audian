@@ -62,6 +62,12 @@ class Data(object):
         self.data.reload_buffer()
         self.update_times()
 
+
+    def update_times(self):
+        self.data.update_time(self.toffset, self.toffset + self.twindow)
+        self.filtered.update_time(self.toffset, self.toffset + self.twindow)
+        self.spectrum.update_time(self.toffset, self.toffset + self.twindow)
+        
         
     def set_time_limits(self, ax):
         ax.setLimits(xMin=0, xMax=self.tmax,
@@ -150,12 +156,6 @@ class Data(object):
                          minYRange=1/2**16,
                          maxYRange=self.data.ampl_max - self.data.ampl_min)
 
-
-    def update_times(self):
-        self.data.update_time(self.toffset, self.toffset + self.twindow)
-        self.filtered.update_time(self.toffset, self.toffset + self.twindow)
-        self.spectrum.update_time(self.toffset, self.toffset + self.twindow)
-        
         
     def freq_resolution_down(self):
         self.spectrum.set_resolution(nfft=self.spectrum.nfft//2)

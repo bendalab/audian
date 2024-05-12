@@ -909,7 +909,7 @@ class DataBrowser(QWidget):
         for axs in self.axts:
             for ax in axs:
                 if enable_starttime is not None:
-                    ax.enableStartTime(enable_starttime)
+                    ax.enable_start_time(enable_starttime)
                 if self.isVisible():
                     self.data.set_time_range(ax)
         for trace in self.traces:
