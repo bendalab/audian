@@ -13,7 +13,6 @@ class BufferedFilter(BufferedArray):
         self.lowpass_cutoff = []
         self.filter_order = []
         self.sos = []
-        self.need_filter = False
 
         
     def open(self, source, highpass_cutoff=None, lowpass_cutoff=None):
@@ -40,22 +39,17 @@ class BufferedFilter(BufferedArray):
             self.lowpass_cutoff = [lowpass_cutoff]*self.channels
         self.filter_order = [2]*self.channels
         self.sos = [None]*self.channels
-        self.need_filter = False
         self.set_filter()
 
         
     def load_buffer(self, offset, nframes, buffer):
-        if self.need_filter:
-            for c in range(self.channels):
-                if self.sos[c] is None:
-                    buffer[:, c] = self.source[offset:offset + nframes, c]
-                else:
-                    buffer[:, c] = sosfiltfilt(self.sos[c],
-                                               self.source[offset:offset
-                                                           + nframes, c])
-        else:
-            self.buffer = self.source.buffer
-            self.offset = self.source.offset
+        for c in range(self.channels):
+            if self.sos[c] is None:
+                buffer[:, c] = self.source[offset:offset + nframes, c]
+            else:
+                buffer[:, c] = sosfiltfilt(self.sos[c],
+                                           self.source[offset:offset
+                                                       + nframes, c])
 
             
     def make_filter(self, channel):
@@ -81,13 +75,7 @@ class BufferedFilter(BufferedArray):
 
             
     def set_filter(self):
-        need_filter = False
         for c in range(self.channels):
             self.make_filter(c)
-            if self.sos[c] is not None:
-                need_filter = True
-        if need_filter != self.need_filter and need_filter:
-            self.allocate_buffer(self.source.bufferframes, True)
-        self.need_filter = need_filter
         self.reload_buffer()
 

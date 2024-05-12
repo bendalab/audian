@@ -21,8 +21,8 @@ class SpecItem(pg.ImageItem):
         self.f0 = 0.0
         self.f1 = self.fmax
         self.cbar = None
-        self.estimate_noiselevels()
-        self.set_power()
+        #self.estimate_noiselevels()
+        #self.set_power()
 
 
     def estimate_noiselevels(self):
