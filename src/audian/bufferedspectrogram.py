@@ -56,6 +56,7 @@ class BufferedSpectrogram(BufferedArray):
         if stop > len(self.source.buffer):
             print('    source buffer overflow', stop, len(self.source.buffer))
             stop = len(self.source.buffer)
+        # TODO: sometimes start is negative, but must not!
         print('    buffer', start, stop - start, len(self.source.buffer))
         freq, time, Sxx = spectrogram(self.source.buffer[start:stop],
                                       self.source.rate,
@@ -103,5 +104,6 @@ class BufferedSpectrogram(BufferedArray):
             self.backframes = self.source.backframes//self.hop
             self.tresolution = self.hop/self.source.rate
             self.fresolution = self.source.rate/self.nfft
+            self.offset = self.source.offset//self.hop
             self.allocate_buffer()
             self.reload_buffer()
