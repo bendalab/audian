@@ -72,6 +72,8 @@ handles all GUI aspects.
 - `audiangui.py`: Main GUI, handles DataBrowser widgets and key shortcuts.
 - `databrowser.py`: Each data file is displayed in a DataBrowser widget.
 - `data.py`: All the raw data traces, filtered traces, and spectrogram data.
+- `bufferedfilter.py`: Filter source data on the fly.
+- `bufferedspectrogram.py`: Spectrogram of source data on the fly.
 - `fulltraceplot.py`: GraphicsLayoutWidget showing the full raw data traces.
 - `oscillogramplot.py`: PlotItem for plotting traces.
 - `traceitem.py`: PlotDataItem for OscillogramPlot.

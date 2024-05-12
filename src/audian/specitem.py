@@ -18,7 +18,7 @@ class SpecItem(pg.ImageItem):
         self.f0 = 0.0
         self.f1 = self.fmax
         self.cbar = None
-        self.update_spectrum()
+        #self.update_plot()
         self.estimate_noiselevels()
         self.set_power()
 
@@ -47,23 +47,8 @@ class SpecItem(pg.ImageItem):
         if not self.cbar is None:
             self.cbar.setLevels((self.zmin, self.zmax))
 
-        
-    def viewRangeChanged(self):
-        print('spec view changed', self.channel)
-        vb = self.getViewBox()
-        if not isinstance(vb, pg.ViewBox):
-            return
-        
-        trange = vb.viewRange()[0]
-        start = max(0, int(trange[0]*self.data.rate))
-        stop = min(len(self.data), int(trange[1]*self.data.rate+1))
-        if start < self.data.offset or stop >= self.data.offset + len(self.data.buffer):
-            #self.data.update_buffer(start, stop)
-            self.update_spectrum()
-    
 
-    def update_spectrum(self):
-        print('spec update', self.channel)
+    def update_plot(self):
         self.setImage(decibel(self.data.buffer[:, self.channel, :].T),
                       autoLevels=False)
         self.setRect(QRectF(*self.data.spec_rect))

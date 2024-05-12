@@ -824,7 +824,7 @@ class DataBrowser(QWidget):
             for ax in self.axfxs[c]:
                 ax.setYRange(self.specs[c].f0, self.specs[c].f1)
             # update spectrograms:
-            self.specs[c].update_spectrum()
+            self.specs[c].update_plot()
         self.setting = False
 
                 
@@ -896,6 +896,8 @@ class DataBrowser(QWidget):
 
     def set_times(self, toffset=None, twindow=None, enable_starttime=None,
                   dispatch=True):
+        if self.setting:
+            return
         self.setting = True
         if not toffset is None:
             self.data.toffset = toffset
@@ -908,6 +910,10 @@ class DataBrowser(QWidget):
                     ax.enableStartTime(enable_starttime)
                 if self.isVisible():
                     self.data.set_time_range(ax)
+        for trace in self.traces:
+            trace.update_plot()
+        for spec in self.specs:
+            spec.update_plot()
         self.setting = False
         if dispatch:
             self.sigTimesChanged.emit(self.data.toffset, self.data.twindow,
@@ -1090,7 +1096,7 @@ class DataBrowser(QWidget):
         self.data.spectrum.set_resolution(nfft, hop_frac)
         self.nfftw.setCurrentText(f'{self.data.spectrum.nfft}')
         for s in self.specs:
-            s.update_spectrum()
+            s.update_plot()
         self.setting = False
         if dispatch:
             self.sigResolutionChanged.emit()
@@ -1259,7 +1265,7 @@ class DataBrowser(QWidget):
                                                lowpass_cutoffs[cf])
         self.data.filtered.set_filter()
         for c in range(self.data.channels):
-            self.traces[c].update_trace()
+            self.traces[c].update_plot()
         self.setting = False
 
 
@@ -1284,7 +1290,7 @@ class DataBrowser(QWidget):
                                                      lowpass_cutoff)
         self.data.filtered.set_filter()
         for c in range(self.data.channels):
-            self.traces[c].update_trace()
+            self.traces[c].update_plot()
         self.setting = False
         self.sigFilterChanged.emit()  # dispatch
 

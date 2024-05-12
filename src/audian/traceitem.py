@@ -47,13 +47,8 @@ class TraceItem(pg.PlotDataItem):
         self.setSymbolBrush(color=self.color)
         self.setSymbolPen(color=self.color)
 
-        
-    def viewRangeChanged(self):
-        #print('TraceItem:viewRangeChanged()', self.channel)
-        self.update_trace()
-    
 
-    def update_trace(self):
+    def update_plot(self):
         vb = self.getViewBox()
         if not isinstance(vb, pg.ViewBox):
             return
@@ -138,7 +133,6 @@ class TraceItem(pg.PlotDataItem):
         
         
     def auto_ampl(self, toffset, twindow):
-        # TODO: add a flag selecting whether to who filtered, unfiltered or both
         t0 = int(np.round(toffset*self.rate))
         t1 = int(np.round((toffset + twindow)*self.rate))
         ymin = np.min(self.data[t0:t1, self.channel])
