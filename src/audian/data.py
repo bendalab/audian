@@ -18,6 +18,8 @@ class Data(object):
         self.load_buffer_orig = None
         self.rate = None
         self.channels = 0
+        self.tbefore = 0
+        self.tafter = 0
         self.tmax = 0.0
         self.toffset = 0.0
         self.twindow = 10.0
@@ -40,6 +42,8 @@ class Data(object):
         tafter = 0
         tbefore, tafter = self.spectrum.expand_times(tbefore, tafter)
         tbefore, tafter = self.filtered.expand_times(tbefore, tafter)
+        self.tbefore = tbefore
+        self.tafter = tafter
         # raw data:        
         tbuffer = 60 + tbefore + tafter
         try:
@@ -71,7 +75,8 @@ class Data(object):
 
 
     def update_times(self):
-        self.data.update_time(self.toffset, self.toffset + self.twindow)
+        self.data.update_time(self.toffset - self.tbefore,
+                              self.toffset + self.twindow + self.tafter)
         self.filtered.update_time(self.toffset, self.toffset + self.twindow)
         self.spectrum.update_time(self.toffset, self.toffset + self.twindow)
         

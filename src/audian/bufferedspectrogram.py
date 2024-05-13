@@ -41,7 +41,7 @@ class BufferedSpectrogram(BufferedData):
 
         
     def load_buffer(self, offset, nframes, buffer):
-        print('compute spectrum', offset, nframes)
+        print(f'compute spectrum: {offset/self.rate:.3f} - {(offset + nframes)/self.rate:.3f}')
         start = offset*self.hop - self.source.offset
         stop = start + nframes*self.hop
         if stop > len(self.source.buffer):
