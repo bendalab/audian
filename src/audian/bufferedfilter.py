@@ -2,13 +2,13 @@
 """
 
 from scipy.signal import butter, sosfiltfilt
-from audioio import BufferedArray
+from .buffereddata import BufferedData
 
 
-class BufferedFilter(BufferedArray):
+class BufferedFilter(BufferedData):
 
-    def __init_(self, verbose=0):
-        self.verbose = verbose
+    def __init__(self, verbose=0):
+        super().__init__(tbefore=10, tafter=0, verbose=verbose)
         self.highpass_cutoff = []
         self.lowpass_cutoff = []
         self.filter_order = []
@@ -16,19 +16,9 @@ class BufferedFilter(BufferedArray):
 
         
     def open(self, source, highpass_cutoff=None, lowpass_cutoff=None):
-        self.source = source
-        self.rate = self.source.rate
-        self.channels = self.source.channels
-        self.frames = self.source.frames
-        self.shape = (self.frames, self.channels)
-        self.ndim = 2
-        self.size = self.frames * self.channels
-        self.bufferframes = self.source.bufferframes
-        self.backframes = self.source.backframes
-        self.ampl_min = self.source.ampl_min
-        self.ampl_max = self.source.ampl_max
-        self.offset = 0
-        self.init_buffer()
+        self.ampl_min = source.ampl_min
+        self.ampl_max = source.ampl_max
+        super().open(source)
         if highpass_cutoff is None:
             self.highpass_cutoff = [0]*self.channels
         else:

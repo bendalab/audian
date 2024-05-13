@@ -8,14 +8,14 @@
 
 import numpy as np
 from scipy.signal import spectrogram
-from audioio import BufferedArray
 from thunderlab.powerspectrum import decibel
+from .buffereddata import BufferedData
 
 
-class BufferedSpectrogram(BufferedArray):
+class BufferedSpectrogram(BufferedData):
 
-    def __init_(self, verbose=0):
-        self.verbose = verbose
+    def __init__(self, verbose=0):
+        super().__init__(tbefore=0, tafter=10, verbose=verbose)
         self.nfft = []
         self.hop_frac = []
         self.hop = []
@@ -26,7 +26,6 @@ class BufferedSpectrogram(BufferedArray):
 
         
     def open(self, source, nfft=256, hop_frac=0.5):
-        self.source = source
         self.nfft = nfft
         self.hop_frac = hop_frac
         self.hop = int(self.nfft*self.hop_frac)
@@ -34,19 +33,11 @@ class BufferedSpectrogram(BufferedArray):
             self.hop = 1
         if self.hop > self.nfft:
             self.hop = self.nfft
-        self.rate = self.source.rate/self.hop
-        self.channels = self.source.channels
-        self.frames = self.source.frames//self.hop
-        self.shape = (self.frames, self.channels, self.nfft//2 + 1)
-        self.ndim = 3
-        self.size = np.prod(self.shape)
-        self.bufferframes = self.source.bufferframes//self.hop
-        self.backframes = self.source.backframes//self.hop
-        self.fresolution = self.source.rate/self.nfft
-        self.tresolution = self.hop/self.source.rate
+        self.fresolution = source.rate/self.nfft
+        self.tresolution = self.hop/source.rate
         self.spec_rect = []
         self.use_spec = True
-        self.init_buffer()
+        super().open(source, self.hop, more_shape=(self.nfft//2 + 1,))
 
         
     def load_buffer(self, offset, nframes, buffer):
@@ -96,14 +87,8 @@ class BufferedSpectrogram(BufferedArray):
             self.hop = hop
             spec_update = True
         if spec_update:
-            self.rate = self.source.rate/self.hop
-            self.frames = self.source.frames//self.hop
-            self.shape = (self.frames, self.channels, self.nfft//2 + 1)
-            self.size = np.prod(self.shape)
-            self.bufferframes = self.source.bufferframes//self.hop
-            self.backframes = self.source.backframes//self.hop
+            self.update_hop(self.hop, more_shape=(self.nfft//2 + 1,))
             self.tresolution = self.hop/self.source.rate
             self.fresolution = self.source.rate/self.nfft
-            self.offset = self.source.offset//self.hop
             self.allocate_buffer()
             self.reload_buffer()

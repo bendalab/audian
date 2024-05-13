@@ -35,8 +35,15 @@ class Data(object):
     def open(self, unwrap, unwrap_clip, highpass_cutoff, lowpass_cutoff):
         if not self.data is None:
             self.data.close()
+        # expand buffer times:
+        tbefore = 0
+        tafter = 0
+        tbefore, tafter = self.spectrum.expand_times(tbefore, tafter)
+        tbefore, tafter = self.filtered.expand_times(tbefore, tafter)
+        # raw data:        
+        tbuffer = 60 + tbefore + tafter
         try:
-            self.data = DataLoader(self.file_path, 60.0, 10.0)
+            self.data = DataLoader(self.file_path, tbuffer, tbuffer/2)
         except IOError:
             self.data = None
             return
@@ -72,6 +79,7 @@ class Data(object):
     def set_time_limits(self, ax):
         ax.setLimits(xMin=0, xMax=self.tmax,
                      minXRange=10/self.rate, maxXRange=self.tmax)
+        # TODO: limit maxXRange to 60s or so!
 
         
     def set_time_range(self, ax):
