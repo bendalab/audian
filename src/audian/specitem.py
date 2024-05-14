@@ -51,6 +51,7 @@ class SpecItem(pg.ImageItem):
 
 
     def update_plot(self):
+        return
         if self.data.buffer_changed[self.channel]:
             self.setImage(decibel(self.data.buffer[:, self.channel, :].T),
                           autoLevels=False)

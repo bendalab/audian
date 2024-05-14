@@ -914,8 +914,8 @@ class DataBrowser(QWidget):
                     self.data.set_time_range(ax)
         for trace in self.traces:
             trace.update_plot()
-        for spec in self.specs:
-            spec.update_plot()
+        #for spec in self.specs:
+        #    spec.update_plot()
         self.setting = False
         if dispatch:
             self.sigTimesChanged.emit(self.data.toffset, self.data.twindow,
@@ -1669,17 +1669,18 @@ class DataBrowser(QWidget):
 
 
     def play_region(self, t0, t1):
-        rate = self.data.rate
+        data = self.data.filtered
+        rate = data.rate
         i0 = int(np.round(t0*rate))
         i1 = int(np.round(t1*rate))
-        if i1 > len(self.data.data):
-            i1 = len(self.data.data)
+        if i1 > len(data):
+            i1 = len(data)
             t1 = i1/rate
         n2 = (len(self.selected_channels)+1)//2
         playdata = np.zeros((i1-i0, min(2, len(self.selected_channels))))
-        playdata[:,0] = np.mean(self.data.data[i0:i1, self.selected_channels[:n2]], 1)
+        playdata[:,0] = np.mean(data[i0:i1, self.selected_channels[:n2]], 1)
         if len(self.selected_channels) > 1:
-            playdata[:,1] = np.mean(self.data.data[i0:i1, self.selected_channels[n2:]], 1)
+            playdata[:,1] = np.mean(data[i0:i1, self.selected_channels[n2:]], 1)
         if self.audio_use_heterodyne:
             # multiply with heterodyne frequency:
             heterodyne = np.sin(2*np.pi*self.audio_heterodyne_freq*np.arange(len(playdata))/rate)
@@ -1687,7 +1688,7 @@ class DataBrowser(QWidget):
             # low-pass filter and downsample:
             fcutoff = 20000.0
             sos = butter(2, 20000, 'low', output='sos', fs=rate)
-            nstep = int(np.round(self.data.rate/(2*fcutoff)))
+            nstep = int(np.round(rate/(2*fcutoff)))
             if nstep < 1:
                 nstep = 1
             playdata = sosfiltfilt(sos, playdata, 0)[::nstep]
@@ -1697,7 +1698,7 @@ class DataBrowser(QWidget):
         self.audio_time = t0
         self.audio_tmax = t1
         self.audio_timer.start(50)
-        for c in range(self.data.channels):
+        for c in range(data.channels):
             atime = self.audio_time if c in self.selected_channels else -1
             for vmarker in self.audio_markers[c]:
                 vmarker.setValue(atime)

@@ -78,7 +78,7 @@ class Data(object):
         self.data.update_time(self.toffset - self.tbefore,
                               self.toffset + self.twindow + self.tafter)
         self.filtered.update_time(self.toffset, self.toffset + self.twindow)
-        self.spectrum.update_time(self.toffset, self.toffset + self.twindow)
+        #self.spectrum.update_time(self.toffset, self.toffset + self.twindow)
         
         
     def set_time_limits(self, ax):

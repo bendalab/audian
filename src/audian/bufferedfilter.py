@@ -8,7 +8,7 @@ from .buffereddata import BufferedData
 class BufferedFilter(BufferedData):
 
     def __init__(self, verbose=0):
-        super().__init__(tbefore=10, tafter=0, verbose=verbose)
+        super().__init__(tbefore=0, tafter=0, verbose=verbose)
         self.highpass_cutoff = []
         self.lowpass_cutoff = []
         self.filter_order = []
