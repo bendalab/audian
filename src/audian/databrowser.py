@@ -914,8 +914,8 @@ class DataBrowser(QWidget):
                     self.data.set_time_range(ax)
         for trace in self.traces:
             trace.update_plot()
-        #for spec in self.specs:
-        #    spec.update_plot()
+        for spec in self.specs:
+            spec.update_plot()
         self.setting = False
         if dispatch:
             self.sigTimesChanged.emit(self.data.toffset, self.data.twindow,

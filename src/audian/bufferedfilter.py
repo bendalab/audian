@@ -8,7 +8,8 @@ from .buffereddata import BufferedData
 class BufferedFilter(BufferedData):
 
     def __init__(self, verbose=0):
-        super().__init__(tbefore=0, tafter=0, verbose=verbose)
+        super().__init__(name='filtered', tbefore=10, tafter=0,
+                         verbose=verbose)
         self.highpass_cutoff = []
         self.lowpass_cutoff = []
         self.filter_order = []
@@ -33,13 +34,19 @@ class BufferedFilter(BufferedData):
 
         
     def load_buffer(self, offset, nframes, buffer):
+        print(f'load {self.name} {offset/self.rate:.3f} {(offset + nframes)/self.rate:.3f}')
+        nbefore = int(self.source_tbefore/self.source.rate)
         for c in range(self.channels):
             if self.sos[c] is None:
                 buffer[:, c] = self.source[offset:offset + nframes, c]
             else:
+                offs = offset - nbefore
+                nfrs = nframes + nbefore
+                if offs < 0:
+                    nfrs += offs
+                    offs = 0
                 buffer[:, c] = sosfiltfilt(self.sos[c],
-                                           self.source[offset:offset
-                                                       + nframes, c])
+                                           self.source[offs:offs + nfrs, c])[nbefore:]
 
             
     def make_filter(self, channel):

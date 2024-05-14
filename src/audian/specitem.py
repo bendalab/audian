@@ -21,8 +21,8 @@ class SpecItem(pg.ImageItem):
         self.f0 = 0.0
         self.f1 = self.fmax
         self.cbar = None
-        #self.estimate_noiselevels()
-        #self.set_power()
+        self.estimate_noiselevels()
+        self.set_power()
 
 
     def estimate_noiselevels(self):
@@ -51,7 +51,6 @@ class SpecItem(pg.ImageItem):
 
 
     def update_plot(self):
-        return
         if self.data.buffer_changed[self.channel]:
             self.setImage(decibel(self.data.buffer[:, self.channel, :].T),
                           autoLevels=False)

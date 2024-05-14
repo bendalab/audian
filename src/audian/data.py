@@ -35,6 +35,7 @@ class Data(object):
 
         
     def open(self, unwrap, unwrap_clip, highpass_cutoff, lowpass_cutoff):
+        buffer_time = 60
         if not self.data is None:
             self.data.close()
         # expand buffer times:
@@ -45,14 +46,13 @@ class Data(object):
         self.tbefore = tbefore
         self.tafter = tafter
         # raw data:        
-        tbuffer = 60 + tbefore + tafter
+        tbuffer = buffer_time + self.tbefore + self.tafter
         try:
             self.data = DataLoader(self.file_path, tbuffer, tbuffer/2)
         except IOError:
             self.data = None
             return
         self.data.set_unwrap(unwrap, unwrap_clip, False, self.data.unit)
-        self.data.allocate_buffer()
         self.file_path = self.data.filepath
         self.rate = self.data.rate
         self.channels = self.data.channels
@@ -70,6 +70,7 @@ class Data(object):
         # spectrogram:
         self.spectrum.open(self.data, 256, 0.5)
         # load data, apply filter, and compute spectrograms:
+        self.data.allocate_buffer()
         self.data.reload_buffer()
         self.update_times()
 
@@ -78,7 +79,7 @@ class Data(object):
         self.data.update_time(self.toffset - self.tbefore,
                               self.toffset + self.twindow + self.tafter)
         self.filtered.update_time(self.toffset, self.toffset + self.twindow)
-        #self.spectrum.update_time(self.toffset, self.toffset + self.twindow)
+        self.spectrum.update_time(self.toffset, self.toffset + self.twindow)
         
         
     def set_time_limits(self, ax):

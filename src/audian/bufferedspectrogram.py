@@ -15,7 +15,8 @@ from .buffereddata import BufferedData
 class BufferedSpectrogram(BufferedData):
 
     def __init__(self, verbose=0):
-        super().__init__(tbefore=0, tafter=0, verbose=verbose)
+        super().__init__(name='spectrogram', tbefore=0, tafter=10,
+                         verbose=verbose)
         self.nfft = []
         self.hop_frac = []
         self.hop = []
@@ -41,7 +42,6 @@ class BufferedSpectrogram(BufferedData):
 
         
     def load_buffer(self, offset, nframes, buffer):
-        return
         print(f'compute spectrum: {offset/self.rate:.3f} - {(offset + nframes)/self.rate:.3f}')
         start = offset*self.hop - self.source.offset
         stop = start + nframes*self.hop
