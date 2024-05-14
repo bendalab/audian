@@ -2,7 +2,6 @@
 """
 
 import numpy as np
-from PyQt5.QtCore import QRectF
 import pyqtgraph as pg
 from thunderlab.powerspectrum import decibel
 
@@ -54,7 +53,7 @@ class SpecItem(pg.ImageItem):
         if self.data.buffer_changed[self.channel]:
             self.setImage(decibel(self.data.buffer[:, self.channel, :].T),
                           autoLevels=False)
-            self.setRect(QRectF(*self.data.spec_rect))
+            self.setRect(*self.data.spec_rect)
             self.data.buffer_changed[self.channel] = False
 
             
