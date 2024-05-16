@@ -17,11 +17,11 @@ class BufferedSpectrogram(BufferedData):
     def __init__(self, verbose=0):
         super().__init__(name='spectrogram', tbefore=0, tafter=10,
                          verbose=verbose)
-        self.nfft = []
-        self.hop_frac = []
-        self.hop = []
-        self.fresolution = []
-        self.tresolution = []
+        self.nfft = 256
+        self.hop_frac = 0.5
+        self.hop = self.nfft//2
+        self.fresolution = 1
+        self.tresolution = 1
         self.spec_rect = []
         self.use_spec = True
 
@@ -48,7 +48,7 @@ class BufferedSpectrogram(BufferedData):
         stop = start + (nframes - 1)*self.hop + self.nfft
         if stop > self.source.frames:
             stop = self.source.frames
-        freq, time, Sxx = spectrogram(self.source.buffer[start - self.source.offset:stop - self.source.offset],
+        freq, time, Sxx = spectrogram(self.source[start:stop],
                                       self.source.rate,
                                       nperseg=self.nfft,
                                       noverlap=self.nfft - self.hop,
@@ -86,7 +86,7 @@ class BufferedSpectrogram(BufferedData):
             self.hop = hop
             spec_update = True
         if spec_update:
-            self.update_hop(self.hop, more_shape=(self.nfft//2 + 1,))
+            self.update_step(self.hop, more_shape=(self.nfft//2 + 1,))
             self.tresolution = self.hop/self.source.rate
             self.fresolution = self.source.rate/self.nfft
             self.allocate_buffer()

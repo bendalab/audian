@@ -8,7 +8,8 @@ class BufferedData(BufferedArray):
 
     def __init__(self, name, tbefore=0, tafter=0, verbose=0):
         self.name = name
-        self.tbuffer = 0
+        self.buffer_time = 0
+        self.back_time = 0
         self.tbefore = 0
         self.tafter = 0
         self.source = None
@@ -23,7 +24,7 @@ class BufferedData(BufferedArray):
         return self.source_tbefore + tbefore, self.source_tafter + tafter
 
 
-    def update_step(self, buffer_time, back_time, step=1, more_shape=None):
+    def update_step(self, step=1, more_shape=None):
         if step < 1:
             step = 1
         self.rate = self.source.rate/step
@@ -37,23 +38,22 @@ class BufferedData(BufferedArray):
             self.bufferframes = self.frames
             self.backframes = 0
         else:
-            self.bufferframes = int((buffer_time + self.tbefore + self.tafter)*self.rate)
-            self.backframes = int((back_time + self.tbefore)*self.rate)
-            print(f'setup {self.name}: buffer={self.bufferframes/self.rate:.3f}s,  source={self.source.bufferframes/self.source.rate:.3f}s')
-        self.offset = self.source.offset//step
+            self.bufferframes = int((self.buffer_time + self.tbefore + self.tafter)*self.rate)
+            self.backframes = int((self.back_time + self.tbefore)*self.rate)
+        self.offset = (self.source.offset + step - 1)//step
 
         
-    def open(self, source, buffer_time, back_time, step=1, more_shape=None):
+    def open(self, source, buffer_time, back_time=0, step=1, more_shape=None):
         self.source = source
+        self.buffer_time = buffer_time
+        self.back_time = back_time
         self.channels = self.source.channels
-        self.update_step(buffer_time, back_time, step, more_shape)
+        self.update_step(step, more_shape)
         self.init_buffer()
-        print(f'init {self.name}: {self.bufferframes/self.rate:.3f}s')
 
         
     def update_time(self, tstart, tstop):
         t0 = tstart - self.tbefore
         t1 = tstop + self.tafter
-        print(f'update {self.name} {t0:.3f}s - {t1:.3f}s, buffer holds {self.offset/self.rate:.3f}s - {(self.offset + len(self.buffer))/self.rate:.3f}s')
         super().update_time(t0, t1)
 
