@@ -36,6 +36,7 @@ class Data(object):
         
     def open(self, unwrap, unwrap_clip, highpass_cutoff, lowpass_cutoff):
         buffer_time = 60
+        back_time = 20
         if not self.data is None:
             self.data.close()
         # expand buffer times:
@@ -47,8 +48,9 @@ class Data(object):
         self.tafter = tafter
         # raw data:        
         tbuffer = buffer_time + self.tbefore + self.tafter
+        tback = back_time + self.tbefore
         try:
-            self.data = DataLoader(self.file_path, tbuffer, tbuffer/2)
+            self.data = DataLoader(self.file_path, tbuffer, tback)
         except IOError:
             self.data = None
             return
@@ -66,9 +68,10 @@ class Data(object):
         self.meta_data.update(self.data.metadata())
         self.start_time = get_datetime(self.meta_data)
         # filter:
-        self.filtered.open(self.data, highpass_cutoff, lowpass_cutoff)
+        self.filtered.open(self.data, buffer_time, back_time,
+                           highpass_cutoff, lowpass_cutoff)
         # spectrogram:
-        self.spectrum.open(self.data, 256, 0.5)
+        self.spectrum.open(self.data, buffer_time, back_time, 256, 0.5)
         # load data, apply filter, and compute spectrograms:
         self.data.allocate_buffer()
         self.data.reload_buffer()

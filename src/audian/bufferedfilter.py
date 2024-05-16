@@ -16,10 +16,11 @@ class BufferedFilter(BufferedData):
         self.sos = []
 
         
-    def open(self, source, highpass_cutoff=None, lowpass_cutoff=None):
+    def open(self, source, buffer_time, back_time,
+             highpass_cutoff=None, lowpass_cutoff=None):
         self.ampl_min = source.ampl_min
         self.ampl_max = source.ampl_max
-        super().open(source)
+        super().open(source, buffer_time, back_time)
         if highpass_cutoff is None:
             self.highpass_cutoff = [0]*self.channels
         else:
