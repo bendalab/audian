@@ -72,17 +72,13 @@ class Data(object):
                            highpass_cutoff, lowpass_cutoff)
         # spectrogram:
         self.spectrum.open(self.data, buffer_time, back_time, 256, 0.5)
-        # load data, apply filter, and compute spectrograms:
-        self.data.allocate_buffer()
-        self.data.reload_buffer()
-        self.update_times()
 
 
     def update_times(self):
         self.data.update_time(self.toffset - self.tbefore,
                               self.toffset + self.twindow + self.tafter)
-        self.filtered.update_time(self.toffset, self.toffset + self.twindow)
-        self.spectrum.update_time(self.toffset, self.toffset + self.twindow)
+        self.filtered.align_buffer()
+        self.spectrum.align_buffer()
         
         
     def set_time_limits(self, ax):

@@ -14,14 +14,12 @@ class SpecItem(pg.ImageItem):
         
         self.data = data
         self.channel = channel
-        self.zmin = -100
-        self.zmax = 0
+        self.zmin = None
+        self.zmax = None
         self.fmax = 0.5*self.data.source.rate
         self.f0 = 0.0
         self.f1 = self.fmax
         self.cbar = None
-        self.estimate_noiselevels()
-        self.set_power()
 
 
     def estimate_noiselevels(self):
@@ -51,6 +49,9 @@ class SpecItem(pg.ImageItem):
 
     def update_plot(self):
         if self.data.buffer_changed[self.channel]:
+            if self.zmin is None:
+                self.estimate_noiselevels()
+                self.set_power()
             self.setImage(decibel(self.data.buffer[:, self.channel, :].T),
                           autoLevels=False)
             self.setRect(*self.data.spec_rect)

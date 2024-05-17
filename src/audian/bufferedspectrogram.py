@@ -44,11 +44,17 @@ class BufferedSpectrogram(BufferedData):
         
     def load_buffer(self, offset, nframes, buffer):
         print(f'compute spectrum: {offset/self.rate:.3f}s - {(offset + nframes)/self.rate:.3f}s')
-        start = offset*self.hop
+        start = offset*self.hop - self.source.offset
         stop = start + (nframes - 1)*self.hop + self.nfft
-        if stop > self.source.frames:
-            stop = self.source.frames
-        freq, time, Sxx = spectrogram(self.source[start:stop],
+        if stop > len(self.source.buffer):
+            stop = len(self.source.buffer)
+        if start < 0:
+            print('  negative', start, self.nfft, self.hop)
+            print(f'  source buffer: {self.source.offset/self.source.rate:.3f}s - {(self.source.offset + len(self.source.buffer))/self.source.rate:.3f}s')
+        if stop > len(self.source.buffer):
+            print('  negative', stop, len(self.source.buffer))
+            print(f'  source buffer: {self.source.offset/self.source.rate:.3f}s - {(self.source.offset + len(self.source.buffer))/self.source.rate:.3f}s')
+        freq, time, Sxx = spectrogram(self.source.buffer[start:stop],
                                       self.source.rate,
                                       nperseg=self.nfft,
                                       noverlap=self.nfft - self.hop,
@@ -58,7 +64,7 @@ class BufferedSpectrogram(BufferedData):
         buffer[n:] = 0
         # extent of the full buffer:
         self.spec_rect = [self.offset/self.rate, 0,
-                          len(self.buffer)/self.rate + self.tresolution,
+                          len(self.buffer)/self.rate,
                           freq[-1] + self.fresolution]
 
         

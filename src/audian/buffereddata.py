@@ -1,6 +1,7 @@
 """Base class for computed data.
 """
 
+import numpy as np
 from audioio import BufferedArray
 
 
@@ -52,8 +53,17 @@ class BufferedData(BufferedArray):
         self.init_buffer()
 
         
-    def update_time(self, tstart, tstop):
-        t0 = tstart - self.tbefore
-        t1 = tstop + self.tafter
-        super().update_time(t0, t1)
+    def align_buffer(self):
+        offset = self.source.offset
+        nframes = len(self.source.buffer)
+        if offset > 0:
+            n = int(self.source_tbefore*self.source.rate)
+            offset += n
+            nframes -= n
+        if self.source.offset + len(self.source.buffer) < self.source.frames:
+            n = int(self.source_tafter*self.source.rate)
+            nframes -= n
+        offset = int(np.ceil(offset*self.rate/self.source.rate))
+        nframes = int(np.floor(nframes*self.rate/self.source.rate))
+        self.move_buffer(offset, nframes)
 
