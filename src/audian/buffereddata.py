@@ -9,8 +9,6 @@ class BufferedData(BufferedArray):
 
     def __init__(self, name, tbefore=0, tafter=0, verbose=0):
         self.name = name
-        self.buffer_time = 0
-        self.back_time = 0
         self.tbefore = 0
         self.tafter = 0
         self.source = None
@@ -26,6 +24,7 @@ class BufferedData(BufferedArray):
 
 
     def update_step(self, step=1, more_shape=None):
+        tbuffer = self.bufferframes/self.rate
         if step < 1:
             step = 1
         self.rate = self.source.rate/step
@@ -37,18 +36,17 @@ class BufferedData(BufferedArray):
         self.size = self.frames * self.channels
         if self.source.bufferframes == self.source.frames:
             self.bufferframes = self.frames
-            self.backframes = 0
         else:
-            self.bufferframes = int((self.buffer_time + self.tbefore + self.tafter)*self.rate)
-            self.backframes = int((self.back_time + self.tbefore)*self.rate)
+            self.bufferframes = int(tbuffer*self.rate)
         self.offset = (self.source.offset + step - 1)//step
 
         
-    def open(self, source, buffer_time, back_time=0, step=1, more_shape=None):
+    def open(self, source, step=1, more_shape=None):
         self.source = source
-        self.buffer_time = buffer_time
-        self.back_time = back_time
+        self.bufferframes = 0
+        self.backframes = 0
         self.channels = self.source.channels
+        self.rate = self.source.rate
         self.update_step(step, more_shape)
         self.init_buffer()
 
@@ -66,4 +64,5 @@ class BufferedData(BufferedArray):
         offset = int(np.ceil(offset*self.rate/self.source.rate))
         nframes = int(np.floor(nframes*self.rate/self.source.rate))
         self.move_buffer(offset, nframes)
+        self.bufferframes = len(self.buffer)
 

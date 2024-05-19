@@ -26,7 +26,7 @@ class BufferedSpectrogram(BufferedData):
         self.use_spec = True
 
         
-    def open(self, source, buffer_time, back_time, nfft=256, hop_frac=0.5):
+    def open(self, source, nfft=256, hop_frac=0.5):
         self.nfft = nfft
         self.hop_frac = hop_frac
         self.hop = int(self.nfft*self.hop_frac)
@@ -38,8 +38,7 @@ class BufferedSpectrogram(BufferedData):
         self.tresolution = self.hop/source.rate
         self.spec_rect = []
         self.use_spec = True
-        super().open(source, buffer_time, back_time, self.hop,
-                     more_shape=(self.nfft//2 + 1,))
+        super().open(source, self.hop, more_shape=(self.nfft//2 + 1,))
 
         
     def load_buffer(self, offset, nframes, buffer):

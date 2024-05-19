@@ -13,6 +13,9 @@ from .bufferedspectrogram import BufferedSpectrogram
 class Data(object):
 
     def __init__(self, file_path):
+        self.buffer_time = 60
+        self.back_time = 20
+        self.follow_time = 5
         self.file_path = file_path
         self.data = None
         self.load_buffer_orig = None
@@ -35,8 +38,6 @@ class Data(object):
 
         
     def open(self, unwrap, unwrap_clip, highpass_cutoff, lowpass_cutoff):
-        buffer_time = 60
-        back_time = 20
         if not self.data is None:
             self.data.close()
         # expand buffer times:
@@ -47,14 +48,15 @@ class Data(object):
         self.tbefore = tbefore
         self.tafter = tafter
         # raw data:        
-        tbuffer = buffer_time + self.tbefore + self.tafter
-        tback = back_time + self.tbefore
+        tbuffer = self.buffer_time + self.tbefore + self.tafter
+        tback = self.back_time + self.tbefore
         try:
             self.data = DataLoader(self.file_path, tbuffer, tback)
         except IOError:
             self.data = None
             return
         self.data.set_unwrap(unwrap, unwrap_clip, False, self.data.unit)
+        self.data.follow = int(self.follow_time*self.data.rate)
         self.file_path = self.data.filepath
         self.rate = self.data.rate
         self.channels = self.data.channels
@@ -68,10 +70,9 @@ class Data(object):
         self.meta_data.update(self.data.metadata())
         self.start_time = get_datetime(self.meta_data)
         # filter:
-        self.filtered.open(self.data, buffer_time, back_time,
-                           highpass_cutoff, lowpass_cutoff)
+        self.filtered.open(self.data, highpass_cutoff, lowpass_cutoff)
         # spectrogram:
-        self.spectrum.open(self.data, buffer_time, back_time, 256, 0.5)
+        self.spectrum.open(self.data, 256, 0.5)
 
 
     def update_times(self):

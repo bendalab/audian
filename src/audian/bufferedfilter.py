@@ -16,11 +16,10 @@ class BufferedFilter(BufferedData):
         self.sos = []
 
         
-    def open(self, source, buffer_time, back_time,
-             highpass_cutoff=None, lowpass_cutoff=None):
+    def open(self, source, highpass_cutoff=None, lowpass_cutoff=None):
         self.ampl_min = source.ampl_min
         self.ampl_max = source.ampl_max
-        super().open(source, buffer_time, back_time)
+        super().open(source)
         if highpass_cutoff is None:
             self.highpass_cutoff = [0]*self.channels
         else:
@@ -35,19 +34,23 @@ class BufferedFilter(BufferedData):
 
         
     def load_buffer(self, offset, nframes, buffer):
-        print(f'load {self.name} {offset/self.rate:.3f} {(offset + nframes)/self.rate:.3f}')
+        print(f'load {self.name} {offset/self.rate:.3f} - {(offset + nframes)/self.rate:.3f}')
         nbefore = int(self.source_tbefore/self.source.rate)
         for c in range(self.channels):
             if self.sos[c] is None:
-                buffer[:, c] = self.source[offset:offset + nframes, c]
+                offs = offset - self.source.offset
+                buffer[:, c] = self.source.buffer[offs:offs + nframes, c]
             else:
-                offs = offset - nbefore
-                nfrs = nframes + nbefore
+                nbfr = nbefore
+                offs = offset - nbfr
+                nfrs = nframes + nbfr
                 if offs < 0:
+                    nbfr += offs
                     nfrs += offs
                     offs = 0
+                offs -= self.source.offset
                 buffer[:, c] = sosfiltfilt(self.sos[c],
-                                           self.source[offs:offs + nfrs, c])[nbefore:]
+                                           self.source.buffer[offs:offs + nfrs, c])[nbfr:]
 
             
     def make_filter(self, channel):
