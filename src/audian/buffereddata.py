@@ -7,14 +7,14 @@ from audioio import BufferedArray
 
 class BufferedData(BufferedArray):
 
-    def __init__(self, name, tbefore=0, tafter=0, verbose=0):
+    def __init__(self, name, tbefore=0, tafter=0):
         self.name = name
         self.tbefore = 0
         self.tafter = 0
         self.source = None
         self.source_tbefore = tbefore
         self.source_tafter = tafter
-        self.verbose = verbose
+        self.verbose = 0
 
 
     def expand_times(self, tbefore, tafter):

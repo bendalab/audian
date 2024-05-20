@@ -8,18 +8,17 @@ from .buffereddata import BufferedData
 
 class BufferedEnvelope(BufferedData):
 
-    def __init__(self, verbose=0):
-        super().__init__(name='envelope', tbefore=1, tafter=0,
-                         verbose=verbose)
+    def __init__(self):
+        super().__init__(name='envelope', tbefore=1, tafter=0)
         self.envelope_cutoff = 500
         self.filter_order = 2
         self.sos = None
 
         
     def open(self, source, lowpass_cutoff=None, filter_order=2):
-        self.ampl_min = source.ampl_min  # TODO: should be zero!
-        self.ampl_max = source.ampl_max
         super().open(source)
+        self.ampl_min = 0
+        self.ampl_max = source.ampl_max
         if lowpass_cutoff is not None:
             self.envelope_cutoff = lowpass_cutoff
         if filter_order is not None:
@@ -38,8 +37,8 @@ class BufferedEnvelope(BufferedData):
             nframes += offset
             offset = 0
         offset -= self.source.offset
-        # TODO: find the right factor for sine waves!
-        tmp_buffer = np.sqrt(2)*np.abs(self.source.buffer[offset:offset + nframes])
+        # the integral over one hump of the sine wave is 2, the mean is 2/pi:
+        tmp_buffer = (np.pi/2)*np.abs(self.source.buffer[offset:offset + nframes])
         buffer[:] = sosfiltfilt(self.sos, tmp_buffer, axis=0)[nbefore:]
         # TODO: downsample!!!
 
