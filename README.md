@@ -20,30 +20,42 @@ audio signals. In the end, audian should be easily extensible via
 plugins that provide processing and analysis algorithms, and audian
 handles all GUI aspects.
 
-### Incomplete list of ToDos:
+### Incomplete list of TODOs:
 
-- Handle all data in one class!
-- Implement a proper layout for showing the plot panels, allowing also for
-  an optional grid layout.
-- FullTracePlot:
-  - fix offset problem,
-  - indicate time under mouse cursor.
-- Interactive high- and low-pass filtering:
-  - high- and low-pass filter lines must not cross! Update limits.
-  - databrowser should provide the filtered traces to both traceitems and specitems.
-  - filter original signal in trace plot and spectrogram plot.
-  - play should filter its data on its own?
-  - add a toolbar widget for setting filter order.
-- Improve downsampling and filtering of traces
-- Implement downsampling of spectrograms! Or make it even dependent on window size.
-- New plot widget showing power spectrum of visible range
-  or slice at current cursor position.
-- Improve on the concept of current cursor:
-  - play should not stop at visible range but keeps going and scrolls data.
-  - make cursor moveable by mouse.
-  - some key shortcuts for moving and handling cursor.
-- Improve on marking cross hair, cues, regions, events:
-  - Cross hair should only be used for measuring! Just a single whitish color.
+- [ ] Implement Model-View structure
+  - [x] Handle all data (raw, filtered, spectrogram,...) in one class!
+  - [ ] Boil down the BufferedData code to a simple plugin interface.
+  - [ ] Add destination list to Buffered data.
+    Use these for smarter updates of buffers.
+  - [ ] Traces should be hideable and assignable to plots.
+  - [ ] Test this plugin interface with
+    - [ ] Subtract common mean
+    - [ ] Logarithmic and high-pass filtered envelope
+    - [ ] Envelope from visible frequency range of spectrogram
+    - [ ] Feature expansion (kernel filter)
+  - [ ] Add events and marker ranges to the Data class
+    - [ ] Load events from csv files provide along with the raw data.
+  - [ ] Provide interface for event detectors
+  - [ ] Provide interface for event filters?
+- [ ] Implement a proper layout for showing the plot panels:
+  - [ ] support optional grid layout
+  - [ ] support additional plots from plugins
+- [ ] New plot widget showing power spectrum of visible range
+  or slice at current cursor position. Cycle with Ctrl+P through no power plot, color bar, power spectrum to the right, power spectrum on top.
+- [ ] FullTracePlot:
+  - [ ] fix offset problem.
+  - [ ] indicate time under mouse cursor.
+- [ ] Add a toolbar widget for spectrum overlap
+- [ ] Interactive high- and low-pass filtering:
+  - [ ] high- and low-pass filter lines must not cross! Update limits.
+  - [ ] add a toolbar widget for setting filter order.
+- [ ] Implement downsampling of spectrograms! Or make it even dependent on window size.
+- [ ] Improve on the concept of current cursor:
+  - [ ] play should not stop at visible range but keeps going and scrolls data.
+  - [ ] make cursor moveable by mouse.
+  - [ ] some key shortcuts for moving and handling cursor.
+- [ ] Improve on marking cross hair, cues, regions, events:
+  - [ ] Cross hair should only be used for measuring! Just a single whitish color.
     Comments only in the table.
     Show points only fom active measurement.
   - Cues and regions have position data with labels. Same for all channels.
@@ -62,30 +74,65 @@ handles all GUI aspects.
     - Plotted as lines on top of data.
     - Result from some analysis.
     - But should be editable.
-- Define plugin interfaces for analysis on full data, visible range,
+- [ ] Define plugin interfaces for analysis on full data, visible range,
   selected range.
-- Have a dockable sidebar for showing metadata, cue tables etc.
+- [ ] Have a dockable sidebar for showing metadata, cue tables etc.
 
 
 ### Structure
 
-- `audiangui.py`: Main GUI, handles DataBrowser widgets and key shortcuts.
-- `databrowser.py`: Each data file is displayed in a DataBrowser widget.
-- `data.py`: All the raw data traces, filtered traces, and spectrogram data.
-- `bufferedfilter.py`: Filter source data on the fly.
-- `bufferedspectrogram.py`: Spectrogram of source data on the fly.
-- `fulltraceplot.py`: GraphicsLayoutWidget showing the full raw data traces.
-- `timeplot.py`: Panel for displaying any data as a function of time.
-- `traceitem.py`: PlotDataItem for OscillogramPlot.
-- `spectrumplot.py`: PlotItem for interactive display of spectrograms.
-- `specitem.py`: ImageItem for SpectrumPlot.
-- `selectviewbox.py`: Handles zooming and selection on OscillogramPlot
-  and SpectrumPlot.
-- `timeaxisitem.py`: Label time-axis of OscillogramPlot and SpectrumPlot.
-- `yaxisitem.py`: Label y-axis of OscillogramPlot and SpectrumPlot.
+Eventually we want audian to be neatly separated into a data model,
+widgets that display the data, and controllers.
+
+#### Model
+
+At the core of audian are time-series data that are loaded from a
+file. In addition it supports varous derived time-series data, like
+for example filtered data, computed envelopes, spectrograms,
+etc. Audian can handle very large data sets, but holds only a small
+part in memory (buffer).
+
+- `class BufferedData`: Base class for computed data (`buffereddata.py`).
+- `class BufferedFilter`: Filter source data on the fly (`bufferedfilter.py`).
+- `class BufferedEnvelope`: Compute envelope on the fly (`bufferedenvelope.py`).
+- `class BufferedSpectrogram`: Spectrogram of source data on the fly (`bufferedspectrogram.py`).
+
+- `class Data`: Handles all the raw data traces, filtered traces, spectrogram data, etc (`data.py`).
+
 - `markerdata.py`: All marker related stuff. TODO: Split it into widgets and marker data.
 
+#### View
+
+All the data audian is dealing with are displayed in plots.
+
+A few classes specializing some pyqtgraph features:
+
+- `timeaxisitem.py`: Label time-axis of OscillogramPlot and SpectrumPlot.
+- `yaxisitem.py`: Label y-axis of OscillogramPlot and SpectrumPlot.
+- `selectviewbox.py`: Handles zooming and selection on OscillogramPlot
+  and SpectrumPlot.
+
+Basic plots for time-series data:
+
+- `timeplot.py`: Panel for displaying any data as a function of time.
+- `spectrumplot.py`: PlotItem for interactive display of spectrograms.
+
+Basic plot items:
+
+- `traceitem.py`: PlotDataItem for OscillogramPlot.
+- `specitem.py`: ImageItem for SpectrumPlot.
+- `fulltraceplot.py`: GraphicsLayoutWidget showing the full raw data traces.
+
+#### Controller
+
+- `audiangui.py`: Main GUI, handles DataBrowser widgets and key shortcuts.
+- `databrowser.py`: Each data file is displayed in a DataBrowser widget.
+
+
 ## Old matplotlib-based version
+
+Not further developed. As soon as audiangui is able to show power
+spectra of both raw traces and envelopes, this script will be removed from the repository.
 
 Simply run it from a terminal:
 ``` sh
