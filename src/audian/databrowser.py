@@ -68,6 +68,7 @@ class DataBrowser(QWidget):
     sigResolutionChanged = Signal()
     sigColorMapChanged = Signal()
     sigFilterChanged = Signal()
+    sigEnvelopeChanged = Signal()
     sigPowerChanged = Signal()
     sigAudioChanged = Signal(object, object, object)
 
@@ -171,6 +172,7 @@ class DataBrowser(QWidget):
         self.axspacers = [] # spacer between trace and spectrogram
         self.axspecs = []   # spectrogram plots
         self.traces = []    # traces
+        self.envelopes = [] # envelopes
         self.specs = []     # spectrograms
         self.cbars = []     # color bars
         self.trace_labels = [] # labels on traces
@@ -223,6 +225,7 @@ class DataBrowser(QWidget):
         self.axspacers = [] # spacer between trace and spectrogram
         self.axspecs = []   # spectrogram plots
         self.traces = []    # traces
+        self.envelopes = [] # envelopes
         self.trace_labels = [] # labels on traces
         self.trace_region_labels = [] # regions with labels on traces
         self.specs = []     # spectrograms
@@ -319,6 +322,12 @@ class DataBrowser(QWidget):
             else:
                 axt.setLabel('left', f'channel {c}', color='black')
             axt.addItem(trace)
+            # envelope:
+            envelope = TraceItem(self.data.envelope, c, color='#ff8800')
+            self.envelopes.append(envelope)
+            axt.addItem(envelope)
+            
+            # add marker labels:
             labels = []
             for l in self.marker_labels:
                 label = pg.ScatterPlotItem(size=10, hoverSize=20,
@@ -914,6 +923,8 @@ class DataBrowser(QWidget):
                     self.data.set_time_range(ax)
         for trace in self.traces:
             trace.update_plot()
+        for envelope in self.envelopes:
+            envelope.update_plot()
         for spec in self.specs:
             spec.update_plot()
         self.setting = False
@@ -1295,6 +1306,44 @@ class DataBrowser(QWidget):
             self.traces[c].update_plot()
         self.setting = False
         self.sigFilterChanged.emit()  # dispatch
+
+
+    def envelope_cutoff_up(self):
+        envelope_cutoff = self.data.envelope.envelope_cutoff
+        step = 1.0
+        if envelope_cutoff >= 1.0:
+            step = 0.5*10**(floor(log10(envelope_cutoff)))
+        envelope_cutoff += step
+        if envelope_cutoff > self.data.rate/2/5:
+            envelope_cutoff = self.data.rate/2/5
+        self.update_envelope(envelope_cutoff)
+
+
+    def envelope_cutoff_down(self):
+        envelope_cutoff = self.data.envelope.envelope_cutoff
+        step = 1.0
+        if envelope_cutoff >= 1.0:
+            step = 0.5*10**(floor(log10(envelope_cutoff)))
+            step = 0.5*10**(floor(log10(envelope_cutoff - 0.1*step)))
+        envelope_cutoff -= step
+        if envelope_cutoff < 1:
+            envelope_cutoff = 1
+        self.update_envelope(envelope_cutoff)
+
+
+    def update_envelope(self, envelope_cutoff):
+        """Called when envelope cutoffs was changed by key shortcuts.
+
+        """
+        if self.setting:
+            return
+        self.setting = True
+        self.data.envelope.envelope_cutoff = envelope_cutoff
+        self.data.envelope.set_filter()
+        for c in range(self.data.channels):
+            self.envelopes[c].update_plot()
+        self.setting = False
+        self.sigEnvelopeChanged.emit()  # dispatch
 
 
     def add_to_show_channels(self, channels):

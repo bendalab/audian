@@ -36,6 +36,7 @@ class Audian(QMainWindow):
         self.link_frequency = True
         self.link_filter = True
         self.link_power = True
+        self.link_envelope = True
         self.link_channels = True
         self.link_panels = True
         self.link_audio = True
@@ -698,6 +699,43 @@ class Audian(QMainWindow):
         return power_menu
 
         
+    def toggle_link_envelope(self):
+        self.link_envelope = not self.link_envelope
+
+
+    def dispatch_envelope(self):
+        if self.link_envelope:
+            envelope_cutoff = self.browser().data.envelope.envelope_cutoff
+            for b in self.browsers:
+                if not b is self.browser():
+                    b.set_envelope(envelope_cutoff)
+
+
+    def setup_envelope_actions(self, menu):
+        self.acts.link_envelope = QAction('Link &envelope', self)
+        self.acts.link_envelope.setShortcut('Alt+E')
+        self.acts.link_envelope.setCheckable(True)
+        self.acts.link_envelope.setChecked(self.link_envelope)
+        self.acts.link_envelope.toggled.connect(self.toggle_link_envelope)
+        
+        self.acts.envelope_up = QAction('Envelope cutoff &up', self)
+        self.acts.envelope_up.setShortcut('Shift+E')
+        self.acts.envelope_up.triggered.connect(lambda x: self.browser().envelope_cutoff_up())
+
+        self.acts.envelope_down = QAction('Envelope cutoff &down', self)
+        self.acts.envelope_down.setShortcut('E')
+        self.acts.envelope_down.triggered.connect(lambda x: self.browser().envelope_cutoff_down())
+        
+        envelope_menu = menu.addMenu('&Envelope')
+        envelope_menu.addAction(self.acts.link_envelope)
+        envelope_menu.addAction(self.acts.envelope_up)
+        envelope_menu.addAction(self.acts.envelope_down)
+
+        self.data_menus.append(envelope_menu)
+        
+        return envelope_menu
+
+    
     def toggle_link_channels(self):
         self.link_channels = not self.link_channels
 
@@ -966,6 +1004,7 @@ class Audian(QMainWindow):
         self.setup_amplitude_actions(view_menu)
         self.setup_frequency_actions(view_menu)
         self.setup_power_actions(view_menu)
+        self.setup_envelope_actions(view_menu)
         self.setup_channel_actions(view_menu)
         self.setup_panel_actions(view_menu)
         view_menu.addAction(self.acts.toggle_grid)

@@ -7,6 +7,7 @@ import numpy as np
 from audioio import get_datetime
 from thunderlab.dataloader import DataLoader
 from .bufferedfilter import BufferedFilter
+from .bufferedenvelope import BufferedEnvelope
 from .bufferedspectrogram import BufferedSpectrogram
 
 
@@ -29,6 +30,7 @@ class Data(object):
         self.start_time = None
         self.meta_data = {}
         self.filtered = BufferedFilter()
+        self.envelope = BufferedEnvelope()
         self.spectrum = BufferedSpectrogram()
 
         
@@ -44,6 +46,7 @@ class Data(object):
         tbefore = 0
         tafter = 0
         tbefore, tafter = self.spectrum.expand_times(tbefore, tafter)
+        self.envelope.expand_times(0, 0)  # need smarter dependency management!
         tbefore, tafter = self.filtered.expand_times(tbefore, tafter)
         self.tbefore = tbefore
         self.tafter = tafter
@@ -71,6 +74,8 @@ class Data(object):
         self.start_time = get_datetime(self.meta_data)
         # filter:
         self.filtered.open(self.data, highpass_cutoff, lowpass_cutoff)
+        # envelope:
+        self.envelope.open(self.filtered)
         # spectrogram:
         self.spectrum.open(self.data, 256, 0.5)
 
@@ -79,6 +84,7 @@ class Data(object):
         self.data.update_time(self.toffset - self.tbefore,
                               self.toffset + self.twindow + self.tafter)
         self.filtered.align_buffer()
+        self.envelope.align_buffer()
         self.spectrum.align_buffer()
         
         
