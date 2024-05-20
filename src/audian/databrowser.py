@@ -405,6 +405,15 @@ class DataBrowser(QWidget):
         self.nfftw.currentTextChanged.connect(lambda s: self.set_resolution(nfft=int(s)))
         self.toolbar.addWidget(self.nfftw)
         self.toolbar.addSeparator()
+        self.envfw = QSpinBox(self)
+        self.envfw.setToolTip('Envelope low-pass filter cutoff frequency')
+        self.envfw.setRange(1, 10000)
+        self.envfw.setSingleStep(5)
+        self.envfw.setSuffix('Hz')
+        self.envfw.setValue(int(self.data.envelope.envelope_cutoff))
+        self.envfw.valueChanged.connect(lambda v: self.update_envelope(envelope_cutoff=v))
+        self.toolbar.addWidget(self.envfw)
+        self.toolbar.addSeparator()
         self.toolbar.addWidget(QLabel('Channel:'))
         for c in range(max(self.data.channels, len(self.acts.channels))):
             gui.set_channel_action(c, self.data.channels,
@@ -1332,8 +1341,7 @@ class DataBrowser(QWidget):
 
 
     def update_envelope(self, envelope_cutoff):
-        """Called when envelope cutoffs was changed by key shortcuts.
-
+        """Called when envelope cutoffs was changed by key shortcuts or widget.
         """
         if self.setting:
             return
@@ -1342,6 +1350,7 @@ class DataBrowser(QWidget):
         self.data.envelope.set_filter()
         for c in range(self.data.channels):
             self.envelopes[c].update_plot()
+        self.envfw.setValue(int(self.data.envelope.envelope_cutoff))
         self.setting = False
         self.sigEnvelopeChanged.emit()  # dispatch
 
