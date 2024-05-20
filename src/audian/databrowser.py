@@ -1340,15 +1340,18 @@ class DataBrowser(QWidget):
         self.update_envelope(envelope_cutoff)
 
 
-    def update_envelope(self, envelope_cutoff):
+    def update_envelope(self, envelope_cutoff=None, show_envelope=None):
         """Called when envelope cutoffs was changed by key shortcuts or widget.
         """
         if self.setting:
             return
         self.setting = True
-        self.data.envelope.envelope_cutoff = envelope_cutoff
+        if envelope_cutoff is not None:
+            self.data.envelope.envelope_cutoff = envelope_cutoff
         self.data.envelope.set_filter()
         for c in range(self.data.channels):
+            if show_envelope is not None:
+                self.envelopes[c].setVisible(show_envelope)
             self.envelopes[c].update_plot()
         self.envfw.setValue(int(self.data.envelope.envelope_cutoff))
         self.setting = False

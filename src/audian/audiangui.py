@@ -702,13 +702,19 @@ class Audian(QMainWindow):
     def toggle_link_envelope(self):
         self.link_envelope = not self.link_envelope
 
+        
+    def toggle_show_envelope(self):
+        self.browser().update_envelope(show_envelope=not self.browser().envelopes[0].isVisible())
+
 
     def dispatch_envelope(self):
         if self.link_envelope:
             envelope_cutoff = self.browser().data.envelope.envelope_cutoff
+            show_envelope = self.browser().envelopes[0].isVisible()
             for b in self.browsers:
                 if not b is self.browser():
-                    b.set_envelope(envelope_cutoff)
+                    b.update_envelope(envelope_cutoff=envelope_cutoff,
+                                      show_envelope=show_envelope)
 
 
     def setup_envelope_actions(self, menu):
@@ -717,6 +723,12 @@ class Audian(QMainWindow):
         self.acts.link_envelope.setCheckable(True)
         self.acts.link_envelope.setChecked(self.link_envelope)
         self.acts.link_envelope.toggled.connect(self.toggle_link_envelope)
+        
+        self.acts.show_envelope = QAction('Link &envelope', self)
+        self.acts.show_envelope.setShortcut('Ctrl+E')
+        self.acts.show_envelope.setCheckable(True)
+        self.acts.show_envelope.setChecked(True)
+        self.acts.show_envelope.toggled.connect(self.toggle_show_envelope)
         
         self.acts.envelope_up = QAction('Envelope cutoff &up', self)
         self.acts.envelope_up.setShortcut('Shift+E')
@@ -728,6 +740,7 @@ class Audian(QMainWindow):
         
         envelope_menu = menu.addMenu('&Envelope')
         envelope_menu.addAction(self.acts.link_envelope)
+        envelope_menu.addAction(self.acts.show_envelope)
         envelope_menu.addAction(self.acts.envelope_up)
         envelope_menu.addAction(self.acts.envelope_down)
 
@@ -1107,6 +1120,7 @@ Can not open file <b>{browser.file_path}</b>!''')
                 browser.sigResolutionChanged.connect(self.dispatch_resolution)
                 browser.sigColorMapChanged.connect(self.dispatch_colormap)
                 browser.sigFilterChanged.connect(self.dispatch_filter)
+                browser.sigEnvelopeChanged.connect(self.dispatch_envelope)
                 browser.sigPowerChanged.connect(self.dispatch_power)
                 browser.sigAudioChanged.connect(self.dispatch_audio)
                 browser.set_times(enable_starttime=self.acts.toggle_start_time.isChecked(), dispatch=False)
