@@ -28,6 +28,7 @@ handles all GUI aspects.
   - [ ] Add destination list to Buffered data.
     Use these for smarter updates of buffers.
   - [ ] Traces should be hideable and assignable to plots.
+  - [ ] TraceItems should get color and line width from data objects.
   - [ ] Test this plugin interface with
     - [ ] Subtract common mean
     - [ ] Logarithmic and high-pass filtered envelope
@@ -46,6 +47,8 @@ handles all GUI aspects.
   - [ ] fix offset problem.
   - [ ] indicate time under mouse cursor.
 - [ ] Add a toolbar widget for spectrum overlap
+- [ ] SpinBox for envelope cutoff frequency needs to show digits
+  after decimal point.
 - [ ] Interactive high- and low-pass filtering:
   - [ ] high- and low-pass filter lines must not cross! Update limits.
   - [ ] add a toolbar widget for setting filter order.

@@ -1115,7 +1115,7 @@ class DataBrowser(QWidget):
         if self.setting:
             return
         self.setting = True
-        self.data.spectrum.set_resolution(nfft, hop_frac)
+        self.data.spectrum.update(nfft, hop_frac)
         self.nfftw.setCurrentText(f'{self.data.spectrum.nfft}')
         for s in self.specs:
             s.update_plot()
@@ -1285,7 +1285,7 @@ class DataBrowser(QWidget):
             self.data.filtered.lowpass_cutoff[c] = lowpass_cutoffs[cf]
             self.axspecs[c].set_filter_handles(highpass_cutoffs[cf],
                                                lowpass_cutoffs[cf])
-        self.data.filtered.set_filter()
+        self.data.filtered.update()
         for c in range(self.data.channels):
             self.traces[c].update_plot()
         self.setting = False
@@ -1310,7 +1310,7 @@ class DataBrowser(QWidget):
             self.data.filtered.lowpass_cutoff[channel] = lowpass_cutoff
             self.axspecs[channel].set_filter_handles(highpass_cutoff,
                                                      lowpass_cutoff)
-        self.data.filtered.set_filter()
+        self.data.filtered.update()
         for c in range(self.data.channels):
             self.traces[c].update_plot()
         self.setting = False
@@ -1348,7 +1348,7 @@ class DataBrowser(QWidget):
         self.setting = True
         if envelope_cutoff is not None:
             self.data.envelope.envelope_cutoff = envelope_cutoff
-        self.data.envelope.set_filter()
+        self.data.envelope.update()
         for c in range(self.data.channels):
             if show_envelope is not None:
                 self.envelopes[c].setVisible(show_envelope)

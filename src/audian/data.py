@@ -178,17 +178,17 @@ class Data(object):
 
         
     def freq_resolution_down(self):
-        self.spectrum.set_resolution(nfft=self.spectrum.nfft//2)
+        self.spectrum.update(nfft=self.spectrum.nfft//2)
 
         
     def freq_resolution_up(self):
-        self.spectrum.set_resolution(nfft=2*self.spectrum.nfft)
+        self.spectrum.update(nfft=2*self.spectrum.nfft)
 
 
     def hop_frac_down(self):
-        self.spectrum.set_resolution(hop_frac=self.spectrum.hop_frac/2)
+        self.spectrum.update(hop_frac=self.spectrum.hop_frac/2)
 
 
     def hop_frac_up(self):
-        self.spectrum.set_resolution(hop_frac=2*self.spectrum.hop_frac)
+        self.spectrum.update(hop_frac=2*self.spectrum.hop_frac)
 

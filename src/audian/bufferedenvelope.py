@@ -24,27 +24,17 @@ class BufferedEnvelope(BufferedData):
         if filter_order is not None:
             self.filter_order = filter_order
         self.sos = None
-        self.set_filter()
+        self.update()
 
         
-    def load_buffer(self, offset, nframes, buffer):
-        print(f'load {self.name} {offset/self.rate:.3f} - {(offset + nframes)/self.rate:.3f}')
-        nbefore = int(self.source_tbefore/self.source.rate)
-        offset -= nbefore
-        nframes += nbefore
-        if offset < 0:
-            nbefore += offset
-            nframes += offset
-            offset = 0
-        offset -= self.source.offset
+    def process(self, source, dest, nbefore):
         # the integral over one hump of the sine wave is 2, the mean is 2/pi:
-        tmp_buffer = (np.pi/2)*np.abs(self.source.buffer[offset:offset + nframes])
-        buffer[:] = sosfiltfilt(self.sos, tmp_buffer, axis=0)[nbefore:]
+        dest[:] = sosfiltfilt(self.sos, (np.pi/2)*np.abs(source), axis=0)[nbefore:]
         # TODO: downsample!!!
 
             
-    def set_filter(self):
+    def update(self):
         self.sos = butter(self.filter_order, self.envelope_cutoff,
                           'lowpass', fs=self.rate, output='sos')
-        self.reload_buffer()
+        self.recompute()
 

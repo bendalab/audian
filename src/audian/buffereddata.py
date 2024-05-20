@@ -33,12 +33,14 @@ class BufferedData(BufferedArray):
             self.shape = (self.frames, self.channels)
         else:
             self.shape = (self.frames, self.channels) + more_shape
+        self.ndim = len(self.shape)
         self.size = self.frames * self.channels
         if self.source.bufferframes == self.source.frames:
             self.bufferframes = self.frames
         else:
             self.bufferframes = int(tbuffer*self.rate)
         self.offset = (self.source.offset + step - 1)//step
+        self.follow = 0
 
         
     def open(self, source, step=1, more_shape=None):
@@ -47,8 +49,9 @@ class BufferedData(BufferedArray):
         self.backframes = 0
         self.channels = self.source.channels
         self.rate = self.source.rate
+        self.buffer_changed = np.zeros(self.channels, dtype=bool)
+        self.buffer = np.zeros((0, self.channels))
         self.update_step(step, more_shape)
-        self.init_buffer()
 
         
     def align_buffer(self):
@@ -65,4 +68,31 @@ class BufferedData(BufferedArray):
         nframes = int(np.floor(nframes*self.rate/self.source.rate))
         self.move_buffer(offset, nframes)
         self.bufferframes = len(self.buffer)
+
+
+    def load_buffer(self, offset, nframes, buffer):
+        print(f'load {self.name} {offset/self.rate:.3f} - {(offset + nframes)/self.rate:.3f}')
+        # transform to rate of source buffer:
+        soffset = int(offset*self.source.rate/self.rate)
+        snframes = int(nframes*self.source.rate/self.rate)
+        nbefore = int(self.source_tbefore/self.source.rate)
+        soffset -= nbefore
+        snframes += nbefore
+        soffset -= self.source.offset
+        if soffset < 0:
+            snbefore += soffset
+            snframes += soffset
+            soffset = 0
+        if soffset + snframes > len(self.source.buffer):
+            snframes = len(self.source.buffer) - soffset
+        source = self.source.buffer[soffset:soffset + snframes]
+        self.process(source, buffer, nbefore)
+
+
+    def recompute(self):
+        if len(self.source.buffer) > 0:
+            self.allocate_buffer()
+        self.reload_buffer()
+        
+        
 

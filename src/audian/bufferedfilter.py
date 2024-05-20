@@ -1,7 +1,7 @@
 """Filter source data on the fly.
 """
 
-from scipy.signal import butter, sosfiltfilt
+from scipy.signal import butter, sosfilt
 from .buffereddata import BufferedData
 
 
@@ -29,29 +29,17 @@ class BufferedFilter(BufferedData):
             self.lowpass_cutoff = [lowpass_cutoff]*self.channels
         self.filter_order = [2]*self.channels
         self.sos = [None]*self.channels
-        self.set_filter()
+        self.update()
 
-        
-    def load_buffer(self, offset, nframes, buffer):
-        print(f'load {self.name} {offset/self.rate:.3f} - {(offset + nframes)/self.rate:.3f}')
-        nbefore = int(self.source_tbefore/self.source.rate)
+
+    def process(self, source, dest, nbefore):
         for c in range(self.channels):
             if self.sos[c] is None:
-                offs = offset - self.source.offset
-                buffer[:, c] = self.source.buffer[offs:offs + nframes, c]
+                dest[:, c] = source[nbefore:, c]
             else:
-                nbfr = nbefore
-                offs = offset - nbfr
-                nfrs = nframes + nbfr
-                if offs < 0:
-                    nbfr += offs
-                    nfrs += offs
-                    offs = 0
-                offs -= self.source.offset
-                buffer[:, c] = sosfiltfilt(self.sos[c],
-                                           self.source.buffer[offs:offs + nfrs, c])[nbfr:]
+                dest[:, c] = sosfilt(self.sos[c], source[:, c],)[nbefore:]
 
-            
+                
     def make_filter(self, channel):
         if self.highpass_cutoff[channel] < 1e-8 and \
            self.lowpass_cutoff[channel] >= self.rate/2 - 1e-8:
@@ -74,8 +62,8 @@ class BufferedFilter(BufferedData):
                                        output='sos')
 
             
-    def set_filter(self):
+    def update(self):
         for c in range(self.channels):
             self.make_filter(c)
-        self.reload_buffer()
+        self.recompute()
 

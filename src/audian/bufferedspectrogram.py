@@ -40,33 +40,25 @@ class BufferedSpectrogram(BufferedData):
         super().open(source, self.hop, more_shape=(self.nfft//2 + 1,))
 
         
-    def load_buffer(self, offset, nframes, buffer):
-        print(f'compute spectrum: {offset/self.rate:.3f}s - {(offset + nframes)/self.rate:.3f}s')
-        start = offset*self.hop - self.source.offset
-        stop = start + (nframes - 1)*self.hop + self.nfft
-        if stop > len(self.source.buffer):
-            stop = len(self.source.buffer)
-        if start < 0:
-            print('  negative', start, self.nfft, self.hop)
-            print(f'  source buffer: {self.source.offset/self.source.rate:.3f}s - {(self.source.offset + len(self.source.buffer))/self.source.rate:.3f}s')
-        if stop > len(self.source.buffer):
-            print('  negative', stop, len(self.source.buffer))
-            print(f'  source buffer: {self.source.offset/self.source.rate:.3f}s - {(self.source.offset + len(self.source.buffer))/self.source.rate:.3f}s')
-        freq, time, Sxx = spectrogram(self.source.buffer[start:stop],
+    def process(self, source, dest, nbefore):
+        nsource = (len(dest) - 1)*self.hop + self.nfft
+        if nsource > len(source):
+            nsource = len(source)
+        freq, time, Sxx = spectrogram(source[:nsource],
                                       self.source.rate,
                                       nperseg=self.nfft,
                                       noverlap=self.nfft - self.hop,
                                       axis=0)
         n = Sxx.shape[2]
-        buffer[:n] = Sxx.transpose((2, 1, 0))
-        buffer[n:] = 0
+        dest[:n] = Sxx.transpose((2, 1, 0))
+        dest[n:] = 0
         # extent of the full buffer:
         self.spec_rect = [self.offset/self.rate, 0,
                           len(self.buffer)/self.rate,
                           freq[-1] + self.fresolution]
 
         
-    def set_resolution(self, nfft=None, hop_frac=None):
+    def update(self, nfft=None, hop_frac=None):
         spec_update = False
         if nfft is not None:
             if nfft < 8:
@@ -90,8 +82,7 @@ class BufferedSpectrogram(BufferedData):
             self.hop = hop
             spec_update = True
         if spec_update:
-            self.update_step(self.hop, more_shape=(self.nfft//2 + 1,))
             self.tresolution = self.hop/self.source.rate
             self.fresolution = self.source.rate/self.nfft
-            self.allocate_buffer()
-            self.reload_buffer()
+            self.update_step(self.hop, more_shape=(self.nfft//2 + 1,))
+            self.recompute()
