@@ -16,7 +16,7 @@ class Data(object):
     def __init__(self, file_path):
         self.buffer_time = 60
         self.back_time = 20
-        self.follow_time = 5
+        self.follow_time = 0
         self.file_path = file_path
         self.data = None
         self.load_buffer_orig = None
@@ -32,24 +32,59 @@ class Data(object):
         self.filtered = BufferedFilter()
         self.envelope = BufferedEnvelope()
         self.spectrum = BufferedSpectrogram()
+        self.traces = [self.filtered, self.envelope, self.spectrum]
+        self.order_plugins()
 
         
     def __del__(self):
         if not self.data is None:
             self.data.close()
 
+
+    def order_plugins(self):
+        traces = []
+        self.sources = []
+        i = -1
+        while i < len(traces):
+            sname = traces[i].name if i >= 0 else 'data'
+            dtraces = []
+            for k in range(len(self.traces)):
+                if self.traces[k] is not None and \
+                   self.traces[k].source_name is sname:
+                    dtraces.append(self.traces[k])
+                    self.traces[k] = None
+            for t in reversed(dtraces):
+                traces.insert(i + 1, t)
+                self.sources.insert(i + 1, i)
+            i += 1
+        if len(traces) < len(self.traces):
+            for trace in self.traces:
+                if trace is not None:
+                    print(f'! ERROR: source "{trace.source_name}" for trace "{trace.name}" not found!')
+            print('! the following sources are available:')
+            print('  data')
+            for source in traces:
+                print(f'  {source.name}')
+        self.traces = traces
+
         
-    def open(self, unwrap, unwrap_clip, highpass_cutoff, lowpass_cutoff):
+    def open(self, unwrap, unwrap_clip):
         if not self.data is None:
             self.data.close()
         # expand buffer times:
-        tbefore = 0
-        tafter = 0
-        tbefore, tafter = self.spectrum.expand_times(tbefore, tafter)
-        self.envelope.expand_times(0, 0)  # need smarter dependency management!
-        tbefore, tafter = self.filtered.expand_times(tbefore, tafter)
-        self.tbefore = tbefore
-        self.tafter = tafter
+        self.tbefore = 0
+        self.tafter = 0
+        tbefore = [0] * len(self.traces)
+        tafter = [0] * len(self.traces)
+        for k in reversed(range(len(self.traces))):
+            tb, ta = self.traces[k].expand_times(tbefore[k], tafter[k])
+            i = self.sources[k]
+            if i < 0:
+                self.tbefore = max(self.tbefore, tb)
+                self.tafter = max(self.tafter, ta)
+            else:
+                tbefore[i] = max(tbefore[i], tb)
+                tafter[i] = max(tafter[i], ta)
         # raw data:        
         tbuffer = self.buffer_time + self.tbefore + self.tafter
         tback = self.back_time + self.tbefore
@@ -60,6 +95,10 @@ class Data(object):
             return
         self.data.set_unwrap(unwrap, unwrap_clip, False, self.data.unit)
         self.data.follow = int(self.follow_time*self.data.rate)
+        self.data.name = 'data'
+        self.data.dests = []
+        self.traces.insert(0, self.data)
+        self.sources = [None] + [i + 1 for i in self.sources]
         self.file_path = self.data.filepath
         self.rate = self.data.rate
         self.channels = self.data.channels
@@ -72,20 +111,16 @@ class Data(object):
         self.meta_data = dict(Format=self.data.format_dict())
         self.meta_data.update(self.data.metadata())
         self.start_time = get_datetime(self.meta_data)
-        # filter:
-        self.filtered.open(self.data, highpass_cutoff, lowpass_cutoff)
-        # envelope:
-        self.envelope.open(self.filtered)
-        # spectrogram:
-        self.spectrum.open(self.data, 256, 0.5)
+        # derived data:
+        for trace, source in zip(self.traces[1:], self.sources[1:]):
+            trace.open(self.traces[source])
 
 
     def update_times(self):
         self.data.update_time(self.toffset - self.tbefore,
                               self.toffset + self.twindow + self.tafter)
-        self.filtered.align_buffer()
-        self.envelope.align_buffer()
-        self.spectrum.align_buffer()
+        for trace in self.traces[1:]:
+            trace.align_buffer()
         
         
     def set_time_limits(self, ax):

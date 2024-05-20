@@ -15,7 +15,7 @@ from .buffereddata import BufferedData
 class BufferedSpectrogram(BufferedData):
 
     def __init__(self):
-        super().__init__(name='spectrogram', tbefore=0, tafter=10)
+        super().__init__('spectrogram', 'data', tbefore=0, tafter=10)
         self.nfft = 256
         self.hop_frac = 0.5
         self.hop = self.nfft//2
@@ -25,14 +25,8 @@ class BufferedSpectrogram(BufferedData):
         self.use_spec = True
 
         
-    def open(self, source, nfft=256, hop_frac=0.5):
-        self.nfft = nfft
-        self.hop_frac = hop_frac
+    def open(self, source):
         self.hop = int(self.nfft*self.hop_frac)
-        if self.hop < 1:
-            self.hop = 1
-        if self.hop > self.nfft:
-            self.hop = self.nfft
         self.fresolution = source.rate/self.nfft
         self.tresolution = self.hop/source.rate
         self.spec_rect = []

@@ -24,11 +24,13 @@ handles all GUI aspects.
 
 - [ ] Implement Model-View structure
   - [x] Handle all data (raw, filtered, spectrogram,...) in one class!
-  - [ ] Boil down the BufferedData code to a simple plugin interface.
-  - [ ] Add destination list to Buffered data.
-    Use these for smarter updates of buffers.
+  - [x] Boil down the BufferedData code to a simple plugin interface.
+  - [x] Add destination list to Buffered data.
+  - [x] Smart updates of trace buffers.
+  - [ ] Move spectrum functions from Data to BufferedSpectrum.
   - [ ] Traces should be hideable and assignable to plots.
   - [ ] TraceItems should get color and line width from data objects.
+  - [ ] Automatically discover plugins. 
   - [ ] Test this plugin interface with
     - [ ] Subtract common mean
     - [ ] Logarithmic and high-pass filtered envelope

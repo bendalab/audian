@@ -183,9 +183,14 @@ class DataBrowser(QWidget):
 
         
     def open(self, gui, unwrap, unwrap_clip, highpass_cutoff, lowpass_cutoff):
-        self.data.open(unwrap, unwrap_clip, highpass_cutoff, lowpass_cutoff)
+        self.data.open(unwrap, unwrap_clip)
         if self.data.data is None:
             return
+        for c in range(self.data.channels):
+            if highpass_cutoff is not None:
+                self.data.filtered.highpass_cutoff[c] = highpass_cutoff
+            if lowpass_cutoff is not None:
+                self.data.filtered.lowpass_cutoff[c] = lowpass_cutoff
         self.marker_data.file_path = self.data.file_path
 
         if self.show_channels is None:

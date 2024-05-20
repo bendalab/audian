@@ -7,13 +7,15 @@ from audioio import BufferedArray
 
 class BufferedData(BufferedArray):
 
-    def __init__(self, name, tbefore=0, tafter=0):
+    def __init__(self, name, source_name, tbefore=0, tafter=0):
         self.name = name
+        self.source_name = source_name
         self.tbefore = 0
         self.tafter = 0
         self.source = None
         self.source_tbefore = tbefore
         self.source_tafter = tafter
+        self.dests = []
         self.verbose = 0
 
 
@@ -45,6 +47,7 @@ class BufferedData(BufferedArray):
         
     def open(self, source, step=1, more_shape=None):
         self.source = source
+        self.source.dests.append(self)
         self.bufferframes = 0
         self.backframes = 0
         self.channels = self.source.channels

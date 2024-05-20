@@ -8,25 +8,19 @@ from .buffereddata import BufferedData
 class BufferedFilter(BufferedData):
 
     def __init__(self):
-        super().__init__(name='filtered', tbefore=10, tafter=0)
+        super().__init__('filtered', 'data', tbefore=10, tafter=0)
         self.highpass_cutoff = []
         self.lowpass_cutoff = []
         self.filter_order = []
         self.sos = []
 
         
-    def open(self, source, highpass_cutoff=None, lowpass_cutoff=None):
+    def open(self, source):
         super().open(source)
         self.ampl_min = source.ampl_min
         self.ampl_max = source.ampl_max
-        if highpass_cutoff is None:
-            self.highpass_cutoff = [0]*self.channels
-        else:
-            self.highpass_cutoff = [highpass_cutoff]*self.channels
-        if lowpass_cutoff is None:
-            self.lowpass_cutoff = [self.rate/2]*self.channels
-        else:
-            self.lowpass_cutoff = [lowpass_cutoff]*self.channels
+        self.highpass_cutoff = [0]*self.channels
+        self.lowpass_cutoff = [self.rate/2]*self.channels
         self.filter_order = [2]*self.channels
         self.sos = [None]*self.channels
         self.update()

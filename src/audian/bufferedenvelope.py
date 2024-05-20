@@ -9,20 +9,16 @@ from .buffereddata import BufferedData
 class BufferedEnvelope(BufferedData):
 
     def __init__(self):
-        super().__init__(name='envelope', tbefore=1, tafter=0)
+        super().__init__('envelope', 'filtered', tbefore=1, tafter=0)
         self.envelope_cutoff = 500
         self.filter_order = 2
         self.sos = None
 
         
-    def open(self, source, lowpass_cutoff=None, filter_order=2):
+    def open(self, source):
         super().open(source)
         self.ampl_min = 0
         self.ampl_max = source.ampl_max
-        if lowpass_cutoff is not None:
-            self.envelope_cutoff = lowpass_cutoff
-        if filter_order is not None:
-            self.filter_order = filter_order
         self.sos = None
         self.update()
 
