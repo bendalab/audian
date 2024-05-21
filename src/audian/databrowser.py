@@ -411,9 +411,35 @@ class DataBrowser(QWidget):
         self.nfftw.currentTextChanged.connect(lambda s: self.set_resolution(nfft=int(s)))
         self.toolbar.addWidget(self.nfftw)
         self.toolbar.addSeparator()
+
+        self.toolbar.addWidget(QLabel('H'))
+        self.hpfw = QDoubleSpinBox(self)
+        self.hpfw.setToolTip('High-pass filter cutoff frequency')
+        self.hpfw.setRange(0, 99)
+        self.hpfw.setSingleStep(5)
+        self.hpfw.setStepType(QAbstractSpinBox.AdaptiveDecimalStepType)
+        self.hpfw.setDecimals(1)
+        self.hpfw.setSuffix('kHz')
+        self.hpfw.setValue(0.001*self.data.filtered.highpass_cutoff[0])
+        self.hpfw.valueChanged.connect(lambda v: self.update_filter(highpass_cutoff=1000*v))
+        self.toolbar.addWidget(self.hpfw)        
+
+        self.toolbar.addWidget(QLabel('L'))
+        self.lpfw = QDoubleSpinBox(self)
+        self.lpfw.setToolTip('Low-pass filter cutoff frequency')
+        self.lpfw.setRange(1, 999)
+        self.lpfw.setSingleStep(5)
+        self.lpfw.setStepType(QAbstractSpinBox.AdaptiveDecimalStepType)
+        self.lpfw.setDecimals(0)
+        self.lpfw.setSuffix('kHz')
+        self.lpfw.setValue(0.001*self.data.filtered.lowpass_cutoff[0])
+        self.lpfw.valueChanged.connect(lambda v: self.update_filter(lowpass_cutoff=1000*v))
+        self.toolbar.addWidget(self.lpfw)        
+        
+        self.toolbar.addWidget(QLabel('E'))
         self.envfw = QDoubleSpinBox(self)
         self.envfw.setToolTip('Envelope low-pass filter cutoff frequency')
-        self.envfw.setRange(1, 10000)
+        self.envfw.setRange(0.1, 9900)
         self.envfw.setSingleStep(5)
         self.envfw.setStepType(QAbstractSpinBox.AdaptiveDecimalStepType)
         self.envfw.setDecimals(1)
@@ -1295,7 +1321,8 @@ class DataBrowser(QWidget):
         self.setting = False
 
 
-    def update_filter(self, highpass_cutoff, lowpass_cutoff, channel=None):
+    def update_filter(self, highpass_cutoff=None, lowpass_cutoff=None,
+                      channel=None):
         """Called when filter cutoffs were changed by key shortcuts or handles
         in spectrum plots.
 
@@ -1305,15 +1332,23 @@ class DataBrowser(QWidget):
         self.setting = True
         if channel is None or channel in self.selected_channels:
             for c in self.selected_channels:
-                self.data.filtered.highpass_cutoff[c] = highpass_cutoff
-                self.data.filtered.lowpass_cutoff[c] = lowpass_cutoff
-                self.axspecs[c].set_filter_handles(highpass_cutoff,
-                                                   lowpass_cutoff)
+                if highpass_cutoff is not None:
+                    self.data.filtered.highpass_cutoff[c] = highpass_cutoff
+                if lowpass_cutoff is not None:
+                    self.data.filtered.lowpass_cutoff[c] = lowpass_cutoff
+                self.axspecs[c].set_filter_handles(
+                    self.data.filtered.highpass_cutoff[c],
+                    self.data.filtered.lowpass_cutoff[c])
         else:
-            self.data.filtered.highpass_cutoff[channel] = highpass_cutoff
-            self.data.filtered.lowpass_cutoff[channel] = lowpass_cutoff
-            self.axspecs[channel].set_filter_handles(highpass_cutoff,
-                                                     lowpass_cutoff)
+            if highpass_cutoff is not None:
+                self.data.filtered.highpass_cutoff[channel] = highpass_cutoff
+            if lowpass_cutoff is not None:
+                self.data.filtered.lowpass_cutoff[channel] = lowpass_cutoff
+            self.axspecs[channel].set_filter_handles(
+                self.data.filtered.lowpass_cutoff[channel].highpass_cutoff,
+                self.data.filtered.lowpass_cutoff[channel].lowpass_cutoff)
+        self.hpfw.setValue(0.001*self.data.filtered.highpass_cutoff[self.current_channel])
+        self.lpfw.setValue(0.001*self.data.filtered.lowpass_cutoff[self.current_channel])
         self.data.filtered.update()
         for c in range(self.data.channels):
             self.traces[c].update_plot()
