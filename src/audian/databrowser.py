@@ -12,7 +12,7 @@ from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QCursor, QKeySequence
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QScrollArea
 from PyQt5.QtWidgets import QAction, QMenu, QToolBar, QComboBox
-from PyQt5.QtWidgets import QCheckBox, QSpinBox
+from PyQt5.QtWidgets import QCheckBox, QDoubleSpinBox, QAbstractSpinBox
 from PyQt5.QtWidgets import QLabel, QSizePolicy, QTableView
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFileDialog
 from PyQt5.QtWidgets import QAbstractItemView, QGraphicsRectItem
@@ -385,12 +385,13 @@ class DataBrowser(QWidget):
         self.audiofacw.setCurrentText(f'{self.audio_rate_fac:g}')
         self.audiofacw.currentTextChanged.connect(lambda s: self.set_audio(rate_fac=float(s)))
         self.toolbar.addWidget(self.audiofacw)
-        self.audiohetfw = QSpinBox(self)
+        self.audiohetfw = QDoubleSpinBox(self)
         self.audiohetfw.setToolTip('Audio heterodyne frequency')
         self.audiohetfw.setRange(10, 100)
         self.audiohetfw.setSingleStep(5)
+        self.audiohetfw.setDecimals(0)
         self.audiohetfw.setSuffix('kHz')
-        self.audiohetfw.setValue(int(self.audio_heterodyne_freq/1000))
+        self.audiohetfw.setValue(self.audio_heterodyne_freq/1000)
         self.audiohetfw.valueChanged.connect(lambda v: self.set_audio(heterodyne_freq=1000*v))
         if self.data.rate > 50000:
             self.toolbar.addWidget(self.audiohetfw)
@@ -410,12 +411,14 @@ class DataBrowser(QWidget):
         self.nfftw.currentTextChanged.connect(lambda s: self.set_resolution(nfft=int(s)))
         self.toolbar.addWidget(self.nfftw)
         self.toolbar.addSeparator()
-        self.envfw = QSpinBox(self)
+        self.envfw = QDoubleSpinBox(self)
         self.envfw.setToolTip('Envelope low-pass filter cutoff frequency')
         self.envfw.setRange(1, 10000)
         self.envfw.setSingleStep(5)
+        self.envfw.setStepType(QAbstractSpinBox.AdaptiveDecimalStepType)
+        self.envfw.setDecimals(1)
         self.envfw.setSuffix('Hz')
-        self.envfw.setValue(int(self.data.envelope.envelope_cutoff))
+        self.envfw.setValue(self.data.envelope.envelope_cutoff)
         self.envfw.valueChanged.connect(lambda v: self.update_envelope(envelope_cutoff=v))
         self.toolbar.addWidget(self.envfw)
         self.toolbar.addSeparator()
@@ -1354,7 +1357,7 @@ class DataBrowser(QWidget):
             if show_envelope is not None:
                 self.envelopes[c].setVisible(show_envelope)
             self.envelopes[c].update_plot()
-        self.envfw.setValue(int(self.data.envelope.envelope_cutoff))
+        self.envfw.setValue(self.data.envelope.envelope_cutoff)
         self.setting = False
         self.sigEnvelopeChanged.emit()  # dispatch
 
@@ -1723,7 +1726,7 @@ class DataBrowser(QWidget):
         if heterodyne_freq is not None:
             self.audio_heterodyne_freq = float(heterodyne_freq)
             if not dispatch:
-                self.audiohetfw.setValue(int(self.audio_heterodyne_freq/1000))
+                self.audiohetfw.setValue(self.audio_heterodyne_freq/1000)
         if dispatch:
             self.sigAudioChanged.emit(self.audio_rate_fac,
                                       self.audio_use_heterodyne,

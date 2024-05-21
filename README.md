@@ -50,7 +50,7 @@ handles all GUI aspects.
   - [ ] fix offset problem.
   - [ ] indicate time under mouse cursor.
 - [ ] Add a toolbar widget for spectrum overlap
-- [ ] SpinBox for envelope cutoff frequency needs to show digits
+- [x] SpinBox for envelope cutoff frequency needs to show digits
   after decimal point.
 - [ ] Interactive high- and low-pass filtering:
   - [ ] high- and low-pass filter lines must not cross! Update limits.
