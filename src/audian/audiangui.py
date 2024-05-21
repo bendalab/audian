@@ -724,7 +724,7 @@ class Audian(QMainWindow):
         self.acts.link_envelope.setChecked(self.link_envelope)
         self.acts.link_envelope.toggled.connect(self.toggle_link_envelope)
         
-        self.acts.show_envelope = QAction('Link &envelope', self)
+        self.acts.show_envelope = QAction('&Show envelope', self)
         self.acts.show_envelope.setShortcut('Ctrl+E')
         self.acts.show_envelope.setCheckable(True)
         self.acts.show_envelope.setChecked(True)
