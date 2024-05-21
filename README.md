@@ -27,7 +27,8 @@ handles all GUI aspects.
   - [x] Boil down the BufferedData code to a simple plugin interface.
   - [x] Add destination list to Buffered data.
   - [x] Smart updates of trace buffers.
-  - [ ] Move spectrum functions from Data to BufferedSpectrum.
+  - [x] Move spectrum functions from Data to BufferedSpectrum.
+  - [ ] Recompute only if visible or used by something visible.
   - [ ] Traces should be hideable and assignable to plots.
   - [ ] TraceItems should get color and line width from data objects.
   - [ ] Automatically discover plugins. 

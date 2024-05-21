@@ -1,8 +1,5 @@
 """Spectrogram of source data on the fly.
 
-## TODO
-- update use_spec on visibility of databrowser, and whether spectra are shown at all
-
 """
 
 
@@ -15,7 +12,7 @@ from .buffereddata import BufferedData
 class BufferedSpectrogram(BufferedData):
 
     def __init__(self):
-        super().__init__('spectrogram', 'data', tbefore=0, tafter=10)
+        super().__init__('spectrogram', 'data', tafter=10)
         self.nfft = 256
         self.hop_frac = 0.5
         self.hop = self.nfft//2

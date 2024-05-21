@@ -1130,23 +1130,19 @@ class DataBrowser(QWidget):
 
         
     def freq_resolution_down(self):
-        self.data.freq_resolution_down()
-        self.set_resolution()
+        self.set_resolution(nfft=self.data.spectrum.nfft//2)
 
         
     def freq_resolution_up(self):
-        self.data.freq_resolution_up()
-        self.set_resolution()
+        self.set_resolution(nfft=2*self.data.spectrum.nfft)
 
 
     def hop_frac_down(self):
-        self.data.hop_frac_down()
-        self.set_resolution()
+        self.set_resolution(hop_frac=self.data.spectrum.hop_frac/2)
 
 
     def hop_frac_up(self):
-        self.data.hop_frac_up()
-        self.set_resolution()
+        self.set_resolution(hop_frac=2*self.data.spectrum.hop_frac)
 
         
     def set_color_map(self, color_map=None, dispatch=True):

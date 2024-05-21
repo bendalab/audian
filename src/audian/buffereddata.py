@@ -74,7 +74,7 @@ class BufferedData(BufferedArray):
 
 
     def load_buffer(self, offset, nframes, buffer):
-        print(f'load {self.name} {offset/self.rate:.3f} - {(offset + nframes)/self.rate:.3f}')
+        #print(f'load {self.name} {offset/self.rate:.3f} - {(offset + nframes)/self.rate:.3f}')
         # transform to rate of source buffer:
         soffset = int(offset*self.source.rate/self.rate)
         snframes = int(nframes*self.source.rate/self.rate)

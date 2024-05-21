@@ -19,16 +19,15 @@ class Data(object):
         self.follow_time = 0
         self.file_path = file_path
         self.data = None
-        self.load_buffer_orig = None
         self.rate = None
         self.channels = 0
-        self.tbefore = 0
-        self.tafter = 0
         self.tmax = 0.0
         self.toffset = 0.0
         self.twindow = 10.0
         self.start_time = None
         self.meta_data = {}
+        self.tbefore = 0
+        self.tafter = 0
         self.filtered = BufferedFilter()
         self.envelope = BufferedEnvelope()
         self.spectrum = BufferedSpectrogram()
@@ -210,20 +209,4 @@ class Data(object):
             ax.setLimits(yMin=self.data.ampl_min, yMax=self.data.ampl_max,
                          minYRange=1/2**16,
                          maxYRange=self.data.ampl_max - self.data.ampl_min)
-
-        
-    def freq_resolution_down(self):
-        self.spectrum.update(nfft=self.spectrum.nfft//2)
-
-        
-    def freq_resolution_up(self):
-        self.spectrum.update(nfft=2*self.spectrum.nfft)
-
-
-    def hop_frac_down(self):
-        self.spectrum.update(hop_frac=self.spectrum.hop_frac/2)
-
-
-    def hop_frac_up(self):
-        self.spectrum.update(hop_frac=2*self.spectrum.hop_frac)
 
