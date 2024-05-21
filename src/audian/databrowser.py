@@ -403,6 +403,8 @@ class DataBrowser(QWidget):
         self.toolbar.addAction(self.acts.zoom_back)
         self.toolbar.addAction(self.acts.zoom_forward)
         self.toolbar.addSeparator()
+        
+        self.toolbar.addWidget(QLabel('N:'))
         self.nfftw = QComboBox(self)
         self.nfftw.setToolTip('NFFT (R, Shift+R)')
         self.nfftw.addItems([f'{2**i}' for i in range(3, 20)])
@@ -410,11 +412,23 @@ class DataBrowser(QWidget):
         self.nfftw.setCurrentText(f'{self.data.spectrum.nfft}')
         self.nfftw.currentTextChanged.connect(lambda s: self.set_resolution(nfft=int(s)))
         self.toolbar.addWidget(self.nfftw)
+
+        self.toolbar.addWidget(QLabel('O:'))
+        self.ofracw = QDoubleSpinBox(self)
+        self.ofracw.setToolTip('Overlap of Fourier segments (O, Shift+O)')
+        self.ofracw.setRange(0, 100)
+        self.ofracw.setSingleStep(5)
+        self.ofracw.setStepType(QAbstractSpinBox.AdaptiveDecimalStepType)
+        self.ofracw.setDecimals(1)
+        self.ofracw.setSuffix('%')
+        self.ofracw.setValue(100*(1 - self.data.spectrum.hop_frac))
+        self.ofracw.valueChanged.connect(lambda v: self.set_resolution(hop_frac=1-0.01*v))
+        self.toolbar.addWidget(self.ofracw)
         self.toolbar.addSeparator()
 
-        self.toolbar.addWidget(QLabel('H'))
+        self.toolbar.addWidget(QLabel('H:'))
         self.hpfw = QDoubleSpinBox(self)
-        self.hpfw.setToolTip('High-pass filter cutoff frequency')
+        self.hpfw.setToolTip('High-pass filter cutoff frequency (H, Shift+H)')
         self.hpfw.setRange(0, 99)
         self.hpfw.setSingleStep(5)
         self.hpfw.setStepType(QAbstractSpinBox.AdaptiveDecimalStepType)
@@ -424,9 +438,9 @@ class DataBrowser(QWidget):
         self.hpfw.valueChanged.connect(lambda v: self.update_filter(highpass_cutoff=1000*v))
         self.toolbar.addWidget(self.hpfw)        
 
-        self.toolbar.addWidget(QLabel('L'))
+        self.toolbar.addWidget(QLabel(' L:'))
         self.lpfw = QDoubleSpinBox(self)
-        self.lpfw.setToolTip('Low-pass filter cutoff frequency')
+        self.lpfw.setToolTip('Low-pass filter cutoff frequency (L, Shift+L)')
         self.lpfw.setRange(1, 999)
         self.lpfw.setSingleStep(5)
         self.lpfw.setStepType(QAbstractSpinBox.AdaptiveDecimalStepType)
@@ -436,9 +450,9 @@ class DataBrowser(QWidget):
         self.lpfw.valueChanged.connect(lambda v: self.update_filter(lowpass_cutoff=1000*v))
         self.toolbar.addWidget(self.lpfw)        
         
-        self.toolbar.addWidget(QLabel('E'))
+        self.toolbar.addWidget(QLabel(' E:'))
         self.envfw = QDoubleSpinBox(self)
-        self.envfw.setToolTip('Envelope low-pass filter cutoff frequency')
+        self.envfw.setToolTip('Envelope low-pass filter cutoff frequency (E, Shift+E)')
         self.envfw.setRange(0.1, 9900)
         self.envfw.setSingleStep(5)
         self.envfw.setStepType(QAbstractSpinBox.AdaptiveDecimalStepType)
@@ -1151,6 +1165,7 @@ class DataBrowser(QWidget):
         self.setting = True
         self.data.spectrum.update(nfft, hop_frac)
         self.nfftw.setCurrentText(f'{self.data.spectrum.nfft}')
+        self.ofracw.setValue(100*(1 - self.data.spectrum.hop_frac))
         for s in self.specs:
             s.update_plot()
         self.setting = False
