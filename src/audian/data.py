@@ -40,6 +40,21 @@ class Data(object):
             self.data.close()
 
 
+    def __len__(self):
+        return len(self.traces)
+
+            
+    def __getitem__(self, key):
+        for trace in self.traces:
+            if trace.name.lower() == key.lower():
+                return trace
+        return None
+
+
+    def keys(self):
+        return [trace.name for trace in self.traces]
+
+        
     def order_plugins(self):
         traces = []
         self.sources = []
