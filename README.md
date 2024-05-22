@@ -28,9 +28,10 @@ handles all GUI aspects.
   - [x] Add destination list to Buffered data.
   - [x] Smart updates of trace buffers.
   - [x] Move spectrum functions from Data to BufferedSpectrum.
-  - [ ] Recompute only if visible or used by something visible.
+  - [ ] Move y-lim functions from TracItem and SpecItem to the respective plot classes.
   - [ ] Traces should be hideable and assignable to plots.
   - [ ] TraceItems should get color and line width from data objects.
+  - [ ] Recompute derived data only if visible or used by something visible.
   - [ ] Automatically discover plugins. 
   - [ ] Test this plugin interface with
     - [ ] Subtract common mean
