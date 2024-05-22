@@ -406,7 +406,8 @@ class DataBrowser(QWidget):
         
         self.toolbar.addWidget(QLabel('N:'))
         self.nfftw = QComboBox(self)
-        self.nfftw.setToolTip('NFFT (R, Shift+R)')
+        self.nfftw.tooltip = 'NFFT (R, Shift+R)'
+        self.nfftw.setToolTip(self.nfftw.tooltip)
         self.nfftw.addItems([f'{2**i}' for i in range(3, 20)])
         self.nfftw.setEditable(False)
         self.nfftw.setCurrentText(f'{self.data.spectrum.nfft}')
@@ -1165,6 +1166,27 @@ class DataBrowser(QWidget):
         self.setting = True
         self.data.spectrum.update(nfft, hop_frac)
         self.nfftw.setCurrentText(f'{self.data.spectrum.nfft}')
+        T = self.data.spectrum.nfft/self.data.rate
+        if T >= 1:
+            self.nfftw.setToolTip(self.nfftw.tooltip +
+                                  f'={self.data.spectrum.nfft}, ' +
+                                  f'T={T:.1f}s, \u0394f={1/T:.2f}Hz')
+        elif T >= 0.1:
+            self.nfftw.setToolTip(self.nfftw.tooltip +
+                                  f'={self.data.spectrum.nfft}, ' +
+                                  f'T={1000*T:.0f}ms, \u0394f={1/T:.1f}Hz')
+        elif T >= 0.01:
+            self.nfftw.setToolTip(self.nfftw.tooltip +
+                                  f'={self.data.spectrum.nfft}, ' +
+                                  f'T={1000*T:.0f}ms, \u0394f={1/T:.0f}Hz')
+        elif T >= 0.001:
+            self.nfftw.setToolTip(self.nfftw.tooltip +
+                                  f'={self.data.spectrum.nfft}, ' +
+                                  f'T={1000*T:.1f}ms, \u0394f={1/T:.0f}Hz')
+        else:
+            self.nfftw.setToolTip(self.nfftw.tooltip +
+                                  f'={self.data.spectrum.nfft}, ' +
+                                  f'T={1000*T:.2f}ms, \u0394f={0.001/T:.1f}kHz')
         self.ofracw.setValue(100*(1 - self.data.spectrum.hop_frac))
         for s in self.specs:
             s.update_plot()

@@ -69,9 +69,9 @@ class BufferedSpectrogram(BufferedData):
             hop = 1
         if hop > self.nfft:
             hop = self.nfft
-        self.hop_frac = self.hop/self.nfft
         if self.hop != hop:
             self.hop = hop
+            self.hop_frac = self.hop/self.nfft
             spec_update = True
         if spec_update:
             self.tresolution = self.hop/self.source.rate
