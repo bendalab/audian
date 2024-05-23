@@ -7,11 +7,15 @@ from audioio import BufferedArray
 
 class BufferedData(BufferedArray):
 
-    def __init__(self, name, source_name, tbefore=0, tafter=0):
+    def __init__(self, name, source_name, tbefore=0, tafter=0,
+                 color='#00ee00', lw_thin=1.1, lw_thick=2):
         self.name = name
         self.source_name = source_name
         self.tbefore = 0
         self.tafter = 0
+        self.color = color
+        self.lw_thin = lw_thin
+        self.lw_thick = lw_thick
         self.source = None
         self.source_tbefore = tbefore
         self.source_tafter = tafter

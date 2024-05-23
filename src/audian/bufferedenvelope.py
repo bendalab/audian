@@ -9,7 +9,8 @@ from .buffereddata import BufferedData
 class BufferedEnvelope(BufferedData):
 
     def __init__(self):
-        super().__init__('envelope', 'filtered', tbefore=1)
+        super().__init__('envelope', 'filtered', tbefore=1,
+                         color='#ff8800', lw_thin=2.5, lw_thick=4)
         self.envelope_cutoff = 500
         self.filter_order = 2
         self.sos = None

@@ -21,28 +21,23 @@ def down_sample_peak(data, step):
 
 class TraceItem(pg.PlotDataItem):
     
-    def __init__(self, data, channel, *args, color='#00ee00', **kwargs):
+    def __init__(self, data, channel, *args, **kwargs):
         self.data = data
         self.rate = self.data.rate
         self.channel = channel
         self.step = 1
-        self.color = color
+        self.color = self.data.color
+        self.lw_thin = self.data.lw_thin
+        self.lw_thick = self.data.lw_thick
         
         pg.PlotDataItem.__init__(self, *args, connect='all',
                                  antialias=False, skipFiniteCheck=True,
                                  **kwargs)
-        self.setPen(dict(color=self.color, width=2))
+        self.setPen(dict(color=self.color, width=self.lw_thin))
         self.setSymbolSize(8)
         self.setSymbolBrush(color=self.color)
         self.setSymbolPen(color=self.color)
         self.setSymbol(None)
-
-
-    def set_color(self, color):
-        self.color = color
-        self.setPen(dict(color=self.color, width=2))
-        self.setSymbolBrush(color=self.color)
-        self.setSymbolPen(color=self.color)
 
 
     def update_plot(self):
@@ -59,7 +54,7 @@ class TraceItem(pg.PlotDataItem):
         if self.step > 1:
             start = int(floor(start/self.step)*self.step)
             stop = int(ceil(stop/self.step + 1)*self.step)
-            self.setPen(dict(color=self.color, width=1.1))
+            self.setPen(dict(color=self.color, width=self.lw_thin))
             n = (stop - start)//self.step
             pdata = np.zeros(2*n)
             i = 0
@@ -76,12 +71,12 @@ class TraceItem(pg.PlotDataItem):
             # subsample:
             self.setData(np.arange(start, stop, self.step)/self.rate,
                          self.data[start:stop:self.step, self.channel])
-            self.setPen(dict(color=self.color, width=1.1))
+            self.setPen(dict(color=self.color, width=self.lw_thin))
         else:
             # all data:
             self.setData(np.arange(start, stop)/self.rate,
                          self.data[start:stop, self.channel])
-            self.setPen(dict(color=self.color, width=2))
+            self.setPen(dict(color=self.color, width=self.lw_thick))
             if max_pixel/(stop - start) >= 10:
                 self.setSymbol('o')
             else:

@@ -42,9 +42,9 @@ handles all GUI aspects.
   - [x] Add destination list to Buffered data.
   - [x] Smart updates of trace buffers.
   - [x] Move spectrum functions from Data to BufferedSpectrum.
-  - [ ] Move y-lim functions from TracItem and SpecItem to the respective plot classes.
+  - [x] Move y-lim functions from TracItem and SpecItem to DataBrowser.
   - [ ] Traces should be hideable and assignable to plots.
-  - [ ] TraceItems should get color and line width from data objects.
+  - [x] TraceItems should get color and line width from data objects.
   - [ ] Recompute derived data only if visible or used by something visible.
   - [ ] Automatically discover plugins. 
   - [ ] Test this plugin interface with

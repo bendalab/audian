@@ -298,9 +298,9 @@ class DataBrowser(QWidget):
             self.borders.append(border)
             
             # spectrogram:
+            axs = SpectrumPlot(self.data, c, xwidth, self.fmax)
             spec = SpecItem(self.data.spectrum, c)
             self.specs.append(spec)
-            axs = SpectrumPlot(self.data, c, xwidth, self.fmax)
             axs.addItem(spec)
             labels = []
             for l in self.marker_labels:
@@ -347,16 +347,16 @@ class DataBrowser(QWidget):
             self.axspacers.append(axsp)
             
             # trace plot:
-            trace = TraceItem(self.data.filtered, c)
-            self.traces.append(trace)
             axt = TimePlot(c, xwidth, self.data.start_time)
             if self.data.channels > 4:
                 axt.setLabel('left', f'C{c}', color='black')
             else:
                 axt.setLabel('left', f'channel {c}', color='black')
+            trace = TraceItem(self.data.filtered, c)
+            self.traces.append(trace)
             axt.addItem(trace)
             # envelope:
-            envelope = TraceItem(self.data.envelope, c, color='#ff8800')
+            envelope = TraceItem(self.data.envelope, c)
             self.envelopes.append(envelope)
             axt.addItem(envelope)
             
@@ -760,11 +760,11 @@ class DataBrowser(QWidget):
                     if self.marker_time is not None and \
                        self.marker_freq is not None and ax in self.axspecs:
                         spec = self.specs[self.axspecs.index(ax)]
-                        fi = int(floor(self.marker_freq/spec.fresolution))
-                        ti = int(floor((self.marker_time - spec.offset/spec.rate) / spec.tresolution))
-                        if fi < spec.spectrum.shape[0] and \
-                           ti < spec.spectrum.shape[1]:
-                            self.marker_power = spec.spectrum[fi, ti]
+                        fi = int(floor(self.marker_freq/spec.data.fresolution))
+                        ti = int(floor((self.marker_time - spec.data.offset/spec.data.rate) / spec.data.tresolution))
+                        if fi < spec.data.shape[0] and \
+                           ti < spec.data.shape[1]:
+                            self.marker_power = spec.data.buffer[fi, ti]
                 break
             
         # set cross-hair positions:
@@ -917,12 +917,12 @@ class DataBrowser(QWidget):
                 self.data.set_time_range(ax)
             # update amplitude ranges:
             for ax in self.axys[c]:
-                ax.setYRange(self.traces[c].ymin, self.traces[c].ymax)
+                ax.setYRange(self.ymin[c], self.ymax[c])
             # update frequency ranges:
             for ax in self.axfys[c]:
-                ax.setXRange(self.specs[c].f0, self.specs[c].f1)
+                ax.setXRange(self.f0[c], self.f1[c])
             for ax in self.axfxs[c]:
-                ax.setYRange(self.specs[c].f0, self.specs[c].f1)
+                ax.setYRange(self.f0[c], self.f1[c])
             # update spectrograms:
             self.specs[c].update_plot()
         self.setting = False
