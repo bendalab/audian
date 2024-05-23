@@ -16,9 +16,6 @@ class SpecItem(pg.ImageItem):
         self.channel = channel
         self.zmin = None
         self.zmax = None
-        self.fmax = 0.5*self.data.source.rate
-        self.f0 = 0.0
-        self.f1 = self.fmax
         self.cbar = None
 
 
@@ -56,60 +53,4 @@ class SpecItem(pg.ImageItem):
                           autoLevels=False)
             self.setRect(*self.data.spec_rect)
             self.data.buffer_changed[self.channel] = False
-
-            
-    def zoom_freq_in(self):
-        df = self.f1 - self.f0
-        if df > 0.1:
-            df *= 0.5
-            self.f1 = self.f0 + df
-            
-        
-    def zoom_freq_out(self):
-        if self.f1 - self.f0 < self.fmax:
-            df = self.f1 - self.f0
-            df *= 2.0
-            if df > self.fmax:
-                df = self.fmax
-            self.f1 = self.f0 + df
-            if self.f1 > self.fmax:
-                self.f1 = self.fmax
-                self.f0 = self.fmax - df
-            if self.f0 < 0:
-                self.f0 = 0
-                self.f1 = df
-                
-        
-    def freq_down(self):
-        if self.f0 > 0.0:
-            df = self.f1 - self.f0
-            self.f0 -= 0.5*df
-            self.f1 -= 0.5*df
-            if self.f0 < 0.0:
-                self.f0 = 0.0
-                self.f1 = df
-
-            
-    def freq_up(self):
-        if self.f1 < self.fmax:
-            df = self.f1 - self.f0
-            self.f0 += 0.5*df
-            self.f1 += 0.5*df
-
-
-    def freq_home(self):
-        if self.f0 > 0.0:
-            df = self.f1 - self.f0
-            self.f0 = 0.0
-            self.f1 = df
-
-            
-    def freq_end(self):
-        if self.f1 < self.fmax:
-            df = self.f1 - self.f0
-            self.f1 = ceil(self.fmax/(0.5*df))*(0.5*df)
-            self.f0 = self.f1 - df
-            if self.f0 < 0.0:
-                self.f0 = 0.0
-                self.f1 = df
 

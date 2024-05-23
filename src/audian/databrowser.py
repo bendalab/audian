@@ -82,11 +82,17 @@ class DataBrowser(QWidget):
 
         # data:
         self.data = Data(file_path)
-        self.channels = channels
+        self.schannels = channels
 
+        # channel selection:
         self.show_channels = None
         self.current_channel = 0
         self.selected_channels = []
+
+        # frequeny ranges:
+        self.fmax = 0
+        self.f0 = []
+        self.f1 = []
         
         self.trace_fracs = {0: 1, 1: 1, 2: 0.5, 3: 0.25, 4: 0.15}
 
@@ -183,21 +189,30 @@ class DataBrowser(QWidget):
 
         
     def open(self, gui, unwrap, unwrap_clip, highpass_cutoff, lowpass_cutoff):
+        # load data:
         self.data.open(unwrap, unwrap_clip)
         if self.data.data is None:
             return
+        self.marker_data.file_path = self.data.file_path
+        
+        # setup frequency ranges:
+        self.fmax = self.data.rate/2
+        self.f0 = [0]*self.data.channels
+        self.f1 = [self.fmax]*self.data.channels
+        
+        # requested filtering:
         for c in range(self.data.channels):
             if highpass_cutoff is not None:
                 self.data.filtered.highpass_cutoff[c] = highpass_cutoff
             if lowpass_cutoff is not None:
                 self.data.filtered.lowpass_cutoff[c] = lowpass_cutoff
-        self.marker_data.file_path = self.data.file_path
-
+                
+        # setup channel selection:
         if self.show_channels is None:
-            if len(self.channels) == 0:
+            if len(self.schannels) == 0:
                 self.show_channels = list(range(self.data.channels))
             else:
-                self.show_channels = [c for c in self.channels if c < self.data.channels]
+                self.show_channels = [c for c in self.schannels if c < self.data.channels]
         else:
             self.show_channels = [c for c in self.show_channels if c < self.data.channels]
         if len(self.show_channels) == 0:
@@ -206,7 +221,7 @@ class DataBrowser(QWidget):
         self.current_channel = self.show_channels[0]
         self.selected_channels = list(range(self.data.channels))
 
-        # load data:
+        # load marker data:
         locs, labels = self.data.data.markers()
         self.marker_data.set_markers(locs, labels, self.data.rate)
         if len(labels) > 0:
@@ -215,6 +230,7 @@ class DataBrowser(QWidget):
                 self.marker_labels.append(MarkerLabel(l, l[0].lower(),
                                 list(colors.keys())[i % len(colors.keys())]))
 
+        # setup plots:
         self.figs = []     # all GraphicsLayoutWidgets - one for each channel
         self.borders = []
         self.sig_proxies = []
@@ -272,7 +288,7 @@ class DataBrowser(QWidget):
             # spectrogram:
             spec = SpecItem(self.data.spectrum, c)
             self.specs.append(spec)
-            axs = SpectrumPlot(self.data, c, xwidth, spec.fmax)
+            axs = SpectrumPlot(self.data, c, xwidth, self.fmax)
             axs.addItem(spec)
             labels = []
             for l in self.marker_labels:
@@ -284,8 +300,8 @@ class DataBrowser(QWidget):
             self.spec_region_labels.append([])
             self.data.set_time_limits(axs)
             self.data.set_time_range(axs)
+            axs.setYRange(self.f0[c], self.f1[c])
             axs.sigXRangeChanged.connect(self.update_times)
-            axs.setYRange(spec.f0, spec.f1)
             axs.sigYRangeChanged.connect(self.update_frequencies)
             axs.sigSelectedRegion.connect(self.region_menu)
             axs.sigUpdateFilter.connect(self.update_filter)
@@ -1106,14 +1122,14 @@ class DataBrowser(QWidget):
         self.setting = True
         for c in self.selected_channels:
             if not f0 is None:
-                self.specs[c].f0 = f0
+                self.f0[c] = f0
             if not f1 is None:
-                self.specs[c].f1 = f1
+                self.f1[c] = f1
             if self.isVisible():
                 for ax in self.axfys[c]:
-                    ax.setYRange(self.specs[c].f0, self.specs[c].f1)
+                    ax.setYRange(self.f0[c], self.f1[c])
                 for ax in self.axfxs[c]:
-                    ax.setXRange(self.specs[c].f0, self.specs[c].f1)
+                    ax.setXRange(self.f0[c], self.f1[c])
         self.setting = False
 
             
@@ -1126,37 +1142,69 @@ class DataBrowser(QWidget):
                 
     def zoom_freq_in(self):
         for c in self.selected_channels:
-            self.specs[c].zoom_freq_in()
+            df = self.f1[c] - self.f0[c]
+            if df > 0.1:
+                df *= 0.5
+                self.f1[c] = self.f0[c] + df
         self.set_frequencies()
             
         
     def zoom_freq_out(self):
         for c in self.selected_channels:
-            self.specs[c].zoom_freq_out()
+            if self.f1[c] - self.f0[c] < self.fmax:
+                df = self.f1[c] - self.f0[c]
+                df *= 2.0
+                if df > self.fmax:
+                    df = self.fmax
+                self.f1[c] = self.f0[c] + df
+                if self.f1[c] > self.fmax:
+                    self.f1[c] = self.fmax
+                    self.f0[c] = self.fmax - df
+                if self.f0[c] < 0:
+                    self.f0[c] = 0
+                    self.f1[c] = df
         self.set_frequencies()
                 
         
     def freq_down(self):
         for c in self.selected_channels:
-            self.specs[c].freq_down()
+            if self.f0[c] > 0.0:
+                df = self.f1[c] - self.f0[c]
+                self.f0[c] -= 0.5*df
+                self.f1[c] -= 0.5*df
+                if self.f0[c] < 0.0:
+                    self.f0[c] = 0.0
+                    self.f1[c] = df
         self.set_frequencies()
 
             
     def freq_up(self):
         for c in self.selected_channels:
-            self.specs[c].freq_up()
+            if self.f1[c] < self.fmax:
+                df = self.f1[c] - self.f0[c]
+                self.f0[c] += 0.5*df
+                self.f1[c] += 0.5*df
         self.set_frequencies()
 
-
+        
     def freq_home(self):
         for c in self.selected_channels:
-            self.specs[c].freq_home()
+            if self.f0[c] > 0.0:
+                df = self.f1[c] - self.f0[c]
+                self.f0[c] = 0.0
+                self.f1[c] = df
         self.set_frequencies()
 
             
     def freq_end(self):
         for c in self.selected_channels:
-            self.specs[c].freq_end()
+            if self.f1[c] < self.fmax:
+                df = self.f1[c] - self.f0[c]
+                self.f1[c] = ceil(self.fmax/(0.5*df))*(0.5*df)
+                self.f0[c] = self.f1[c] - df
+                if self.f0[c] < 0.0:
+                    self.f0[c] = 0.0
+                    self.f1[c] = df
         self.set_frequencies()
 
 
@@ -1555,7 +1603,7 @@ class DataBrowser(QWidget):
         self.setting = True
         if show_channels is not None:
             if self.data is None:
-                self.channels = show_channels
+                self.schannels = show_channels
                 self.setting = False
                 return
             self.show_channels = [c for c in show_channels if c < self.data.channels]

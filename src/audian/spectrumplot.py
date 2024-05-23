@@ -67,4 +67,3 @@ class SpectrumPlot(TimePlot):
         self.lowpass_cutoff = self.lowpass_handle.value()
         self.sigUpdateFilter.emit(self.highpass_cutoff,
                                   self.lowpass_cutoff, self.channel)
-
