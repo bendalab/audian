@@ -89,17 +89,23 @@ class DataBrowser(QWidget):
         self.current_channel = 0
         self.selected_channels = []
 
+        # amplitude ranges:
+        self.amin = +1
+        self.amax = -1
+        self.ymin = []
+        self.ymax = []
+
         # frequeny ranges:
         self.fmax = 0
         self.f0 = []
         self.f1 = []
         
+        # view:
+        self.setting = False
+        
         self.trace_fracs = {0: 1, 1: 1, 2: 0.5, 3: 0.25, 4: 0.15}
 
         self.region_mode = DataBrowser.ask_region
-        
-        # view:
-        self.setting = False
         
         self.grids = 0
         self.show_traces = True
@@ -194,6 +200,12 @@ class DataBrowser(QWidget):
         if self.data.data is None:
             return
         self.marker_data.file_path = self.data.file_path
+
+        # setup amplitude ranges:
+        self.ampl_min = self.data.data.ampl_min
+        self.ampl_max = self.data.data.ampl_max
+        self.ymin = [self.ampl_min]*self.data.channels
+        self.ymax = [self.ampl_max]*self.data.channels
         
         # setup frequency ranges:
         self.fmax = self.data.rate/2
@@ -363,8 +375,11 @@ class DataBrowser(QWidget):
             axt.getAxis('bottom').setStyle(showValues=(c == self.show_channels[-1]))
             self.data.set_time_limits(axt)
             self.data.set_time_range(axt)
-            self.data.set_amplitude_limits(axt)
-            axt.setYRange(self.traces[c].ymin, self.traces[c].ymax)
+            if np.isfinite(self.ampl_min) and np.isfinite(self.ampl_max):
+                axt.setLimits(yMin=self.ampl_min, yMax=self.ampl_max,
+                              minYRange=1/2**16,
+                              maxYRange=self.ampl_max - self.ampl_min)
+            axt.setYRange(self.ymin[c], self.ymax[c])
             axt.sigXRangeChanged.connect(self.update_times)
             axt.sigYRangeChanged.connect(self.update_amplitudes)
             axt.sigSelectedRegion.connect(self.region_menu)
@@ -1069,15 +1084,17 @@ class DataBrowser(QWidget):
 
 
     def set_amplitudes(self, ymin=None, ymax=None):
+        if self.setting:
+            return
         self.setting = True
         for c in self.selected_channels:
             if not ymin is None:
-                self.traces[c].ymin = ymin
+                self.ymin[c] = ymin
             if not ymax is None:
-                self.traces[c].ymax = ymax
+                self.ymax[c] = ymax
             if self.isVisible():
                 for ax in self.axys[c]:
-                    ax.setYRange(self.traces[c].ymin, self.traces[c].ymax)
+                    ax.setYRange(self.ymin[c], self.ymax[c])
         self.setting = False
 
             
@@ -1090,31 +1107,47 @@ class DataBrowser(QWidget):
 
     def zoom_ampl_in(self):
         for c in self.selected_channels:
-            self.traces[c].zoom_ampl_in()
+            h = 0.25*(self.ymax[c] - self.ymin[c])
+            m = 0.5*(self.ymax[c] + self.ymin[c])
+            if h > 1/2**16:
+                self.ymin[c] = m - h
+                self.ymax[c] = m + h
         self.set_amplitudes()
 
         
     def zoom_ampl_out(self):
         for c in self.selected_channels:
-            self.traces[c].zoom_ampl_out()
+            h = self.ymax[c] - self.ymin[c]
+            m = 0.5*(self.ymax[c] + self.ymin[c])
+            self.ymin[c] = m - h
+            self.ymax[c] = m + h
+            if self.ymax[c] > self.ampl_max:
+                self.ymax[c] = self.ampl_max
+                self.ymin[c] = 1 - 2*h
+            if self.ymin[c] < self.ampl_min:
+                self.ymin[c] = self.ampl_min
         self.set_amplitudes()
         
         
     def auto_ampl(self):
         for c in self.selected_channels:
-            self.traces[c].auto_ampl(self.data.toffset, self.data.twindow)
+            self.ymin[c], self.ymax[c] = \
+                self.traces[c].auto_ampl(self.data.toffset, self.data.twindow)
         self.set_amplitudes()
 
         
     def reset_ampl(self):
         for c in self.selected_channels:
-            self.traces[c].reset_ampl()
+            self.ymin[c] = self.ampl_min if np.isfinite(self.ampl_min) else -1
+            self.ymax[c] = self.ampl_max if np.isfinite(self.ampl_max) else +1
         self.set_amplitudes()
 
 
     def center_ampl(self):
         for c in self.selected_channels:
-            self.traces[c].center_ampl()
+            dy = self.ymax[c] - self.ymin[c]
+            self.ymin[c] = -dy/2
+            self.ymax[c] = +dy/2
         self.set_amplitudes()
 
 

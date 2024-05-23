@@ -27,8 +27,6 @@ class TraceItem(pg.PlotDataItem):
         self.channel = channel
         self.step = 1
         self.color = color
-        self.ymin = self.data.ampl_min
-        self.ymax = self.data.ampl_max
         
         pg.PlotDataItem.__init__(self, *args, connect='all',
                                  antialias=False, skipFiniteCheck=True,
@@ -112,47 +110,14 @@ class TraceItem(pg.PlotDataItem):
             return idx/self.rate, self.data[idx, self.channel]
 
         
-    def zoom_ampl_in(self):
-        h = 0.25*(self.ymax - self.ymin)
-        c = 0.5*(self.ymax + self.ymin)
-        if h > 1/2**16:
-            self.ymin = c - h
-            self.ymax = c + h
-
-        
-    def zoom_ampl_out(self):
-        h = self.ymax - self.ymin
-        c = 0.5*(self.ymax + self.ymin)
-        self.ymin = c - h
-        self.ymax = c + h
-        if self.ymax > self.data.ampl_max:
-            self.ymax = self.data.ampl_max
-            self.ymin = 1 - 2*h
-        if self.ymin < self.data.ampl_min:
-            self.ymin = self.data.ampl_min
-        
-        
     def auto_ampl(self, toffset, twindow):
         t0 = int(np.round(toffset*self.rate))
         t1 = int(np.round((toffset + twindow)*self.rate))
         ymin = np.min(self.data[t0:t1, self.channel])
         ymax = np.max(self.data[t0:t1, self.channel])
         h = 0.5*(ymax - ymin)
-        
         c = 0.5*(ymax + ymin)
         if h < 1/2**16:
             h = 1/2**16
-        self.ymin = c - h
-        self.ymax = c + h
-
-        
-    def reset_ampl(self):
-        self.ymin = self.data.ampl_min
-        self.ymax = self.data.ampl_max
-
-
-    def center_ampl(self):
-        dy = self.ymax - self.ymin
-        self.ymin = -dy/2
-        self.ymax = +dy/2
+        return c - h, c + h
 
