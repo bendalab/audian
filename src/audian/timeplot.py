@@ -44,6 +44,7 @@ class TimePlot(pg.PlotItem):
                                         'top': top_axis,
                                         'left': left_axis,
                                         'right': right_axis})
+        self.data_items = []
 
         # design:
         self.getViewBox().setBackgroundColor('black')
@@ -89,6 +90,16 @@ class TimePlot(pg.PlotItem):
 
         # signals:
         view.sigSelectedRegion.connect(self.sigSelectedRegion)
+
+
+    def add_item(self, item):
+        self.data_items.append(item)
+        self.addItem(item)
+
+
+    def update_plot(self):
+        for item in self.data_items:
+            item.update_plot()
 
 
     def enable_start_time(self, enable):

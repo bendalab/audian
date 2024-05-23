@@ -30,8 +30,10 @@ class SpecItem(pg.ImageItem):
         self.zmax = zmin + 60.0
 
             
-    def setCBar(self, cbar):
+    def set_cbar(self, cbar):
         self.cbar = cbar
+        self.cbar.setLevels([self.zmin, self.zmax])
+        self.cbar.setImageItem(self)
 
 
     def set_power(self, zmin=None, zmax=None):

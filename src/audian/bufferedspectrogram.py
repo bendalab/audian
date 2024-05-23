@@ -11,8 +11,8 @@ from .buffereddata import BufferedData
 
 class BufferedSpectrogram(BufferedData):
 
-    def __init__(self):
-        super().__init__('spectrogram', 'data', tafter=10)
+    def __init__(self, name='spectrogram', source='filtered', panel='spectrum'):
+        super().__init__(name, source, tafter=10, panel=panel)
         self.nfft = 256
         self.hop_frac = 0.5
         self.hop = self.nfft//2

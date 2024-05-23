@@ -110,6 +110,10 @@ class Data(object):
         self.data.set_unwrap(unwrap, unwrap_clip, False, self.data.unit)
         self.data.follow = int(self.follow_time*self.data.rate)
         self.data.name = 'data'
+        self.data.panel = 'trace'
+        self.data.color = '#0000ee'
+        self.data.lw_thin = 1.1
+        self.data.lw_thick = 2
         self.data.dests = []
         self.traces.insert(0, self.data)
         self.sources = [None] + [i + 1 for i in self.sources]

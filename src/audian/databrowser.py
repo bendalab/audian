@@ -183,6 +183,7 @@ class DataBrowser(QWidget):
         self.axtraces = []  # trace plots
         self.axspacers = [] # spacer between trace and spectrogram
         self.axspecs = []   # spectrogram plots
+        self.axnames = dict(trace=self.axtraces, spectrum=self.axspecs)
         self.traces = []    # traces
         self.envelopes = [] # envelopes
         self.specs = []     # spectrograms
@@ -257,6 +258,7 @@ class DataBrowser(QWidget):
         self.axtraces = []  # trace plots
         self.axspacers = [] # spacer between trace and spectrogram
         self.axspecs = []   # spectrogram plots
+        self.axnames = dict(trace=self.axtraces, spectrum=self.axspecs)
         self.traces = []    # traces
         self.envelopes = [] # envelopes
         self.trace_labels = [] # labels on traces
@@ -299,9 +301,15 @@ class DataBrowser(QWidget):
             
             # spectrogram:
             axs = SpectrumPlot(self.data, c, xwidth, self.fmax)
-            spec = SpecItem(self.data.spectrum, c)
-            self.specs.append(spec)
-            axs.addItem(spec)
+                
+            # items for spectrum plot:
+            for trace in self.data.traces:
+                if trace.panel == 'spectrum':
+                    spec_item = SpecItem(trace, c)
+                    axs.add_item(spec_item)
+                    if trace.name == 'spectrogram':
+                        self.specs.append(spec_item)
+                    
             labels = []
             for l in self.marker_labels:
                 label = pg.ScatterPlotItem(size=10, pen=pg.mkPen(None),
@@ -328,13 +336,11 @@ class DataBrowser(QWidget):
             cbar.setLabel('right', 'Power (dB)')
             cbar.getAxis('right').setTextPen('black')
             cbar.getAxis('right').setWidth(6*xwidth)
-            cbar.setLevels([spec.zmin, spec.zmax])
-            cbar.setImageItem(spec)
             cbar.sigLevelsChanged.connect(self.update_power)
             cbar.setVisible(self.show_cbars)
             self.cbars.append(cbar)
             fig.addItem(cbar, row=0, col=1)
-            spec.setCBar(cbar)
+            self.specs[-1].set_cbar(cbar)
             self.axts[-1].append(axs)
             self.axfys[-1].append(axs)
             self.axgs[-1].append(axs)
@@ -352,13 +358,16 @@ class DataBrowser(QWidget):
                 axt.setLabel('left', f'C{c}', color='black')
             else:
                 axt.setLabel('left', f'channel {c}', color='black')
-            trace = TraceItem(self.data.filtered, c)
-            self.traces.append(trace)
-            axt.addItem(trace)
-            # envelope:
-            envelope = TraceItem(self.data.envelope, c)
-            self.envelopes.append(envelope)
-            axt.addItem(envelope)
+                
+            # items for trace plot:
+            for trace in self.data.traces:
+                if trace.panel == 'trace':
+                    trace_item = TraceItem(trace, c)
+                    axt.add_item(trace_item)
+                    if trace.name == 'data': # or trace.name == 'filtered':
+                        self.traces.append(trace_item)
+                    elif trace.name == 'envelope':
+                        self.envelopes.append(trace_item)
             
             # add marker labels:
             labels = []
@@ -923,8 +932,10 @@ class DataBrowser(QWidget):
                 ax.setXRange(self.f0[c], self.f1[c])
             for ax in self.axfxs[c]:
                 ax.setYRange(self.f0[c], self.f1[c])
-            # update spectrograms:
-            self.specs[c].update_plot()
+            # update plots:
+            for axx in self.axs:
+                for ax in axx:
+                    ax.update_plot()
         self.setting = False
 
                 
@@ -1010,12 +1021,9 @@ class DataBrowser(QWidget):
                     ax.enable_start_time(enable_starttime)
                 if self.isVisible():
                     self.data.set_time_range(ax)
-        for trace in self.traces:
-            trace.update_plot()
-        for envelope in self.envelopes:
-            envelope.update_plot()
-        for spec in self.specs:
-            spec.update_plot()
+        for axx in self.axs:
+            for ax in axx:
+                ax.update_plot()
         self.setting = False
         if dispatch:
             self.sigTimesChanged.emit(self.data.toffset, self.data.twindow,
@@ -1269,8 +1277,9 @@ class DataBrowser(QWidget):
                                   f'={self.data.spectrum.nfft}, ' +
                                   f'T={1000*T:.2f}ms, \u0394f={0.001/T:.1f}kHz')
         self.ofracw.setValue(100*(1 - self.data.spectrum.hop_frac))
-        for s in self.specs:
-            s.update_plot()
+        if self.data.spectrum.panel in self.axnames:
+            for ax in self.axnames[self.data.spectrum.panel]:
+                ax.update_plot()
         self.setting = False
         if dispatch:
             self.sigResolutionChanged.emit()
@@ -1434,8 +1443,9 @@ class DataBrowser(QWidget):
             self.axspecs[c].set_filter_handles(highpass_cutoffs[cf],
                                                lowpass_cutoffs[cf])
         self.data.filtered.update()
-        for c in range(self.data.channels):
-            self.traces[c].update_plot()
+        if self.data.filtered.panel in self.axnames:
+            for ax in self.axnames[self.data.filtered.panel]:
+                ax.update_plot()
         self.setting = False
 
 
@@ -1468,8 +1478,9 @@ class DataBrowser(QWidget):
         self.hpfw.setValue(0.001*self.data.filtered.highpass_cutoff[self.current_channel])
         self.lpfw.setValue(0.001*self.data.filtered.lowpass_cutoff[self.current_channel])
         self.data.filtered.update()
-        for c in range(self.data.channels):
-            self.traces[c].update_plot()
+        if self.data.filtered.panel in self.axnames:
+            for ax in self.axnames[self.data.filtered.panel]:
+                ax.update_plot()
         self.setting = False
         self.sigFilterChanged.emit()  # dispatch
 
@@ -1509,7 +1520,9 @@ class DataBrowser(QWidget):
         for c in range(self.data.channels):
             if show_envelope is not None:
                 self.envelopes[c].setVisible(show_envelope)
-            self.envelopes[c].update_plot()
+        if self.data.envelope.panel in self.axnames:
+            for ax in self.axnames[self.data.envelope.panel]:
+                ax.update_plot()
         self.envfw.setValue(self.data.envelope.envelope_cutoff)
         self.setting = False
         self.sigEnvelopeChanged.emit()  # dispatch
