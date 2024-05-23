@@ -6,6 +6,20 @@
 Python-based GUI for viewing and analyzing recordings of animal
 vocalizations.
 
+![audian](docs/audian-v1.7.png)
+
+## Features
+
+- Interactive viewer for single and multi-channel audio signals.
+- Can handle many file formats and long recordings - holds only part of the recordings in memory.
+- Displays raw traces, filtered traces, envelopes, and spectrogram.
+- Change spectrogramm resolution and overlap interactively.
+- Change spectrogram color bar range and color map on the fly.
+- Change low- and high-pass filter cutoff frequencies interactively.
+- Optional envelope with lowpass-filter cutoff frequency that can be changed interactively.
+- Hide and show channels and plot panels.
+- Extensive and intuitive key shortcuts for most functions.
+
 ## New pyqtgraph based version
 
 New implementation of `audian` based on
