@@ -6,7 +6,8 @@ from PyQt5.QtGui import QKeySequence, QIcon
 from PyQt5.QtWidgets import QStyle, QApplication, QMainWindow, QTabWidget
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel
 from PyQt5.QtWidgets import QAction, QActionGroup, QPushButton
-from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QScrollArea
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
 import pyqtgraph as pg
 from audioio import available_formats, PlayAudio
 from .version import __version__, __year__
@@ -942,7 +943,7 @@ class Audian(QMainWindow):
                     
     def setup_panel_actions(self, menu):
         self.acts.link_panels = QAction('Link &panels', self)
-        self.acts.link_panels.setShortcut('Alt+P')
+        #self.acts.link_panels.setShortcut('Alt+P')
         self.acts.link_panels.setCheckable(True)
         self.acts.link_panels.setChecked(self.link_panels)
         self.acts.link_panels.toggled.connect(self.toggle_link_panels)
@@ -1153,23 +1154,19 @@ Can not open file <b>{browser.file_path}</b>!''')
             self.menu_shortcuts(menu)
         dialog = QDialog(self)
         dialog.setWindowTitle('Audian Key Shortcuts')
-        mvbox = QVBoxLayout(dialog)
+        dvbox = QVBoxLayout(dialog)
+        scrollarea = QScrollArea()
+        dvbox.addWidget(scrollarea)
+        widget = QWidget()
+        mvbox = QVBoxLayout(widget)
         mvbox.addWidget(QLabel(self.keys[0]))
-        hbox = QHBoxLayout()
-        hbox.setSpacing(4*self.fontMetrics().averageCharWidth())
-        mvbox.addLayout(hbox)
-        n = 2
         for ks in self.keys[1:]:
-            if n == 2:
-                vbox = QVBoxLayout()
-                hbox.addLayout(vbox)
-                n = 0
-            valign = Qt.AlignTop if n == 0 else Qt.AlignBottom
-            vbox.addWidget(QLabel(ks), 1, Qt.AlignLeft | valign)
-            n += 1
+            mvbox.addWidget(QLabel(ks), 1, Qt.AlignLeft)
+        scrollarea.setWidget(widget)
         buttons = QDialogButtonBox(QDialogButtonBox.Close)
         buttons.rejected.connect(dialog.reject)
-        mvbox.addWidget(buttons)
+        dvbox.addWidget(buttons)
+        dialog.setMinimumWidth(widget.width() + 70)
         dialog.show()
 
 
