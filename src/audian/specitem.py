@@ -47,12 +47,13 @@ class SpecItem(pg.ImageItem):
 
 
     def update_plot(self):
-        if self.data.buffer_changed[self.channel]:
-            if self.zmin is None:
-                self.estimate_noiselevels()
-                self.set_power()
-            self.setImage(decibel(self.data.buffer[:, self.channel, :].T),
-                          autoLevels=False)
-            self.setRect(*self.data.spec_rect)
-            self.data.buffer_changed[self.channel] = False
+        if not self.data.buffer_changed[self.channel]:
+            return
+        if self.zmin is None:
+            self.estimate_noiselevels()
+            self.set_power()
+        self.setImage(decibel(self.data.buffer[:, self.channel, :].T),
+                      autoLevels=False)
+        self.setRect(*self.data.spec_rect)
+        self.data.buffer_changed[self.channel] = False
 

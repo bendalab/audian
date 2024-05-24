@@ -916,6 +916,12 @@ class DataBrowser(QWidget):
             self.borders[c].setVisible(c in self.selected_channels)
 
 
+    def update_plots(self):
+        for axx in self.axs:
+            for ax in axx:
+                ax.update_plot()
+
+
     def showEvent(self, event):
         if self.data is None:
             return
@@ -932,10 +938,7 @@ class DataBrowser(QWidget):
                 ax.setXRange(self.f0[c], self.f1[c])
             for ax in self.axfxs[c]:
                 ax.setYRange(self.f0[c], self.f1[c])
-            # update plots:
-            for axx in self.axs:
-                for ax in axx:
-                    ax.update_plot()
+            self.update_plots()
         self.setting = False
 
                 
@@ -1021,9 +1024,7 @@ class DataBrowser(QWidget):
                     ax.enable_start_time(enable_starttime)
                 if self.isVisible():
                     self.data.set_time_range(ax)
-        for axx in self.axs:
-            for ax in axx:
-                ax.update_plot()
+        self.update_plots()
         self.setting = False
         if dispatch:
             self.sigTimesChanged.emit(self.data.toffset, self.data.twindow,
@@ -1254,6 +1255,7 @@ class DataBrowser(QWidget):
             return
         self.setting = True
         self.data.spectrum.update(nfft, hop_frac)
+        self.update_plots()
         self.nfftw.setCurrentText(f'{self.data.spectrum.nfft}')
         T = self.data.spectrum.nfft/self.data.rate
         if T >= 1:
@@ -1277,9 +1279,6 @@ class DataBrowser(QWidget):
                                   f'={self.data.spectrum.nfft}, ' +
                                   f'T={1000*T:.2f}ms, \u0394f={0.001/T:.1f}kHz')
         self.ofracw.setValue(100*(1 - self.data.spectrum.hop_frac))
-        if self.data.spectrum.panel in self.axnames:
-            for ax in self.axnames[self.data.spectrum.panel]:
-                ax.update_plot()
         self.setting = False
         if dispatch:
             self.sigResolutionChanged.emit()
@@ -1443,9 +1442,7 @@ class DataBrowser(QWidget):
             self.axspecs[c].set_filter_handles(highpass_cutoffs[cf],
                                                lowpass_cutoffs[cf])
         self.data.filtered.update()
-        if self.data.filtered.panel in self.axnames:
-            for ax in self.axnames[self.data.filtered.panel]:
-                ax.update_plot()
+        self.update_plots()
         self.setting = False
 
 
@@ -1478,9 +1475,7 @@ class DataBrowser(QWidget):
         self.hpfw.setValue(0.001*self.data.filtered.highpass_cutoff[self.current_channel])
         self.lpfw.setValue(0.001*self.data.filtered.lowpass_cutoff[self.current_channel])
         self.data.filtered.update()
-        if self.data.filtered.panel in self.axnames:
-            for ax in self.axnames[self.data.filtered.panel]:
-                ax.update_plot()
+        self.update_plots()
         self.setting = False
         self.sigFilterChanged.emit()  # dispatch
 
@@ -1520,9 +1515,7 @@ class DataBrowser(QWidget):
         for c in range(self.data.channels):
             if show_envelope is not None:
                 self.envelopes[c].setVisible(show_envelope)
-        if self.data.envelope.panel in self.axnames:
-            for ax in self.axnames[self.data.envelope.panel]:
-                ax.update_plot()
+        self.update_plots()
         self.envfw.setValue(self.data.envelope.envelope_cutoff)
         self.setting = False
         self.sigEnvelopeChanged.emit()  # dispatch

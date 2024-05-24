@@ -44,8 +44,8 @@ class TraceItem(pg.PlotDataItem):
         vb = self.getViewBox()
         if not isinstance(vb, pg.ViewBox):
             return
-        
         t0, t1 = vb.viewRange()[0]
+        
         start = max(0, int(t0*self.rate))
         tstop = int(t1*self.rate+1)
         stop = min(len(self.data), tstop)
@@ -81,6 +81,7 @@ class TraceItem(pg.PlotDataItem):
                 self.setSymbol('o')
             else:
                 self.setSymbol(None)
+        self.data.buffer_changed[self.channel] = False
 
 
     def get_amplitude(self, x, y, x1=None):
