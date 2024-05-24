@@ -77,4 +77,4 @@ class BufferedSpectrogram(BufferedData):
             self.tresolution = self.hop/self.source.rate
             self.fresolution = self.source.rate/self.nfft
             self.update_step(self.hop, more_shape=(self.nfft//2 + 1,))
-            self.recompute()
+            self.recompute_all()

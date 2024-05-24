@@ -101,6 +101,13 @@ class BufferedData(BufferedArray):
         if len(self.source.buffer) > 0:
             self.allocate_buffer()
         self.reload_buffer()
+
+
+    def recompute_all(self):
+        self.recompute()
+        for d in self.dests:
+            d.recompute()
+            
         
         
 

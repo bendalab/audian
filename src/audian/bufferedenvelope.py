@@ -34,5 +34,5 @@ class BufferedEnvelope(BufferedData):
     def update(self):
         self.sos = butter(self.filter_order, self.envelope_cutoff,
                           'lowpass', fs=self.rate, output='sos')
-        self.recompute()
+        self.recompute_all()
 

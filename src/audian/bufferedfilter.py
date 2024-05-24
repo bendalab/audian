@@ -61,5 +61,5 @@ class BufferedFilter(BufferedData):
     def update(self):
         for c in range(self.channels):
             self.make_filter(c)
-        self.recompute()
+        self.recompute_all()
 
