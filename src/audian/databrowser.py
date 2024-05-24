@@ -214,11 +214,15 @@ class DataBrowser(QWidget):
         self.f1 = [self.fmax]*self.data.channels
         
         # requested filtering:
-        for c in range(self.data.channels):
-            if highpass_cutoff is not None:
-                self.data.filtered.highpass_cutoff[c] = highpass_cutoff
-            if lowpass_cutoff is not None:
-                self.data.filtered.lowpass_cutoff[c] = lowpass_cutoff
+        filter_changed = False
+        if highpass_cutoff is not None:
+            self.data.filtered.highpass_cutoff = highpass_cutoff
+            filter_changed = True
+        if lowpass_cutoff is not None:
+            self.data.filtered.lowpass_cutoff = lowpass_cutoff
+            filter_changed = True
+        if filter_changed:
+            self.data.filtered.update()
                 
         # setup channel selection:
         if self.show_channels is None:
@@ -474,7 +478,7 @@ class DataBrowser(QWidget):
         self.hpfw.setStepType(QAbstractSpinBox.AdaptiveDecimalStepType)
         self.hpfw.setDecimals(2)
         self.hpfw.setSuffix('kHz')
-        self.hpfw.setValue(0.001*self.data.filtered.highpass_cutoff[0])
+        self.hpfw.setValue(0.001*self.data.filtered.highpass_cutoff)
         self.hpfw.valueChanged.connect(lambda v: self.update_filter(highpass_cutoff=1000*v))
         self.toolbar.addWidget(self.hpfw)        
 
@@ -485,7 +489,7 @@ class DataBrowser(QWidget):
         self.lpfw.setStepType(QAbstractSpinBox.AdaptiveDecimalStepType)
         self.lpfw.setDecimals(0)
         self.lpfw.setSuffix('kHz')
-        self.lpfw.setValue(0.001*self.data.filtered.lowpass_cutoff[0])
+        self.lpfw.setValue(0.001*self.data.filtered.lowpass_cutoff)
         self.lpfw.valueChanged.connect(lambda v: self.update_filter(lowpass_cutoff=1000*v))
         self.toolbar.addWidget(self.lpfw)        
         
@@ -1371,22 +1375,20 @@ class DataBrowser(QWidget):
 
 
     def highpass_cutoff_up(self):
-        highpass_cutoff = self.data.filtered.highpass_cutoff[self.current_channel]
-        lowpass_cutoff = self.data.filtered.lowpass_cutoff[self.current_channel]
+        highpass_cutoff = self.data.filtered.highpass_cutoff
         step = 0.01*self.data.rate/2
         if highpass_cutoff >= step:
             step = 0.5*10**(floor(log10(highpass_cutoff)))
         highpass_cutoff += step
-        if highpass_cutoff + step > lowpass_cutoff:
-            highpass_cutoff = lowpass_cutoff - step
+        if highpass_cutoff + step > self.data.filtered.lowpass_cutoff:
+            highpass_cutoff = self.data.filtered.lowpass_cutoff - step
         if highpass_cutoff < 0:
             highpass_cutoff = 0
-        self.update_filter(highpass_cutoff, lowpass_cutoff)
+        self.update_filter(highpass_cutoff=highpass_cutoff)
 
 
     def highpass_cutoff_down(self):
-        highpass_cutoff = self.data.filtered.highpass_cutoff[self.current_channel]
-        lowpass_cutoff = self.data.filtered.lowpass_cutoff[self.current_channel]
+        highpass_cutoff = self.data.filtered.highpass_cutoff
         step = 0.01*self.data.rate/2
         if highpass_cutoff >= step:
             step = 0.5*10**(floor(log10(highpass_cutoff)))
@@ -1394,91 +1396,61 @@ class DataBrowser(QWidget):
         highpass_cutoff -= step
         if highpass_cutoff < 0:
             highpass_cutoff = 0
-        self.update_filter(highpass_cutoff, lowpass_cutoff)
+        self.update_filter(highpass_cutoff=highpass_cutoff)
 
 
     def lowpass_cutoff_up(self):
-        highpass_cutoff = self.data.filtered.highpass_cutoff[self.current_channel]
-        lowpass_cutoff = self.data.filtered.lowpass_cutoff[self.current_channel]
+        lowpass_cutoff = self.data.filtered.lowpass_cutoff
         step = 0.5*10**(floor(log10(lowpass_cutoff)))
         lowpass_cutoff += step
         if lowpass_cutoff > self.data.rate/2:
             lowpass_cutoff = self.data.rate/2
-        self.update_filter(highpass_cutoff, lowpass_cutoff)
+        self.update_filter(lowpass_cutoff=lowpass_cutoff)
 
 
     def lowpass_cutoff_down(self):
-        highpass_cutoff = self.data.filtered.highpass_cutoff[self.current_channel]
-        lowpass_cutoff = self.data.filtered.lowpass_cutoff[self.current_channel]
+        lowpass_cutoff = self.data.filtered.lowpass_cutoff
         step = 0.01*self.data.rate/2
         if lowpass_cutoff >= step:
             step = 0.5*10**(floor(log10(lowpass_cutoff)))
             step = 0.5*10**(floor(log10(lowpass_cutoff - 0.1*step)))
-        if lowpass_cutoff < highpass_cutoff + step:
+        if lowpass_cutoff < self.data.filtered.highpass_cutoff + step:
             return
         lowpass_cutoff -= step
-        if lowpass_cutoff < highpass_cutoff + step:
-            lowpass_cutoff = highpass_cutoff + step
-        self.update_filter(highpass_cutoff, lowpass_cutoff)
+        if lowpass_cutoff < self.data.filtered.highpass_cutoff + step:
+            lowpass_cutoff = self.data.filtered.highpass_cutoff + step
+        self.update_filter(lowpass_cutoff=lowpass_cutoff)
 
 
-    def set_filter(self, highpass_cutoffs, lowpass_cutoffs):
-        """Called for dispatching cutoff frequencies.
-        """
-        if self.setting:
-            return
-        self.setting = True
-        for c in self.selected_channels:
-            cf = c if c < len(highpass_cutoffs) else -1
-            self.data.filtered.highpass_cutoff[c] = highpass_cutoffs[cf]
-            self.data.filtered.lowpass_cutoff[c] = lowpass_cutoffs[cf]
-            self.axspecs[c].set_filter_handles(highpass_cutoffs[cf],
-                                               lowpass_cutoffs[cf])
-        self.data.filtered.update()
-        self.update_plots()
-        self.setting = False
-
-
-    def update_filter(self, highpass_cutoff=None, lowpass_cutoff=None,
-                      channel=None):
+    def update_filter(self, highpass_cutoff=None, lowpass_cutoff=None):
         """Called when filter cutoffs were changed by key shortcuts or handles
-        in spectrum plots.
+        in spectrum plots and when dispatching.
 
         """
         if self.setting:
             return
         self.setting = True
-        if channel is None or channel in self.selected_channels:
-            for c in self.selected_channels:
-                if highpass_cutoff is not None:
-                    self.data.filtered.highpass_cutoff[c] = highpass_cutoff
-                if lowpass_cutoff is not None:
-                    self.data.filtered.lowpass_cutoff[c] = lowpass_cutoff
-                self.axspecs[c].set_filter_handles(
-                    self.data.filtered.highpass_cutoff[c],
-                    self.data.filtered.lowpass_cutoff[c])
-        else:
-            if highpass_cutoff is not None:
-                self.data.filtered.highpass_cutoff[channel] = highpass_cutoff
-            if lowpass_cutoff is not None:
-                self.data.filtered.lowpass_cutoff[channel] = lowpass_cutoff
-            self.axspecs[channel].set_filter_handles(
-                self.data.filtered.lowpass_cutoff[channel].highpass_cutoff,
-                self.data.filtered.lowpass_cutoff[channel].lowpass_cutoff)
-        if self.data.filtered.highpass_cutoff[self.current_channel] < 1000:
+        if highpass_cutoff is not None:
+            self.data.filtered.highpass_cutoff = highpass_cutoff
+        if lowpass_cutoff is not None:
+            self.data.filtered.lowpass_cutoff = lowpass_cutoff
+        for ax in self.axspecs:
+            ax.set_filter_handles(self.data.filtered.highpass_cutoff,
+                                  self.data.filtered.lowpass_cutoff)
+        if self.data.filtered.highpass_cutoff < 1000:
             self.hpfw.setDecimals(2)
-        elif self.data.filtered.highpass_cutoff[self.current_channel] < 10000:
+        elif self.data.filtered.highpass_cutoff < 10000:
             self.hpfw.setDecimals(1)
         else:
             self.hpfw.setDecimals(0)
-        self.hpfw.setValue(0.001*self.data.filtered.highpass_cutoff[self.current_channel])
-        if self.data.filtered.lowpass_cutoff[self.current_channel] < 1000:
+        self.hpfw.setValue(0.001*self.data.filtered.highpass_cutoff)
+        if self.data.filtered.lowpass_cutoff < 1000:
             self.lpfw.setDecimals(2)
-        elif self.data.filtered.lowpass_cutoff[self.current_channel] < 10000:
+        elif self.data.filtered.lowpass_cutoff < 10000:
             self.lpfw.setDecimals(1)
         else:
             self.lpfw.setDecimals(0)
-        self.lpfw.setValue(0.001*self.data.filtered.lowpass_cutoff[self.current_channel])
+        self.lpfw.setValue(0.001*self.data.filtered.lowpass_cutoff)
         self.data.filtered.update()
         self.update_plots()
         self.setting = False

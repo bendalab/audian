@@ -574,11 +574,11 @@ class Audian(QMainWindow):
         
     def dispatch_filter(self):
         if self.link_filter:
-            highpass_cutoffs = self.browser().data.filtered.highpass_cutoff
-            lowpass_cutoffs = self.browser().data.filtered.lowpass_cutoff
+            highpass_cutoff = self.browser().data.filtered.highpass_cutoff
+            lowpass_cutoff = self.browser().data.filtered.lowpass_cutoff
             for b in self.browsers:
                 if not b is self.browser():
-                    b.set_filter(highpass_cutoffs, lowpass_cutoffs)
+                    b.update_filter(highpass_cutoff, lowpass_cutoff)
 
 
     def setup_spectrogram_actions(self, menu):

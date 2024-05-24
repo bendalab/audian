@@ -12,7 +12,7 @@ from .timeplot import TimePlot
 class SpectrumPlot(TimePlot):
 
     
-    sigUpdateFilter = Signal(object, object, object)
+    sigUpdateFilter = Signal(object, object)
 
 
     def __init__(self, data, channel, xwidth, fmax):
@@ -28,8 +28,8 @@ class SpectrumPlot(TimePlot):
                        minYRange=0.1, maxYRange=fmax)
 
         # filter handles:
-        self.highpass_cutoff = data.filtered.highpass_cutoff[channel]
-        self.lowpass_cutoff = data.filtered.lowpass_cutoff[channel]
+        self.highpass_cutoff = data.filtered.highpass_cutoff
+        self.lowpass_cutoff = data.filtered.lowpass_cutoff
         self.highpass_handle = pg.InfiniteLine(angle=0, movable=True)
         self.highpass_handle.setPen(pg.mkPen('white', width=2))
         self.highpass_handle.addMarker('o', position=0.75, size=6)
@@ -60,10 +60,10 @@ class SpectrumPlot(TimePlot):
     def highpass_changed(self):
         self.highpass_cutoff = self.highpass_handle.value()
         self.sigUpdateFilter.emit(self.highpass_cutoff,
-                                  self.lowpass_cutoff, self.channel)
+                                  self.lowpass_cutoff)
         
 
     def lowpass_changed(self):
         self.lowpass_cutoff = self.lowpass_handle.value()
         self.sigUpdateFilter.emit(self.highpass_cutoff,
-                                  self.lowpass_cutoff, self.channel)
+                                  self.lowpass_cutoff)

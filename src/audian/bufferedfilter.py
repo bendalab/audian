@@ -1,4 +1,4 @@
-"""Filter source data on the fly.
+"""Filter data on the fly.
 """
 
 from scipy.signal import butter, sosfilt
@@ -11,55 +11,44 @@ class BufferedFilter(BufferedData):
                  color='#00ee00', lw_thin=1.1, lw_thick=2):
         super().__init__(name, source, tbefore=10, panel=panel,
                          color=color, lw_thin=lw_thin, lw_thick=lw_thick)
-        self.highpass_cutoff = []
-        self.lowpass_cutoff = []
-        self.filter_order = []
-        self.sos = []
+        self.highpass_cutoff = 0
+        self.lowpass_cutoff = 1
+        self.filter_order = 2
+        self.sos = None
 
         
     def open(self, source):
         super().open(source)
         self.ampl_min = source.ampl_min
         self.ampl_max = source.ampl_max
-        self.highpass_cutoff = [0]*self.channels
-        self.lowpass_cutoff = [self.rate/2]*self.channels
-        self.filter_order = [2]*self.channels
-        self.sos = [None]*self.channels
+        self.highpass_cutoff = 0
+        self.lowpass_cutoff = self.rate/2
+        self.filter_order = 2
+        self.sos = None
         self.update()
 
 
     def process(self, source, dest, nbefore):
-        for c in range(self.channels):
-            if self.sos[c] is None:
-                dest[:, c] = source[nbefore:, c]
-            else:
-                dest[:, c] = sosfilt(self.sos[c], source[:, c],)[nbefore:]
-
-                
-    def make_filter(self, channel):
-        if self.highpass_cutoff[channel] < 1e-8 and \
-           self.lowpass_cutoff[channel] >= self.rate/2 - 1e-8:
-            self.sos[channel] = None
-        elif self.highpass_cutoff[channel] < 1e-8:
-            self.sos[channel] = butter(self.filter_order[channel],
-                                       self.lowpass_cutoff[channel],
-                                       'lowpass', fs=self.rate,
-                                       output='sos')
-        elif self.lowpass_cutoff[channel] >= self.rate/2-1e-8:
-            self.sos[channel] = butter(self.filter_order[channel],
-                                       self.highpass_cutoff[channel],
-                                       'highpass', fs=self.rate,
-                                       output='sos')
+        if self.sos is None:
+            dest[:, :] = source[nbefore:, :]
         else:
-            self.sos[channel] = butter(self.filter_order[channel],
-                                       (self.highpass_cutoff[channel],
-                                        self.lowpass_cutoff[channel]),
-                                       'bandpass', fs=self.rate,
-                                       output='sos')
+            for c in range(self.channels):
+                dest[:, c] = sosfilt(self.sos, source[:, c],)[nbefore:]
 
             
     def update(self):
-        for c in range(self.channels):
-            self.make_filter(c)
+        if self.highpass_cutoff < 0.001*self.rate/2 and \
+           self.lowpass_cutoff >= self.rate/2 - 1e-8:
+            self.sos = None
+        elif self.highpass_cutoff < 0.001*self.rate/2:
+            self.sos = butter(self.filter_order, self.lowpass_cutoff,
+                              'lowpass', fs=self.rate, output='sos')
+        elif self.lowpass_cutoff >= self.rate/2 - 1e-8:
+            self.sos = butter(self.filter_order, self.highpass_cutoff,
+                              'highpass', fs=self.rate, output='sos')
+        else:
+            self.sos = butter(self.filter_order,
+                              (self.highpass_cutoff, self.lowpass_cutoff),
+                              'bandpass', fs=self.rate, output='sos')
         self.recompute_all()
 
