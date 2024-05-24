@@ -470,10 +470,9 @@ class DataBrowser(QWidget):
         self.toolbar.addWidget(QLabel('H:'))
         self.hpfw = QDoubleSpinBox(self)
         self.hpfw.setToolTip('High-pass filter cutoff frequency (H, Shift+H)')
-        self.hpfw.setRange(0, 99)
-        self.hpfw.setSingleStep(5)
+        self.hpfw.setRange(0, 0.001*self.data.rate/2)
         self.hpfw.setStepType(QAbstractSpinBox.AdaptiveDecimalStepType)
-        self.hpfw.setDecimals(1)
+        self.hpfw.setDecimals(2)
         self.hpfw.setSuffix('kHz')
         self.hpfw.setValue(0.001*self.data.filtered.highpass_cutoff[0])
         self.hpfw.valueChanged.connect(lambda v: self.update_filter(highpass_cutoff=1000*v))
@@ -482,8 +481,7 @@ class DataBrowser(QWidget):
         self.toolbar.addWidget(QLabel(' L:'))
         self.lpfw = QDoubleSpinBox(self)
         self.lpfw.setToolTip('Low-pass filter cutoff frequency (L, Shift+L)')
-        self.lpfw.setRange(1, 999)
-        self.lpfw.setSingleStep(5)
+        self.lpfw.setRange(0.01*0.001*self.data.rate/2, 0.001*self.data.rate/2)
         self.lpfw.setStepType(QAbstractSpinBox.AdaptiveDecimalStepType)
         self.lpfw.setDecimals(0)
         self.lpfw.setSuffix('kHz')
@@ -494,8 +492,7 @@ class DataBrowser(QWidget):
         self.toolbar.addWidget(QLabel(' E:'))
         self.envfw = QDoubleSpinBox(self)
         self.envfw.setToolTip('Envelope low-pass filter cutoff frequency (E, Shift+E)')
-        self.envfw.setRange(0.1, 9900)
-        self.envfw.setSingleStep(5)
+        self.envfw.setRange(0, 0.5*self.data.rate/2)
         self.envfw.setStepType(QAbstractSpinBox.AdaptiveDecimalStepType)
         self.envfw.setDecimals(1)
         self.envfw.setSuffix('Hz')
@@ -1376,11 +1373,9 @@ class DataBrowser(QWidget):
     def highpass_cutoff_up(self):
         highpass_cutoff = self.data.filtered.highpass_cutoff[self.current_channel]
         lowpass_cutoff = self.data.filtered.lowpass_cutoff[self.current_channel]
-        step = 1.0
-        if highpass_cutoff >= 1.0:
+        step = 0.01*self.data.rate/2
+        if highpass_cutoff >= step:
             step = 0.5*10**(floor(log10(highpass_cutoff)))
-        elif highpass_cutoff == 0.0:
-            step = 100.0
         highpass_cutoff += step
         if highpass_cutoff + step > lowpass_cutoff:
             highpass_cutoff = lowpass_cutoff - step
@@ -1392,8 +1387,8 @@ class DataBrowser(QWidget):
     def highpass_cutoff_down(self):
         highpass_cutoff = self.data.filtered.highpass_cutoff[self.current_channel]
         lowpass_cutoff = self.data.filtered.lowpass_cutoff[self.current_channel]
-        step = 1.0
-        if highpass_cutoff >= 1.0:
+        step = 0.01*self.data.rate/2
+        if highpass_cutoff >= step:
             step = 0.5*10**(floor(log10(highpass_cutoff)))
             step = 0.5*10**(floor(log10(highpass_cutoff - 0.1*step)))
         highpass_cutoff -= step
@@ -1405,9 +1400,7 @@ class DataBrowser(QWidget):
     def lowpass_cutoff_up(self):
         highpass_cutoff = self.data.filtered.highpass_cutoff[self.current_channel]
         lowpass_cutoff = self.data.filtered.lowpass_cutoff[self.current_channel]
-        step = 1.0
-        if lowpass_cutoff >= 1.0:
-            step = 0.5*10**(floor(log10(lowpass_cutoff)))
+        step = 0.5*10**(floor(log10(lowpass_cutoff)))
         lowpass_cutoff += step
         if lowpass_cutoff > self.data.rate/2:
             lowpass_cutoff = self.data.rate/2
@@ -1417,8 +1410,8 @@ class DataBrowser(QWidget):
     def lowpass_cutoff_down(self):
         highpass_cutoff = self.data.filtered.highpass_cutoff[self.current_channel]
         lowpass_cutoff = self.data.filtered.lowpass_cutoff[self.current_channel]
-        step = 1.0
-        if lowpass_cutoff >= 1.0:
+        step = 0.01*self.data.rate/2
+        if lowpass_cutoff >= step:
             step = 0.5*10**(floor(log10(lowpass_cutoff)))
             step = 0.5*10**(floor(log10(lowpass_cutoff - 0.1*step)))
         if lowpass_cutoff < highpass_cutoff + step:
@@ -1472,7 +1465,19 @@ class DataBrowser(QWidget):
             self.axspecs[channel].set_filter_handles(
                 self.data.filtered.lowpass_cutoff[channel].highpass_cutoff,
                 self.data.filtered.lowpass_cutoff[channel].lowpass_cutoff)
+        if self.data.filtered.highpass_cutoff[self.current_channel] < 1000:
+            self.hpfw.setDecimals(2)
+        elif self.data.filtered.highpass_cutoff[self.current_channel] < 10000:
+            self.hpfw.setDecimals(1)
+        else:
+            self.hpfw.setDecimals(0)
         self.hpfw.setValue(0.001*self.data.filtered.highpass_cutoff[self.current_channel])
+        if self.data.filtered.lowpass_cutoff[self.current_channel] < 1000:
+            self.lpfw.setDecimals(2)
+        elif self.data.filtered.lowpass_cutoff[self.current_channel] < 10000:
+            self.lpfw.setDecimals(1)
+        else:
+            self.lpfw.setDecimals(0)
         self.lpfw.setValue(0.001*self.data.filtered.lowpass_cutoff[self.current_channel])
         self.data.filtered.update()
         self.update_plots()
@@ -1482,24 +1487,24 @@ class DataBrowser(QWidget):
 
     def envelope_cutoff_up(self):
         envelope_cutoff = self.data.envelope.envelope_cutoff
-        step = 1.0
-        if envelope_cutoff >= 1.0:
+        step = 0.001*self.data.rate/2
+        if envelope_cutoff >= step:
             step = 0.5*10**(floor(log10(envelope_cutoff)))
         envelope_cutoff += step
-        if envelope_cutoff > self.data.rate/2/5:
-            envelope_cutoff = self.data.rate/2/5
+        if envelope_cutoff > 0.2*self.data.rate/2:
+            envelope_cutoff = 0.2*self.data.rate/2
         self.update_envelope(envelope_cutoff)
 
 
     def envelope_cutoff_down(self):
         envelope_cutoff = self.data.envelope.envelope_cutoff
-        step = 1.0
-        if envelope_cutoff >= 1.0:
+        step = 0.001*self.data.rate/2
+        if envelope_cutoff >= step:
             step = 0.5*10**(floor(log10(envelope_cutoff)))
             step = 0.5*10**(floor(log10(envelope_cutoff - 0.1*step)))
         envelope_cutoff -= step
-        if envelope_cutoff < 1:
-            envelope_cutoff = 1
+        if envelope_cutoff < 0.01:
+            envelope_cutoff = 0.01
         self.update_envelope(envelope_cutoff)
 
 
