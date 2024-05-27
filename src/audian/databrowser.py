@@ -1470,13 +1470,14 @@ class DataBrowser(QWidget):
 
     def envelope_cutoff_down(self):
         envelope_cutoff = self.data.envelope.envelope_cutoff
-        step = 0.001*self.data.rate/2
+        min_step = 0.001*self.data.rate/2
+        step = min_step
         if envelope_cutoff >= step:
             step = 0.5*10**(floor(log10(envelope_cutoff)))
             step = 0.5*10**(floor(log10(envelope_cutoff - 0.1*step)))
         envelope_cutoff -= step
-        if envelope_cutoff < 0.01:
-            envelope_cutoff = 0.01
+        if envelope_cutoff < min_step:
+            envelope_cutoff = min_step
         self.update_envelope(envelope_cutoff)
 
 
