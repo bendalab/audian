@@ -558,7 +558,7 @@ class DataBrowser(QWidget):
                     #self.axtraces[c].addItem(text)
                     self.trace_region_labels[c].append(region)
                 else:
-                    tl[lidx].addPoints((t1,), (self.data[idx1, c],), data=(ds,), tip=marker_tip)
+                    tl[lidx].addPoints((t1,), (self.data.data[idx1, c],), data=(ds,), tip=marker_tip)
             for c, sl in enumerate(self.spec_labels):
                 if ddt > 0:
                     # TODO: self.spec_region_labels
