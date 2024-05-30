@@ -99,7 +99,8 @@ class TimePlot(pg.PlotItem):
 
     def update_plot(self):
         for item in self.data_items:
-            item.update_plot()
+            if item.isVisible():
+                item.update_plot()
 
 
     def enable_start_time(self, enable):

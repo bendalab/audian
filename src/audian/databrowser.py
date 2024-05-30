@@ -109,7 +109,7 @@ class DataBrowser(QWidget):
         
         self.grids = 0
         self.show_traces = True
-        self.show_specs = 4
+        self.show_specs = 0
         self.show_cbars = False
         self.show_fulldata = True
         
@@ -311,6 +311,7 @@ class DataBrowser(QWidget):
                 if trace.panel == 'spectrum':
                     spec_item = SpecItem(trace, c)
                     axs.add_item(spec_item)
+                    trace.plot_item = spec_item
                     if trace.name == 'spectrogram':
                         self.specs.append(spec_item)
                     
@@ -330,6 +331,7 @@ class DataBrowser(QWidget):
             axs.sigSelectedRegion.connect(self.region_menu)
             axs.sigUpdateFilter.connect(self.update_filter)
             axs.getViewBox().init_zoom_history()
+            axs.setVisible(self.show_specs > 0)
             self.audio_markers[-1].append(axs.vmarker)
             fig.addItem(axs, row=0, col=0)
             
@@ -368,9 +370,11 @@ class DataBrowser(QWidget):
                 if trace.panel == 'trace':
                     trace_item = TraceItem(trace, c)
                     axt.add_item(trace_item)
+                    trace.plot_item = trace_item
                     if trace.name == 'data': # or trace.name == 'filtered':
                         self.traces.append(trace_item)
                     elif trace.name == 'envelope':
+                        trace_item.setVisible(False)
                         self.envelopes.append(trace_item)
             
             # add marker labels:
@@ -411,7 +415,8 @@ class DataBrowser(QWidget):
             proxy = pg.SignalProxy(fig.scene().sigMouseClicked, rateLimit=60,
                                    slot=lambda x, c=c: self.mouse_clicked(x, c))
             self.sig_proxies.append(proxy)
-            
+
+        self.data.set_need_update()
         self.set_times()
         
         # tool bar:
@@ -920,7 +925,8 @@ class DataBrowser(QWidget):
     def update_plots(self):
         for axx in self.axs:
             for ax in axx:
-                ax.update_plot()
+                if ax.isVisible():
+                    ax.update_plot()
 
 
     def showEvent(self, event):
@@ -939,7 +945,8 @@ class DataBrowser(QWidget):
                 ax.setXRange(self.f0[c], self.f1[c])
             for ax in self.axfxs[c]:
                 ax.setYRange(self.f0[c], self.f1[c])
-            self.update_plots()
+        self.data.set_need_update()
+        self.update_plots()
         self.setting = False
 
                 
@@ -947,6 +954,7 @@ class DataBrowser(QWidget):
         if self.show_channels is None or len(self.show_channels) == 0:
             return
         self.adjust_layout(event.size().width(), event.size().height())
+        self.data.set_need_update()
         
 
     def adjust_layout(self, width, height):
@@ -1493,6 +1501,7 @@ class DataBrowser(QWidget):
         for c in range(self.data.channels):
             if show_envelope is not None:
                 self.envelopes[c].setVisible(show_envelope)
+        self.data.set_need_update()
         self.update_plots()
         self.envfw.setValue(self.data.envelope.envelope_cutoff)
         self.setting = False
@@ -1719,6 +1728,7 @@ class DataBrowser(QWidget):
         if self.datafig is not None:
             self.datafig.setVisible(self.show_fulldata)
         self.adjust_layout(self.width(), self.height())
+        self.data.set_need_update()
             
 
     def toggle_traces(self):

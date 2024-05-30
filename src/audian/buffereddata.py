@@ -14,6 +14,7 @@ class BufferedData(BufferedArray):
         self.tbefore = 0
         self.tafter = 0
         self.panel = panel
+        self.plot_item = None
         self.color = color
         self.lw_thin = lw_thin
         self.lw_thick = lw_thick
@@ -21,6 +22,7 @@ class BufferedData(BufferedArray):
         self.source_tbefore = tbefore
         self.source_tafter = tafter
         self.dests = []
+        self.need_update = False
         self.verbose = 0
 
 
@@ -79,7 +81,7 @@ class BufferedData(BufferedArray):
 
 
     def load_buffer(self, offset, nframes, buffer):
-        #print(f'load {self.name} {offset/self.rate:.3f} - {(offset + nframes)/self.rate:.3f}')
+        print(f'load {self.name} {offset/self.rate:.3f} - {(offset + nframes)/self.rate:.3f}')
         # transform to rate of source buffer:
         soffset = int(offset*self.source.rate/self.rate)
         snframes = int(nframes*self.source.rate/self.rate)
@@ -103,11 +105,23 @@ class BufferedData(BufferedArray):
         self.reload_buffer()
 
 
-    def recompute_all(self):
-        self.recompute()
+    def set_need_update(self):
+        self.need_update = self.plot_item is not None and \
+            self.plot_item.isVisible()
         for d in self.dests:
-            d.recompute()
+            d.set_need_update()
+        # end of dependency chain:
+        if len(self.dests) == 0:
+            # go to sources and propagate needed update:
+            trace = self
+            while hasattr(trace, 'source'):
+                s = trace.source
+                s.need_update = trace.need_update or s.need_update
+                trace = s
             
-        
-        
 
+    def recompute_all(self):
+        if self.need_update:
+            self.recompute()
+            for d in self.dests:
+                d.recompute_all()

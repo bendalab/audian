@@ -47,7 +47,7 @@ handles all GUI aspects.
   - [x] TraceItems should get color and line width from data objects.
   - [x] Recompute derived data whenever a source is changed.
   - [x] Update plots of all items that have been recomputed.
-  - [ ] Recompute derived data only if visible or used by something visible.
+  - [x] Recompute derived data only if visible or used by something visible.
   - [ ] Automatically discover plugins: see https://packaging.python.org/en/latest/guides/creating-and-discovering-plugins/
   - [ ] Test this plugin interface with
     - [ ] Subtract common mean

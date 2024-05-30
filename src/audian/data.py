@@ -111,10 +111,12 @@ class Data(object):
         self.data.follow = int(self.follow_time*self.data.rate)
         self.data.name = 'data'
         self.data.panel = 'trace'
+        self.data.plot_item = None
         self.data.color = '#0000ee'
         self.data.lw_thin = 1.1
         self.data.lw_thick = 2
         self.data.dests = []
+        self.data.need_update = False
         self.traces.insert(0, self.data)
         self.sources = [None] + [i + 1 for i in self.sources]
         self.file_path = self.data.filepath
@@ -132,13 +134,25 @@ class Data(object):
         # derived data:
         for trace, source in zip(self.traces[1:], self.sources[1:]):
             trace.open(self.traces[source])
+        self.set_need_update()
 
+            
+    def set_need_update(self):
+        if self.data is None:
+            return
+        self.data.need_update = self.data.plot_item is not None and \
+            self.data.plot_item.isVisible()
+        for d in self.data.dests:
+            d.set_need_update()
 
+            
     def update_times(self):
-        self.data.update_time(self.toffset - self.tbefore,
-                              self.toffset + self.twindow + self.tafter)
+        if self.data.need_update:
+            self.data.update_time(self.toffset - self.tbefore,
+                                  self.toffset + self.twindow + self.tafter)
         for trace in self.traces[1:]:
-            trace.align_buffer()
+            if trace.need_update:
+                trace.align_buffer()
         
         
     def set_time_limits(self, ax):
