@@ -1729,6 +1729,8 @@ class DataBrowser(QWidget):
             self.datafig.setVisible(self.show_fulldata)
         self.adjust_layout(self.width(), self.height())
         self.data.set_need_update()
+        self.data.update_times()
+        self.update_plots()
             
 
     def toggle_traces(self):
