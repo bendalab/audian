@@ -48,7 +48,7 @@ handles all GUI aspects.
   - [x] Recompute derived data whenever a source is changed.
   - [x] Update plots of all items that have been recomputed.
   - [x] Recompute derived data only if visible or used by something visible.
-  - [ ] Automatically discover plugins: see https://packaging.python.org/en/latest/guides/creating-and-discovering-plugins/
+  - [x] Automatically discover plugins
   - [ ] Test this plugin interface with
     - [ ] Subtract common mean
     - [ ] Logarithmic and high-pass filtered envelope
@@ -81,6 +81,7 @@ handles all GUI aspects.
   - [ ] Cross hair should only be used for measuring! Just a single whitish color.
     Comments only in the table.
     Show points only fom active measurement.
+    
   - Cues and regions have position data with labels. Same for all channels.
     - visualize them by infinite vertical lines/regions, both in plots and
       FullTracePlot (maybe in extra row?).

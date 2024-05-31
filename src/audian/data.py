@@ -6,14 +6,11 @@ and the time window shown.
 import numpy as np
 from audioio import get_datetime
 from thunderlab.dataloader import DataLoader
-from .bufferedfilter import BufferedFilter
-from .bufferedenvelope import BufferedEnvelope
-from .bufferedspectrogram import BufferedSpectrogram
 
 
 class Data(object):
 
-    def __init__(self, file_path):
+    def __init__(self, file_path, trace_factory):
         self.buffer_time = 60
         self.back_time = 20
         self.follow_time = 0
@@ -28,10 +25,14 @@ class Data(object):
         self.meta_data = {}
         self.tbefore = 0
         self.tafter = 0
-        self.filtered = BufferedFilter()
-        self.envelope = BufferedEnvelope()
-        self.spectrum = BufferedSpectrogram()
-        self.traces = [self.filtered, self.envelope, self.spectrum]
+        self.traces = trace_factory.traces()
+        for t in self.traces:
+            if t.name == 'filtered':
+                self.filtered = t
+            elif t.name == 'envelope':
+                self.envelope = t
+            elif t.name == 'spectrogram':
+                self.spectrum = t
         self.order_plugins()
 
         
