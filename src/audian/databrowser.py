@@ -11,8 +11,7 @@ except ImportError:
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QCursor, QKeySequence
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QScrollArea
-from PyQt5.QtWidgets import QAction, QMenu, QToolBar, QComboBox
-from PyQt5.QtWidgets import QCheckBox, QDoubleSpinBox, QAbstractSpinBox
+from PyQt5.QtWidgets import QAction, QMenu, QToolBar, QComboBox, QCheckBox
 from PyQt5.QtWidgets import QLabel, QSizePolicy, QTableView
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFileDialog
 from PyQt5.QtWidgets import QAbstractItemView, QGraphicsRectItem
@@ -463,14 +462,12 @@ class DataBrowser(QWidget):
         self.toolbar.addWidget(self.nfftw)
 
         self.toolbar.addWidget(QLabel('O:'))
-        self.ofracw = QDoubleSpinBox(self)
+        self.ofracw = pg.SpinBox(self, 100*(1 - self.data.spectrum.hop_frac),
+                                 bounds=(0, 99.8),
+                                 suffix='%', siPrefix=False,
+                                 step=0.5, dec=True, decimals=3,
+                                 minStep=0.01)
         self.ofracw.setToolTip('Overlap of Fourier segments (O, Shift+O)')
-        self.ofracw.setRange(0, 100)
-        self.ofracw.setSingleStep(5)
-        self.ofracw.setStepType(QAbstractSpinBox.AdaptiveDecimalStepType)
-        self.ofracw.setDecimals(1)
-        self.ofracw.setSuffix('%')
-        self.ofracw.setValue(100*(1 - self.data.spectrum.hop_frac))
         self.ofracw.valueChanged.connect(lambda v: self.set_resolution(hop_frac=1-0.01*v))
         self.toolbar.addWidget(self.ofracw)
         self.toolbar.addSeparator()
