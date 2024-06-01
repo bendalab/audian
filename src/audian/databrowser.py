@@ -434,14 +434,13 @@ class DataBrowser(QWidget):
         self.audiofacw.setCurrentText(f'{self.audio_rate_fac:g}')
         self.audiofacw.currentTextChanged.connect(lambda s: self.set_audio(rate_fac=float(s)))
         self.toolbar.addWidget(self.audiofacw)
-        self.audiohetfw = QDoubleSpinBox(self)
+        self.audiohetfw = pg.SpinBox(self, self.audio_heterodyne_freq,
+                                     bounds=(10000, 100000),
+                                     suffix='Hz', siPrefix=True,
+                                     step=0.1, dec=True, decimals=3,
+                                     minStep=5000)
         self.audiohetfw.setToolTip('Audio heterodyne frequency')
-        self.audiohetfw.setRange(10, 100)
-        self.audiohetfw.setSingleStep(5)
-        self.audiohetfw.setDecimals(0)
-        self.audiohetfw.setSuffix('kHz')
-        self.audiohetfw.setValue(self.audio_heterodyne_freq/1000)
-        self.audiohetfw.valueChanged.connect(lambda v: self.set_audio(heterodyne_freq=1000*v))
+        self.audiohetfw.sigValueChanged.connect(lambda s: self.set_audio(heterodyne_freq=s.value()))
         if self.data.rate > 50000:
             self.toolbar.addWidget(self.audiohetfw)
             self.toolbar.addAction(self.acts.use_heterodyne)
@@ -1788,7 +1787,7 @@ class DataBrowser(QWidget):
         if heterodyne_freq is not None:
             self.audio_heterodyne_freq = float(heterodyne_freq)
             if not dispatch:
-                self.audiohetfw.setValue(self.audio_heterodyne_freq/1000)
+                self.audiohetfw.setValue(self.audio_heterodyne_freq)
         if dispatch:
             self.sigAudioChanged.emit(self.audio_rate_fac,
                                       self.audio_use_heterodyne,
