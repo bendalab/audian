@@ -7,13 +7,18 @@ from .bufferedenvelope import BufferedEnvelope
 from .bufferedspectrogram import BufferedSpectrogram
 
 
+def default_factory(factory):
+    factory.clear()
+    return [BufferedFilter(),
+            BufferedEnvelope(),
+            BufferedSpectrogram()]
+
+
 class TraceFactory(object):
 
     def __init__(self):
         self.factories = []
-        self.add(lambda x=0: BufferedFilter())
-        self.add(lambda x=0: BufferedEnvelope())
-        self.add(lambda x=0: BufferedSpectrogram())
+        self.add(default_factory)
 
 
     def add(self, factory_func):
@@ -31,7 +36,7 @@ class TraceFactory(object):
             called = False
             for k in dir(x):
                 if k.startswith('audian_') and callable(getattr(x, k)):
-                    getattr(x, k)(self)
+                    self.add(getattr(x, k))
                     called = True
             if called:
                 print(f'loaded audian plugins from {module}')
@@ -39,6 +44,7 @@ class TraceFactory(object):
 
 
     def traces(self):
-        return [f() for f in self.factories]
-
-    
+        t = []
+        for f in self.factories:
+            t.extend(f(self))
+        return t
