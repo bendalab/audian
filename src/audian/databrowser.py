@@ -477,36 +477,33 @@ class DataBrowser(QWidget):
         self.toolbar.addSeparator()
 
         self.toolbar.addWidget(QLabel('H:'))
-        self.hpfw = QDoubleSpinBox(self)
+        self.hpfw = pg.SpinBox(self, self.data.filtered.highpass_cutoff,
+                               bounds=(0, self.data.rate/2),
+                               suffix='Hz', siPrefix=True,
+                               step=0.5, dec=True, decimals=3,
+                               minStep=10**np.floor(np.log10(0.01*self.data.rate/2)))
         self.hpfw.setToolTip('High-pass filter cutoff frequency (H, Shift+H)')
-        self.hpfw.setRange(0, 0.001*self.data.rate/2)
-        self.hpfw.setStepType(QAbstractSpinBox.AdaptiveDecimalStepType)
-        self.hpfw.setDecimals(2)
-        self.hpfw.setSuffix('kHz')
-        self.hpfw.setValue(0.001*self.data.filtered.highpass_cutoff)
-        self.hpfw.valueChanged.connect(lambda v: self.update_filter(highpass_cutoff=1000*v))
+        self.hpfw.sigValueChanged.connect(lambda s: self.update_filter(highpass_cutoff=s.value()))
         self.toolbar.addWidget(self.hpfw)        
 
         self.toolbar.addWidget(QLabel(' L:'))
-        self.lpfw = QDoubleSpinBox(self)
+        self.lpfw = pg.SpinBox(self, self.data.filtered.lowpass_cutoff,
+                               bounds=(0.01*self.data.rate/2, self.data.rate/2),
+                               suffix='Hz', siPrefix=True,
+                               step=0.5, dec=True, decimals=3,
+                               minStep=10**np.floor(np.log10(0.01*self.data.rate/2)))
         self.lpfw.setToolTip('Low-pass filter cutoff frequency (L, Shift+L)')
-        self.lpfw.setRange(0.01*0.001*self.data.rate/2, 0.001*self.data.rate/2)
-        self.lpfw.setStepType(QAbstractSpinBox.AdaptiveDecimalStepType)
-        self.lpfw.setDecimals(0)
-        self.lpfw.setSuffix('kHz')
-        self.lpfw.setValue(0.001*self.data.filtered.lowpass_cutoff)
-        self.lpfw.valueChanged.connect(lambda v: self.update_filter(lowpass_cutoff=1000*v))
+        self.lpfw.sigValueChanged.connect(lambda s: self.update_filter(lowpass_cutoff=s.value()))
         self.toolbar.addWidget(self.lpfw)        
         
         self.toolbar.addWidget(QLabel(' E:'))
-        self.envfw = QDoubleSpinBox(self)
+        self.envfw = pg.SpinBox(self, self.data.envelope.envelope_cutoff,
+                                bounds=(0, 0.5*self.data.rate/2),
+                                suffix='Hz', siPrefix=True,
+                                step=0.5, dec=True, decimals=3,
+                                minStep=10**np.floor(np.log10(0.00001*self.data.rate/2)))
         self.envfw.setToolTip('Envelope low-pass filter cutoff frequency (E, Shift+E)')
-        self.envfw.setRange(0, 0.5*self.data.rate/2)
-        self.envfw.setStepType(QAbstractSpinBox.AdaptiveDecimalStepType)
-        self.envfw.setDecimals(1)
-        self.envfw.setSuffix('Hz')
-        self.envfw.setValue(self.data.envelope.envelope_cutoff)
-        self.envfw.valueChanged.connect(lambda v: self.update_envelope(envelope_cutoff=v))
+        self.envfw.sigValueChanged.connect(lambda s: self.update_envelope(envelope_cutoff=s.value()))
         self.toolbar.addWidget(self.envfw)
         self.toolbar.addSeparator()
         self.toolbar.addWidget(QLabel('Channel:'))
@@ -1382,54 +1379,6 @@ class DataBrowser(QWidget):
         self.set_power()
 
 
-    def highpass_cutoff_up(self):
-        highpass_cutoff = self.data.filtered.highpass_cutoff
-        step = 0.01*self.data.rate/2
-        if highpass_cutoff >= step:
-            step = 0.5*10**(floor(log10(highpass_cutoff)))
-        highpass_cutoff += step
-        if highpass_cutoff + step > self.data.filtered.lowpass_cutoff:
-            highpass_cutoff = self.data.filtered.lowpass_cutoff - step
-        if highpass_cutoff < 0:
-            highpass_cutoff = 0
-        self.update_filter(highpass_cutoff=highpass_cutoff)
-
-
-    def highpass_cutoff_down(self):
-        highpass_cutoff = self.data.filtered.highpass_cutoff
-        step = 0.01*self.data.rate/2
-        if highpass_cutoff >= step:
-            step = 0.5*10**(floor(log10(highpass_cutoff)))
-            step = 0.5*10**(floor(log10(highpass_cutoff - 0.1*step)))
-        highpass_cutoff -= step
-        if highpass_cutoff < 0:
-            highpass_cutoff = 0
-        self.update_filter(highpass_cutoff=highpass_cutoff)
-
-
-    def lowpass_cutoff_up(self):
-        lowpass_cutoff = self.data.filtered.lowpass_cutoff
-        step = 0.5*10**(floor(log10(lowpass_cutoff)))
-        lowpass_cutoff += step
-        if lowpass_cutoff > self.data.rate/2:
-            lowpass_cutoff = self.data.rate/2
-        self.update_filter(lowpass_cutoff=lowpass_cutoff)
-
-
-    def lowpass_cutoff_down(self):
-        lowpass_cutoff = self.data.filtered.lowpass_cutoff
-        step = 0.01*self.data.rate/2
-        if lowpass_cutoff >= step:
-            step = 0.5*10**(floor(log10(lowpass_cutoff)))
-            step = 0.5*10**(floor(log10(lowpass_cutoff - 0.1*step)))
-        if lowpass_cutoff < self.data.filtered.highpass_cutoff + step:
-            return
-        lowpass_cutoff -= step
-        if lowpass_cutoff < self.data.filtered.highpass_cutoff + step:
-            lowpass_cutoff = self.data.filtered.highpass_cutoff + step
-        self.update_filter(lowpass_cutoff=lowpass_cutoff)
-
-
     def update_filter(self, highpass_cutoff=None, lowpass_cutoff=None):
         """Called when filter cutoffs were changed by key shortcuts or handles
         in spectrum plots and when dispatching.
@@ -1445,48 +1394,12 @@ class DataBrowser(QWidget):
         for ax in self.axspecs:
             ax.set_filter_handles(self.data.filtered.highpass_cutoff,
                                   self.data.filtered.lowpass_cutoff)
-        if self.data.filtered.highpass_cutoff < 1000:
-            self.hpfw.setDecimals(2)
-        elif self.data.filtered.highpass_cutoff < 10000:
-            self.hpfw.setDecimals(1)
-        else:
-            self.hpfw.setDecimals(0)
-        self.hpfw.setValue(0.001*self.data.filtered.highpass_cutoff)
-        if self.data.filtered.lowpass_cutoff < 1000:
-            self.lpfw.setDecimals(2)
-        elif self.data.filtered.lowpass_cutoff < 10000:
-            self.lpfw.setDecimals(1)
-        else:
-            self.lpfw.setDecimals(0)
-        self.lpfw.setValue(0.001*self.data.filtered.lowpass_cutoff)
+        self.hpfw.setValue(self.data.filtered.highpass_cutoff)
+        self.lpfw.setValue(self.data.filtered.lowpass_cutoff)
         self.data.filtered.update()
         self.update_plots()
         self.setting = False
         self.sigFilterChanged.emit()  # dispatch
-
-
-    def envelope_cutoff_up(self):
-        envelope_cutoff = self.data.envelope.envelope_cutoff
-        step = 0.001*self.data.rate/2
-        if envelope_cutoff >= step:
-            step = 0.5*10**(floor(log10(envelope_cutoff)))
-        envelope_cutoff += step
-        if envelope_cutoff > 0.2*self.data.rate/2:
-            envelope_cutoff = 0.2*self.data.rate/2
-        self.update_envelope(envelope_cutoff)
-
-
-    def envelope_cutoff_down(self):
-        envelope_cutoff = self.data.envelope.envelope_cutoff
-        min_step = 0.001*self.data.rate/2
-        step = min_step
-        if envelope_cutoff >= step:
-            step = 0.5*10**(floor(log10(envelope_cutoff)))
-            step = 0.5*10**(floor(log10(envelope_cutoff - 0.1*step)))
-        envelope_cutoff -= step
-        if envelope_cutoff < min_step:
-            envelope_cutoff = min_step
-        self.update_envelope(envelope_cutoff)
 
 
     def update_envelope(self, envelope_cutoff=None, show_envelope=None):
@@ -1497,11 +1410,11 @@ class DataBrowser(QWidget):
         self.setting = True
         if envelope_cutoff is not None:
             self.data.envelope.envelope_cutoff = envelope_cutoff
-        self.data.envelope.update()
         for c in range(self.data.channels):
             if show_envelope is not None:
                 self.envelopes[c].setVisible(show_envelope)
         self.data.set_need_update()
+        self.data.envelope.update()
         self.update_plots()
         self.envfw.setValue(self.data.envelope.envelope_cutoff)
         self.setting = False

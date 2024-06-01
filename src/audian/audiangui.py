@@ -616,19 +616,19 @@ class Audian(QMainWindow):
         
         self.acts.highpass_up = QAction('Increase &highpass cutoff', self)
         self.acts.highpass_up.setShortcut('Shift+H')
-        self.acts.highpass_up.triggered.connect(lambda x: self.browser().highpass_cutoff_up())
+        self.acts.highpass_up.triggered.connect(lambda x: self.browser().hpfw.stepUp())
         
         self.acts.highpass_down = QAction('Decrease highpass cutoff', self)
         self.acts.highpass_down.setShortcut('H')
-        self.acts.highpass_down.triggered.connect(lambda x: self.browser().highpass_cutoff_down())
+        self.acts.highpass_down.triggered.connect(lambda x: self.browser().hpfw.stepDown())
         
         self.acts.lowpass_up = QAction('Increase &lowpass cutoff', self)
         self.acts.lowpass_up.setShortcut('Shift+L')
-        self.acts.lowpass_up.triggered.connect(lambda x: self.browser().lowpass_cutoff_up())
+        self.acts.lowpass_up.triggered.connect(lambda x: self.browser().lpfw.stepUp())
         
         self.acts.lowpass_down = QAction('Decrease lowpass cutoff', self)
         self.acts.lowpass_down.setShortcut('L')
-        self.acts.lowpass_down.triggered.connect(lambda x: self.browser().lowpass_cutoff_down())
+        self.acts.lowpass_down.triggered.connect(lambda x: self.browser().lpfw.stepDown())
         
         spec_menu = menu.addMenu('&Spectrogram')
         spec_menu.addAction(self.acts.frequency_resolution_up)
@@ -739,11 +739,11 @@ class Audian(QMainWindow):
         
         self.acts.envelope_up = QAction('Envelope cutoff &up', self)
         self.acts.envelope_up.setShortcut('Shift+E')
-        self.acts.envelope_up.triggered.connect(lambda x: self.browser().envelope_cutoff_up())
+        self.acts.envelope_up.triggered.connect(lambda x: self.browser().envfw.stepUp())
 
         self.acts.envelope_down = QAction('Envelope cutoff &down', self)
         self.acts.envelope_down.setShortcut('E')
-        self.acts.envelope_down.triggered.connect(lambda x: self.browser().envelope_cutoff_down())
+        self.acts.envelope_down.triggered.connect(lambda x: self.browser().envfw.stepDown())
         
         envelope_menu = menu.addMenu('&Envelope')
         envelope_menu.addAction(self.acts.link_envelope)
