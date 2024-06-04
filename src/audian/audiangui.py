@@ -12,18 +12,18 @@ import pyqtgraph as pg
 from audioio import available_formats, PlayAudio
 from .version import __version__, __year__
 from .databrowser import DataBrowser
-from .tracefactory import TraceFactory
+from .plugins import Plugins
 
 
 class Audian(QMainWindow):
-    def __init__(self, file_paths, trace_factory, channels,
+    def __init__(self, file_paths, plugins, channels,
                  highpass_cutoff, lowpass_cutoff,
                  unwrap, unwrap_clip):
         super().__init__()
 
-        self.trace_factory = trace_factory
-        if self.trace_factory is None:
-            self.trace_factory = TraceFactory()
+        self.plugins = plugins
+        if self.plugins is None:
+            self.plugins = Plugins()
 
         class acts: pass
         self.acts = acts
@@ -613,19 +613,19 @@ class Audian(QMainWindow):
         self.acts.link_filter.setCheckable(True)
         self.acts.link_filter.setChecked(self.link_filter)
         self.acts.link_filter.toggled.connect(self.toggle_link_filter)
-        
+
         self.acts.highpass_up = QAction('Increase &highpass cutoff', self)
         self.acts.highpass_up.setShortcut('Shift+H')
         self.acts.highpass_up.triggered.connect(lambda x: self.browser().hpfw.stepUp())
-        
+
         self.acts.highpass_down = QAction('Decrease highpass cutoff', self)
         self.acts.highpass_down.setShortcut('H')
         self.acts.highpass_down.triggered.connect(lambda x: self.browser().hpfw.stepDown())
-        
+
         self.acts.lowpass_up = QAction('Increase &lowpass cutoff', self)
         self.acts.lowpass_up.setShortcut('Shift+L')
         self.acts.lowpass_up.triggered.connect(lambda x: self.browser().lpfw.stepUp())
-        
+
         self.acts.lowpass_down = QAction('Decrease lowpass cutoff', self)
         self.acts.lowpass_down.setShortcut('L')
         self.acts.lowpass_down.triggered.connect(lambda x: self.browser().lpfw.stepDown())
@@ -1091,7 +1091,7 @@ class Audian(QMainWindow):
         for file_path in file_paths:
             if not os.path.isfile(file_path):
                 continue
-            browser = DataBrowser(file_path, self.trace_factory,
+            browser = DataBrowser(file_path, self.plugins,
                                   self.channels, self.audio, self.acts)
             self.tabs.addTab(browser, os.path.basename(file_path))
             self.browsers.append(browser)
@@ -1248,11 +1248,11 @@ def main(cargs):
     else:
         args.unwrap_clip = False
 
-    trace_factory = TraceFactory()
-    trace_factory.load_plugins()
+    plugins = Plugins()
+    plugins.load_plugins()
     
     app = QApplication(sys.argv[:1] + qt_args)
-    main = Audian(args.files, trace_factory, channels, args.highpass_cutoff,
+    main = Audian(args.files, plugins, channels, args.highpass_cutoff,
                   args.lowpass_cutoff, args.unwrap, args.unwrap_clip)
     main.show()
     app.exec_()

@@ -10,7 +10,7 @@ from thunderlab.dataloader import DataLoader
 
 class Data(object):
 
-    def __init__(self, file_path, trace_factory):
+    def __init__(self, file_path):
         self.buffer_time = 60
         self.back_time = 20
         self.follow_time = 0
@@ -25,7 +25,28 @@ class Data(object):
         self.meta_data = {}
         self.tbefore = 0
         self.tafter = 0
-        self.traces = trace_factory.traces()
+        self.traces = []
+        self.filtered = None
+        self.envelope = None
+        self.spectrum = None
+
+
+    def add_trace(self, trace):
+        self.traces.append(trace)
+
+
+    def remove_trace(self, name):
+        t = self[name]
+        if t is not None:
+            i = self.traces.index(t)
+            del self.traces[i]
+
+
+    def clear_traces(self):
+        self.traces = []
+
+
+    def setup_traces(self):
         for t in self.traces:
             if t.name == 'filtered':
                 self.filtered = t
@@ -33,7 +54,7 @@ class Data(object):
                 self.envelope = t
             elif t.name == 'spectrogram':
                 self.spectrum = t
-        self.order_plugins()
+        self.order_traces()
 
         
     def __del__(self):
@@ -56,7 +77,7 @@ class Data(object):
         return [trace.name for trace in self.traces]
 
         
-    def order_plugins(self):
+    def order_traces(self):
         traces = []
         self.sources = []
         i = -1

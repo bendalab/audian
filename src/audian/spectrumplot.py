@@ -28,24 +28,25 @@ class SpectrumPlot(TimePlot):
                        minYRange=0.1, maxYRange=fmax)
 
         # filter handles:
-        self.highpass_cutoff = data.filtered.highpass_cutoff
-        self.lowpass_cutoff = data.filtered.lowpass_cutoff
-        self.highpass_handle = pg.InfiniteLine(angle=0, movable=True)
-        self.highpass_handle.setPen(pg.mkPen('white', width=2))
-        self.highpass_handle.addMarker('o', position=0.75, size=6)
-        self.highpass_handle.setZValue(100)
-        self.highpass_handle.setBounds((0, fmax))
-        self.highpass_handle.setValue(self.highpass_cutoff)
-        self.highpass_handle.sigPositionChangeFinished.connect(self.highpass_changed)
-        self.addItem(self.highpass_handle, ignoreBounds=True)
-        self.lowpass_handle = pg.InfiniteLine(angle=0, movable=True)
-        self.lowpass_handle.setPen(pg.mkPen('white', width=2))
-        self.lowpass_handle.addMarker('o', position=0.75, size=6)
-        self.lowpass_handle.setZValue(100)
-        self.lowpass_handle.setBounds((0, fmax))
-        self.lowpass_handle.setValue(self.lowpass_cutoff)
-        self.lowpass_handle.sigPositionChangeFinished.connect(self.lowpass_changed)
-        self.addItem(self.lowpass_handle, ignoreBounds=True)
+        if data.filtered is not None:
+            self.highpass_cutoff = data.filtered.highpass_cutoff
+            self.lowpass_cutoff = data.filtered.lowpass_cutoff
+            self.highpass_handle = pg.InfiniteLine(angle=0, movable=True)
+            self.highpass_handle.setPen(pg.mkPen('white', width=2))
+            self.highpass_handle.addMarker('o', position=0.75, size=6)
+            self.highpass_handle.setZValue(100)
+            self.highpass_handle.setBounds((0, fmax))
+            self.highpass_handle.setValue(self.highpass_cutoff)
+            self.highpass_handle.sigPositionChangeFinished.connect(self.highpass_changed)
+            self.addItem(self.highpass_handle, ignoreBounds=True)
+            self.lowpass_handle = pg.InfiniteLine(angle=0, movable=True)
+            self.lowpass_handle.setPen(pg.mkPen('white', width=2))
+            self.lowpass_handle.addMarker('o', position=0.75, size=6)
+            self.lowpass_handle.setZValue(100)
+            self.lowpass_handle.setBounds((0, fmax))
+            self.lowpass_handle.setValue(self.lowpass_cutoff)
+            self.lowpass_handle.sigPositionChangeFinished.connect(self.lowpass_changed)
+            self.addItem(self.lowpass_handle, ignoreBounds=True)
 
 
     def set_filter_handles(self, highpass_cutoff=None, lowpass_cutoff=None):

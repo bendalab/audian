@@ -72,7 +72,7 @@ class DataBrowser(QWidget):
     sigAudioChanged = Signal(object, object, object)
 
     
-    def __init__(self, file_path, trace_factory, channels, audio,
+    def __init__(self, file_path, plugins, channels, audio,
                  acts, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -80,8 +80,10 @@ class DataBrowser(QWidget):
         self.acts = acts
 
         # data:
-        self.data = Data(file_path, trace_factory)
         self.schannels = channels
+        self.data = Data(file_path)
+        plugins.setup_traces(self)
+        self.data.setup_traces()
 
         # channel selection:
         self.show_channels = None
@@ -193,6 +195,35 @@ class DataBrowser(QWidget):
         self.spec_region_labels = [] # regions with labels on spectrograms
         self.datafig = None   # full traces
 
+        # actions:
+        if self.data.filtered is None:
+            self.acts.link_filter.setEnabled(False)
+            self.acts.highpass_up.setEnabled(False)
+            self.acts.highpass_down.setEnabled(False)
+            self.acts.lowpass_up.setEnabled(False)
+            self.acts.lowpass_down.setEnabled(False)
+        if self.data.envelope is None:
+            self.acts.link_envelope.setEnabled(False)
+            self.acts.show_envelope.setEnabled(False)
+            self.acts.envelope_up.setEnabled(False)
+            self.acts.envelope_down.setEnabled(False)
+
+
+    def get_trace(self, name):
+        return self.data[name]
+
+
+    def add_trace(self, trace):
+        self.data.add_trace(trace)
+
+
+    def remove_trace(self, name):
+        self.data.remove_trace(name)
+
+
+    def clear_traces(self):
+        self.data.clear_traces()
+
         
     def open(self, gui, unwrap, unwrap_clip, highpass_cutoff, lowpass_cutoff):
         # load data:
@@ -214,10 +245,10 @@ class DataBrowser(QWidget):
         
         # requested filtering:
         filter_changed = False
-        if highpass_cutoff is not None:
+        if self.data.filtered is not None and highpass_cutoff is not None:
             self.data.filtered.highpass_cutoff = highpass_cutoff
             filter_changed = True
-        if lowpass_cutoff is not None:
+        if self.data.filtered is not None and lowpass_cutoff is not None:
             self.data.filtered.lowpass_cutoff = lowpass_cutoff
             filter_changed = True
         if filter_changed:
@@ -345,7 +376,8 @@ class DataBrowser(QWidget):
             cbar.setVisible(self.show_cbars)
             self.cbars.append(cbar)
             fig.addItem(cbar, row=0, col=1)
-            self.specs[-1].set_cbar(cbar)
+            if len(self.specs) > 0:
+                self.specs[-1].set_cbar(cbar)
             self.axts[-1].append(axs)
             self.axfys[-1].append(axs)
             self.axgs[-1].append(axs)
@@ -450,57 +482,61 @@ class DataBrowser(QWidget):
         self.toolbar.addAction(self.acts.zoom_back)
         self.toolbar.addAction(self.acts.zoom_forward)
         self.toolbar.addSeparator()
+
+        if self.data.spectrum is not None:
+            self.toolbar.addWidget(QLabel('N:'))
+            self.nfftw = QComboBox(self)
+            self.nfftw.tooltip = 'NFFT (R, Shift+R)'
+            self.nfftw.setToolTip(self.nfftw.tooltip)
+            self.nfftw.addItems([f'{2**i}' for i in range(3, 20)])
+            self.nfftw.setEditable(False)
+            self.nfftw.setCurrentText(f'{self.data.spectrum.nfft}')
+            self.nfftw.currentTextChanged.connect(lambda s: self.set_resolution(nfft=int(s)))
+            self.toolbar.addWidget(self.nfftw)
+
+            self.toolbar.addWidget(QLabel('O:'))
+            self.ofracw = pg.SpinBox(self, 100*(1 - self.data.spectrum.hop_frac),
+                                     bounds=(0, 99.8),
+                                     suffix='%', siPrefix=False,
+                                     step=0.5, dec=True, decimals=3,
+                                     minStep=0.01)
+            self.ofracw.setToolTip('Overlap of Fourier segments (O, Shift+O)')
+            self.ofracw.valueChanged.connect(lambda v: self.set_resolution(hop_frac=1-0.01*v))
+            self.toolbar.addWidget(self.ofracw)
+            self.toolbar.addSeparator()
+
+        if self.data.filtered is not None:
+            self.toolbar.addWidget(QLabel('H:'))
+            self.hpfw = pg.SpinBox(self, self.data.filtered.highpass_cutoff,
+                                   bounds=(0, self.data.rate/2),
+                                   suffix='Hz', siPrefix=True,
+                                   step=0.5, dec=True, decimals=3,
+                                   minStep=10**np.floor(np.log10(0.01*self.data.rate/2)))
+            self.hpfw.setToolTip('High-pass filter cutoff frequency (H, Shift+H)')
+            self.hpfw.sigValueChanged.connect(lambda s: self.update_filter(highpass_cutoff=s.value()))
+            self.toolbar.addWidget(self.hpfw)        
+
+            self.toolbar.addWidget(QLabel(' L:'))
+            self.lpfw = pg.SpinBox(self, self.data.filtered.lowpass_cutoff,
+                                   bounds=(0.01*self.data.rate/2, self.data.rate/2),
+                                   suffix='Hz', siPrefix=True,
+                                   step=0.5, dec=True, decimals=3,
+                                   minStep=10**np.floor(np.log10(0.01*self.data.rate/2)))
+            self.lpfw.setToolTip('Low-pass filter cutoff frequency (L, Shift+L)')
+            self.lpfw.sigValueChanged.connect(lambda s: self.update_filter(lowpass_cutoff=s.value()))
+            self.toolbar.addWidget(self.lpfw)        
         
-        self.toolbar.addWidget(QLabel('N:'))
-        self.nfftw = QComboBox(self)
-        self.nfftw.tooltip = 'NFFT (R, Shift+R)'
-        self.nfftw.setToolTip(self.nfftw.tooltip)
-        self.nfftw.addItems([f'{2**i}' for i in range(3, 20)])
-        self.nfftw.setEditable(False)
-        self.nfftw.setCurrentText(f'{self.data.spectrum.nfft}')
-        self.nfftw.currentTextChanged.connect(lambda s: self.set_resolution(nfft=int(s)))
-        self.toolbar.addWidget(self.nfftw)
+        if self.data.envelope is not None:
+            self.toolbar.addWidget(QLabel(' E:'))
+            self.envfw = pg.SpinBox(self, self.data.envelope.envelope_cutoff,
+                                    bounds=(0, 0.5*self.data.rate/2),
+                                    suffix='Hz', siPrefix=True,
+                                    step=0.5, dec=True, decimals=3,
+                                    minStep=10**np.floor(np.log10(0.00001*self.data.rate/2)))
+            self.envfw.setToolTip('Envelope low-pass filter cutoff frequency (E, Shift+E)')
+            self.envfw.sigValueChanged.connect(lambda s: self.update_envelope(envelope_cutoff=s.value()))
+            self.toolbar.addWidget(self.envfw)
 
-        self.toolbar.addWidget(QLabel('O:'))
-        self.ofracw = pg.SpinBox(self, 100*(1 - self.data.spectrum.hop_frac),
-                                 bounds=(0, 99.8),
-                                 suffix='%', siPrefix=False,
-                                 step=0.5, dec=True, decimals=3,
-                                 minStep=0.01)
-        self.ofracw.setToolTip('Overlap of Fourier segments (O, Shift+O)')
-        self.ofracw.valueChanged.connect(lambda v: self.set_resolution(hop_frac=1-0.01*v))
-        self.toolbar.addWidget(self.ofracw)
-        self.toolbar.addSeparator()
-
-        self.toolbar.addWidget(QLabel('H:'))
-        self.hpfw = pg.SpinBox(self, self.data.filtered.highpass_cutoff,
-                               bounds=(0, self.data.rate/2),
-                               suffix='Hz', siPrefix=True,
-                               step=0.5, dec=True, decimals=3,
-                               minStep=10**np.floor(np.log10(0.01*self.data.rate/2)))
-        self.hpfw.setToolTip('High-pass filter cutoff frequency (H, Shift+H)')
-        self.hpfw.sigValueChanged.connect(lambda s: self.update_filter(highpass_cutoff=s.value()))
-        self.toolbar.addWidget(self.hpfw)        
-
-        self.toolbar.addWidget(QLabel(' L:'))
-        self.lpfw = pg.SpinBox(self, self.data.filtered.lowpass_cutoff,
-                               bounds=(0.01*self.data.rate/2, self.data.rate/2),
-                               suffix='Hz', siPrefix=True,
-                               step=0.5, dec=True, decimals=3,
-                               minStep=10**np.floor(np.log10(0.01*self.data.rate/2)))
-        self.lpfw.setToolTip('Low-pass filter cutoff frequency (L, Shift+L)')
-        self.lpfw.sigValueChanged.connect(lambda s: self.update_filter(lowpass_cutoff=s.value()))
-        self.toolbar.addWidget(self.lpfw)        
-        
-        self.toolbar.addWidget(QLabel(' E:'))
-        self.envfw = pg.SpinBox(self, self.data.envelope.envelope_cutoff,
-                                bounds=(0, 0.5*self.data.rate/2),
-                                suffix='Hz', siPrefix=True,
-                                step=0.5, dec=True, decimals=3,
-                                minStep=10**np.floor(np.log10(0.00001*self.data.rate/2)))
-        self.envfw.setToolTip('Envelope low-pass filter cutoff frequency (E, Shift+E)')
-        self.envfw.sigValueChanged.connect(lambda s: self.update_envelope(envelope_cutoff=s.value()))
-        self.toolbar.addWidget(self.envfw)
         self.toolbar.addSeparator()
         self.toolbar.addWidget(QLabel('Channel:'))
         for c in range(max(self.data.channels, len(self.acts.channels))):
@@ -713,7 +749,7 @@ class DataBrowser(QWidget):
                 else:
                     tidx = int(self.marker_time*self.data.rate)
                     tl[lidx].addPoints((self.marker_time,),
-                                       (self.data[tidx, c],),
+                                       (self.data.data[tidx, c],),
                                        tip=marker_tip)
             for c, sl in enumerate(self.spec_labels):
                 y = 0.0 if self.marker_freq is None else self.marker_freq
@@ -1256,6 +1292,8 @@ class DataBrowser(QWidget):
         if self.setting:
             return
         self.setting = True
+        if self.data.spectrum is None:
+            return
         self.data.spectrum.update(nfft, hop_frac)
         self.update_plots()
         self.nfftw.setCurrentText(f'{self.data.spectrum.nfft}')
@@ -1287,19 +1325,23 @@ class DataBrowser(QWidget):
 
         
     def freq_resolution_down(self):
-        self.set_resolution(nfft=self.data.spectrum.nfft//2)
+        if self.data.spectrum is not None:
+            self.set_resolution(nfft=self.data.spectrum.nfft//2)
 
         
     def freq_resolution_up(self):
-        self.set_resolution(nfft=2*self.data.spectrum.nfft)
+        if self.data.spectrum is not None:
+            self.set_resolution(nfft=2*self.data.spectrum.nfft)
 
 
     def hop_frac_down(self):
-        self.set_resolution(hop_frac=self.data.spectrum.hop_frac/2)
+        if self.data.spectrum is not None:
+            self.set_resolution(hop_frac=self.data.spectrum.hop_frac/2)
 
 
     def hop_frac_up(self):
-        self.set_resolution(hop_frac=2*self.data.spectrum.hop_frac)
+        if self.data.spectrum is not None:
+            self.set_resolution(hop_frac=2*self.data.spectrum.hop_frac)
 
         
     def set_color_map(self, color_map=None, dispatch=True):
@@ -1383,6 +1425,8 @@ class DataBrowser(QWidget):
         if self.setting:
             return
         self.setting = True
+        if self.data.filtered is None:
+            return
         if highpass_cutoff is not None:
             self.data.filtered.highpass_cutoff = highpass_cutoff
         if lowpass_cutoff is not None:
@@ -1404,6 +1448,8 @@ class DataBrowser(QWidget):
         if self.setting:
             return
         self.setting = True
+        if self.data.envelope is None:
+            return
         if envelope_cutoff is not None:
             self.data.envelope.envelope_cutoff = envelope_cutoff
         for c in range(self.data.channels):
@@ -1792,7 +1838,7 @@ class DataBrowser(QWidget):
 
 
     def play_region(self, t0, t1):
-        data = self.data.filtered
+        data = self.data.data if self.data.filtered is None else self.data.filtered
         rate = data.rate
         i0 = int(np.round(t0*rate))
         i1 = int(np.round(t1*rate))
