@@ -76,6 +76,15 @@ class Data(object):
     def keys(self):
         return [trace.name for trace in self.traces]
 
+    
+    def get_region(self, t0, t1, channel):
+        traces = {}
+        for t in self.traces:
+            i0 = int(t0*t.rate)
+            i1 = int(t1*t.rate) + 1
+            traces[t.name] = (np.arange(i0, i1)/t.rate, t[i0:i1, channel])
+        return traces
+    
         
     def order_traces(self):
         traces = []

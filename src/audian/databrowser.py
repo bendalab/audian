@@ -58,8 +58,9 @@ class DataBrowser(QWidget):
 
     zoom_region = 0
     play_region = 1
-    save_region = 2
-    ask_region = 3
+    analyze_region = 2
+    save_region = 3
+    ask_region = 4
     
     sigTimesChanged = Signal(object, object, object)
     sigAmplitudesChanged = Signal(object, object)
@@ -82,8 +83,14 @@ class DataBrowser(QWidget):
         # data:
         self.schannels = channels
         self.data = Data(file_path)
+
+        # plugins:
+        self.analyzers = []
         plugins.setup_traces(self)
         self.data.setup_traces()
+        if len(self.analyzers) == 0:
+            self.acts.analyze_region.setEnabled(False)            
+            self.acts.analyze_region.setVisible(False)            
 
         # channel selection:
         self.show_channels = None
@@ -223,6 +230,10 @@ class DataBrowser(QWidget):
 
     def clear_traces(self):
         self.data.clear_traces()
+
+
+    def add_analyzer(self, analyzer):
+        self.analyzers.append(analyzer)
 
         
     def open(self, gui, unwrap, unwrap_clip, highpass_cutoff, lowpass_cutoff):
@@ -1763,13 +1774,17 @@ class DataBrowser(QWidget):
             vbox.zoom_region(rect)
         elif self.region_mode == DataBrowser.play_region:
             self.play_region(rect.left(), rect.right())
+        elif self.region_mode == DataBrowser.analyze_region:
+            self.analyze_region(rect.left(), rect.right(), channel)
         elif self.region_mode == DataBrowser.save_region:
             self.save_region(rect.left(), rect.right())
         elif self.region_mode == DataBrowser.ask_region:
             menu = QMenu(self)
             zoom_act = menu.addAction('&Zoom')
-            #analyze_act = menu.addAction('&Analyze')
             play_act = menu.addAction('&Play')
+            analyze_act = menu.addAction('&Analyze')
+            analyze_act.setEnabled(self.acts.analyze_region.isEnabled())
+            analyze_act.setVisible(self.acts.analyze_region.isVisible())
             save_act = menu.addAction('&Save as')
             #crop_act = menu.addAction('&Crop')
             act = menu.exec(QCursor.pos())
@@ -1777,6 +1792,8 @@ class DataBrowser(QWidget):
                 vbox.zoom_region(rect)
             elif act is play_act:
                 self.play_region(rect.left(), rect.right())
+            elif act is analyze_act:
+                self.analyze_region(rect.left(), rect.right(), channel)
             elif act is save_act:
                 self.save_region(rect.left(), rect.right())
         vbox.hide_region()
@@ -1896,6 +1913,12 @@ class DataBrowser(QWidget):
                 for vmarker in amarkers:
                     vmarker.setValue(-1)
 
+                    
+    def analyze_region(self, t0, t1, channel):
+        traces = self.data.get_region(t0, t1, channel)
+        for a in self.analyzers:
+            a(t0, t1, traces)
+        
                     
     def save_region(self, t0, t1):
 

@@ -203,6 +203,11 @@ class Audian(QMainWindow):
             b.set_region_mode(DataBrowser.play_region)
 
 
+    def set_analyze(self):
+        for b in self.browsers:
+            b.set_region_mode(DataBrowser.analyze_region)
+
+
     def set_save(self):
         for b in self.browsers:
             b.set_region_mode(DataBrowser.save_region)
@@ -262,19 +267,25 @@ class Audian(QMainWindow):
         self.acts.play_region.setShortcut('P')
         self.acts.play_region.toggled.connect(self.set_play)
         
+        self.acts.analyze_region = QAction('&Analyze', self)
+        self.acts.analyze_region.setCheckable(True)
+        self.acts.analyze_region.setShortcut('a')
+        self.acts.analyze_region.toggled.connect(self.set_analyze)
+        
         self.acts.save_region = QAction('&Save', self)
         self.acts.save_region.setCheckable(True)
         self.acts.save_region.setShortcut('s')
         self.acts.save_region.toggled.connect(self.set_save)
         
-        self.acts.ask_region = QAction('&Ask', self)
+        self.acts.ask_region = QAction('Re&quest', self)
         self.acts.ask_region.setCheckable(True)
-        self.acts.ask_region.setShortcut('a')
+        self.acts.ask_region.setShortcut('q')
         self.acts.ask_region.toggled.connect(self.set_ask)
         
         self.acts.zoom_rect_mode = QActionGroup(self)
         self.acts.zoom_rect_mode.addAction(self.acts.zoom_region)
         self.acts.zoom_rect_mode.addAction(self.acts.play_region)
+        self.acts.zoom_rect_mode.addAction(self.acts.analyze_region)
         self.acts.zoom_rect_mode.addAction(self.acts.save_region)
         self.acts.zoom_rect_mode.addAction(self.acts.ask_region)
         self.acts.ask_region.setChecked(True)
@@ -315,6 +326,7 @@ class Audian(QMainWindow):
         region_menu.addSeparator()
         region_menu.addAction(self.acts.zoom_region)
         region_menu.addAction(self.acts.play_region)
+        region_menu.addAction(self.acts.analyze_region)
         region_menu.addAction(self.acts.save_region)
         region_menu.addAction(self.acts.ask_region)
         region_menu.addSeparator()
