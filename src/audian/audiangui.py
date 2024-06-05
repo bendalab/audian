@@ -289,6 +289,10 @@ class Audian(QMainWindow):
         self.acts.zoom_rect_mode.addAction(self.acts.save_region)
         self.acts.zoom_rect_mode.addAction(self.acts.ask_region)
         self.acts.ask_region.setChecked(True)
+        
+        self.acts.analysis_results = QAction('Analysis results', self)
+        #self.acts.analysis_results.setShortcut('Alt+A')
+        self.acts.analysis_results.triggered.connect(lambda x: self.browser().analysis_results())
 
         self.acts.play_window = QAction('&Play window', self)
         self.acts.play_window.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
@@ -329,6 +333,8 @@ class Audian(QMainWindow):
         region_menu.addAction(self.acts.analyze_region)
         region_menu.addAction(self.acts.save_region)
         region_menu.addAction(self.acts.ask_region)
+        region_menu.addSeparator()
+        region_menu.addAction(self.acts.analysis_results)
         region_menu.addSeparator()
         region_menu.addAction(self.acts.play_window)
         region_menu.addAction(self.acts.use_heterodyne)

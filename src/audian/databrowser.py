@@ -86,6 +86,7 @@ class DataBrowser(QWidget):
         self.data = Data(file_path)
 
         # plugins:
+        self.analysis_table = None
         self.analyzers = [StatisticsAnalyzer()]
         plugins.setup_traces(self)
         self.data.setup_traces()
@@ -1919,7 +1920,67 @@ class DataBrowser(QWidget):
         traces = self.data.get_region(t0, t1, channel)
         for a in self.analyzers:
             a.analyze(t0, t1, channel, traces)
-        
+
+
+    def analysis_results(self):
+        if len(self.analyzers) == 0:
+            return
+        dialog = QDialog(self)
+        dialog.setWindowTitle('Audian analyis table')
+        vbox = QVBoxLayout()
+        dialog.setLayout(vbox)
+        table = self.analyzers[0].data
+        for a in self.analyzers[1:]:
+            for k in range(len(table)):
+                table[k].update(a.data[k])
+        self.analysis_table = pg.TableWidget()
+        self.analysis_table.setData(table)
+        vbox.addWidget(self.analysis_table)
+        buttons = QDialogButtonBox(QDialogButtonBox.Close |
+                                   QDialogButtonBox.Save |
+                                   QDialogButtonBox.Reset)
+        buttons.rejected.connect(dialog.reject)
+        buttons.button(QDialogButtonBox.Reset).clicked.connect(self.clear_analysis)
+        buttons.button(QDialogButtonBox.Save).clicked.connect(self.save_analysis)
+        vbox.addWidget(buttons)
+        dialog.show()
+
+
+    def clear_analysis(self):
+        if self.analysis_table is not None:
+            self.analysis_table.clear()
+        for a in self.analyzers:
+            a.data = []
+
+            
+    def save_analysis(self):
+        if len(self.analyzers) == 0 or len(self.analyzers[0].data) == 0:
+            return
+        file_name, _ = QFileDialog.getSaveFileName(
+            self, 'Save analysis as',
+            os.path.splitext(self.data.file_path)[0] + '-analysis.csv',
+            'comma-separated values (*.csv)')
+        if not file_name:
+            return
+        header = []
+        for a in self.analyzers:
+            header.extend(a.data[0].keys())
+        table = self.analyzers[0].data
+        for a in self.analyzers[1:]:
+            for k in range(len(table)):
+                table[k].update(a.data[k])
+        with open(file_name, 'w') as df:
+            df.write(';'.join(header))
+            df.write('\n')
+            line = []
+            for k in range(len(self.analyzers[0].data)):
+                line = []
+                for a in self.analyzers:
+                    for v in a.data[k].values():
+                        line.append(str(v))
+                df.write(';'.join(line))
+                df.write('\n')
+     
                     
     def save_region(self, t0, t1):
 

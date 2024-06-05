@@ -4,7 +4,7 @@ class Analyzer(object):
 
     def __init__(self, name):
         self.name = name
-        self.data = {}
+        self.data = []
 
         
     def analyze(self, t0, t1, channel, traces):
