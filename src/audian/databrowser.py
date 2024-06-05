@@ -29,6 +29,7 @@ from .traceitem import TraceItem
 from .specitem import SpecItem
 from .markerdata import colors, MarkerLabel, MarkerLabelsModel
 from .markerdata import MarkerData, MarkerDataModel
+from .statisticsanalyzer import StatisticsAnalyzer
 
 
 pg.setConfigOption('useNumba', True)
@@ -85,7 +86,7 @@ class DataBrowser(QWidget):
         self.data = Data(file_path)
 
         # plugins:
-        self.analyzers = []
+        self.analyzers = [StatisticsAnalyzer()]
         plugins.setup_traces(self)
         self.data.setup_traces()
         if len(self.analyzers) == 0:
