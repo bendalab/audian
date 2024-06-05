@@ -13,12 +13,12 @@ vocalizations.
 - Interactive viewer for single and multi-channel audio signals.
 - Can handle many file formats and long recordings - holds only part of the recordings in memory.
 - Displays raw traces, filtered traces, envelopes, and spectrogram.
-- Change spectrogramm resolution and overlap interactively.
-- Change spectrogram color bar range and color map on the fly.
+- Change spectrogramm resolution, overlap, color bar range and color map interactively.
 - Change low- and high-pass filter cutoff frequencies interactively.
 - Optional envelope with lowpass-filter cutoff frequency that can be changed interactively.
 - Hide and show channels and plot panels.
 - Extensive and intuitive key shortcuts for most functions.
+- Plugins for additional computed traces and analysis.
 
 ## New pyqtgraph based version
 
@@ -48,7 +48,8 @@ handles all GUI aspects.
   - [x] Recompute derived data whenever a source is changed.
   - [x] Update plots of all items that have been recomputed.
   - [x] Recompute derived data only if visible or used by something visible.
-  - [x] Automatically discover plugins
+  - [x] Automatically discover plugins.
+  - [x] Analyzer plugins for analysing a select snippet of the data.
   - [ ] Test this plugin interface with
     - [ ] Subtract common mean
     - [ ] Logarithmic and high-pass filtered envelope
