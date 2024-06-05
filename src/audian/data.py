@@ -81,7 +81,11 @@ class Data(object):
         traces = {}
         for t in self.traces:
             i0 = int(t0*t.rate)
+            if i0 < 0:
+                i0 = 0
             i1 = int(t1*t.rate) + 1
+            if i1 > len(t):
+                i1 = len(t)
             traces[t.name] = (np.arange(i0, i1)/t.rate, t[i0:i1, channel])
         return traces
     
