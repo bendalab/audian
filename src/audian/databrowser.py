@@ -1917,7 +1917,7 @@ class DataBrowser(QWidget):
     def analyze_region(self, t0, t1, channel):
         traces = self.data.get_region(t0, t1, channel)
         for a in self.analyzers:
-            a(t0, t1, traces)
+            a.analyze(t0, t1, channel, traces)
         
                     
     def save_region(self, t0, t1):
