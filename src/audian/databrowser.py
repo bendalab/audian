@@ -29,6 +29,7 @@ from .traceitem import TraceItem
 from .specitem import SpecItem
 from .markerdata import colors, MarkerLabel, MarkerLabelsModel
 from .markerdata import MarkerData, MarkerDataModel
+from .analyzer import PlainAnalyzer
 from .statisticsanalyzer import StatisticsAnalyzer
 
 
@@ -86,13 +87,11 @@ class DataBrowser(QWidget):
         self.data = Data(file_path)
 
         # plugins:
+        self.plugins = plugins
         self.analysis_table = None
-        self.analyzers = [StatisticsAnalyzer()]
-        plugins.setup_traces(self)
+        self.analyzers = []
+        self.plugins.setup_traces(self)
         self.data.setup_traces()
-        if len(self.analyzers) == 0:
-            self.acts.analyze_region.setEnabled(False)            
-            self.acts.analyze_region.setVisible(False)            
 
         # channel selection:
         self.show_channels = None
@@ -234,8 +233,25 @@ class DataBrowser(QWidget):
         self.data.clear_traces()
 
 
+    def get_analyzer(self, name):
+        for a in self.analyzer:
+            if name.lower() == a.name.lower():
+                return a
+        return None
+
+
     def add_analyzer(self, analyzer):
         self.analyzers.append(analyzer)
+
+
+    def remove_analyzer(self, name):
+        for k, a in enumerate(self.analyzer):
+            if name.lower() == a.name.lower():
+                del self.analyzer[k]
+
+
+    def clear_analyzer(self):
+        self.analyzer = []
 
         
     def open(self, gui, unwrap, unwrap_clip, highpass_cutoff, lowpass_cutoff):
@@ -289,6 +305,14 @@ class DataBrowser(QWidget):
             for i, l in enumerate(lbls):
                 self.marker_labels.append(MarkerLabel(l, l[0].lower(),
                                 list(colors.keys())[i % len(colors.keys())]))
+
+        # setup analyzers:
+        PlainAnalyzer(self)
+        StatisticsAnalyzer(self)
+        self.plugins.setup_analyzer(self)
+        if len(self.analyzers) == 0:
+            self.acts.analyze_region.setEnabled(False)            
+            self.acts.analyze_region.setVisible(False)            
 
         # setup plots:
         self.figs = []     # all GraphicsLayoutWidgets - one for each channel
@@ -1920,8 +1944,30 @@ class DataBrowser(QWidget):
         traces = self.data.get_region(t0, t1, channel)
         for a in self.analyzers:
             a.analyze(t0, t1, channel, traces)
+        if self.analysis_table is None:
+            self.analysis_results()
+        else:
+            self.analysis_table.setData(self.get_analysis_table())
 
-
+            
+    def get_analysis_table(self):
+        table = []
+        r = 0
+        while True:
+            row = {}
+            for a in self.analyzers:
+                if r < a.data.rows():
+                    for c in range(len(a.data)):
+                        us = f'/{a.data.unit(c)}' if a.data.unit(c) else ''
+                        header = a.data.label(c) + us
+                        row.update({header: a.data[r, c]})
+            if len(row) == 0:
+                break
+            table.append(row)
+            r += 1
+        return table
+    
+            
     def analysis_results(self):
         if len(self.analyzers) == 0:
             return
@@ -1929,12 +1975,14 @@ class DataBrowser(QWidget):
         dialog.setWindowTitle('Audian analyis table')
         vbox = QVBoxLayout()
         dialog.setLayout(vbox)
-        table = self.analyzers[0].data
-        for a in self.analyzers[1:]:
-            for k in range(len(table)):
-                table[k].update(a.data[k])
         self.analysis_table = pg.TableWidget()
-        self.analysis_table.setData(table)
+        self.analysis_table.setMinimumHeight(300)
+        self.analysis_table.setData(self.get_analysis_table())
+        c = 0
+        for a in self.analyzers:
+            for i in range(len(a.data)):
+                self.analysis_table.setFormat(a.data.format(i), c)
+                c += 1
         vbox.addWidget(self.analysis_table)
         buttons = QDialogButtonBox(QDialogButtonBox.Close |
                                    QDialogButtonBox.Save |
@@ -1943,6 +1991,7 @@ class DataBrowser(QWidget):
         buttons.button(QDialogButtonBox.Reset).clicked.connect(self.clear_analysis)
         buttons.button(QDialogButtonBox.Save).clicked.connect(self.save_analysis)
         vbox.addWidget(buttons)
+        dialog.finished.connect(lambda x: [None for self.analysis_table in [None]])
         dialog.show()
 
 
@@ -1962,24 +2011,13 @@ class DataBrowser(QWidget):
             'comma-separated values (*.csv)')
         if not file_name:
             return
-        header = []
-        for a in self.analyzers:
-            header.extend(a.data[0].keys())
         table = self.analyzers[0].data
         for a in self.analyzers[1:]:
-            for k in range(len(table)):
-                table[k].update(a.data[k])
-        with open(file_name, 'w') as df:
-            df.write(';'.join(header))
-            df.write('\n')
-            line = []
-            for k in range(len(self.analyzers[0].data)):
-                line = []
-                for a in self.analyzers:
-                    for v in a.data[k].values():
-                        line.append(str(v))
-                df.write(';'.join(line))
-                df.write('\n')
+            for c in range(len(a.data)):
+                table.append(a.data.label(c), a.data.unit(c),
+                             a.data.format(c), a.data.data[c])
+        table.write(file_name, table_format='csv', delimiter=';',
+                    unit_style='header', column_numbers=None, sections=0)
      
                     
     def save_region(self, t0, t1):

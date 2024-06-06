@@ -19,6 +19,7 @@ class Plugins(object):
         self.plugins = {}
         self.trace_factories = []
         self.add_trace_factory(default_setup_traces)
+        self.analyzer_factories = []
 
 
     def add_plugin(self, name, module):
@@ -29,10 +30,18 @@ class Plugins(object):
         self.trace_factories.append(factory_func)
 
 
-    def clear_traces(self):
+    def clear_trace_factories(self):
         self.trace_factories = []
 
 
+    def add_analyzer_factory(self, factory_func):
+        self.analyzer_factories.append(factory_func)
+
+
+    def clear_analyzer_factories(self):
+        self.analyzer_factories = []
+
+        
     def load_plugins(self):
         sys.path.append(os.getcwd())
         for module in glob.glob('audian*.py'):
@@ -43,6 +52,9 @@ class Plugins(object):
                     if k.endswith('traces'):
                         self.add_trace_factory(getattr(x, k))
                         called = True
+                    elif k.endswith('analyzer'):
+                        self.add_analyzer_factory(getattr(x, k))
+                        called = True
             if called:
                 self.add_plugin(k, x)
                 print(f'loaded audian plugins from {module}')
@@ -51,4 +63,9 @@ class Plugins(object):
 
     def setup_traces(self, browser):
         for f in self.trace_factories:
+            f(browser)
+
+            
+    def setup_analyzer(self, browser):
+        for f in self.analyzer_factories:
             f(browser)

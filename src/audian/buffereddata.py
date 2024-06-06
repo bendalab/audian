@@ -55,6 +55,9 @@ class BufferedData(BufferedArray):
     def open(self, source, step=1, more_shape=None):
         self.source = source
         self.source.dests.append(self)
+        self.ampl_min = source.ampl_min
+        self.ampl_max = source.ampl_max
+        self.unit = source.unit
         self.bufferframes = 0
         self.backframes = 0
         self.channels = self.source.channels

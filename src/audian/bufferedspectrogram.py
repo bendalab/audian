@@ -29,6 +29,9 @@ class BufferedSpectrogram(BufferedData):
         self.spec_rect = []
         self.use_spec = True
         super().open(source, self.hop, more_shape=(self.nfft//2 + 1,))
+        self.unit = f'{self.unit}^2/Hz'
+        self.ampl_min = 0
+        self.ampl_max = self.source.rate/2
 
         
     def process(self, source, dest, nbefore):

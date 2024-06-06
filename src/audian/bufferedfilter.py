@@ -19,8 +19,6 @@ class BufferedFilter(BufferedData):
         
     def open(self, source):
         super().open(source)
-        self.ampl_min = source.ampl_min
-        self.ampl_max = source.ampl_max
         self.highpass_cutoff = 0
         self.lowpass_cutoff = self.rate/2
         self.filter_order = 2
