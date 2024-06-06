@@ -234,7 +234,7 @@ class DataBrowser(QWidget):
 
 
     def get_analyzer(self, name):
-        for a in self.analyzer:
+        for a in self.analyzers:
             if name.lower() == a.name.lower():
                 return a
         return None
@@ -245,13 +245,13 @@ class DataBrowser(QWidget):
 
 
     def remove_analyzer(self, name):
-        for k, a in enumerate(self.analyzer):
+        for k, a in enumerate(self.analyzers):
             if name.lower() == a.name.lower():
-                del self.analyzer[k]
+                del self.analyzers[k]
 
 
     def clear_analyzer(self):
-        self.analyzer = []
+        self.analyzers = []
 
         
     def open(self, gui, unwrap, unwrap_clip, highpass_cutoff, lowpass_cutoff):
