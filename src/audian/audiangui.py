@@ -16,7 +16,7 @@ from .plugins import Plugins
 
 
 class Audian(QMainWindow):
-    def __init__(self, file_paths, plugins, channels,
+    def __init__(self, file_paths, load_kwargs, plugins, channels,
                  highpass_cutoff, lowpass_cutoff,
                  unwrap, unwrap_clip):
         super().__init__()
@@ -82,7 +82,7 @@ class Audian(QMainWindow):
         # data:
         self.unwrap = unwrap
         self.unwrap_clip = unwrap_clip
-        self.load_files(file_paths)
+        self.load_files(file_paths, load_kwargs)
 
         # init widgets to show:
         if len(self.browsers) > 0:
@@ -1101,7 +1101,7 @@ class Audian(QMainWindow):
                 menu.setEnabled(True)
 
 
-    def load_files(self, file_paths):
+    def load_files(self, file_paths, load_kwargs):
         if len(self.browsers) > 0:
             self.prev_browser = self.browser()
         # prepare open files:
@@ -1109,7 +1109,7 @@ class Audian(QMainWindow):
         for file_path in file_paths:
             if not os.path.isfile(file_path):
                 continue
-            browser = DataBrowser(file_path, self.plugins,
+            browser = DataBrowser(file_path, load_kwargs, self.plugins,
                                   self.channels, self.audio, self.acts)
             self.tabs.addTab(browser, os.path.basename(file_path))
             self.browsers.append(browser)
@@ -1239,14 +1239,17 @@ def main(cargs):
     parser.add_argument('-l', dest='lowpass_cutoff', type=float,
                         metavar='FREQ', default=None,
                         help='Cutoff frequency of lowpass filter in Hz')
-    parser.add_argument('files', nargs='*', default=[], type=str,
-                        help='name of the file with the time series data')
+    parser.add_argument('-i', dest='load_kwargs', default=[],
+                        action='append', metavar='KWARGS',
+                        help='key-word arguments for the data loader function')
     parser.add_argument('-u', dest='unwrap', default=0, type=float,
                         metavar='UNWRAP', const=1.5, nargs='?',
                         help='unwrap clipped data with threshold relative to maximum input range and divide by two using unwrap() from audioio package')
     parser.add_argument('-U', dest='unwrap_clip', default=0, type=float,
                         metavar='UNWRAP', const=1.5, nargs='?',
                         help='unwrap clipped data with threshold relative to maximum input range and clip using unwrap() from audioio package')
+    parser.add_argument('files', nargs='*', default=[], type=str,
+                        help='name of the file with the time series data')
     args, qt_args = parser.parse_known_args(cargs)
 
     cs = [s.strip() for s in args.channels.split(',')]
@@ -1266,12 +1269,21 @@ def main(cargs):
     else:
         args.unwrap_clip = False
 
+    # kwargs for data loader:
+    load_kwargs = {}
+    for s in args.load_kwargs:
+        for kw in s.split(','):
+            kws = kw.split(':')
+            if len(kws) == 2:
+                load_kwargs[kws[0].strip()] = kws[1].strip()
+
     plugins = Plugins()
     plugins.load_plugins()
     
     app = QApplication(sys.argv[:1] + qt_args)
-    main = Audian(args.files, plugins, channels, args.highpass_cutoff,
-                  args.lowpass_cutoff, args.unwrap, args.unwrap_clip)
+    main = Audian(args.files, load_kwargs, plugins, channels,
+                  args.highpass_cutoff, args.lowpass_cutoff,
+                  args.unwrap, args.unwrap_clip)
     main.show()
     app.exec_()
 

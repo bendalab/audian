@@ -75,8 +75,8 @@ class DataBrowser(QWidget):
     sigAudioChanged = Signal(object, object, object)
 
     
-    def __init__(self, file_path, plugins, channels, audio,
-                 acts, *args, **kwargs):
+    def __init__(self, file_path, load_kwargs, plugins, channels,
+                 audio, acts, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # actions of main window:
@@ -84,7 +84,7 @@ class DataBrowser(QWidget):
 
         # data:
         self.schannels = channels
-        self.data = Data(file_path)
+        self.data = Data(file_path, **load_kwargs)
 
         # plugins:
         self.plugins = plugins

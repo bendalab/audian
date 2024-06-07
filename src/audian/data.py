@@ -10,11 +10,12 @@ from thunderlab.dataloader import DataLoader
 
 class Data(object):
 
-    def __init__(self, file_path):
+    def __init__(self, file_path, **kwargs):
         self.buffer_time = 60
         self.back_time = 20
         self.follow_time = 0
         self.file_path = file_path
+        self.load_kwargs = kwargs
         self.data = None
         self.rate = None
         self.channels = 0
@@ -138,7 +139,8 @@ class Data(object):
         tbuffer = self.buffer_time + self.tbefore + self.tafter
         tback = self.back_time + self.tbefore
         try:
-            self.data = DataLoader(self.file_path, tbuffer, tback)
+            self.data = DataLoader(self.file_path, tbuffer, tback,
+                                   **self.load_kwargs)
         except IOError:
             self.data = None
             return
