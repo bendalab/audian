@@ -1969,6 +1969,8 @@ class DataBrowser(QWidget):
     
             
     def analysis_results(self):
+        if self.analysis_table is not None:
+            return
         if len(self.analyzers) == 0:
             return
         dialog = QDialog(self)
