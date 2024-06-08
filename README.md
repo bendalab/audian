@@ -52,7 +52,7 @@ handles all GUI aspects.
   - [x] Analyzer plugins for analysing a select snippet of the data.
   - [ ] Test this plugin interface with
     - [ ] Subtract common mean
-    - [ ] Logarithmic and high-pass filtered envelope
+    - [x] Logarithmic and high-pass filtered envelope
     - [ ] Envelope from visible frequency range of spectrogram
     - [ ] Feature expansion (kernel filter)
   - [ ] Add events and marker ranges to the Data class
@@ -61,13 +61,13 @@ handles all GUI aspects.
   - [ ] Provide interface for event filters?
 - [ ] Implement a proper layout for showing the plot panels:
   - [ ] support optional grid layout
-  - [ ] support additional plots from plugins
+  - [x] support additional plots from plugins
 - [ ] New plot widget showing power spectrum of visible range
   or slice at current cursor position. Cycle with Ctrl+P through no power plot, color bar, power spectrum to the right, power spectrum on top.
 - [ ] FullTracePlot:
   - [ ] fix offset problem.
   - [ ] indicate time under mouse cursor.
-- [ ] Add a toolbar widget for spectrum overlap
+- [x] Add a toolbar widget for spectrum overlap
 - [x] SpinBox for envelope cutoff frequency needs to show digits
   after decimal point.
 - [ ] Interactive high- and low-pass filtering:

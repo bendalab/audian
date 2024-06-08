@@ -88,8 +88,8 @@ class DataBrowser(QWidget):
 
         # panels:
         self.panels = {}
-        self.add_panel('trace', 'xt')
-        self.add_panel('spectrogram', 'ft')
+        self.add_panel('trace', 'xt', 0)
+        self.add_panel('spectrogram', 'ft', 1)
 
         # plugins:
         self.plugins = plugins
@@ -220,9 +220,19 @@ class DataBrowser(QWidget):
             self.acts.envelope_down.setEnabled(False)
 
 
-    def add_panel(self, name, specifier):
-        self.panels[name] = [specifier, [], 0]
+    def add_panel(self, name, specifier, row=None):
+        if row is None:
+            row = len(self.panels)
+        for panel in self.panels.values():
+            if panel[2] >= row:
+                panel[2] += 1
+        self.panels[name] = [specifier, [], row]
         # specifier, list of plot items for each channel, row in figure layout
+        if len(self.panels) > 1:
+            names = np.array(list(self.panels.keys()))
+            rows = [self.panels[name][2] for name in names]
+            inx = np.argsort(rows)
+            self.panels = {name: self.panels[name] for name in names[inx]}
 
 
     def remove_panel(self, name):

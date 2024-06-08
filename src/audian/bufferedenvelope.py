@@ -33,7 +33,7 @@ class BufferedEnvelope(BufferedData):
         else:
             # the integral over one hump of the sine wave is 2, the mean is 2/pi:
             dest[:] = sosfiltfilt(self.sos, (np.pi/2)*np.abs(source), axis=0)[nbefore:]
-            # TODO: downsample!!!
+            dest[dest < 0] = 0
 
             
     def update(self):
