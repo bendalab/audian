@@ -73,6 +73,13 @@ class Data(object):
                 return trace
         return None
 
+            
+    def __contains__(self, key):
+        for trace in self.traces:
+            if trace.name.lower() == key.lower():
+                return True
+        return False
+
 
     def keys(self):
         return [trace.name for trace in self.traces]
