@@ -11,8 +11,8 @@ class StatisticsAnalyzer(Analyzer):
         if nd < 0:
             nd = 0
         us = browser.data[self.source].unit
-        self.add_column(f'{source} mean', us, f'%.{nd}f')
-        self.add_column(f'{source} stdev', us, f'%.{nd}f')
+        self.make_column(f'{source} mean', us, f'%.{nd}f')
+        self.make_column(f'{source} stdev', us, f'%.{nd}f')
 
         
     def analyze(self, t0, t1, channel, traces):

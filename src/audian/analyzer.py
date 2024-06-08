@@ -25,7 +25,7 @@ class Analyzer(object):
         return self.browser.data[name]
 
 
-    def add_column(self, label, unit=None, formats=None):
+    def make_column(self, label, unit=None, formats=None):
         self.data.append(label, unit, formats)
 
         
@@ -33,7 +33,7 @@ class Analyzer(object):
         self.data.append_data(args, 0)
 
         
-    def add_events(self, name, trace_name, symbol, color, size):
+    def make_events(self, name, trace_name, symbol, color, size):
         self.events[name] = []
         for c in range(self.browser.data.data.channels):
             spi = pg.ScatterPlotItem()
@@ -52,6 +52,12 @@ class Analyzer(object):
                 self.events[name][c].clear()
         
         
+    def add_events(self, name, channel, x, y):
+        for c in range(self.browser.data.data.channels):
+            if c == channel or channel < 0:
+                self.events[name][c].addPoints(x, y)
+        
+        
 class PlainAnalyzer(Analyzer):
 
     def __init__(self, browser):
@@ -60,10 +66,10 @@ class PlainAnalyzer(Analyzer):
         nd = int(floor(-log10(1/source.rate)))
         if nd < 0:
             nd = 0
-        self.add_column('tstart', 's', f'%.{nd}f')
-        self.add_column('tend', 's', f'%.{nd}f')
-        self.add_column('duration', 's', f'%.{nd}f')
-        self.add_column('channel', '', '%.0f')
+        self.make_column('tstart', 's', f'%.{nd}f')
+        self.make_column('tend', 's', f'%.{nd}f')
+        self.make_column('duration', 's', f'%.{nd}f')
+        self.make_column('channel', '', '%.0f')
 
         
     def analyze(self, t0, t1, channel, traces):
