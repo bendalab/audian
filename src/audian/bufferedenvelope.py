@@ -10,10 +10,11 @@ class BufferedEnvelope(BufferedData):
 
     def __init__(self, name='envelope', source='filtered', panel='trace',
                  color='#ff8800', lw_thin=2.5, lw_thick=4,
-                 envelope_cutoff=500, filter_order=2):
+                 envelope_cutoff=500, filter_order=2, highpass_cutoff=0):
         super().__init__(name, source, tbefore=1, panel=panel,
                          color=color, lw_thin=lw_thin, lw_thick=lw_thick)
         self.envelope_cutoff = envelope_cutoff
+        self.highpass_cutoff = highpass_cutoff
         self.filter_order = filter_order
         self.sos = None
 
@@ -37,8 +38,13 @@ class BufferedEnvelope(BufferedData):
             
     def update(self):
         try:
-            self.sos = butter(self.filter_order, self.envelope_cutoff,
-                              'lowpass', fs=self.rate, output='sos')
+            if self.highpass_cutoff > 0:
+                self.sos = butter(self.filter_order,
+                                  (self.highpass_cutoff, self.envelope_cutoff),
+                                  'bandpass', fs=self.rate, output='sos')
+            else:
+                self.sos = butter(self.filter_order, self.envelope_cutoff,
+                                  'lowpass', fs=self.rate, output='sos')
         except ValueError:
             self.sos = None
         self.recompute_all()
