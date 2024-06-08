@@ -220,8 +220,9 @@ class DataBrowser(QWidget):
             self.acts.envelope_down.setEnabled(False)
 
 
-    def add_panel(self, name, axis):
-        self.panels[name] = (axis, [])
+    def add_panel(self, name, specifier):
+        self.panels[name] = [specifier, [], 0]
+        # specifier, list of plot items for each channel, row in figure layout
 
 
     def remove_panel(self, name):
@@ -330,6 +331,18 @@ class DataBrowser(QWidget):
                 self.marker_labels.append(MarkerLabel(l, l[0].lower(),
                                 list(colors.keys())[i % len(colors.keys())]))
 
+        # insert spacers:
+        panels = {}
+        row = 0
+        spacer = 0
+        for name in self.panels:
+            if row > 0:
+                panels[f'spacer{spacer}'] = ['spacer', [], 0]
+                spacer += 1
+            panels[name] = self.panels[name]
+            row += 1
+        self.panels = panels
+            
         # setup plots:
         self.figs = []     # all GraphicsLayoutWidgets - one for each channel
         self.borders = []
@@ -382,112 +395,117 @@ class DataBrowser(QWidget):
             fig.scene().addItem(border)
             fig.sigDeviceRangeChanged.connect(self.update_borders)
             self.borders.append(border)
-            
-            # spectrogram:
-            axs = SpectrumPlot(self.data, c, xwidth, self.fmax)
                 
-            # items for spectrum plot:
-            for trace in self.data.traces:
-                if trace.panel == 'spectrogram':
-                    spec_item = SpecItem(trace, c)
-                    axs.add_item(spec_item)
-                    trace.plot_item = spec_item
-                    if trace.name == 'spectrogram':
-                        self.specs.append(spec_item)
+            # setup plot panels:
+            row = 0
+            for name in reversed(self.panels):
+                panel = self.panels[name]
+                # spacer:
+                if panel[0] == 'spacer':
+                    axsp = fig.addLayout(row=row, col=0)
+                    axsp.setContentsMargins(0, 0, 0, 0)
+                    panel[1].append(axsp)
+                    panel[2] = row
+                # trace plot:
+                elif panel[0] == 'xt':
+                    axt = TimePlot(c, xwidth, self.data.start_time)
+                    if self.data.channels > 4:
+                        axt.setLabel('left', f'C{c}', color='black')
+                    else:
+                        axt.setLabel('left', f'channel {c}', color='black')
+                    # add marker labels:
+                    labels = []
+                    for l in self.marker_labels:
+                        label = pg.ScatterPlotItem(size=10, hoverSize=20,
+                                                   hoverable=True,
+                                                   pen=pg.mkPen(None),
+                                                   brush=pg.mkBrush(l.color))
+                        axt.addItem(label)
+                        labels.append(label)
+                    self.trace_labels.append(labels)
+                    self.trace_region_labels.append([])
+                    axt.getAxis('bottom').showLabel(c == self.show_channels[-1])
+                    axt.getAxis('bottom').setStyle(showValues=(c == self.show_channels[-1]))
+                    self.data.set_time_limits(axt)
+                    self.data.set_time_range(axt)
+                    if np.isfinite(self.ampl_min) and np.isfinite(self.ampl_max):
+                        axt.setLimits(yMin=self.ampl_min, yMax=self.ampl_max,
+                                      minYRange=1/2**16,
+                                      maxYRange=self.ampl_max - self.ampl_min)
+                    axt.setYRange(self.ymin[c], self.ymax[c])
+                    axt.sigXRangeChanged.connect(self.update_times)
+                    axt.sigYRangeChanged.connect(self.update_amplitudes)
+                    axt.sigSelectedRegion.connect(self.region_menu)
+                    axt.getViewBox().init_zoom_history()
+                    self.audio_markers[-1].append(axt.vmarker)
+                    fig.addItem(axt, row=row, col=0)
+                    self.axts[-1].append(axt)
+                    self.axxs[-1].append(axt)
+                    self.axgs[-1].append(axt)
+                    self.axs[-1].append(axt)
+                    panel[1].append(axt)
+                    panel[2] = row
+                # spectrogram:
+                elif panel[0] == 'ft':
+                    axs = SpectrumPlot(self.data, c, xwidth, self.fmax)
+
+                    labels = []
+                    for l in self.marker_labels:
+                        label = pg.ScatterPlotItem(size=10, pen=pg.mkPen(None),
+                                                   brush=pg.mkBrush(l.color))
+                        axs.addItem(label)
+                        labels.append(label)
+                    self.spec_labels.append(labels)
+                    self.spec_region_labels.append([])
+                    self.data.set_time_limits(axs)
+                    self.data.set_time_range(axs)
+                    axs.setYRange(self.f0[c], self.f1[c])
+                    axs.sigXRangeChanged.connect(self.update_times)
+                    axs.sigYRangeChanged.connect(self.update_frequencies)
+                    axs.sigSelectedRegion.connect(self.region_menu)
+                    axs.sigUpdateFilter.connect(self.update_filter)
+                    axs.getViewBox().init_zoom_history()
+                    axs.setVisible(self.show_specs > 0)
+                    self.audio_markers[-1].append(axs.vmarker)
+                    fig.addItem(axs, row=row, col=0)
+                    self.axts[-1].append(axs)
+                    self.axfys[-1].append(axs)
+                    self.axgs[-1].append(axs)
+                    self.axs[-1].append(axs)
+                    panel[1].append(axs)
+                    panel[2] = row
+
+                    # color bar:
+                    cbar = pg.ColorBarItem(colorMap=self.color_maps[self.color_map],
+                                           interactive=True,
+                                           rounding=1, limits=(-200, 20))
+                    cbar.setLabel('right', 'Power (dB)')
+                    cbar.getAxis('right').setTextPen('black')
+                    cbar.getAxis('right').setWidth(6*xwidth)
+                    cbar.sigLevelsChanged.connect(self.update_power)
+                    cbar.setVisible(self.show_cbars)
+                    self.cbars.append(cbar)
+                    fig.addItem(cbar, row=row, col=1)
                     
-            labels = []
-            for l in self.marker_labels:
-                label = pg.ScatterPlotItem(size=10, pen=pg.mkPen(None),
-                                           brush=pg.mkBrush(l.color))
-                axs.addItem(label)
-                labels.append(label)
-            self.spec_labels.append(labels)
-            self.spec_region_labels.append([])
-            self.data.set_time_limits(axs)
-            self.data.set_time_range(axs)
-            axs.setYRange(self.f0[c], self.f1[c])
-            axs.sigXRangeChanged.connect(self.update_times)
-            axs.sigYRangeChanged.connect(self.update_frequencies)
-            axs.sigSelectedRegion.connect(self.region_menu)
-            axs.sigUpdateFilter.connect(self.update_filter)
-            axs.getViewBox().init_zoom_history()
-            axs.setVisible(self.show_specs > 0)
-            self.audio_markers[-1].append(axs.vmarker)
-            fig.addItem(axs, row=0, col=0)
-            
-            # color bar:
-            cbar = pg.ColorBarItem(colorMap=self.color_maps[self.color_map],
-                                   interactive=True,
-                                   rounding=1, limits=(-200, 20))
-            cbar.setLabel('right', 'Power (dB)')
-            cbar.getAxis('right').setTextPen('black')
-            cbar.getAxis('right').setWidth(6*xwidth)
-            cbar.sigLevelsChanged.connect(self.update_power)
-            cbar.setVisible(self.show_cbars)
-            self.cbars.append(cbar)
-            fig.addItem(cbar, row=0, col=1)
-            if len(self.specs) > 0:
-                self.specs[-1].set_cbar(cbar)
-            self.axts[-1].append(axs)
-            self.axfys[-1].append(axs)
-            self.axgs[-1].append(axs)
-            self.axs[-1].append(axs)
-            self.panels['spectrogram'][1].append(axs)
-            
-            # spacer:
-            axsp = fig.addLayout(row=1, col=0)
-            axsp.setContentsMargins(0, 0, 0, 0)
-            
-            # trace plot:
-            axt = TimePlot(c, xwidth, self.data.start_time)
-            if self.data.channels > 4:
-                axt.setLabel('left', f'C{c}', color='black')
-            else:
-                axt.setLabel('left', f'channel {c}', color='black')
+                row += 1
                 
-            # items for trace plot:
+            # add data to the plots:
             for trace in self.data.traces:
-                if trace.panel == 'trace':
-                    trace_item = TraceItem(trace, c)
-                    axt.add_item(trace_item)
-                    trace.plot_item = trace_item
-                    if trace.name == 'data': # or trace.name == 'filtered':
-                        self.traces.append(trace_item)
-                    elif trace.name == 'envelope':
-                        trace_item.setVisible(False)
-                        self.envelopes.append(trace_item)
-            
-            # add marker labels:
-            labels = []
-            for l in self.marker_labels:
-                label = pg.ScatterPlotItem(size=10, hoverSize=20,
-                                           hoverable=True,
-                                           pen=pg.mkPen(None),
-                                           brush=pg.mkBrush(l.color))
-                axt.addItem(label)
-                labels.append(label)
-            self.trace_labels.append(labels)
-            self.trace_region_labels.append([])
-            axt.getAxis('bottom').showLabel(c == self.show_channels[-1])
-            axt.getAxis('bottom').setStyle(showValues=(c == self.show_channels[-1]))
-            self.data.set_time_limits(axt)
-            self.data.set_time_range(axt)
-            if np.isfinite(self.ampl_min) and np.isfinite(self.ampl_max):
-                axt.setLimits(yMin=self.ampl_min, yMax=self.ampl_max,
-                              minYRange=1/2**16,
-                              maxYRange=self.ampl_max - self.ampl_min)
-            axt.setYRange(self.ymin[c], self.ymax[c])
-            axt.sigXRangeChanged.connect(self.update_times)
-            axt.sigYRangeChanged.connect(self.update_amplitudes)
-            axt.sigSelectedRegion.connect(self.region_menu)
-            axt.getViewBox().init_zoom_history()
-            self.audio_markers[-1].append(axt.vmarker)
-            fig.addItem(axt, row=2, col=0)
-            self.axts[-1].append(axt)
-            self.axxs[-1].append(axt)
-            self.axgs[-1].append(axt)
-            self.axs[-1].append(axt)
-            self.panels['trace'][1].append(axt)
+                if self.panels[trace.panel][0] == 'xt':
+                    item = TraceItem(trace, c)
+                elif self.panels[trace.panel][0] == 'ft':
+                    item = SpecItem(trace, c)
+                    item.set_cbar(cbar)
+                self.panels[trace.panel][1][c].add_item(item)
+                trace.plot_item = item
+
+                if trace.name == 'data': # or trace.name == 'filtered':
+                    self.traces.append(item)
+                elif trace.name == 'envelope':
+                    item.setVisible(False)
+                    self.envelopes.append(item)
+                elif trace.name == 'spectrogram':
+                    self.specs.append(item)
 
             proxy = pg.SignalProxy(fig.scene().sigMouseMoved, rateLimit=60,
                                    slot=lambda x, c=c: self.mouse_moved(x, c))
@@ -1042,10 +1060,44 @@ class DataBrowser(QWidget):
         self.adjust_layout(event.size().width(), event.size().height())
         self.data.set_need_update()
         
+            
+    def show_xticks(self):
+        for c in range(self.data.channels):
+            first = True
+            for panel in self.panels.values():
+                if panel[0] == 'spacer':
+                    continue
+                if first and c == self.show_channels[-1] and \
+                   panel[1][c].isVisible():
+                    panel[1][c].getAxis('bottom').showLabel(True)
+                    panel[1][c].getAxis('bottom').setStyle(showValues=True)
+                    first = False
+                else:
+                    panel[1][c].getAxis('bottom').showLabel(False)
+                    panel[1][c].getAxis('bottom').setStyle(showValues=False)
+
+            
+    def show_spacers(self):
+        first = True
+        hide_spacers = []
+        for panel in self.panels.values():
+            if panel[0] == 'spacer':
+                for ax in panel[1]:
+                    ax.setVisible(not first)
+                if not first:
+                    hide_spacers.extend(panel[1])
+            elif panel[1][self.show_channels[0]].isVisible():
+                first = False
+                hide_spacers = []
+        for spacer in hide_spacers:
+            spacer.setVisible(False)
+
 
     def adjust_layout(self, width, height):
         if self.show_channels is None:
             return
+        self.show_xticks()
+        self.show_spacers()
         xwidth = self.fontMetrics().averageCharWidth()
         xheight = self.fontMetrics().ascent()
         # subtract full data plot:
@@ -1055,34 +1107,53 @@ class DataBrowser(QWidget):
         height -= len(self.show_channels)*data_height
         # subtract toolbar:
         height -= 2*xheight
-        bottom_channel = self.show_channels[-1]
+        # subtract time axis:
+        taxis_height = 2*xheight
+        height -= taxis_height
+        # what to plot:
+        ntraces = 0
+        nspecs = 0
+        c = self.show_channels[0]
+        for panel in self.panels.values():
+            if panel[1][c].isVisible():
+                if panel[0] == 'ft':
+                    nspecs += 1
+                elif panel[0] != 'spacer':
+                    ntraces += 1
+        nspacers = ntraces + nspecs - 1
+        nrows = len(self.show_channels)
+        # subtract border height:
+        border_height = 1.5*xwidth
+        height -= nrows*border_height
+        # subtract spacer height:
+        spacer_height = 0*xheight
+        height -= nspacers*spacer_height
+        # set heights of panels and channels (figures):
+        fig_height = height/nrows
         trace_frac = self.trace_fracs[self.show_specs]
-        #axis_height = None
-        #if self.panels['trace'][1][bottom_channel].isVisible():
-        #    axis_height = self.panels['trace'][1][bottom_channel].getAxis('bottom').height()
-        #elif self.panels['spectrogram'][1][bottom_channel].isVisible():
-        #    axis_height = self.panels['spectrogram'][1][bottom_channel].getAxis('bottom').height()
-        axis_height = 3.2*xheight
-        ntraces = []
-        nspecs = []
-        nspacer = 0
+        spec_height = fig_height/(nspecs + trace_frac*ntraces)
+        trace_height = trace_frac*spec_height
+        bottom_channel = self.show_channels[-1]
         for c in self.show_channels:
-            if c >= len(self.panels['spectrogram'][1]) or c >= len(self.panels['trace'][1]):
-                break
-            nspecs.append(int(self.panels['spectrogram'][1][c].isVisible()))
-            ntraces.append(int(self.panels['trace'][1][c].isVisible()))
-            if self.panels['spectrogram'][1][c].isVisible() and self.panels['trace'][1][c].isVisible():
-                nspacer += 1
-        spec_height = (height - len(self.show_channels)*xwidth - nspacer*xwidth - axis_height)/(np.sum(nspecs) + trace_frac*np.sum(ntraces))
-        for c, ns, nt in zip(self.show_channels, nspecs, ntraces):
-            add_height = axis_height if c == bottom_channel else 0
-            self.vbox.setStretch(c, int(ns*spec_height + (nt+ns)*xwidth +
-                                        nt*trace_frac*spec_height + add_height))
-            t_height = max(0, int(nt*(trace_frac*spec_height + add_height)))
-            self.figs[c].ci.layout.setRowFixedHeight(2, t_height)
-            self.figs[c].ci.layout.setRowFixedHeight(1, (nt+ns-1)*xwidth)
-            s_height = max(0, int(ns*spec_height + (1-nt)*add_height))
-            self.figs[c].ci.layout.setRowFixedHeight(0, s_height)
+            add_height = taxis_height if c == bottom_channel else 0
+            self.vbox.setStretch(c, int(10*(border_height +
+                                            nspecs*spec_height +
+                                            nspacers*spacer_height +
+                                            ntraces*trace_height +
+                                            add_height)))
+            for panel in self.panels.values():
+                if panel[1][c].isVisible():
+                    if panel[0] == 'spacer':
+                        row_height = spacer_height
+                    elif panel[0] == 'ft':
+                        row_height = spec_height + add_height
+                    else:
+                        row_height = trace_height + add_height
+                    self.figs[c].ci.layout.setRowFixedHeight(panel[2],
+                                                             row_height)
+                    add_height = 0
+                else:
+                    self.figs[c].ci.layout.setRowFixedHeight(panel[2], 0)
         # fix full data plot:
         if self.datafig is not None:
             self.datafig.update_layout(self.show_channels, data_height)
@@ -1091,17 +1162,6 @@ class DataBrowser(QWidget):
         for c in self.show_channels:
             self.figs[c].update()
         
-            
-    def show_xticks(self, channel, show_ticks):
-        if self.panels['trace'][1][channel].isVisible():
-            self.panels['trace'][1][channel].getAxis('bottom').showLabel(show_ticks)
-            self.panels['trace'][1][channel].getAxis('bottom').setStyle(showValues=show_ticks)
-            self.panels['spectrogram'][1][channel].getAxis('bottom').showLabel(False)
-            self.panels['spectrogram'][1][channel].getAxis('bottom').setStyle(showValues=False)
-        elif self.panels['spectrogram'][1][channel].isVisible():
-            self.panels['spectrogram'][1][channel].getAxis('bottom').showLabel(show_ticks)
-            self.panels['spectrogram'][1][channel].getAxis('bottom').setStyle(showValues=show_ticks)
-
 
     def set_times(self, toffset=None, twindow=None, enable_starttime=None,
                   dispatch=True):
@@ -1660,7 +1720,6 @@ class DataBrowser(QWidget):
                 self.current_channel = show_selected_channels[-1]
         for c in range(self.data.channels):
             self.figs[c].setVisible(c in self.show_channels)
-            self.show_xticks(c, c == self.show_channels[-1])
             self.acts.channels[c].setChecked(c in self.show_channels)
         self.adjust_layout(self.width(), self.height())
         self.update_borders()
@@ -1728,15 +1787,16 @@ class DataBrowser(QWidget):
             self.show_cbars = cbars
         if not fulldata is None:
             self.show_fulldata = fulldata
-        for axt, axs, cb in zip(self.panels['trace'][1], self.panels['spectrogram'][1], self.cbars):
-            axt.setVisible(self.show_traces)
-            axs.setVisible(self.show_specs > 0)
-            cb.setVisible(self.show_specs > 0 and self.show_cbars)
-            if axt is self.panels['trace'][1][self.show_channels[-1]]:
-                axs.getAxis('bottom').showLabel(not self.show_traces)
-                axs.getAxis('bottom').setStyle(showValues=not self.show_traces)
-                axt.getAxis('bottom').showLabel(self.show_traces)
-                axt.getAxis('bottom').setStyle(showValues=self.show_traces)
+        for panel in self.panels.values():
+            if panel[0] == 'xt':
+                for c, ax in enumerate(panel[1]):
+                    ax.setVisible(self.show_traces)
+            elif panel[0] == 'ft':
+                for c, ax in enumerate(panel[1]):
+                    ax.setVisible(self.show_specs > 0 and
+                                  c in self.show_channels)
+                    self.cbars[c].setVisible(self.show_cbars and
+                                             self.show_specs > 0)
         if self.datafig is not None:
             self.datafig.setVisible(self.show_fulldata)
         self.adjust_layout(self.width(), self.height())
