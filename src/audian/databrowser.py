@@ -253,6 +253,15 @@ class DataBrowser(QWidget):
     def clear_analyzer(self):
         self.analyzers = []
 
+
+    def get_panel(self, trace_name, channel):
+        panel = self.data[trace_name].panel
+        return self.axnames[panel][channel]
+
+
+    def add_to_panel(self, trace_name, channel, plot_item):
+        self.get_panel(trace_name, channel).addItem(plot_item)
+
         
     def open(self, gui, unwrap, unwrap_clip, highpass_cutoff, lowpass_cutoff):
         # load data:
@@ -305,14 +314,6 @@ class DataBrowser(QWidget):
             for i, l in enumerate(lbls):
                 self.marker_labels.append(MarkerLabel(l, l[0].lower(),
                                 list(colors.keys())[i % len(colors.keys())]))
-
-        # setup analyzers:
-        PlainAnalyzer(self)
-        StatisticsAnalyzer(self)
-        self.plugins.setup_analyzer(self)
-        if len(self.analyzers) == 0:
-            self.acts.analyze_region.setEnabled(False)            
-            self.acts.analyze_region.setVisible(False)            
 
         # setup plots:
         self.figs = []     # all GraphicsLayoutWidgets - one for each channel
@@ -602,6 +603,14 @@ class DataBrowser(QWidget):
 
         self.setEnabled(True)
         self.adjust_layout(self.width(), self.height())
+
+        # setup analyzers:
+        PlainAnalyzer(self)
+        StatisticsAnalyzer(self)
+        self.plugins.setup_analyzer(self)
+        if len(self.analyzers) == 0:
+            self.acts.analyze_region.setEnabled(False)            
+            self.acts.analyze_region.setVisible(False)            
 
         # add marker data to plot:
         labels = [l.label for l in self.marker_labels]

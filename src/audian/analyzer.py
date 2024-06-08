@@ -1,4 +1,5 @@
 from math import floor, log10
+import pyqtgraph as pg
 from thunderlab.tabledata import TableData
 
 
@@ -8,6 +9,7 @@ class Analyzer(object):
         self.browser = browser
         self.name = name
         self.data = TableData()
+        self.events = {}
         self.browser.add_analyzer(self)
 
         
@@ -30,8 +32,26 @@ class Analyzer(object):
     def store(self, *args):
         self.data.append_data(args, 0)
 
+        
+    def add_events(self, name, trace_name, symbol, color, size):
+        self.events[name] = []
+        for c in range(self.browser.data.data.channels):
+            spi = pg.ScatterPlotItem()
+            spi.setSymbol(symbol)
+            spi.setBrush(color)
+            spi.setSize(size)
+            self.events[name].append(spi)
+            self.browser.add_to_panel(trace_name, c, spi)
 
-
+        
+    def set_events(self, name, channel, x, y):
+        for c in range(self.browser.data.data.channels):
+            if c == channel or channel < 0:
+                self.events[name][c].setData(x, y)
+            else:
+                self.events[name][c].clear()
+        
+        
 class PlainAnalyzer(Analyzer):
 
     def __init__(self, browser):
