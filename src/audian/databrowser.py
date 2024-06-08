@@ -86,6 +86,11 @@ class DataBrowser(QWidget):
         self.schannels = channels
         self.data = Data(file_path, **load_kwargs)
 
+        # panels:
+        self.panels = {}
+        self.add_panel('trace', 'xt')
+        self.add_panel('spectrogram', 'ft')
+
         # plugins:
         self.plugins = plugins
         self.analysis_table = None
@@ -184,24 +189,22 @@ class DataBrowser(QWidget):
         # nested lists (channel, panel):
         self.axs  = []      # all plots
         self.axts = []      # plots with time axis
-        self.axys = []      # plots with amplitude axis
+        self.axxs = []      # plots with amplitude axis
         self.axfxs = []     # plots with x-frequency axis
         self.axfys = []     # plots with y-frequency axis
         self.axgs = []      # plots with grids
-        # lists with one plot per channel:
-        self.axtraces = []  # trace plots
-        self.axspacers = [] # spacer between trace and spectrogram
-        self.axspecs = []   # spectrogram plots
-        self.axnames = dict(trace=self.axtraces, spectrum=self.axspecs)
+        # lists with one plot item per channel:
         self.traces = []    # traces
         self.envelopes = [] # envelopes
         self.specs = []     # spectrograms
         self.cbars = []     # color bars
+        # lists with marker labels and regions:
         self.trace_labels = [] # labels on traces
         self.trace_region_labels = [] # regions with labels on traces
         self.spec_labels = []  # labels on spectrograms
         self.spec_region_labels = [] # regions with labels on spectrograms
-        self.datafig = None   # full traces
+        # full traces:
+        self.datafig = None
 
         # actions:
         if self.data.filtered is None:
@@ -215,6 +218,18 @@ class DataBrowser(QWidget):
             self.acts.show_envelope.setEnabled(False)
             self.acts.envelope_up.setEnabled(False)
             self.acts.envelope_down.setEnabled(False)
+
+
+    def add_panel(self, name, axis):
+        self.panels[name] = (axis, [])
+
+
+    def remove_panel(self, name):
+        del self.panels[name]
+
+
+    def clear_panels(self):
+        self.panels = {}
 
 
     def get_trace(self, name):
@@ -256,7 +271,7 @@ class DataBrowser(QWidget):
 
     def get_panel(self, trace_name, channel):
         panel = self.data[trace_name].panel
-        return self.axnames[panel][channel]
+        return self.panels[panel][1][channel]
 
 
     def add_to_panel(self, trace_name, channel, plot_item):
@@ -322,23 +337,20 @@ class DataBrowser(QWidget):
         # nested lists (channel, panel):
         self.axs  = []      # all plots
         self.axts = []      # plots with time axis
-        self.axys = []      # plots with amplitude axis
+        self.axxs = []      # plots with amplitude axis
         self.axfxs = []     # plots with x-frequency axis
         self.axfys = []     # plots with y-frequency axis
         self.axgs = []      # plots with grids
-        # lists with one plot per channel:
-        self.axtraces = []  # trace plots
-        self.axspacers = [] # spacer between trace and spectrogram
-        self.axspecs = []   # spectrogram plots
-        self.axnames = dict(trace=self.axtraces, spectrum=self.axspecs)
+        # lists with one plot item per channel:
         self.traces = []    # traces
         self.envelopes = [] # envelopes
+        self.specs = []     # spectrograms
+        self.cbars = []     # color bars
+        # lists with marker labels and regions:
         self.trace_labels = [] # labels on traces
         self.trace_region_labels = [] # regions with labels on traces
-        self.specs = []     # spectrograms
         self.spec_labels = []  # labels on spectrograms
         self.spec_region_labels = [] # regions with labels on spectrograms
-        self.cbars = []     # color bars
         self.audio_markers = [] # vertical line showing position while playing
         # font size:
         xwidth = self.fontMetrics().averageCharWidth()
@@ -346,7 +358,7 @@ class DataBrowser(QWidget):
         for c in range(self.data.channels):
             self.axs.append([])
             self.axts.append([])
-            self.axys.append([])
+            self.axxs.append([])
             self.axfxs.append([])
             self.axfys.append([])
             self.axgs.append([])
@@ -376,7 +388,7 @@ class DataBrowser(QWidget):
                 
             # items for spectrum plot:
             for trace in self.data.traces:
-                if trace.panel == 'spectrum':
+                if trace.panel == 'spectrogram':
                     spec_item = SpecItem(trace, c)
                     axs.add_item(spec_item)
                     trace.plot_item = spec_item
@@ -420,12 +432,11 @@ class DataBrowser(QWidget):
             self.axfys[-1].append(axs)
             self.axgs[-1].append(axs)
             self.axs[-1].append(axs)
-            self.axspecs.append(axs)
+            self.panels['spectrogram'][1].append(axs)
             
             # spacer:
             axsp = fig.addLayout(row=1, col=0)
             axsp.setContentsMargins(0, 0, 0, 0)
-            self.axspacers.append(axsp)
             
             # trace plot:
             axt = TimePlot(c, xwidth, self.data.start_time)
@@ -473,10 +484,10 @@ class DataBrowser(QWidget):
             self.audio_markers[-1].append(axt.vmarker)
             fig.addItem(axt, row=2, col=0)
             self.axts[-1].append(axt)
-            self.axys[-1].append(axt)
+            self.axxs[-1].append(axt)
             self.axgs[-1].append(axt)
             self.axs[-1].append(axt)
-            self.axtraces.append(axt)
+            self.panels['trace'][1].append(axt)
 
             proxy = pg.SignalProxy(fig.scene().sigMouseMoved, rateLimit=60,
                                    slot=lambda x, c=c: self.mouse_moved(x, c))
@@ -598,7 +609,7 @@ class DataBrowser(QWidget):
         self.vbox.addWidget(self.toolbar)
         
         # full data:
-        self.datafig = FullTracePlot(self.data.data, self.axtraces)
+        self.datafig = FullTracePlot(self.data.data, self.panels['trace'][1])
         self.vbox.addWidget(self.datafig)
 
         self.setEnabled(True)
@@ -632,10 +643,10 @@ class DataBrowser(QWidget):
                                                  movable=False,
                                                  span=(0.02, 0.05))
                     region.setZValue(-10)
-                    self.axtraces[c].addItem(region)
+                    self.panels['trace'][1][c].addItem(region)
                     #text = pg.TextItem(ds, color='green', anchor=(0, 0))
                     #text.setPos(t0, 0)
-                    #self.axtraces[c].addItem(text)
+                    #self.panels['trace'][1][c].addItem(text)
                     self.trace_region_labels[c].append(region)
                 else:
                     tl[lidx].addPoints((t1,), (self.data.data[idx1, c],), data=(ds,), tip=marker_tip)
@@ -721,8 +732,8 @@ class DataBrowser(QWidget):
             for axts in self.axts:
                 for ax in axts:
                     ax.xline.setVisible(True)
-            for axys in self.axys:
-                for ax in axys:
+            for axxs in self.axxs:
+                for ax in axxs:
                     ax.yline.setVisible(True)
             for axfys in self.axfys:
                 for ax in axfys:
@@ -734,8 +745,8 @@ class DataBrowser(QWidget):
             for axts in self.axts:
                 for ax in axts:
                     ax.xline.setVisible(False)
-            for axys in self.axys:
-                for ax in axys:
+            for axxs in self.axxs:
+                for ax in axxs:
                     ax.yline.setVisible(False)
             for axfys in self.axfys:
                 for ax in axfys:
@@ -830,14 +841,14 @@ class DataBrowser(QWidget):
                 if hasattr(ax, 'yline'):
                     ax.yline.setPos(pos.y())
                     # is it amplitude?
-                    for axys in self.axys:
-                        if ax in axys:
+                    for axxs in self.axxs:
+                        if ax in axxs:
                             self.marker_ampl = pos.y()
                             break
                     # is it trace amplitude?
-                    if ax in self.axtraces:
+                    if ax in self.panels['trace'][1]:
                         if not self.marker_time is None:
-                            trace = self.traces[self.axtraces.index(ax)]
+                            trace = self.traces[self.panels['trace'][1].index(ax)]
                             self.marker_time, self.marker_ampl = \
                                 trace.get_amplitude(self.marker_time,
                                                     pos.y(), npos.x())
@@ -848,8 +859,8 @@ class DataBrowser(QWidget):
                             break
                     # is it spectrogram?
                     if self.marker_time is not None and \
-                       self.marker_freq is not None and ax in self.axspecs:
-                        spec = self.specs[self.axspecs.index(ax)]
+                       self.marker_freq is not None and ax in self.panels['spectrogram'][1]:
+                        spec = self.specs[self.panels['spectrogram'][1].index(ax)]
                         fi = int(floor(self.marker_freq/spec.data.fresolution))
                         ti = int(floor((self.marker_time - spec.data.offset/spec.data.rate) / spec.data.tresolution))
                         if fi < spec.data.shape[0] and \
@@ -863,8 +874,8 @@ class DataBrowser(QWidget):
                 for axt in axts:
                     axt.xline.setPos(self.marker_time)
         if self.marker_ampl:
-            for axys in self.axys:
-                for axy in axys:
+            for axxs in self.axxs:
+                for axy in axxs:
                     axy.yline.setPos(self.marker_ampl)
         if self.marker_freq:
             for axfys in self.axfys:
@@ -1013,7 +1024,7 @@ class DataBrowser(QWidget):
             for ax in self.axts[c]:
                 self.data.set_time_range(ax)
             # update amplitude ranges:
-            for ax in self.axys[c]:
+            for ax in self.axxs[c]:
                 ax.setYRange(self.ymin[c], self.ymax[c])
             # update frequency ranges:
             for ax in self.axfys[c]:
@@ -1047,20 +1058,20 @@ class DataBrowser(QWidget):
         bottom_channel = self.show_channels[-1]
         trace_frac = self.trace_fracs[self.show_specs]
         #axis_height = None
-        #if self.axtraces[bottom_channel].isVisible():
-        #    axis_height = self.axtraces[bottom_channel].getAxis('bottom').height()
-        #elif self.axspecs[bottom_channel].isVisible():
-        #    axis_height = self.axspecs[bottom_channel].getAxis('bottom').height()
+        #if self.panels['trace'][1][bottom_channel].isVisible():
+        #    axis_height = self.panels['trace'][1][bottom_channel].getAxis('bottom').height()
+        #elif self.panels['spectrogram'][1][bottom_channel].isVisible():
+        #    axis_height = self.panels['spectrogram'][1][bottom_channel].getAxis('bottom').height()
         axis_height = 3.2*xheight
         ntraces = []
         nspecs = []
         nspacer = 0
         for c in self.show_channels:
-            if c >= len(self.axspecs) or c >= len(self.axtraces):
+            if c >= len(self.panels['spectrogram'][1]) or c >= len(self.panels['trace'][1]):
                 break
-            nspecs.append(int(self.axspecs[c].isVisible()))
-            ntraces.append(int(self.axtraces[c].isVisible()))
-            if self.axspecs[c].isVisible() and self.axtraces[c].isVisible():
+            nspecs.append(int(self.panels['spectrogram'][1][c].isVisible()))
+            ntraces.append(int(self.panels['trace'][1][c].isVisible()))
+            if self.panels['spectrogram'][1][c].isVisible() and self.panels['trace'][1][c].isVisible():
                 nspacer += 1
         spec_height = (height - len(self.show_channels)*xwidth - nspacer*xwidth - axis_height)/(np.sum(nspecs) + trace_frac*np.sum(ntraces))
         for c, ns, nt in zip(self.show_channels, nspecs, ntraces):
@@ -1082,14 +1093,14 @@ class DataBrowser(QWidget):
         
             
     def show_xticks(self, channel, show_ticks):
-        if self.axtraces[channel].isVisible():
-            self.axtraces[channel].getAxis('bottom').showLabel(show_ticks)
-            self.axtraces[channel].getAxis('bottom').setStyle(showValues=show_ticks)
-            self.axspecs[channel].getAxis('bottom').showLabel(False)
-            self.axspecs[channel].getAxis('bottom').setStyle(showValues=False)
-        elif self.axspecs[channel].isVisible():
-            self.axspecs[channel].getAxis('bottom').showLabel(show_ticks)
-            self.axspecs[channel].getAxis('bottom').setStyle(showValues=show_ticks)
+        if self.panels['trace'][1][channel].isVisible():
+            self.panels['trace'][1][channel].getAxis('bottom').showLabel(show_ticks)
+            self.panels['trace'][1][channel].getAxis('bottom').setStyle(showValues=show_ticks)
+            self.panels['spectrogram'][1][channel].getAxis('bottom').showLabel(False)
+            self.panels['spectrogram'][1][channel].getAxis('bottom').setStyle(showValues=False)
+        elif self.panels['spectrogram'][1][channel].isVisible():
+            self.panels['spectrogram'][1][channel].getAxis('bottom').showLabel(show_ticks)
+            self.panels['spectrogram'][1][channel].getAxis('bottom').setStyle(showValues=show_ticks)
 
 
     def set_times(self, toffset=None, twindow=None, enable_starttime=None,
@@ -1186,7 +1197,7 @@ class DataBrowser(QWidget):
             if not ymax is None:
                 self.ymax[c] = ymax
             if self.isVisible():
-                for ax in self.axys[c]:
+                for ax in self.axxs[c]:
                     ax.setYRange(self.ymin[c], self.ymax[c])
         self.setting = False
 
@@ -1477,7 +1488,7 @@ class DataBrowser(QWidget):
             self.data.filtered.highpass_cutoff = highpass_cutoff
         if lowpass_cutoff is not None:
             self.data.filtered.lowpass_cutoff = lowpass_cutoff
-        for ax in self.axspecs:
+        for ax in self.panels['spectrogram'][1]:
             ax.set_filter_handles(self.data.filtered.highpass_cutoff,
                                   self.data.filtered.lowpass_cutoff)
         self.hpfw.setValue(self.data.filtered.highpass_cutoff)
@@ -1717,11 +1728,11 @@ class DataBrowser(QWidget):
             self.show_cbars = cbars
         if not fulldata is None:
             self.show_fulldata = fulldata
-        for axt, axs, cb in zip(self.axtraces, self.axspecs, self.cbars):
+        for axt, axs, cb in zip(self.panels['trace'][1], self.panels['spectrogram'][1], self.cbars):
             axt.setVisible(self.show_traces)
             axs.setVisible(self.show_specs > 0)
             cb.setVisible(self.show_specs > 0 and self.show_cbars)
-            if axt is self.axtraces[self.show_channels[-1]]:
+            if axt is self.panels['trace'][1][self.show_channels[-1]]:
                 axs.getAxis('bottom').showLabel(not self.show_traces)
                 axs.getAxis('bottom').setStyle(showValues=not self.show_traces)
                 axt.getAxis('bottom').showLabel(self.show_traces)
@@ -1987,7 +1998,7 @@ class DataBrowser(QWidget):
         vbox = QVBoxLayout()
         dialog.setLayout(vbox)
         self.analysis_table = pg.TableWidget()
-        self.analysis_table.setMinimumHeight(300)
+        self.analysis_table.setMinimumHeight(250)
         self.analysis_table.setData(self.get_analysis_table())
         c = 0
         for a in self.analyzers:
