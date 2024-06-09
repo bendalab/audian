@@ -1,6 +1,6 @@
 import os
 from copy import deepcopy
-from math import fabs, ceil, floor, log, log10
+from math import fabs, floor
 import datetime as dt
 import numpy as np
 from scipy.signal import butter, sosfiltfilt
@@ -23,11 +23,10 @@ from thunderlab.datawriter import available_formats, write_data
 from .version import __version__, __year__
 from .data import Data
 from .panel import Panel
+from .plotrange import PlotRange
 from .fulltraceplot import FullTracePlot, secs_to_str
 from .timeplot import TimePlot
 from .spectrumplot import SpectrumPlot
-from .traceitem import TraceItem
-from .specitem import SpecItem
 from .markerdata import colors, MarkerLabel, MarkerLabelsModel
 from .markerdata import MarkerData, MarkerDataModel
 from .analyzer import PlainAnalyzer
@@ -86,7 +85,8 @@ class DataBrowser(QWidget):
         # data:
         self.schannels = channels
         self.data = Data(file_path, **load_kwargs)
-
+        self.plot_ranges = {}
+        
         # panels:
         self.panels = {}
         self.add_panel('trace', 'xt', 0)
@@ -103,17 +103,6 @@ class DataBrowser(QWidget):
         self.show_channels = None
         self.current_channel = 0
         self.selected_channels = []
-
-        # amplitude ranges:
-        self.amin = +1
-        self.amax = -1
-        self.ymin = []
-        self.ymax = []
-
-        # frequeny ranges:
-        self.fmax = 0
-        self.f0 = []
-        self.f1 = []
         
         # view:
         self.setting = False
@@ -190,9 +179,6 @@ class DataBrowser(QWidget):
         # nested lists (channel, panel):
         self.axs  = []      # all plots
         self.axts = []      # plots with time axis
-        self.axxs = []      # plots with amplitude axis
-        self.axfxs = []     # plots with x-frequency axis
-        self.axfys = []     # plots with y-frequency axis
         self.axgs = []      # plots with grids
         # lists with one plot item per channel:
         self.traces = []    # traces
@@ -292,16 +278,8 @@ class DataBrowser(QWidget):
             return
         self.marker_data.file_path = self.data.file_path
 
-        # setup amplitude ranges:
-        self.ampl_min = self.data.data.ampl_min
-        self.ampl_max = self.data.data.ampl_max
-        self.ymin = [self.ampl_min]*self.data.channels
-        self.ymax = [self.ampl_max]*self.data.channels
-        
-        # setup frequency ranges:
-        self.fmax = self.data.rate/2
-        self.f0 = [0]*self.data.channels
-        self.f1 = [self.fmax]*self.data.channels
+        # amplitude ranges:
+        self.plot_ranges = {s: PlotRange(s, self.data.channels) for s in 'xyzf'}
         
         # requested filtering:
         filter_changed = False
@@ -357,9 +335,6 @@ class DataBrowser(QWidget):
         # nested lists (channel, panel):
         self.axs  = []      # all plots
         self.axts = []      # plots with time axis
-        self.axxs = []      # plots with amplitude axis
-        self.axfxs = []     # plots with x-frequency axis
-        self.axfys = []     # plots with y-frequency axis
         self.axgs = []      # plots with grids
         # lists with one plot item per channel:
         self.traces = []    # traces
@@ -378,9 +353,6 @@ class DataBrowser(QWidget):
         for c in range(self.data.channels):
             self.axs.append([])
             self.axts.append([])
-            self.axxs.append([])
-            self.axfxs.append([])
-            self.axfys.append([])
             self.axgs.append([])
             self.audio_markers.append([])
             
@@ -415,22 +387,19 @@ class DataBrowser(QWidget):
                     panel.row = row
                 # trace plot:
                 elif panel.ax_spec in ['xt', 'yt', 'zt']:
+                    aspec = panel.ax_spec[0]
                     ylabel = panel.name if panel.name != 'trace' else ''
-                    axt = TimePlot(ylabel, c, xwidth, self)
-                    if np.isfinite(self.ampl_min) and np.isfinite(self.ampl_max):
-                        axt.setLimits(yMin=self.ampl_min, yMax=self.ampl_max,
-                                      minYRange=1/2**16,
-                                      maxYRange=self.ampl_max - self.ampl_min)
-                    axt.setYRange(self.ymin[c], self.ymax[c])
-                    axt.sigYRangeChanged.connect(self.update_amplitudes)
+                    axt = TimePlot(aspec, ylabel, c, xwidth, self)
                     self.audio_markers[-1].append(axt.vmarker)
                     fig.addItem(axt, row=row, col=0)
                     self.axts[-1].append(axt)
-                    self.axxs[-1].append(axt)
                     self.axgs[-1].append(axt)
                     self.axs[-1].append(axt)
                     panel.add_ax(axt)
                     panel.row = row
+                    panel.add_traces(c, self.data)
+                    self.plot_ranges[aspec].add_yaxis(axt, c, True)
+                    axt.sigYRangeChanged.connect(self.update_amplitudes)
                     # add marker labels:
                     labels = []
                     for l in self.marker_labels:
@@ -444,25 +413,6 @@ class DataBrowser(QWidget):
                     self.trace_region_labels.append([])
                 # spectrogram:
                 elif panel == 'ft':
-                    axs = SpectrumPlot(self, c, xwidth, self.fmax)
-                    self.audio_markers[-1].append(axs.vmarker)
-                    fig.addItem(axs, row=row, col=0)
-                    self.axts[-1].append(axs)
-                    self.axfys[-1].append(axs)
-                    self.axgs[-1].append(axs)
-                    self.axs[-1].append(axs)
-                    panel.add_ax(axs)
-                    panel.row = row
-                    # add marker labels:
-                    labels = []
-                    for l in self.marker_labels:
-                        label = pg.ScatterPlotItem(size=10, pen=pg.mkPen(None),
-                                                   brush=pg.mkBrush(l.color))
-                        axs.addItem(label)
-                        labels.append(label)
-                    self.spec_labels.append(labels)
-                    self.spec_region_labels.append([])
-
                     # color bar:
                     cbar = pg.ColorBarItem(colorMap=self.color_maps[self.color_map],
                                            interactive=True,
@@ -474,26 +424,38 @@ class DataBrowser(QWidget):
                     cbar.setVisible(self.show_cbars)
                     self.cbars.append(cbar)
                     fig.addItem(cbar, row=row, col=1)
-                    
+
+                    # spectrum:
+                    axs = SpectrumPlot(self, c, xwidth, cbar)
+                    self.audio_markers[-1].append(axs.vmarker)
+                    fig.addItem(axs, row=row, col=0)
+                    self.axts[-1].append(axs)
+                    self.axgs[-1].append(axs)
+                    self.axs[-1].append(axs)
+                    panel.add_ax(axs)
+                    panel.row = row
+                    panel.add_traces(c, self.data)
+                    self.plot_ranges['f'].add_yaxis(axs, c, True)
+                    # add marker labels:
+                    labels = []
+                    for l in self.marker_labels:
+                        label = pg.ScatterPlotItem(size=10, pen=pg.mkPen(None),
+                                                   brush=pg.mkBrush(l.color))
+                        axs.addItem(label)
+                        labels.append(label)
+                    self.spec_labels.append(labels)
+                    self.spec_region_labels.append([])
+
                 row += 1
                 
-            # add data to the plots:
+            # special trace items (TODO: eliminate those as soon as possible):
             for trace in self.data.traces:
-                if self.panels[trace.panel] == 'xt':
-                    item = TraceItem(trace, c)
-                elif self.panels[trace.panel] == 'ft':
-                    item = SpecItem(trace, c)
-                    item.set_cbar(cbar)
-                self.panels[trace.panel].add_item(c, item, True)
-                trace.plot_item = item
-
                 if trace.name == 'data': # or trace.name == 'filtered':
-                    self.traces.append(item)
+                    self.traces.append(trace.plot_item)
                 elif trace.name == 'envelope':
-                    item.setVisible(False)
-                    self.envelopes.append(item)
+                    self.envelopes.append(trace.plot_item)
                 elif trace.name == 'spectrogram':
-                    self.specs.append(item)
+                    self.specs.append(trace.plot_item)
 
             proxy = pg.SignalProxy(fig.scene().sigMouseMoved, rateLimit=60,
                                    slot=lambda x, c=c: self.mouse_moved(x, c))
@@ -501,7 +463,12 @@ class DataBrowser(QWidget):
             proxy = pg.SignalProxy(fig.scene().sigMouseClicked, rateLimit=60,
                                    slot=lambda x, c=c: self.mouse_clicked(x, c))
             self.sig_proxies.append(proxy)
-
+            
+        self.setting = True
+        for r in self.plot_ranges.values():
+            r.set_limits()
+            r.set_ranges()
+        self.setting = False
         self.data.set_need_update()
         self.set_times()
         
@@ -735,28 +702,22 @@ class DataBrowser(QWidget):
                     self.addAction(l.action)
                 l.action.setShortcut(l.key_shortcut)
                 l.action.setEnabled(True)
+            for r in self.plot_ranges:
+                r.show_crosshair(True)
+            # TODO: add to plot_ranges:
             for axts in self.axts:
                 for ax in axts:
                     ax.xline.setVisible(True)
-            for axxs in self.axxs:
-                for ax in axxs:
-                    ax.yline.setVisible(True)
-            for axfys in self.axfys:
-                for ax in axfys:
-                    ax.yline.setVisible(True)
         else:
             self.xpos_action.setVisible(False)
             self.ypos_action.setVisible(False)
             self.zpos_action.setVisible(False)
+            for r in self.plot_ranges:
+                r.show_crosshair(False)
+            # TODO: add to plot_ranges:
             for axts in self.axts:
                 for ax in axts:
                     ax.xline.setVisible(False)
-            for axxs in self.axxs:
-                for ax in axxs:
-                    ax.yline.setVisible(False)
-            for axfys in self.axfys:
-                for ax in axfys:
-                    ax.yline.setVisible(False)
             self.clear_marker()
             # disable marker actions:
             for l in self.marker_labels:
@@ -831,6 +792,7 @@ class DataBrowser(QWidget):
         self.marker_freq = None
         self.marker_power = None
         self.marker_channel = channel
+        """ TODO: update to plot_ranges or what:
         for ax in self.axs[channel]:
             if ax.sceneBoundingRect().contains(pixel_pos):
                 pos = ax.getViewBox().mapSceneToView(pixel_pos)
@@ -873,20 +835,18 @@ class DataBrowser(QWidget):
                            ti < spec.data.shape[1]:
                             self.marker_power = spec.data.buffer[fi, ti]
                 break
-            
+        """            
         # set cross-hair positions:
+        # TODO: add to plot_ranges:
         if self.marker_time:
             for axts in self.axts:
                 for axt in axts:
                     axt.xline.setPos(self.marker_time)
+                    axt.xline.setPos(self.marker_time)
         if self.marker_ampl:
-            for axxs in self.axxs:
-                for axy in axxs:
-                    axy.yline.setPos(self.marker_ampl)
+            self.plot_ranges['x'].set_crosshair(self.marker_ampl)
         if self.marker_freq:
-            for axfys in self.axfys:
-                for axf in axfys:
-                    axf.yline.setPos(self.marker_freq)
+            self.plot_ranges['f'].set_crosshair(self.marker_freq)
                 
         # compute deltas:
         self.delta_time = None
@@ -1024,17 +984,12 @@ class DataBrowser(QWidget):
             return
         self.setting = True
         for c in range(self.data.channels):
-            # update time ranges:
+            # update time ranges: TODO add to plot_ranges
             for ax in self.axts[c]:
                 self.data.set_time_range(ax)
-            # update amplitude ranges:
-            for ax in self.axxs[c]:
-                ax.setYRange(self.ymin[c], self.ymax[c])
-            # update frequency ranges:
-            for ax in self.axfys[c]:
-                ax.setXRange(self.f0[c], self.f1[c])
-            for ax in self.axfxs[c]:
-                ax.setYRange(self.f0[c], self.f1[c])
+        # update ranges:
+        for r in self.plot_ranges:
+            r.set_ranges()
         self.data.set_need_update()
         self.update_plots()
         self.setting = False
@@ -1238,14 +1193,9 @@ class DataBrowser(QWidget):
         if self.setting:
             return
         self.setting = True
-        for c in self.selected_channels:
-            if not ymin is None:
-                self.ymin[c] = ymin
-            if not ymax is None:
-                self.ymax[c] = ymax
-            if self.isVisible():
-                for ax in self.axxs[c]:
-                    ax.setYRange(self.ymin[c], self.ymax[c])
+        self.plot_ranges['x'].set_ranges(ymin, ymax,
+                                         self.selected_channels,
+                                         self.isVisible())
         self.setting = False
 
             
@@ -1257,63 +1207,45 @@ class DataBrowser(QWidget):
         
 
     def zoom_ampl_in(self):
-        for c in self.selected_channels:
-            h = 0.25*(self.ymax[c] - self.ymin[c])
-            m = 0.5*(self.ymax[c] + self.ymin[c])
-            if h > 1/2**16:
-                self.ymin[c] = m - h
-                self.ymax[c] = m + h
-        self.set_amplitudes()
+        self.setting = True
+        self.plot_ranges['x'].zoom_in(self.selected_channels, self.isVisible())
+        self.setting = False
 
         
     def zoom_ampl_out(self):
-        for c in self.selected_channels:
-            h = self.ymax[c] - self.ymin[c]
-            m = 0.5*(self.ymax[c] + self.ymin[c])
-            self.ymin[c] = m - h
-            self.ymax[c] = m + h
-            if self.ymax[c] > self.ampl_max:
-                self.ymax[c] = self.ampl_max
-                self.ymin[c] = 1 - 2*h
-            if self.ymin[c] < self.ampl_min:
-                self.ymin[c] = self.ampl_min
-        self.set_amplitudes()
+        self.setting = True
+        self.plot_ranges['x'].zoom_out(self.selected_channels, self.isVisible())
+        self.setting = False
         
         
     def auto_ampl(self):
-        for c in self.selected_channels:
-            self.ymin[c], self.ymax[c] = \
-                self.traces[c].auto_ampl(self.data.toffset, self.data.twindow)
-        self.set_amplitudes()
+        self.setting = True
+        for r in 'xyz':
+            self.plot_ranges[r].auto(self.data.toffset,
+                                     self.data.toffset + self.data.twindow,
+                                     self.selected_channels, self.isVisible())
+        self.setting = False
 
         
     def reset_ampl(self):
-        for c in self.selected_channels:
-            self.ymin[c] = self.ampl_min if np.isfinite(self.ampl_min) else -1
-            self.ymax[c] = self.ampl_max if np.isfinite(self.ampl_max) else +1
-        self.set_amplitudes()
+        self.setting = True
+        for r in 'xyz':
+            self.plot_ranges[r].reset(self.selected_channels, self.isVisible())
+        self.setting = False
 
 
     def center_ampl(self):
-        for c in self.selected_channels:
-            dy = self.ymax[c] - self.ymin[c]
-            self.ymin[c] = -dy/2
-            self.ymax[c] = +dy/2
-        self.set_amplitudes()
+        self.setting = True
+        for r in 'xyz':
+            self.plot_ranges[r].center(self.selected_channels, self.isVisible())
+        self.setting = False
 
 
     def set_frequencies(self, f0=None, f1=None):
         self.setting = True
-        for c in self.selected_channels:
-            if not f0 is None:
-                self.f0[c] = f0
-            if not f1 is None:
-                self.f1[c] = f1
-            if self.isVisible():
-                for ax in self.axfys[c]:
-                    ax.setYRange(self.f0[c], self.f1[c])
-                for ax in self.axfxs[c]:
-                    ax.setXRange(self.f0[c], self.f1[c])
+        self.plot_ranges['x'].set_ranges(f0, f1,
+                                         self.selected_channels,
+                                         self.isVisible())
         self.setting = False
 
             
@@ -1325,71 +1257,39 @@ class DataBrowser(QWidget):
         
                 
     def zoom_freq_in(self):
-        for c in self.selected_channels:
-            df = self.f1[c] - self.f0[c]
-            if df > 0.1:
-                df *= 0.5
-                self.f1[c] = self.f0[c] + df
-        self.set_frequencies()
+        self.setting = True
+        self.plot_ranges['f'].zoom_in(self.selected_channels, self.isVisible())
+        self.setting = False
             
         
     def zoom_freq_out(self):
-        for c in self.selected_channels:
-            if self.f1[c] - self.f0[c] < self.fmax:
-                df = self.f1[c] - self.f0[c]
-                df *= 2.0
-                if df > self.fmax:
-                    df = self.fmax
-                self.f1[c] = self.f0[c] + df
-                if self.f1[c] > self.fmax:
-                    self.f1[c] = self.fmax
-                    self.f0[c] = self.fmax - df
-                if self.f0[c] < 0:
-                    self.f0[c] = 0
-                    self.f1[c] = df
-        self.set_frequencies()
+        self.setting = True
+        self.plot_ranges['f'].zoom_out(self.selected_channels, self.isVisible())
+        self.setting = False
                 
         
     def freq_down(self):
-        for c in self.selected_channels:
-            if self.f0[c] > 0.0:
-                df = self.f1[c] - self.f0[c]
-                self.f0[c] -= 0.5*df
-                self.f1[c] -= 0.5*df
-                if self.f0[c] < 0.0:
-                    self.f0[c] = 0.0
-                    self.f1[c] = df
-        self.set_frequencies()
+        self.setting = True
+        self.plot_ranges['f'].down(self.selected_channels, self.isVisible())
+        self.setting = False
 
             
     def freq_up(self):
-        for c in self.selected_channels:
-            if self.f1[c] < self.fmax:
-                df = self.f1[c] - self.f0[c]
-                self.f0[c] += 0.5*df
-                self.f1[c] += 0.5*df
-        self.set_frequencies()
+        self.setting = True
+        self.plot_ranges['f'].up(self.selected_channels, self.isVisible())
+        self.setting = False
 
         
     def freq_home(self):
-        for c in self.selected_channels:
-            if self.f0[c] > 0.0:
-                df = self.f1[c] - self.f0[c]
-                self.f0[c] = 0.0
-                self.f1[c] = df
-        self.set_frequencies()
+        self.setting = True
+        self.plot_ranges['f'].home(self.selected_channels, self.isVisible())
+        self.setting = False
 
             
     def freq_end(self):
-        for c in self.selected_channels:
-            if self.f1[c] < self.fmax:
-                df = self.f1[c] - self.f0[c]
-                self.f1[c] = ceil(self.fmax/(0.5*df))*(0.5*df)
-                self.f0[c] = self.f1[c] - df
-                if self.f0[c] < 0.0:
-                    self.f0[c] = 0.0
-                    self.f1[c] = df
-        self.set_frequencies()
+        self.setting = True
+        self.plot_ranges['f'].end(self.selected_channels, self.isVisible())
+        self.setting = False
 
 
     def set_resolution(self, nfft=None, hop_frac=None, dispatch=True):

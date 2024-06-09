@@ -1,3 +1,6 @@
+from .traceitem import TraceItem
+from .specitem import SpecItem
+
 
 class Panel(object):
     
@@ -34,6 +37,18 @@ class Panel(object):
     def add_item(self, channel, plot_item, is_data):
         self.axs[channel].add_item(plot_item, is_data)
         self.items[channel].append(plot_item)
+
+
+    def add_traces(self, channel, data):        
+        for trace in data.traces:
+            if trace.panel != self.name:
+                continue
+            if self.ax_spec in ['xt', 'yt', 'zt']:
+                item = TraceItem(trace, channel)
+            elif self.ax_spec == 'ft':
+                item = SpecItem(trace, channel)
+            self.add_item(channel, item, True)
+            trace.plot_item = item
 
 
     def update_plots(self):

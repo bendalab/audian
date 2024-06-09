@@ -1,6 +1,7 @@
 """PlotItem for displaying any data as a function of time.
 """
 
+import numpy as np
 try:
     from PyQt5.QtCore import Signal
 except ImportError:
@@ -13,8 +14,9 @@ from .yaxisitem import YAxisItem
 
 class TimePlot(pg.PlotItem):
 
-    def __init__(self, ylabel, channel, xwidth, browser):
+    def __init__(self, aspec, ylabel, channel, xwidth, browser):
 
+        self.aspec = aspec
         self.channel = channel
 
         # view box:
@@ -105,6 +107,38 @@ class TimePlot(pg.PlotItem):
         if is_data:
             self.data_items.append(item)
         self.addItem(item)
+
+
+    def range(self):
+        amin = None
+        amax = None
+        for item in self.data_items:
+            a0 = item.data.ampl_min
+            a1 = item.data.ampl_max
+            if amin is None or a0 < amin:
+                amin = a0
+            if amax is None or a1 > amax:
+                amax = a1
+        if amin is None:
+            amin = -1
+        if amax is None:
+            amax = +1
+        return amin, amax
+
+
+    def amplitudes(self, t0, t1):
+        amin = None
+        amax = None
+        for item in self.data_items:
+            i0 = int(np.round(t0*item.rate))
+            i1 = int(np.round(t1*item.rate))
+            a0 = np.min(item.data[i0:i1, item.channel])
+            a1 = np.max(item.data[i0:i1, item.channel])
+            if amin is None or a0 < amin:
+                amin = a0
+            if amax is None or a1 > amax:
+                amax = a1
+        return amin, amax
 
 
     def update_plot(self):
