@@ -27,7 +27,6 @@ class Data(object):
         self.tbefore = 0
         self.tafter = 0
         self.traces = []
-        self.spectrum = None
 
 
     def add_trace(self, trace):
@@ -43,13 +42,6 @@ class Data(object):
 
     def clear_traces(self):
         self.traces = []
-
-
-    def setup_traces(self):
-        for t in self.traces:
-            if t.name == 'spectrogram':
-                self.spectrum = t
-        self.order_traces()
 
         
     def __del__(self):
@@ -107,7 +99,9 @@ class Data(object):
         return traces
     
         
-    def order_traces(self):
+    def setup_traces(self):
+        """ order trace sequence.
+        """
         traces = []
         self.sources = []
         i = -1

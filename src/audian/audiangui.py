@@ -691,9 +691,9 @@ class Audian(QMainWindow):
 
 
     def dispatch_power(self):
-        if self.link_power:
-            zmin = [s.zmin for s in self.browser().specs]
-            zmax = [s.zmax for s in self.browser().specs]
+        if self.link_power and 'spectrogram' in self.browser().data:
+            zmin = [s.zmin for s in self.browser().data['spectrogram'].plot_items]
+            zmax = [s.zmax for s in self.browser().data['spectrogram'].plot_items]
             for b in self.browsers:
                 if not b is self.browser():
                     b.set_power(zmin, zmax, False)
@@ -753,8 +753,8 @@ class Audian(QMainWindow):
 
 
     def dispatch_envelope(self):
-        if self.link_envelope:
-            envelope_cutoff = self.browser().data.envelope.envelope_cutoff
+        if self.link_envelope and 'envelope' in self.browser().data:
+            envelope_cutoff = self.browser().data['envelope'].envelope_cutoff
             show_envelope = self.browser().data.is_visible('envelope')
             for b in self.browsers:
                 if not b is self.browser():

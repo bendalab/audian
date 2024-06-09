@@ -181,7 +181,6 @@ class DataBrowser(QWidget):
         self.axts = []      # plots with time axis
         self.axgs = []      # plots with grids
         # lists with one plot item per channel:
-        self.traces = []    # traces
         self.specs = []     # spectrograms
         self.cbars = []     # color bars
         # lists with marker labels and regions:
@@ -325,7 +324,6 @@ class DataBrowser(QWidget):
         self.axts = []      # plots with time axis
         self.axgs = []      # plots with grids
         # lists with one plot item per channel:
-        self.traces = []    # traces
         self.specs = []     # spectrograms
         self.cbars = []     # color bars
         # lists with marker labels and regions:
@@ -437,9 +435,7 @@ class DataBrowser(QWidget):
                 
             # special trace items (TODO: eliminate those as soon as possible):
             for trace in self.data.traces:
-                if trace.name == 'data': # or trace.name == 'filtered':
-                    self.traces.append(trace.plot_items[c])
-                elif trace.name == 'spectrogram':
+                if trace.name == 'spectrogram':
                     self.specs.append(trace.plot_items[c])
 
             proxy = pg.SignalProxy(fig.scene().sigMouseMoved, rateLimit=60,
@@ -505,19 +501,19 @@ class DataBrowser(QWidget):
         self.toolbar.addAction(self.acts.zoom_forward)
         self.toolbar.addSeparator()
 
-        if self.data.spectrum is not None:
+        if 'spectrogram' in self.data:
             self.toolbar.addWidget(QLabel('N:'))
             self.nfftw = QComboBox(self)
             self.nfftw.tooltip = 'NFFT (R, Shift+R)'
             self.nfftw.setToolTip(self.nfftw.tooltip)
             self.nfftw.addItems([f'{2**i}' for i in range(3, 20)])
             self.nfftw.setEditable(False)
-            self.nfftw.setCurrentText(f'{self.data.spectrum.nfft}')
+            self.nfftw.setCurrentText(f'{self.data["spectrogram"].nfft}')
             self.nfftw.currentTextChanged.connect(lambda s: self.set_resolution(nfft=int(s)))
             self.toolbar.addWidget(self.nfftw)
 
             self.toolbar.addWidget(QLabel('O:'))
-            self.ofracw = pg.SpinBox(self, 100*(1 - self.data.spectrum.hop_frac),
+            self.ofracw = pg.SpinBox(self, 100*(1 - self.data["spectrogram"].hop_frac),
                                      bounds=(0, 99.8),
                                      suffix='%', siPrefix=False,
                                      step=0.5, dec=True, decimals=3,
@@ -1299,56 +1295,57 @@ class DataBrowser(QWidget):
         if self.setting:
             return
         self.setting = True
-        if self.data.spectrum is None:
+        if 'spectrogram' not in self.data:
             return
-        self.data.spectrum.update(nfft, hop_frac)
+        spectrogram = self.data['spectrogram']
+        spectrogram.update(nfft, hop_frac)
         self.update_plots()
-        self.nfftw.setCurrentText(f'{self.data.spectrum.nfft}')
-        T = self.data.spectrum.nfft/self.data.rate
+        self.nfftw.setCurrentText(f'{spectrogram.nfft}')
+        T = spectrogram.nfft/self.data.rate
         if T >= 1:
             self.nfftw.setToolTip(self.nfftw.tooltip +
-                                  f'={self.data.spectrum.nfft}, ' +
+                                  f'={spectrogram.nfft}, ' +
                                   f'T={T:.1f}s, \u0394f={1/T:.2f}Hz')
         elif T >= 0.1:
             self.nfftw.setToolTip(self.nfftw.tooltip +
-                                  f'={self.data.spectrum.nfft}, ' +
+                                  f'={spectrogram.nfft}, ' +
                                   f'T={1000*T:.0f}ms, \u0394f={1/T:.1f}Hz')
         elif T >= 0.01:
             self.nfftw.setToolTip(self.nfftw.tooltip +
-                                  f'={self.data.spectrum.nfft}, ' +
+                                  f'={spectrogram.nfft}, ' +
                                   f'T={1000*T:.0f}ms, \u0394f={1/T:.0f}Hz')
         elif T >= 0.001:
             self.nfftw.setToolTip(self.nfftw.tooltip +
-                                  f'={self.data.spectrum.nfft}, ' +
+                                  f'={spectrogram.nfft}, ' +
                                   f'T={1000*T:.1f}ms, \u0394f={1/T:.0f}Hz')
         else:
             self.nfftw.setToolTip(self.nfftw.tooltip +
-                                  f'={self.data.spectrum.nfft}, ' +
+                                  f'={spectrogram.nfft}, ' +
                                   f'T={1000*T:.2f}ms, \u0394f={0.001/T:.1f}kHz')
-        self.ofracw.setValue(100*(1 - self.data.spectrum.hop_frac))
+        self.ofracw.setValue(100*(1 - spectrogram.hop_frac))
         self.setting = False
         if dispatch:
             self.sigResolutionChanged.emit()
 
         
     def freq_resolution_down(self):
-        if self.data.spectrum is not None:
-            self.set_resolution(nfft=self.data.spectrum.nfft//2)
+        if 'spectrogram' in self.data:
+            self.set_resolution(nfft=self.data['spectrogram'].nfft//2)
 
         
     def freq_resolution_up(self):
-        if self.data.spectrum is not None:
-            self.set_resolution(nfft=2*self.data.spectrum.nfft)
+        if 'spectrogram' in self.data:
+            self.set_resolution(nfft=2*self.data['spectrogram'].nfft)
 
 
     def hop_frac_down(self):
-        if self.data.spectrum is not None:
-            self.set_resolution(hop_frac=self.data.spectrum.hop_frac/2)
+        if 'spectrogram' in self.data:
+            self.set_resolution(hop_frac=self.data['spectrogram'].hop_frac/2)
 
 
     def hop_frac_up(self):
-        if self.data.spectrum is not None:
-            self.set_resolution(hop_frac=2*self.data.spectrum.hop_frac)
+        if 'spectrogram' in self.data:
+            self.set_resolution(hop_frac=2*self.data['spectrogram'].hop_frac)
 
         
     def set_color_map(self, color_map=None, dispatch=True):
