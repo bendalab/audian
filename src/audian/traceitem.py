@@ -29,6 +29,8 @@ class TraceItem(pg.PlotDataItem):
         self.color = self.data.color
         self.lw_thin = self.data.lw_thin
         self.lw_thick = self.data.lw_thick
+
+        self.data.plot_items[self.channel] = self
         
         pg.PlotDataItem.__init__(self, *args, connect='all',
                                  antialias=False, skipFiniteCheck=True,

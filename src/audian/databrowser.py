@@ -1,6 +1,6 @@
 import os
 from copy import deepcopy
-from math import fabs, floor
+from math import fabs, floor, log10
 import datetime as dt
 import numpy as np
 from scipy.signal import butter, sosfiltfilt
@@ -182,7 +182,6 @@ class DataBrowser(QWidget):
         self.axgs = []      # plots with grids
         # lists with one plot item per channel:
         self.traces = []    # traces
-        self.envelopes = [] # envelopes
         self.specs = []     # spectrograms
         self.cbars = []     # color bars
         # lists with marker labels and regions:
@@ -192,19 +191,6 @@ class DataBrowser(QWidget):
         self.spec_region_labels = [] # regions with labels on spectrograms
         # full traces:
         self.datafig = None
-
-        # actions:
-        if self.data.filtered is None:
-            self.acts.link_filter.setEnabled(False)
-            self.acts.highpass_up.setEnabled(False)
-            self.acts.highpass_down.setEnabled(False)
-            self.acts.lowpass_up.setEnabled(False)
-            self.acts.lowpass_down.setEnabled(False)
-        if self.data.envelope is None:
-            self.acts.link_envelope.setEnabled(False)
-            self.acts.show_envelope.setEnabled(False)
-            self.acts.envelope_up.setEnabled(False)
-            self.acts.envelope_down.setEnabled(False)
 
 
     def add_panel(self, name, axes, row=None):
@@ -282,15 +268,17 @@ class DataBrowser(QWidget):
         self.plot_ranges = {s: PlotRange(s, self.data.channels) for s in 'xyuf'}
         
         # requested filtering:
-        filter_changed = False
-        if self.data.filtered is not None and highpass_cutoff is not None:
-            self.data.filtered.highpass_cutoff = highpass_cutoff
-            filter_changed = True
-        if self.data.filtered is not None and lowpass_cutoff is not None:
-            self.data.filtered.lowpass_cutoff = lowpass_cutoff
-            filter_changed = True
-        if filter_changed:
-            self.data.filtered.update()
+        if 'filtered' in self.data:
+            filtered = self.data['filtered']
+            filter_changed = False
+            if highpass_cutoff is not None:
+                filtered.highpass_cutoff = highpass_cutoff
+                filter_changed = True
+            if lowpass_cutoff is not None:
+                filtered.lowpass_cutoff = lowpass_cutoff
+                filter_changed = True
+            if filter_changed:
+                filtered.update()
                 
         # setup channel selection:
         if self.show_channels is None:
@@ -338,7 +326,6 @@ class DataBrowser(QWidget):
         self.axgs = []      # plots with grids
         # lists with one plot item per channel:
         self.traces = []    # traces
-        self.envelopes = [] # envelopes
         self.specs = []     # spectrograms
         self.cbars = []     # color bars
         # lists with marker labels and regions:
@@ -451,11 +438,9 @@ class DataBrowser(QWidget):
             # special trace items (TODO: eliminate those as soon as possible):
             for trace in self.data.traces:
                 if trace.name == 'data': # or trace.name == 'filtered':
-                    self.traces.append(trace.plot_item)
-                elif trace.name == 'envelope':
-                    self.envelopes.append(trace.plot_item)
+                    self.traces.append(trace.plot_items[c])
                 elif trace.name == 'spectrogram':
-                    self.specs.append(trace.plot_item)
+                    self.specs.append(trace.plot_items[c])
 
             proxy = pg.SignalProxy(fig.scene().sigMouseMoved, rateLimit=60,
                                    slot=lambda x, c=c: self.mouse_moved(x, c))
@@ -542,30 +527,38 @@ class DataBrowser(QWidget):
             self.toolbar.addWidget(self.ofracw)
             self.toolbar.addSeparator()
 
-        if self.data.filtered is not None:
+        if 'filtered' in self.data:
             self.toolbar.addWidget(QLabel('H:'))
-            self.hpfw = pg.SpinBox(self, self.data.filtered.highpass_cutoff,
+            self.hpfw = pg.SpinBox(self, self.data['filtered'].highpass_cutoff,
                                    bounds=(0, self.data.rate/2),
                                    suffix='Hz', siPrefix=True,
                                    step=0.5, dec=True, decimals=3,
-                                   minStep=10**np.floor(np.log10(0.01*self.data.rate/2)))
+                                   minStep=10**floor(log10(0.01*self.data.rate/2)))
             self.hpfw.setToolTip('High-pass filter cutoff frequency (H, Shift+H)')
             self.hpfw.sigValueChanged.connect(lambda s: self.update_filter(highpass_cutoff=s.value()))
             self.toolbar.addWidget(self.hpfw)        
 
             self.toolbar.addWidget(QLabel(' L:'))
-            self.lpfw = pg.SpinBox(self, self.data.filtered.lowpass_cutoff,
+            self.lpfw = pg.SpinBox(self, self.data['filtered'].lowpass_cutoff,
                                    bounds=(0.01*self.data.rate/2, self.data.rate/2),
                                    suffix='Hz', siPrefix=True,
                                    step=0.5, dec=True, decimals=3,
-                                   minStep=10**np.floor(np.log10(0.01*self.data.rate/2)))
+                                   minStep=10**floor(log10(0.01*self.data.rate/2)))
             self.lpfw.setToolTip('Low-pass filter cutoff frequency (L, Shift+L)')
             self.lpfw.sigValueChanged.connect(lambda s: self.update_filter(lowpass_cutoff=s.value()))
-            self.toolbar.addWidget(self.lpfw)        
+            self.toolbar.addWidget(self.lpfw)
+        else:
+            self.hpfw = None
+            self.lpfw = None
+            self.acts.link_filter.setEnabled(False)
+            self.acts.highpass_up.setEnabled(False)
+            self.acts.highpass_down.setEnabled(False)
+            self.acts.lowpass_up.setEnabled(False)
+            self.acts.lowpass_down.setEnabled(False)
         
-        if self.data.envelope is not None:
+        if 'envelope' in self.data:
             self.toolbar.addWidget(QLabel(' E:'))
-            self.envfw = pg.SpinBox(self, self.data.envelope.envelope_cutoff,
+            self.envfw = pg.SpinBox(self, self.data['envelope'].envelope_cutoff,
                                     bounds=(0, 0.5*self.data.rate/2),
                                     suffix='Hz', siPrefix=True,
                                     step=0.5, dec=True, decimals=3,
@@ -573,6 +566,12 @@ class DataBrowser(QWidget):
             self.envfw.setToolTip('Envelope low-pass filter cutoff frequency (E, Shift+E)')
             self.envfw.sigValueChanged.connect(lambda s: self.update_envelope(envelope_cutoff=s.value()))
             self.toolbar.addWidget(self.envfw)
+        else:
+            self.envfw = None
+            self.acts.link_envelope.setEnabled(False)
+            self.acts.show_envelope.setEnabled(False)
+            self.acts.envelope_up.setEnabled(False)
+            self.acts.envelope_down.setEnabled(False)
 
         self.toolbar.addSeparator()
         self.toolbar.addWidget(QLabel('Channel:'))
@@ -1433,18 +1432,19 @@ class DataBrowser(QWidget):
         if self.setting:
             return
         self.setting = True
-        if self.data.filtered is None:
+        if 'filtered' not in self.data:
             return
+        filtered = self.data['filtered']
         if highpass_cutoff is not None:
-            self.data.filtered.highpass_cutoff = highpass_cutoff
+            filtered.highpass_cutoff = highpass_cutoff
         if lowpass_cutoff is not None:
-            self.data.filtered.lowpass_cutoff = lowpass_cutoff
+            filtered.lowpass_cutoff = lowpass_cutoff
         for ax in self.panels['spectrogram'].axs:
-            ax.set_filter_handles(self.data.filtered.highpass_cutoff,
-                                  self.data.filtered.lowpass_cutoff)
-        self.hpfw.setValue(self.data.filtered.highpass_cutoff)
-        self.lpfw.setValue(self.data.filtered.lowpass_cutoff)
-        self.data.filtered.update()
+            ax.set_filter_handles(filtered.highpass_cutoff,
+                                  filtered.lowpass_cutoff)
+        self.hpfw.setValue(filtered.highpass_cutoff)
+        self.lpfw.setValue(filtered.lowpass_cutoff)
+        filtered.update()
         self.update_plots()
         self.setting = False
         self.sigFilterChanged.emit()  # dispatch
@@ -1456,17 +1456,19 @@ class DataBrowser(QWidget):
         if self.setting:
             return
         self.setting = True
-        if self.data.envelope is None:
+        if 'envelope' not in self.data:
             return
+        envelope = self.data['envelope']
         if envelope_cutoff is not None:
-            self.data.envelope.envelope_cutoff = envelope_cutoff
-        for c in range(self.data.channels):
-            if show_envelope is not None:
-                self.envelopes[c].setVisible(show_envelope)
+            envelope.envelope_cutoff = envelope_cutoff
+        if show_envelope is not None:
+            self.data.set_visible('envelope', show_envelope)
+            self.data.set_visible('envelope1', show_envelope)
+            self.data.set_visible('envelope2', show_envelope)
         self.data.set_need_update()
-        self.data.envelope.update()
+        envelope.update()
         self.update_plots()
-        self.envfw.setValue(self.data.envelope.envelope_cutoff)
+        self.envfw.setValue(envelope.envelope_cutoff)
         self.setting = False
         self.sigEnvelopeChanged.emit()  # dispatch
 
@@ -1850,7 +1852,7 @@ class DataBrowser(QWidget):
 
 
     def play_region(self, t0, t1):
-        data = self.data.data if self.data.filtered is None else self.data.filtered
+        data = self.data['filtered'] if 'filtered' in self.data else self.data['data']
         rate = data.rate
         i0 = int(np.round(t0*rate))
         i1 = int(np.round(t1*rate))

@@ -68,7 +68,6 @@ class Panel(object):
             elif self.ax_spec == 'ft':
                 item = SpecItem(trace, channel)
             self.add_item(channel, item, True)
-            trace.plot_item = item
 
 
     def get_amplitude(self, channel, t, x, t1=None):

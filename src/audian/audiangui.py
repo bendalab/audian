@@ -617,9 +617,9 @@ class Audian(QMainWindow):
 
         
     def dispatch_filter(self):
-        if self.link_filter:
-            highpass_cutoff = self.browser().data.filtered.highpass_cutoff
-            lowpass_cutoff = self.browser().data.filtered.lowpass_cutoff
+        if self.link_filter and 'filtered' in self.browser().data:
+            highpass_cutoff = self.browser().data['filtered'].highpass_cutoff
+            lowpass_cutoff = self.browser().data['filtered'].lowpass_cutoff
             for b in self.browsers:
                 if not b is self.browser():
                     b.update_filter(highpass_cutoff, lowpass_cutoff)
@@ -749,13 +749,13 @@ class Audian(QMainWindow):
 
         
     def toggle_show_envelope(self):
-        self.browser().update_envelope(show_envelope=not self.browser().envelopes[0].isVisible())
+        self.browser().update_envelope(show_envelope=not self.browser().data.is_visible('envelope'))
 
 
     def dispatch_envelope(self):
         if self.link_envelope:
             envelope_cutoff = self.browser().data.envelope.envelope_cutoff
-            show_envelope = self.browser().envelopes[0].isVisible()
+            show_envelope = self.browser().data.is_visible('envelope')
             for b in self.browsers:
                 if not b is self.browser():
                     b.update_envelope(envelope_cutoff=envelope_cutoff,

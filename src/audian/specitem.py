@@ -19,6 +19,8 @@ class SpecItem(pg.ImageItem):
         self.zmax = None
         self.cbar = None
 
+        self.data.plot_items[self.channel] = self
+
 
     def estimate_noiselevels(self):
         nf = self.data.buffer.shape[2]//16

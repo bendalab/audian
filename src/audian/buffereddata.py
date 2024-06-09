@@ -14,7 +14,7 @@ class BufferedData(BufferedArray):
         self.tbefore = 0
         self.tafter = 0
         self.panel = panel
-        self.plot_item = None
+        self.plot_items = []
         self.color = color
         self.lw_thin = lw_thin
         self.lw_thick = lw_thick
@@ -64,6 +64,7 @@ class BufferedData(BufferedArray):
         self.rate = self.source.rate
         self.buffer_changed = np.zeros(self.channels, dtype=bool)
         self.buffer = np.zeros((0, self.channels))
+        self.plot_items = [None]*self.channels
         self.update_step(step, more_shape)
 
         
@@ -108,9 +109,25 @@ class BufferedData(BufferedArray):
         self.reload_buffer()
 
 
+    def is_visible(self):
+        for pi in self.plot_items:
+            if pi is not None and pi.isVisible():
+                return True
+        return False
+
+
+    def set_visible(self, show):
+        for pi in self.plot_items:
+            if pi is not None:
+                pi.setVisible(show)
+
+
     def set_need_update(self):
-        self.need_update = self.plot_item is not None and \
-            self.plot_item.isVisible()
+        self.need_update = False
+        for pi in self.plot_items:
+            if pi is not None and pi.isVisible():
+                self.need_update = True
+                break
         for d in self.dests:
             d.set_need_update()
         # end of dependency chain:

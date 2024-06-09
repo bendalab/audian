@@ -27,8 +27,6 @@ class Data(object):
         self.tbefore = 0
         self.tafter = 0
         self.traces = []
-        self.filtered = None
-        self.envelope = None
         self.spectrum = None
 
 
@@ -49,11 +47,7 @@ class Data(object):
 
     def setup_traces(self):
         for t in self.traces:
-            if t.name == 'filtered':
-                self.filtered = t
-            elif t.name == 'envelope':
-                self.envelope = t
-            elif t.name == 'spectrogram':
+            if t.name == 'spectrogram':
                 self.spectrum = t
         self.order_traces()
 
@@ -83,6 +77,21 @@ class Data(object):
 
     def keys(self):
         return [trace.name for trace in self.traces]
+
+
+    def is_visible(self, name):
+        if name in self:
+            for pi in self[name].plot_items:
+                if pi is not None and pi.isVisible():
+                    return True
+        return False
+
+
+    def set_visible(self, name, show):
+        if name in self:
+            for pi in self[name].plot_items:
+                if pi is not None:
+                    pi.setVisible(show)
 
     
     def get_region(self, t0, t1, channel):
@@ -155,7 +164,7 @@ class Data(object):
         self.data.follow = int(self.follow_time*self.data.rate)
         self.data.name = 'data'
         self.data.panel = 'trace'
-        self.data.plot_item = None
+        self.data.plot_items = [None]*self.data.channels
         self.data.color = '#0000ee'
         self.data.lw_thin = 1.1
         self.data.lw_thick = 2
@@ -184,8 +193,11 @@ class Data(object):
     def set_need_update(self):
         if self.data is None:
             return
-        self.data.need_update = self.data.plot_item is not None and \
-            self.data.plot_item.isVisible()
+        self.data.need_update = False
+        for pi in self.data.plot_items:
+            if pi is not None and pi.isVisible():
+                self.data.need_update = True
+                break
         for d in self.data.dests:
             d.set_need_update()
 
@@ -279,11 +291,4 @@ class Data(object):
             self.twindow = twindow
             return True
         return False
-
-
-    def set_amplitude_limits(self, ax):
-        if np.isfinite(self.data.ampl_min) and np.isfinite(self.data.ampl_max):
-            ax.setLimits(yMin=self.data.ampl_min, yMax=self.data.ampl_max,
-                         minYRange=1/2**16,
-                         maxYRange=self.data.ampl_max - self.data.ampl_min)
 

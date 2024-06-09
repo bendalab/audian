@@ -29,9 +29,9 @@ class SpectrumPlot(TimePlot):
         # filter handles:
         self.highpass_handle = None        
         self.lowpass_handle = None        
-        if browser.data.filtered is not None:
-            self.highpass_cutoff = browser.data.filtered.highpass_cutoff
-            self.lowpass_cutoff = browser.data.filtered.lowpass_cutoff
+        if 'filtered' in browser.data:
+            self.highpass_cutoff = browser.data['filtered'].highpass_cutoff
+            self.lowpass_cutoff = browser.data['filtered'].lowpass_cutoff
             self.highpass_handle = pg.InfiniteLine(angle=0, movable=True)
             self.highpass_handle.setPen(pg.mkPen('white', width=2))
             self.highpass_handle.addMarker('o', position=0.75, size=6)
