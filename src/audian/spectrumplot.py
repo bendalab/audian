@@ -16,7 +16,7 @@ class SpectrumPlot(TimePlot):
 
 
     def __init__(self, browser, channel, xwidth, fmax):
-        super().__init__(channel, xwidth, browser)
+        super().__init__('', channel, xwidth, browser)
         
         # axis:
         self.getAxis('bottom').showLabel(False)

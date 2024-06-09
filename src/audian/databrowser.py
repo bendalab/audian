@@ -415,7 +415,8 @@ class DataBrowser(QWidget):
                     panel.row = row
                 # trace plot:
                 elif panel.ax_spec in ['xt', 'yt', 'zt']:
-                    axt = TimePlot(c, xwidth, self)
+                    ylabel = panel.name if panel.name != 'trace' else ''
+                    axt = TimePlot(ylabel, c, xwidth, self)
                     if np.isfinite(self.ampl_min) and np.isfinite(self.ampl_max):
                         axt.setLimits(yMin=self.ampl_min, yMax=self.ampl_max,
                                       minYRange=1/2**16,

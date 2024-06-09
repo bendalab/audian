@@ -13,7 +13,7 @@ from .yaxisitem import YAxisItem
 
 class TimePlot(pg.PlotItem):
 
-    def __init__(self, channel, xwidth, browser):
+    def __init__(self, ylabel, channel, xwidth, browser):
 
         self.channel = channel
 
@@ -32,10 +32,13 @@ class TimePlot(pg.PlotItem):
         left_axis.setPen('white')
         left_axis.setTextPen('black')
         left_axis.setWidth(8*xwidth)
-        if browser.data.channels > 4:
-            left_axis.setLabel(f'C{channel}', color='black')
+        if ylabel:
+            left_axis.setLabel(ylabel, color='black')
         else:
-            left_axis.setLabel(f'channel {channel}', color='black')
+            if browser.data.channels > 4:
+                left_axis.setLabel(f'C{channel}', color='black')
+            else:
+                left_axis.setLabel(f'channel {channel}', color='black')
         right_axis = YAxisItem(orientation='right', showValues=False)
 
         # plot:

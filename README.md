@@ -61,8 +61,8 @@ handles all GUI aspects.
   - [ ] Provide interface for event filters?
 - [ ] Implement a proper layout for showing the plot panels:
   - [x] Support additional plots from plugins
+  - [ ] Proper y-labels for xt plots: channel not for single trace plot, otherwise plot name with unit.
   - [ ] Amplitude ranges should consider ampl_min/ampl_max of all traces
-  - [ ] Proper y-labels for xt plots: channel no for single trace plot, otherwise plot name with unit.
   - [ ] Add yt plot with independent y-axis key shortcut
   - [ ] Support optional grid layout
 - [ ] New plot widget showing power spectrum of visible range
@@ -155,6 +155,13 @@ Basic plot items:
 
 - `audiangui.py`: Main GUI, handles DataBrowser widgets and key shortcuts.
 - `databrowser.py`: Each data file is displayed in a DataBrowser widget.
+- `panel.py`: Defines and controlls plot panels.
+
+#### Plugins
+
+- `plugins.py`: Discover and manage plugins.
+- `analyzer.py`: Base class for analyzer plugins.
+- `statisticsanalyzer.py`: Compute basic descriptive statistics.
 
 
 ## Old matplotlib-based version
