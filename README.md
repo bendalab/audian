@@ -16,9 +16,9 @@ vocalizations.
 - Change spectrogramm resolution, overlap, color bar range and color map interactively.
 - Change low- and high-pass filter cutoff frequencies interactively.
 - Optional envelope with lowpass-filter cutoff frequency that can be changed interactively.
-- Hide and show channels and plot panels.
+- Hide and show channels as well as plot panels.
 - Extensive and intuitive key shortcuts for most functions.
-- Plugins for additional computed traces and analysis.
+- Plugins for additional computed traces, plot panels, and analysis.
 
 ## New pyqtgraph based version
 
@@ -60,8 +60,11 @@ handles all GUI aspects.
   - [ ] Provide interface for event detectors
   - [ ] Provide interface for event filters?
 - [ ] Implement a proper layout for showing the plot panels:
-  - [ ] support optional grid layout
-  - [x] support additional plots from plugins
+  - [x] Support additional plots from plugins
+  - [ ] Amplitude ranges should consider ampl_min/ampl_max of all traces
+  - [ ] Proper y-labels for xt plots: channel no for single trace plot, otherwise plot name with unit.
+  - [ ] Add yt plot with independent y-axis key shortcut
+  - [ ] Support optional grid layout
 - [ ] New plot widget showing power spectrum of visible range
   or slice at current cursor position. Cycle with Ctrl+P through no power plot, color bar, power spectrum to the right, power spectrum on top.
 - [ ] FullTracePlot:

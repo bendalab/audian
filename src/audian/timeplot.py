@@ -13,11 +13,7 @@ from .yaxisitem import YAxisItem
 
 class TimePlot(pg.PlotItem):
 
-    
-    sigSelectedRegion = Signal(object, object, object)
-
-
-    def __init__(self, channel, xwidth, starttime):
+    def __init__(self, channel, xwidth, browser):
 
         self.channel = channel
 
@@ -29,13 +25,17 @@ class TimePlot(pg.PlotItem):
         bottom_axis.setLabel('Time', 's', color='black')
         bottom_axis.setPen('white')
         bottom_axis.setTextPen('black')
-        bottom_axis.set_start_time(starttime)
+        bottom_axis.set_start_time(browser.data.start_time)
         top_axis = TimeAxisItem(orientation='top', showValues=False)
-        top_axis.set_start_time(starttime)
+        top_axis.set_start_time(browser.data.start_time)
         left_axis = YAxisItem(orientation='left', showValues=True)
         left_axis.setPen('white')
         left_axis.setTextPen('black')
         left_axis.setWidth(8*xwidth)
+        if browser.data.channels > 4:
+            left_axis.setLabel(f'C{channel}', color='black')
+        else:
+            left_axis.setLabel(f'channel {channel}', color='black')
         right_axis = YAxisItem(orientation='right', showValues=False)
 
         # plot:
@@ -54,6 +54,7 @@ class TimePlot(pg.PlotItem):
         self.hideButtons()
         self.setMenuEnabled(False)
         self.enableAutoRange(False, False)
+        self.getViewBox().init_zoom_history()
 
         # audio marker:
         self.vmarker = pg.InfiniteLine(angle=90, movable=False)
@@ -88,8 +89,13 @@ class TimePlot(pg.PlotItem):
         self.prev_marker.setZValue(20)
         self.addItem(self.prev_marker, ignoreBounds=True)
 
+        # ranges:
+        browser.data.set_time_limits(self)
+        browser.data.set_time_range(self)
+
         # signals:
-        view.sigSelectedRegion.connect(self.sigSelectedRegion)
+        self.sigXRangeChanged.connect(browser.update_times)
+        view.sigSelectedRegion.connect(browser.region_menu)
 
 
     def add_item(self, item):

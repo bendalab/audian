@@ -15,8 +15,8 @@ class SpectrumPlot(TimePlot):
     sigUpdateFilter = Signal(object, object)
 
 
-    def __init__(self, data, channel, xwidth, fmax):
-        super().__init__(channel, xwidth, data.start_time)
+    def __init__(self, browser, channel, xwidth, fmax):
+        super().__init__(channel, xwidth, browser)
         
         # axis:
         self.getAxis('bottom').showLabel(False)
@@ -28,9 +28,9 @@ class SpectrumPlot(TimePlot):
                        minYRange=0.1, maxYRange=fmax)
 
         # filter handles:
-        if data.filtered is not None:
-            self.highpass_cutoff = data.filtered.highpass_cutoff
-            self.lowpass_cutoff = data.filtered.lowpass_cutoff
+        if browser.data.filtered is not None:
+            self.highpass_cutoff = browser.data.filtered.highpass_cutoff
+            self.lowpass_cutoff = browser.data.filtered.lowpass_cutoff
             self.highpass_handle = pg.InfiniteLine(angle=0, movable=True)
             self.highpass_handle.setPen(pg.mkPen('white', width=2))
             self.highpass_handle.addMarker('o', position=0.75, size=6)
@@ -47,6 +47,12 @@ class SpectrumPlot(TimePlot):
             self.lowpass_handle.setValue(self.lowpass_cutoff)
             self.lowpass_handle.sigPositionChangeFinished.connect(self.lowpass_changed)
             self.addItem(self.lowpass_handle, ignoreBounds=True)
+            
+        self.setVisible(browser.show_specs > 0)
+        self.setYRange(browser.f0[channel], browser.f1[channel])
+        self.sigYRangeChanged.connect(browser.update_frequencies)
+        self.sigUpdateFilter.connect(browser.update_filter)
+            
 
 
     def set_filter_handles(self, highpass_cutoff=None, lowpass_cutoff=None):
