@@ -19,10 +19,30 @@ class Panel(object):
     def __eq__(self, ax_spec):
         return self.ax_spec == ax_spec
 
+
+    def is_time(self):
+        return self.ax_spec[1] == 't'
+
+
+    def is_amplitude(self):
+        return self.ax_spec[0] in 'xyu'
+
+
+    def is_xfrequency(self):
+        return self.ax_spec[1] == 'f'
+
+
+    def is_yfrequency(self):
+        return self.ax_spec[0] == 'f'
+
     
     def add_ax(self, ax):
         self.axs.append(ax)
         self.items.append([])
+
+
+    def is_used(self):
+        return len(self.axs) > 0
 
 
     def is_visible(self, channel):
@@ -49,6 +69,20 @@ class Panel(object):
                 item = SpecItem(trace, channel)
             self.add_item(channel, item, True)
             trace.plot_item = item
+
+
+    def get_amplitude(self, channel, t, x, t1=None):
+        if not self.is_amplitude() or len(self.axs[channel].data_items) == 0:
+            return t, None
+        trace = self.axs[channel].data_items[-1]
+        return trace.get_amplitude(t, x, t1)
+
+
+    def get_power(self, channel, t, f):
+        if not self.is_yfrequency() or len(self.axs[channel].data_items) == 0:
+            return None
+        trace = self.axs[channel].data_items[0]
+        return trace.get_power(t, f)
 
 
     def update_plots(self):

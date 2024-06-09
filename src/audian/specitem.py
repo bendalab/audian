@@ -1,6 +1,7 @@
 """PlotDataItem for spectrogram.
 """
 
+from math import floor
 import numpy as np
 import pyqtgraph as pg
 from thunderlab.powerspectrum import decibel
@@ -46,6 +47,16 @@ class SpecItem(pg.ImageItem):
             self.cbar.setLevels((self.zmin, self.zmax))
 
 
+    def get_power(self, t, f):
+        """Get power next to cursor position. """
+        ti = int(floor(t*self.data.rate))
+        fi = int(floor(f/self.data.fresolution))
+        if ti < self.data.shape[0] and fi < self.data.shape[2]:
+            return decibel(self.data[ti, self.channel, fi])
+        else:
+            return None
+
+        
     def update_plot(self):
         if not self.data.buffer_changed[self.channel]:
             return

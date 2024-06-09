@@ -717,7 +717,7 @@ class DataBrowser(QWidget):
                     self.addAction(l.action)
                 l.action.setShortcut(l.key_shortcut)
                 l.action.setEnabled(True)
-            for r in self.plot_ranges:
+            for r in self.plot_ranges.values():
                 r.show_crosshair(True)
             # TODO: add to plot_ranges:
             for axts in self.axts:
@@ -727,7 +727,7 @@ class DataBrowser(QWidget):
             self.xpos_action.setVisible(False)
             self.ypos_action.setVisible(False)
             self.zpos_action.setVisible(False)
-            for r in self.plot_ranges:
+            for r in self.plot_ranges.values():
                 r.show_crosshair(False)
             # TODO: add to plot_ranges:
             for axts in self.axts:
@@ -778,10 +778,10 @@ class DataBrowser(QWidget):
         # add new label point to scatter plots:
         labels = [l.label for l in self.marker_labels]
         if len(label) > 0 and label in labels and \
-           not self.marker_time is None:
+           self.marker_time is not None:
             lidx = labels.index(label)
             for c, tl in enumerate(self.trace_labels):
-                if c == self.marker_channel and not self.marker_ampl is None:
+                if c == self.marker_channel and self.marker_ampl is not None:
                     tl[lidx].addPoints((self.marker_time,),
                                       (self.marker_ampl,),
                                        tip=marker_tip)
@@ -807,50 +807,36 @@ class DataBrowser(QWidget):
         self.marker_freq = None
         self.marker_power = None
         self.marker_channel = channel
-        """ TODO: update to plot_ranges or what:
-        for ax in self.axs[channel]:
-            if ax.sceneBoundingRect().contains(pixel_pos):
-                pos = ax.getViewBox().mapSceneToView(pixel_pos)
-                pixel_pos.setX(pixel_pos.x()+1)
-                npos = ax.getViewBox().mapSceneToView(pixel_pos)
-                if hasattr(ax, 'xline'):
-                    ax.xline.setPos(pos.x())
-                    # is it time?
-                    for axts in self.axts:
-                        if ax in axts:
-                            self.marker_ax = ax
-                            self.marker_time = pos.x()
-                            break
-                if hasattr(ax, 'yline'):
-                    ax.yline.setPos(pos.y())
-                    # is it amplitude?
-                    for axxs in self.axxs:
-                        if ax in axxs:
-                            self.marker_ampl = pos.y()
-                            break
-                    # is it trace amplitude?
-                    if ax in self.panels['trace'].axs:
-                        if not self.marker_time is None:
-                            trace = self.traces[self.panels['trace'].axs.index(ax)]
-                            self.marker_time, self.marker_ampl = \
-                                trace.get_amplitude(self.marker_time,
-                                                    pos.y(), npos.x())
-                    # is it frequency?
-                    for axfys in self.axfys:
-                        if ax in axfys:
-                            self.marker_freq = pos.y()
-                            break
-                    # is it spectrogram?
-                    if self.marker_time is not None and \
-                       self.marker_freq is not None and ax in self.panels['spectrogram'].axs:
-                        spec = self.specs[self.panels['spectrogram'].axs.index(ax)]
-                        fi = int(floor(self.marker_freq/spec.data.fresolution))
-                        ti = int(floor((self.marker_time - spec.data.offset/spec.data.rate) / spec.data.tresolution))
-                        if fi < spec.data.shape[0] and \
-                           ti < spec.data.shape[1]:
-                            self.marker_power = spec.data.buffer[fi, ti]
-                break
-        """            
+        for panel in self.panels.values():
+            if not panel.is_used():
+                continue
+            ax = panel.axs[channel]
+            if not ax.sceneBoundingRect().contains(pixel_pos):
+                continue
+            pos = ax.getViewBox().mapSceneToView(pixel_pos)
+            pixel_pos.setX(pixel_pos.x() + 1)
+            npos = ax.getViewBox().mapSceneToView(pixel_pos)
+            if hasattr(ax, 'xline'):
+                ax.xline.setPos(pos.x())
+                if panel.is_time():
+                    self.marker_ax = ax
+                    self.marker_time = pos.x()
+            if hasattr(ax, 'yline'):
+                ax.yline.setPos(pos.y())
+                if panel.is_amplitude():
+                    self.marker_ampl = pos.y()
+                    if not self.marker_time is None:
+                        self.marker_time, self.marker_ampl = \
+                            panel.get_amplitude(channel, self.marker_time,
+                                                pos.y(), npos.x())
+                        # TODO: marke amplitudes for types of amplitude plots!
+                if panel.is_yfrequency():
+                    self.marker_freq = pos.y()
+                    if self.marker_time is not None:
+                        self.marker_power = panel.get_power(channel,
+                                                            self.marker_time,
+                                                            self.marker_freq)
+            break
         # set cross-hair positions:
         # TODO: add to plot_ranges:
         if self.marker_time:
@@ -862,7 +848,6 @@ class DataBrowser(QWidget):
             self.plot_ranges['x'].set_crosshair(self.marker_ampl)
         if self.marker_freq:
             self.plot_ranges['f'].set_crosshair(self.marker_freq)
-                
         # compute deltas:
         self.delta_time = None
         self.delta_ampl = None
