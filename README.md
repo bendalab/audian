@@ -63,7 +63,7 @@ handles all GUI aspects.
   - [x] Support additional plots from plugins
   - [ ] Proper y-labels for xt plots: channel not for single trace plot, otherwise plot name with unit.
   - [x] Amplitude ranges should consider ampl_min/ampl_max of all traces
-  - [ ] Add yt plot with independent y-axis key shortcut
+  - [x] Add yt plot with independent y-axis key shortcut
   - [ ] Update cross-hair code to the new plot_ranges
   - [ ] Support optional grid layout
 - [ ] New plot widget showing power spectrum of visible range
