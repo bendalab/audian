@@ -33,10 +33,19 @@ class PlotRange(object):
             if self.rmax is None or amax > self.rmax:
                 self.rmax = amax
         self.axys[channel].append(ax)
+
+
+    def is_used(self):
+        n = 0
+        for axx in self.axxs:
+            n += len(axx)
+        for axy in self.axys:
+            n += len(axy)
+        return n > 0
         
 
     def set_limits(self):
-        if self.rmin is None or self.rmax is None:
+        if not self.is_used():
             return
         if np.isfinite(self.rmin) and np.isfinite(self.rmax):
             # TODO: min_dr should eventually come from the data!!!
@@ -73,6 +82,8 @@ class PlotRange(object):
 
 
     def set_ranges(self, r0=None, r1=None, channels=None, do_set=True):
+        if not self.is_used():
+            return
         if channels is None:
             channels = range(len(self.r0))
         for c in channels:
@@ -99,11 +110,11 @@ class PlotRange(object):
 
 
     def zoom_in(self, channels=None, do_set=True):
+        if not self.is_used():
+            return
         if channels is None:
             channels = range(len(self.r0))
         for c in channels:
-            if len(self.axxs[c]) + len(self.axys[c]) == 0:
-                continue
             if self.rmin < 0:
                 h = 0.25*(self.r1[c] - self.r0[c])
                 m = 0.5*(self.r1[c] + self.r0[c])
@@ -117,11 +128,11 @@ class PlotRange(object):
                 
         
     def zoom_out(self, channels=None, do_set=True):
+        if not self.is_used():
+            return
         if channels is None:
             channels = range(len(self.r0))
         for c in channels:
-            if len(self.axxs[c]) + len(self.axys[c]) == 0:
-                continue
             if self.rmin < 0:
                 h = self.r1[c] - self.r0[c]
                 m = 0.5*(self.r1[c] + self.r0[c])
@@ -135,11 +146,11 @@ class PlotRange(object):
 
                 
     def down(self, channels=None, do_set=True):
+        if not self.is_used():
+            return
         if channels is None:
             channels = range(len(self.r0))
         for c in channels:
-            if len(self.axxs[c]) + len(self.axys[c]) == 0:
-                continue
             if self.r0[c] > self.rmin:
                 dr = self.r1[c] - self.r0[c]
                 self.set_ranges(self.r0[c] - 0.5*dr, self.r1[c] - 0.5*dr,
@@ -147,11 +158,11 @@ class PlotRange(object):
                 
                 
     def up(self, channels=None, do_set=True):
+        if not self.is_used():
+            return
         if channels is None:
             channels = range(len(self.r0))
         for c in channels:
-            if len(self.axxs[c]) + len(self.axys[c]) == 0:
-                continue
             if self.r1[c] < self.rmax:
                 dr = self.r1[c] - self.r0[c]
                 self.set_ranges(self.r0[c] + 0.5*dr, self.r1[c] + 0.5*dr,
@@ -159,22 +170,22 @@ class PlotRange(object):
                 
                 
     def home(self, channels=None, do_set=True):
+        if not self.is_used():
+            return
         if channels is None:
             channels = range(len(self.r0))
         for c in channels:
-            if len(self.axxs[c]) + len(self.axys[c]) == 0:
-                continue
             if self.r0[c] > self.rmin:
                 dr = self.r1[c] - self.r0[c]
                 self.set_ranges(self.rmin, self.rmin + dr, [c], do_set)
                 
                 
     def end(self, channels=None, do_set=True):
+        if not self.is_used():
+            return
         if channels is None:
             channels = range(len(self.r0))
         for c in channels:
-            if len(self.axxs[c]) + len(self.axys[c]) == 0:
-                continue
             if self.r1[c] < self.rmax:
                 dr = self.r1[c] - self.r0[c]
                 r1 = ceil(self.rmax/(0.5*dr))*(0.5*dr)
@@ -182,13 +193,13 @@ class PlotRange(object):
                 
         
     def auto(self, t0, t1, channels=None, do_set=True):
+        if not self.is_used():
+            return
         if channels is None:
             channels = range(len(self.r0))
         rmin = None
         rmax = None
         for c in channels:
-            if len(self.axxs[c]) + len(self.axys[c]) == 0:
-                continue
             for ax in self.axxs[c] + self.axys[c]:
                 r0, r1 = ax.amplitudes(t0, t1)
                 if rmin is None or r0 < rmin:
@@ -199,7 +210,7 @@ class PlotRange(object):
 
         
     def reset(self, channels=None, do_set=True):
-        if self.rmin is None or self.rmax is None:
+        if not self.is_used():
             return
         rmin = self.rmin
         if not np.isfinite(rmin):
@@ -211,11 +222,11 @@ class PlotRange(object):
 
         
     def center(self, channels=None, do_set=True):
+        if not self.is_used():
+            return
         if channels is None:
             channels = range(len(self.r0))
         for c in channels:
-            if len(self.axxs[c]) + len(self.axys[c]) == 0:
-                continue
             r = max(np.abs(self.r0[c]), np.abs(self.r1[c]))
             self.set_ranges(-r, +r, [c], do_set)
 

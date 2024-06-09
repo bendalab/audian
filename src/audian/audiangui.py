@@ -380,11 +380,11 @@ class Audian(QMainWindow):
         self.acts.toggle_start_time.toggled.connect(lambda x: self.browser().set_times(enable_starttime=x))
 
         self.acts.zoom_time_in = QAction('Zoom &in', self)
-        self.acts.zoom_time_in.setShortcuts([QKeySequence.ZoomIn, '+', '=', 'Shift+X'])
+        self.acts.zoom_time_in.setShortcuts([QKeySequence.ZoomIn, '+', '='])
         self.acts.zoom_time_in.triggered.connect(lambda x: self.browser().zoom_time_in())
         
         self.acts.zoom_time_out = QAction('Zoom &out', self)
-        self.acts.zoom_time_out.setShortcuts([QKeySequence.ZoomOut, '-', 'x'])
+        self.acts.zoom_time_out.setShortcuts([QKeySequence.ZoomOut, '-'])
         self.acts.zoom_time_out.triggered.connect(lambda x: self.browser().zoom_time_out())
         
         self.acts.link_time_scroll = QAction('Link &time scroll', self)
@@ -457,12 +457,12 @@ class Audian(QMainWindow):
         self.link_amplitude = not self.link_amplitude
 
 
-    def apply_amplitude(self, amplitudefunc):
-        getattr(self.browser(), amplitudefunc)()
+    def apply_amplitude(self, amplitudefunc, ax_spec='xyu'):
+        getattr(self.browser(), amplitudefunc)(ax_spec)
         if self.link_amplitude:
             for b in self.browsers:
                 if not b is self.browser():
-                    getattr(b, amplitudefunc)()
+                    getattr(b, amplitudefunc)(ax_spec)
 
 
     def dispatch_amplitudes(self, ymin, ymax):
@@ -479,13 +479,29 @@ class Audian(QMainWindow):
         self.acts.link_amplitude.setChecked(self.link_amplitude)
         self.acts.link_amplitude.toggled.connect(self.toggle_link_amplitude)
         
-        self.acts.zoom_amplitude_in = QAction('Zoom &in', self)
-        self.acts.zoom_amplitude_in.setShortcut('Shift+Y')
-        self.acts.zoom_amplitude_in.triggered.connect(lambda x: self.apply_amplitude('zoom_ampl_in'))
+        self.acts.zoom_xamplitude_in = QAction('Zoom &in', self)
+        self.acts.zoom_xamplitude_in.setShortcut('Shift+X')
+        self.acts.zoom_xamplitude_in.triggered.connect(lambda x: self.apply_amplitude('zoom_ampl_in', 'x'))
 
-        self.acts.zoom_amplitude_out = QAction('Zoom &out', self)
-        self.acts.zoom_amplitude_out.setShortcut('Y')
-        self.acts.zoom_amplitude_out.triggered.connect(lambda x: self.apply_amplitude('zoom_ampl_out'))
+        self.acts.zoom_xamplitude_out = QAction('Zoom &out', self)
+        self.acts.zoom_xamplitude_out.setShortcut('X')
+        self.acts.zoom_xamplitude_out.triggered.connect(lambda x: self.apply_amplitude('zoom_ampl_out', 'x'))
+        
+        self.acts.zoom_yamplitude_in = QAction('Zoom y in', self)
+        self.acts.zoom_yamplitude_in.setShortcut('Shift+Y')
+        self.acts.zoom_yamplitude_in.triggered.connect(lambda x: self.apply_amplitude('zoom_ampl_in', 'y'))
+
+        self.acts.zoom_yamplitude_out = QAction('Zoom y out', self)
+        self.acts.zoom_yamplitude_out.setShortcut('Y')
+        self.acts.zoom_yamplitude_out.triggered.connect(lambda x: self.apply_amplitude('zoom_ampl_out', 'y'))
+        
+        self.acts.zoom_uamplitude_in = QAction('Zoom u in', self)
+        self.acts.zoom_uamplitude_in.setShortcut('Shift+U')
+        self.acts.zoom_uamplitude_in.triggered.connect(lambda x: self.apply_amplitude('zoom_ampl_in', 'u'))
+
+        self.acts.zoom_uamplitude_out = QAction('Zoom u out', self)
+        self.acts.zoom_uamplitude_out.setShortcut('U')
+        self.acts.zoom_uamplitude_out.triggered.connect(lambda x: self.apply_amplitude('zoom_ampl_out', 'u'))
 
         self.acts.auto_zoom_amplitude = QAction('&Auto scale', self)
         self.acts.auto_zoom_amplitude.setShortcut('v')
@@ -501,8 +517,12 @@ class Audian(QMainWindow):
 
         ampl_menu = menu.addMenu('&Amplitude')
         ampl_menu.addAction(self.acts.link_amplitude)
-        ampl_menu.addAction(self.acts.zoom_amplitude_in)
-        ampl_menu.addAction(self.acts.zoom_amplitude_out)
+        ampl_menu.addAction(self.acts.zoom_xamplitude_in)
+        ampl_menu.addAction(self.acts.zoom_xamplitude_out)
+        ampl_menu.addAction(self.acts.zoom_yamplitude_in)
+        ampl_menu.addAction(self.acts.zoom_yamplitude_out)
+        ampl_menu.addAction(self.acts.zoom_uamplitude_in)
+        ampl_menu.addAction(self.acts.zoom_uamplitude_out)
         ampl_menu.addAction(self.acts.auto_zoom_amplitude)
         ampl_menu.addAction(self.acts.reset_amplitude)
         ampl_menu.addAction(self.acts.center_amplitude)

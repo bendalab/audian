@@ -279,7 +279,7 @@ class DataBrowser(QWidget):
         self.marker_data.file_path = self.data.file_path
 
         # amplitude ranges:
-        self.plot_ranges = {s: PlotRange(s, self.data.channels) for s in 'xyzf'}
+        self.plot_ranges = {s: PlotRange(s, self.data.channels) for s in 'xyuf'}
         
         # requested filtering:
         filter_changed = False
@@ -386,7 +386,7 @@ class DataBrowser(QWidget):
                     panel.add_ax(axsp)
                     panel.row = row
                 # trace plot:
-                elif panel.ax_spec in ['xt', 'yt', 'zt']:
+                elif panel.ax_spec in ['xt', 'yt', 'ut']:
                     aspec = panel.ax_spec[0]
                     ylabel = panel.name if panel.name != 'trace' else ''
                     axt = TimePlot(aspec, ylabel, c, xwidth, self)
@@ -468,6 +468,21 @@ class DataBrowser(QWidget):
         for r in self.plot_ranges.values():
             r.set_limits()
             r.set_ranges()
+        if not self.plot_ranges['x'].is_used():
+            self.acts.zoom_xamplitude_in.setEnabled(False)
+            self.acts.zoom_xamplitude_out.setEnabled(False)
+            self.acts.zoom_xamplitude_in.setVisible(False)
+            self.acts.zoom_xamplitude_out.setVisible(False)
+        if not self.plot_ranges['y'].is_used():
+            self.acts.zoom_yamplitude_in.setEnabled(False)
+            self.acts.zoom_yamplitude_out.setEnabled(False)
+            self.acts.zoom_yamplitude_in.setVisible(False)
+            self.acts.zoom_yamplitude_out.setVisible(False)
+        if not self.plot_ranges['u'].is_used():
+            self.acts.zoom_uamplitude_in.setEnabled(False)
+            self.acts.zoom_uamplitude_out.setEnabled(False)
+            self.acts.zoom_uamplitude_in.setVisible(False)
+            self.acts.zoom_uamplitude_out.setVisible(False)
         self.setting = False
         self.data.set_need_update()
         self.set_times()
@@ -1206,37 +1221,41 @@ class DataBrowser(QWidget):
         self.sigAmplitudesChanged.emit(arange[0], arange[1])
         
 
-    def zoom_ampl_in(self):
+    def zoom_ampl_in(self, ax_spec='xyz'):
         self.setting = True
-        self.plot_ranges['x'].zoom_in(self.selected_channels, self.isVisible())
+        for r in ax_spec:
+            self.plot_ranges[r].zoom_in(self.selected_channels,
+                                        self.isVisible())
         self.setting = False
 
         
-    def zoom_ampl_out(self):
+    def zoom_ampl_out(self, ax_spec='xyz'):
         self.setting = True
-        self.plot_ranges['x'].zoom_out(self.selected_channels, self.isVisible())
+        for r in ax_spec:
+            self.plot_ranges[r].zoom_out(self.selected_channels,
+                                         self.isVisible())
         self.setting = False
         
         
-    def auto_ampl(self):
+    def auto_ampl(self, ax_spec='xyz'):
         self.setting = True
-        for r in 'xyz':
+        for r in ax_spec:
             self.plot_ranges[r].auto(self.data.toffset,
                                      self.data.toffset + self.data.twindow,
                                      self.selected_channels, self.isVisible())
         self.setting = False
 
         
-    def reset_ampl(self):
+    def reset_ampl(self, ax_spec='xyz'):
         self.setting = True
-        for r in 'xyz':
+        for r in ax_spec:
             self.plot_ranges[r].reset(self.selected_channels, self.isVisible())
         self.setting = False
 
 
-    def center_ampl(self):
+    def center_ampl(self, ax_spec='xyz'):
         self.setting = True
-        for r in 'xyz':
+        for r in ax_spec:
             self.plot_ranges[r].center(self.selected_channels, self.isVisible())
         self.setting = False
 

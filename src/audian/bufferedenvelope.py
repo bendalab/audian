@@ -21,8 +21,8 @@ class BufferedEnvelope(BufferedData):
         
     def open(self, source):
         super().open(source)
-        self.ampl_min = 0
-        self.ampl_max = source.ampl_max
+        #self.ampl_min = 0
+        #self.ampl_max = source.ampl_max
         self.sos = None
         self.update()
 
@@ -33,7 +33,8 @@ class BufferedEnvelope(BufferedData):
         else:
             # the integral over one hump of the sine wave is 2, the mean is 2/pi:
             dest[:] = sosfiltfilt(self.sos, (np.pi/2)*np.abs(source), axis=0)[nbefore:]
-            dest[dest < 0] = 0
+            if self.highpass_cutoff == 0:
+                dest[dest < 0] = 0
 
             
     def update(self):

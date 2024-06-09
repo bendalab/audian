@@ -43,7 +43,7 @@ class Panel(object):
         for trace in data.traces:
             if trace.panel != self.name:
                 continue
-            if self.ax_spec in ['xt', 'yt', 'zt']:
+            if self.ax_spec in ['xt', 'yt', 'ut']:
                 item = TraceItem(trace, channel)
             elif self.ax_spec == 'ft':
                 item = SpecItem(trace, channel)
