@@ -98,8 +98,9 @@ class TimePlot(pg.PlotItem):
         view.sigSelectedRegion.connect(browser.region_menu)
 
 
-    def add_item(self, item):
-        self.data_items.append(item)
+    def add_item(self, item, is_data):
+        if is_data:
+            self.data_items.append(item)
         self.addItem(item)
 
 
