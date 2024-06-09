@@ -1465,6 +1465,12 @@ class DataBrowser(QWidget):
         self.data.set_need_update()
         envelope.update()
         self.update_plots()
+        changed = False
+        for panel in self.panels.values():
+            if panel.set_visible(panel.has_visible_traces()):
+                changed = True
+        if changed:
+            self.adjust_layout(self.width(), self.height())
         self.envfw.setValue(envelope.envelope_cutoff)
         self.setting = False
         self.sigEnvelopeChanged.emit()  # dispatch

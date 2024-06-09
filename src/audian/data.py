@@ -80,10 +80,16 @@ class Data(object):
 
 
     def set_visible(self, name, show):
+        changed = False
         if name in self:
             for pi in self[name].plot_items:
                 if pi is not None:
+                    if show:
+                        pi.ax.setVisible(True)
+                    if pi.isVisible() != show:
+                        changed = True
                     pi.setVisible(show)
+        return changed
 
     
     def get_region(self, t0, t1, channel):

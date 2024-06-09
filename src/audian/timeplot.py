@@ -106,6 +106,7 @@ class TimePlot(pg.PlotItem):
     def add_item(self, item, is_data):
         if is_data:
             self.data_items.append(item)
+            item.ax = self
         self.addItem(item)
 
 

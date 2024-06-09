@@ -50,8 +50,22 @@ class Panel(object):
 
 
     def set_visible(self, visible):
+        changed = False
         for ax in self.axs:
+            if ax.isVisible() != visible:
+                changed = True
             ax.setVisible(visible)
+        return changed
+
+
+    def has_visible_traces(self):
+        if self.ax_spec == 'spacer':
+            return False
+        for ax in self.axs:
+            for di in ax.data_items:
+                if di.isVisible():
+                    return True
+        return False
 
             
     def add_item(self, channel, plot_item, is_data):
