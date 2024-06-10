@@ -1190,47 +1190,28 @@ class DataBrowser(QWidget):
 
             
     def update_amplitudes(self, viewbox, arange):
+        if self.setting:
+            return
         axspec = self.plot_ranges.get_axspec(viewbox)
         if not axspec:
             return
-        if not self.setting:
-            self.set_amplitudes(axspec, arange[0], arange[1])
+        self.set_amplitudes(axspec, arange[0], arange[1])
         self.sigAmplitudesChanged.emit(axspec, arange[0], arange[1])
-        
 
-    def zoom_ampl_in(self, axspec='xyz'):
-        self.setting = True
-        self.plot_ranges.zoom_in(axspec, self.selected_channels,
-                                 self.isVisible())
-        self.setting = False
 
-        
-    def zoom_ampl_out(self, axspec='xyz'):
+    def apply_amplitude(self, amplitudefunc, axspec):
         self.setting = True
-        self.plot_ranges.zoom_out(axspec, self.selected_channels,
-                                  self.isVisible())
+        getattr(self.plot_ranges, amplitudefunc)(axspec,
+                                                 self.selected_channels,
+                                                 self.isVisible())
         self.setting = False
         
-        
-    def auto_ampl(self, axspec='xyz'):
+
+    def auto_ampl(self, axspec='xyu'):
         self.setting = True
         self.plot_ranges.auto(axspec, self.data.toffset,
                               self.data.toffset + self.data.twindow,
                               self.selected_channels, self.isVisible())
-        self.setting = False
-
-        
-    def reset_ampl(self, axspec='xyz'):
-        self.setting = True
-        self.plot_ranges.reset(axspec, self.selected_channels,
-                               self.isVisible())
-        self.setting = False
-
-
-    def center_ampl(self, axspec='xyz'):
-        self.setting = True
-        self.plot_ranges.center(axspec, self.selected_channels,
-                                self.isVisible())
         self.setting = False
 
 
@@ -1249,37 +1230,37 @@ class DataBrowser(QWidget):
         self.sigFrequenciesChanged.emit(frange[0], frange[1])
         
                 
-    def zoom_freq_in(self):
+    def zoom_freq_in(self, axspec='fw'):
         self.setting = True
         self.plot_ranges['f'].zoom_in(self.selected_channels, self.isVisible())
         self.setting = False
             
         
-    def zoom_freq_out(self):
+    def zoom_freq_out(self, axspec='fw'):
         self.setting = True
         self.plot_ranges['f'].zoom_out(self.selected_channels, self.isVisible())
         self.setting = False
                 
         
-    def freq_down(self):
+    def freq_down(self, axspec='fw'):
         self.setting = True
         self.plot_ranges['f'].down(self.selected_channels, self.isVisible())
         self.setting = False
 
             
-    def freq_up(self):
+    def freq_up(self, axspec='fw'):
         self.setting = True
         self.plot_ranges['f'].up(self.selected_channels, self.isVisible())
         self.setting = False
 
         
-    def freq_home(self):
+    def freq_home(self, axspec='fw'):
         self.setting = True
         self.plot_ranges['f'].home(self.selected_channels, self.isVisible())
         self.setting = False
 
             
-    def freq_end(self):
+    def freq_end(self, axspec='fw'):
         self.setting = True
         self.plot_ranges['f'].end(self.selected_channels, self.isVisible())
         self.setting = False

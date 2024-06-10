@@ -305,7 +305,7 @@ class PlotRanges(dict):
             r.show_crosshair(show)
 
             
-    def _apply(self, rfunc, axis, *args, **kwargs):
-        for r in axis:
-            getattr(self[r], rfunc)(*args, **kwargs)
+    def _apply(self, rfunc, axspec, *args, **kwargs):
+        for s in axspec:
+            getattr(self[s], rfunc)(*args, **kwargs)
             

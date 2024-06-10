@@ -458,12 +458,20 @@ class Audian(QMainWindow):
         self.link_amplitude = not self.link_amplitude
 
 
-    def apply_amplitude(self, amplitudefunc, axspec='xyu'):
-        getattr(self.browser(), amplitudefunc)(axspec)
+    def apply_amplitude(self, amplitudefunc, axspec):
+        self.browser().apply_amplitude(amplitudefunc, axspec)
         if self.link_amplitude:
             for b in self.browsers:
                 if not b is self.browser():
-                    getattr(b, amplitudefunc)(axspec)
+                    b.apply_amplitude(amplitudefunc, axspec)
+
+
+    def auto_amplitude(self):
+        self.browser().auto_ampl()
+        if self.link_amplitude:
+            for b in self.browsers:
+                if not b is self.browser():
+                    b.auto_ampl()
 
 
     def dispatch_amplitudes(self, axspec, ymin, ymax):
@@ -482,39 +490,39 @@ class Audian(QMainWindow):
         
         self.acts.zoom_xamplitude_in = QAction('Zoom &in', self)
         self.acts.zoom_xamplitude_in.setShortcut('Shift+X')
-        self.acts.zoom_xamplitude_in.triggered.connect(lambda x: self.apply_amplitude('zoom_ampl_in', 'x'))
+        self.acts.zoom_xamplitude_in.triggered.connect(lambda x: self.apply_amplitude('zoom_in', 'x'))
 
         self.acts.zoom_xamplitude_out = QAction('Zoom &out', self)
         self.acts.zoom_xamplitude_out.setShortcut('X')
-        self.acts.zoom_xamplitude_out.triggered.connect(lambda x: self.apply_amplitude('zoom_ampl_out', 'x'))
+        self.acts.zoom_xamplitude_out.triggered.connect(lambda x: self.apply_amplitude('zoom_out', 'x'))
         
         self.acts.zoom_yamplitude_in = QAction('Zoom y in', self)
         self.acts.zoom_yamplitude_in.setShortcut('Shift+Y')
-        self.acts.zoom_yamplitude_in.triggered.connect(lambda x: self.apply_amplitude('zoom_ampl_in', 'y'))
+        self.acts.zoom_yamplitude_in.triggered.connect(lambda x: self.apply_amplitude('zoom_in', 'y'))
 
         self.acts.zoom_yamplitude_out = QAction('Zoom y out', self)
         self.acts.zoom_yamplitude_out.setShortcut('Y')
-        self.acts.zoom_yamplitude_out.triggered.connect(lambda x: self.apply_amplitude('zoom_ampl_out', 'y'))
+        self.acts.zoom_yamplitude_out.triggered.connect(lambda x: self.apply_amplitude('zoom_out', 'y'))
         
         self.acts.zoom_uamplitude_in = QAction('Zoom u in', self)
         self.acts.zoom_uamplitude_in.setShortcut('Shift+U')
-        self.acts.zoom_uamplitude_in.triggered.connect(lambda x: self.apply_amplitude('zoom_ampl_in', 'u'))
+        self.acts.zoom_uamplitude_in.triggered.connect(lambda x: self.apply_amplitude('zoom_in', 'u'))
 
         self.acts.zoom_uamplitude_out = QAction('Zoom u out', self)
         self.acts.zoom_uamplitude_out.setShortcut('U')
-        self.acts.zoom_uamplitude_out.triggered.connect(lambda x: self.apply_amplitude('zoom_ampl_out', 'u'))
+        self.acts.zoom_uamplitude_out.triggered.connect(lambda x: self.apply_amplitude('zoom_out', 'u'))
 
         self.acts.auto_zoom_amplitude = QAction('&Auto scale', self)
         self.acts.auto_zoom_amplitude.setShortcut('v')
-        self.acts.auto_zoom_amplitude.triggered.connect(lambda x: self.apply_amplitude('auto_ampl'))
+        self.acts.auto_zoom_amplitude.triggered.connect(self.auto_amplitude)
 
         self.acts.reset_amplitude = QAction('&Reset', self)
         self.acts.reset_amplitude.setShortcut('Shift+V')
-        self.acts.reset_amplitude.triggered.connect(lambda x: self.apply_amplitude('reset_ampl'))
+        self.acts.reset_amplitude.triggered.connect(lambda x: self.apply_amplitude('reset', 'xyu'))
 
         self.acts.center_amplitude = QAction('&Center', self)
         self.acts.center_amplitude.setShortcut('C')
-        self.acts.center_amplitude.triggered.connect(lambda x: self.apply_amplitude('center_ampl'))
+        self.acts.center_amplitude.triggered.connect(lambda x: self.apply_amplitude('center', 'xyu'))
 
         ampl_menu = menu.addMenu('&Amplitude')
         ampl_menu.addAction(self.acts.link_amplitude)
