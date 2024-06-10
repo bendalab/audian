@@ -22,7 +22,7 @@ from audioio import bext_history_str, add_history
 from thunderlab.datawriter import available_formats, write_data
 from .version import __version__, __year__
 from .data import Data
-from .panel import Panel
+from .panels import Panel, Panels
 from .plotranges import PlotRanges
 from .fulltraceplot import FullTracePlot, secs_to_str
 from .timeplot import TimePlot
@@ -87,9 +87,9 @@ class DataBrowser(QWidget):
         self.plot_ranges = PlotRanges()
         
         # panels:
-        self.panels = {}
-        self.add_panel('trace', 'xt', 0)
-        self.add_panel('spectrogram', 'ft', 1)
+        self.panels = Panels()
+        self.panels.add('trace', 'xt', 0)
+        self.panels.add('spectrogram', 'ft', 1)
 
         # plugins:
         self.plugins = plugins
@@ -191,28 +191,6 @@ class DataBrowser(QWidget):
         self.datafig = None
 
 
-    def add_panel(self, name, axes, row=None):
-        if row is None:
-            row = len(self.panels)
-        for panel in self.panels.values():
-            if panel.row >= row:
-                panel.row += 1
-        self.panels[name] = Panel(name, axes, row)
-        if len(self.panels) > 1:
-            names = np.array(list(self.panels.keys()))
-            rows = [self.panels[name].row for name in names]
-            inx = np.argsort(rows)
-            self.panels = {name: self.panels[name] for name in names[inx]}
-
-
-    def remove_panel(self, name):
-        del self.panels[name]
-
-
-    def clear_panels(self):
-        self.panels = {}
-
-
     def get_trace(self, name):
         return self.data[name]
 
@@ -302,17 +280,7 @@ class DataBrowser(QWidget):
                                 list(colors.keys())[i % len(colors.keys())]))
 
         # insert spacers:
-        panels = {}
-        row = 0
-        spacer = 0
-        for name in self.panels:
-            if row > 0:
-                panels[f'spacer{spacer}'] = Panel(f'spacer{spacer}',
-                                                  'spacer', 0)
-                spacer += 1
-            panels[name] = self.panels[name]
-            row += 1
-        self.panels = panels
+        self.panels.insert_spacers()
             
         # setup plots:
         self.figs = []     # all GraphicsLayoutWidgets - one for each channel
@@ -975,11 +943,6 @@ class DataBrowser(QWidget):
             self.borders[c].setVisible(c in self.selected_channels)
 
 
-    def update_plots(self):
-        for panel in self.panels.values():
-            panel.update_plots()
-
-
     def showEvent(self, event):
         if self.data is None:
             return
@@ -990,7 +953,7 @@ class DataBrowser(QWidget):
                 self.data.set_time_range(ax)
         self.plot_ranges.set_ranges()
         self.data.set_need_update()
-        self.update_plots()
+        self.panels.update_plots()
         self.setting = False
 
                 
@@ -1120,7 +1083,7 @@ class DataBrowser(QWidget):
                     ax.enable_start_time(enable_starttime)
                 if self.isVisible():
                     self.data.set_time_range(ax)
-        self.update_plots()
+        self.panels.update_plots()
         self.setting = False
         if dispatch:
             self.sigTimesChanged.emit(self.data.toffset, self.data.twindow,
@@ -1232,7 +1195,7 @@ class DataBrowser(QWidget):
             return
         spectrogram = self.data['spectrogram']
         spectrogram.update(nfft, hop_frac)
-        self.update_plots()
+        self.panels.update_plots()
         self.nfftw.setCurrentText(f'{spectrogram.nfft}')
         T = spectrogram.nfft/self.data.rate
         if T >= 1:
@@ -1375,7 +1338,7 @@ class DataBrowser(QWidget):
         self.hpfw.setValue(filtered.highpass_cutoff)
         self.lpfw.setValue(filtered.lowpass_cutoff)
         filtered.update()
-        self.update_plots()
+        self.panels.update_plots()
         self.setting = False
         self.sigFilterChanged.emit()  # dispatch
 
@@ -1397,7 +1360,7 @@ class DataBrowser(QWidget):
             self.data.set_visible('envelope2', show_envelope)
         self.data.set_need_update()
         envelope.update()
-        self.update_plots()
+        self.panels.update_plots()
         changed = False
         for panel in self.panels.values():
             if panel.set_visible(panel.has_visible_traces()):
@@ -1629,7 +1592,7 @@ class DataBrowser(QWidget):
         self.adjust_layout(self.width(), self.height())
         self.data.set_need_update()
         self.data.update_times()
-        self.update_plots()
+        self.panels.update_plots()
             
 
     def toggle_traces(self):

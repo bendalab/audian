@@ -14,7 +14,7 @@ from audioio import available_formats, PlayAudio
 from .version import __version__, __year__
 from .databrowser import DataBrowser
 from .plugins import Plugins
-from .panel import Panel
+from .panels import Panel
 
 
 class Audian(QMainWindow):

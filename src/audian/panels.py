@@ -1,3 +1,10 @@
+""" Manage plot panels.
+
+`class Panel`: a single plot panel
+`class Panels`: manage all plot panels
+"""
+
+import numpy as np
 from .traceitem import TraceItem
 from .specitem import SpecItem
 
@@ -119,3 +126,53 @@ class Panel(object):
         for ax in self.axs:
             if ax.isVisible() and self.ax_spec != 'spacer':
                 ax.update_plot()
+
+
+class Panels(dict):
+
+    def __init__(self):
+        super().__init__(self)
+
+
+    def add(self, name, axes, row=None):
+        if row is None:
+            row = len(self)
+        for panel in self.values():
+            if panel.row >= row:
+                panel.row += 1
+        self[name] = Panel(name, axes, row)
+        if len(self) > 1:
+            names = np.array(list(self.keys()))
+            rows = [self[name].row for name in names]
+            inx = np.argsort(rows)
+            self = {name: self[name] for name in names[inx]}
+
+            
+    def remove(self, name):
+        del self[name]
+
+
+    def clear(self):
+        self = {}
+
+
+    def insert_spacers(self):
+        panels = {}
+        row = 0
+        spacer = 0
+        for name in self:
+            if row > 0:
+                panels[f'spacer{spacer}'] = Panel(f'spacer{spacer}',
+                                                  'spacer', 0)
+                spacer += 1
+            panels[name] = self[name]
+            row += 1
+        self = panels
+        
+
+    def update_plots(self):
+        for panel in self.values():
+            panel.update_plots()
+
+
+        
