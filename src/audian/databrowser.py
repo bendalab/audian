@@ -983,7 +983,7 @@ class DataBrowser(QWidget):
             for ax in self.axts[c]:
                 self.data.set_time_range(ax)
         # update ranges:
-        for r in self.plot_ranges:
+        for r in self.plot_ranges.values():
             r.set_ranges()
         self.data.set_need_update()
         self.update_plots()
