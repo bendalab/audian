@@ -346,7 +346,7 @@ class DataBrowser(QWidget):
             fig.setBackground(None)
             fig.ci.layout.setContentsMargins(xwidth2, xwidth2, xwidth2, xwidth2)
             fig.ci.layout.setVerticalSpacing(0)
-            fig.ci.layout.setHorizontalSpacing(xwidth)
+            fig.ci.layout.setHorizontalSpacing(xwidth2)
             fig.setVisible(c in self.show_channels)
 
             self.vbox.addWidget(fig)
