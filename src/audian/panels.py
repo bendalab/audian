@@ -82,13 +82,12 @@ class Panel(object):
         return changed
 
 
-    def has_visible_traces(self):
+    def has_visible_traces(self, channel):
         if self.ax_spec == 'spacer':
             return False
-        for ax in self.axs:
-            for di in ax.data_items:
-                if di.isVisible():
-                    return True
+        for di in self.axs[channel].data_items:
+            if di.isVisible():
+                return True
         return False
 
             
@@ -156,6 +155,11 @@ class Panels(dict):
         self = {}
 
 
+    def update_plots(self):
+        for panel in self.values():
+            panel.update_plots()
+
+
     def insert_spacers(self):
         panels = {}
         row = 0
@@ -169,10 +173,20 @@ class Panels(dict):
             row += 1
         self = panels
         
-
-    def update_plots(self):
+            
+    def show_spacers(self, channel):
+        prev_panel = None
+        prev_spacer = None
         for panel in self.values():
-            panel.update_plots()
-
-
-        
+            if panel == 'spacer':
+                if prev_panel:
+                    prev_visible = prev_panel.is_visible(channel)
+                    panel.set_visible(prev_visible)
+                    if prev_visible:
+                        prev_spacer = panel
+            else:
+                prev_panel = panel
+                if panel.is_visible(channel):
+                    prev_spacer = None
+        if prev_spacer:
+            panel.set_visible(False)

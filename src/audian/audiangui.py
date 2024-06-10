@@ -766,9 +766,10 @@ class Audian(QMainWindow):
             envelope_cutoff = self.browser().data['envelope'].envelope_cutoff
             show_envelope = self.browser().data.is_visible('envelope')
             for b in self.browsers:
-                if not b is self.browser():
+                if b is not self.browser():
                     b.update_envelope(envelope_cutoff=envelope_cutoff,
-                                      show_envelope=show_envelope)
+                                      show_envelope=show_envelope,
+                                      dispatch=False)
 
 
     def setup_envelope_actions(self, menu):

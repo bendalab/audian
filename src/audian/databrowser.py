@@ -979,27 +979,12 @@ class DataBrowser(QWidget):
                     panel.axs[c].getAxis('bottom').showLabel(False)
                     panel.axs[c].getAxis('bottom').setStyle(showValues=False)
 
-            
-    def show_spacers(self):
-        first = True
-        hide_spacers = []
-        for panel in self.panels.values():
-            if panel == 'spacer':
-                panel.set_visible(not first)
-                if not first:
-                    hide_spacers.extend(panel.axs)
-            elif panel.is_visible(self.show_channels[0]):
-                first = False
-                hide_spacers = []
-        for spacer in hide_spacers:
-            spacer.setVisible(False)
-
 
     def adjust_layout(self, width, height):
         if self.show_channels is None:
             return
         self.show_xticks()
-        self.show_spacers()
+        self.panels.show_spacers(self.show_channels[0])
         xwidth = self.fontMetrics().averageCharWidth()
         xheight = self.fontMetrics().ascent()
         # subtract full data plot:
@@ -1018,7 +1003,8 @@ class DataBrowser(QWidget):
         nspacers = 0
         c = self.show_channels[0]
         for panel in self.panels.values():
-            if panel.is_visible(c):
+            if panel.is_visible(c) and (panel == 'spacer' or
+                                        panel.has_visible_traces(c)):
                 if panel == 'spacer':
                     nspacers += 1
                 elif panel.is_spectrogram():
@@ -1046,7 +1032,8 @@ class DataBrowser(QWidget):
                                             ntraces*trace_height +
                                             add_height)))
             for panel in self.panels.values():
-                if panel.is_visible(c):
+                if panel.is_visible(c) and (panel == 'spacer' or
+                                            panel.has_visible_traces(c)):
                     if panel == 'spacer':
                         row_height = spacer_height
                     elif panel.is_spectrogram():
@@ -1343,7 +1330,8 @@ class DataBrowser(QWidget):
         self.sigFilterChanged.emit()  # dispatch
 
 
-    def update_envelope(self, envelope_cutoff=None, show_envelope=None):
+    def update_envelope(self, envelope_cutoff=None, show_envelope=None,
+                        dispatch=True):
         """Called when envelope cutoffs was changed by key shortcuts or widget.
         """
         if self.setting:
@@ -1358,18 +1346,14 @@ class DataBrowser(QWidget):
             self.data.set_visible('envelope', show_envelope)
             self.data.set_visible('envelope1', show_envelope)
             self.data.set_visible('envelope2', show_envelope)
+            self.adjust_layout(self.width(), self.height())
         self.data.set_need_update()
         envelope.update()
         self.panels.update_plots()
-        changed = False
-        for panel in self.panels.values():
-            if panel.set_visible(panel.has_visible_traces()):
-                changed = True
-        if changed:
-            self.adjust_layout(self.width(), self.height())
         self.envfw.setValue(envelope.envelope_cutoff)
         self.setting = False
-        self.sigEnvelopeChanged.emit()  # dispatch
+        if dispatch:
+            self.sigEnvelopeChanged.emit()
 
 
     def add_to_show_channels(self, channels):
