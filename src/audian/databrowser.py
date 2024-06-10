@@ -23,7 +23,7 @@ from thunderlab.datawriter import available_formats, write_data
 from .version import __version__, __year__
 from .data import Data
 from .panel import Panel
-from .plotrange import PlotRange
+from .plotranges import PlotRanges
 from .fulltraceplot import FullTracePlot, secs_to_str
 from .timeplot import TimePlot
 from .spectrumplot import SpectrumPlot
@@ -85,7 +85,7 @@ class DataBrowser(QWidget):
         # data:
         self.schannels = channels
         self.data = Data(file_path, **load_kwargs)
-        self.plot_ranges = {}
+        self.plot_ranges = PlotRanges()
         
         # panels:
         self.panels = {}
@@ -264,7 +264,7 @@ class DataBrowser(QWidget):
         self.marker_data.file_path = self.data.file_path
 
         # amplitude ranges:
-        self.plot_ranges = {s: PlotRange(s, self.data.channels) for s in 'xyuf'}
+        self.plot_ranges.setup(self.data.channels)
         
         # requested filtering:
         if 'filtered' in self.data:
@@ -446,9 +446,8 @@ class DataBrowser(QWidget):
             self.sig_proxies.append(proxy)
             
         self.setting = True
-        for r in self.plot_ranges.values():
-            r.set_limits()
-            r.set_ranges()
+        self.plot_ranges.set_limits()
+        self.plot_ranges.set_ranges()
         if not self.plot_ranges['x'].is_used():
             self.acts.zoom_xamplitude_in.setEnabled(False)
             self.acts.zoom_xamplitude_out.setEnabled(False)
@@ -712,8 +711,7 @@ class DataBrowser(QWidget):
                     self.addAction(l.action)
                 l.action.setShortcut(l.key_shortcut)
                 l.action.setEnabled(True)
-            for r in self.plot_ranges.values():
-                r.show_crosshair(True)
+            self.plot_ranges.show_crosshair(True)
             # TODO: add to plot_ranges:
             for axts in self.axts:
                 for ax in axts:
@@ -722,8 +720,7 @@ class DataBrowser(QWidget):
             self.xpos_action.setVisible(False)
             self.ypos_action.setVisible(False)
             self.zpos_action.setVisible(False)
-            for r in self.plot_ranges.values():
-                r.show_crosshair(False)
+            self.plot_ranges.show_crosshair(False)
             # TODO: add to plot_ranges:
             for axts in self.axts:
                 for ax in axts:
@@ -982,9 +979,7 @@ class DataBrowser(QWidget):
             # update time ranges: TODO add to plot_ranges
             for ax in self.axts[c]:
                 self.data.set_time_range(ax)
-        # update ranges:
-        for r in self.plot_ranges.values():
-            r.set_ranges()
+        self.plot_ranges.set_ranges()
         self.data.set_need_update()
         self.update_plots()
         self.setting = False
@@ -1203,40 +1198,37 @@ class DataBrowser(QWidget):
 
     def zoom_ampl_in(self, ax_spec='xyz'):
         self.setting = True
-        for r in ax_spec:
-            self.plot_ranges[r].zoom_in(self.selected_channels,
-                                        self.isVisible())
+        self.plot_ranges.zoom_in(ax_spec, self.selected_channels,
+                                 self.isVisible())
         self.setting = False
 
         
     def zoom_ampl_out(self, ax_spec='xyz'):
         self.setting = True
-        for r in ax_spec:
-            self.plot_ranges[r].zoom_out(self.selected_channels,
-                                         self.isVisible())
+        self.plot_ranges.zoom_out(ax_spec, self.selected_channels,
+                                  self.isVisible())
         self.setting = False
         
         
     def auto_ampl(self, ax_spec='xyz'):
         self.setting = True
-        for r in ax_spec:
-            self.plot_ranges[r].auto(self.data.toffset,
-                                     self.data.toffset + self.data.twindow,
-                                     self.selected_channels, self.isVisible())
+        self.plot_ranges.auto(ax_spec, self.data.toffset,
+                              self.data.toffset + self.data.twindow,
+                              self.selected_channels, self.isVisible())
         self.setting = False
 
         
     def reset_ampl(self, ax_spec='xyz'):
         self.setting = True
-        for r in ax_spec:
-            self.plot_ranges[r].reset(self.selected_channels, self.isVisible())
+        self.plot_ranges.reset(ax_spec, self.selected_channels,
+                               self.isVisible())
         self.setting = False
 
 
     def center_ampl(self, ax_spec='xyz'):
         self.setting = True
-        for r in ax_spec:
-            self.plot_ranges[r].center(self.selected_channels, self.isVisible())
+        self.plot_ranges.center(ax_spec, self.selected_channels,
+                                self.isVisible())
         self.setting = False
 
 

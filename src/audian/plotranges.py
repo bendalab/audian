@@ -1,5 +1,12 @@
+""" Manage ranges shown on plot axis.
+
+`class PlotRange`: a single axis range
+`class PlotRanges`: manage all ranges
+"""
+
 from math import ceil
 import numpy as np
+from functools import partial
 
 
 class PlotRange(object):
@@ -248,3 +255,37 @@ class PlotRange(object):
             for ax in axy:
                 ax.yline.setPos(pos)
         
+
+class PlotRanges(dict):
+    
+    def __init__(self):
+        super().__init__()
+        for m in ['zoom_in', 'zoom_out', 'down', 'up',
+                  'home', 'end', 'auto', 'reset', 'center']:
+            setattr(self, m, partial(PlotRanges._apply, self, m))
+
+
+    def setup(self, nchannels):
+        for s in 'xyufw':
+            self[s] = PlotRange(s, nchannels)
+
+
+    def set_limits(self):
+        for r in self.values():
+            r.set_limits()
+        
+
+    def set_ranges(self):
+        for r in self.values():
+            r.set_ranges()
+
+            
+    def show_crosshair(self, show):
+        for r in self.values():
+            r.show_crosshair(show)
+
+            
+    def _apply(self, rfunc, axis, *args, **kwargs):
+        for r in axis:
+            getattr(self[r], rfunc)(*args, **kwargs)
+            
