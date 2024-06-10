@@ -65,7 +65,7 @@ class DataBrowser(QWidget):
     ask_region = 4
     
     sigTimesChanged = Signal(object, object, object)
-    sigAmplitudesChanged = Signal(object, object)
+    sigAmplitudesChanged = Signal(object, object, object)
     sigFrequenciesChanged = Signal(object, object)
     sigResolutionChanged = Signal()
     sigColorMapChanged = Signal()
@@ -1179,55 +1179,57 @@ class DataBrowser(QWidget):
             self.set_times()
 
 
-    def set_amplitudes(self, ymin=None, ymax=None):
+    def set_amplitudes(self, axspec, ymin=None, ymax=None):
         if self.setting:
             return
         self.setting = True
-        self.plot_ranges['x'].set_ranges(ymin, ymax,
-                                         self.selected_channels,
-                                         self.isVisible())
+        self.plot_ranges[axspec].set_ranges(ymin, ymax,
+                                            self.selected_channels,
+                                            self.isVisible())
         self.setting = False
 
             
     def update_amplitudes(self, viewbox, arange):
-        if self.setting:
+        axspec = self.plot_ranges.get_axspec(viewbox)
+        if not axspec:
             return
-        self.set_amplitudes(arange[0], arange[1])
-        self.sigAmplitudesChanged.emit(arange[0], arange[1])
+        if not self.setting:
+            self.set_amplitudes(axspec, arange[0], arange[1])
+        self.sigAmplitudesChanged.emit(axspec, arange[0], arange[1])
         
 
-    def zoom_ampl_in(self, ax_spec='xyz'):
+    def zoom_ampl_in(self, axspec='xyz'):
         self.setting = True
-        self.plot_ranges.zoom_in(ax_spec, self.selected_channels,
+        self.plot_ranges.zoom_in(axspec, self.selected_channels,
                                  self.isVisible())
         self.setting = False
 
         
-    def zoom_ampl_out(self, ax_spec='xyz'):
+    def zoom_ampl_out(self, axspec='xyz'):
         self.setting = True
-        self.plot_ranges.zoom_out(ax_spec, self.selected_channels,
+        self.plot_ranges.zoom_out(axspec, self.selected_channels,
                                   self.isVisible())
         self.setting = False
         
         
-    def auto_ampl(self, ax_spec='xyz'):
+    def auto_ampl(self, axspec='xyz'):
         self.setting = True
-        self.plot_ranges.auto(ax_spec, self.data.toffset,
+        self.plot_ranges.auto(axspec, self.data.toffset,
                               self.data.toffset + self.data.twindow,
                               self.selected_channels, self.isVisible())
         self.setting = False
 
         
-    def reset_ampl(self, ax_spec='xyz'):
+    def reset_ampl(self, axspec='xyz'):
         self.setting = True
-        self.plot_ranges.reset(ax_spec, self.selected_channels,
+        self.plot_ranges.reset(axspec, self.selected_channels,
                                self.isVisible())
         self.setting = False
 
 
-    def center_ampl(self, ax_spec='xyz'):
+    def center_ampl(self, axspec='xyz'):
         self.setting = True
-        self.plot_ranges.center(ax_spec, self.selected_channels,
+        self.plot_ranges.center(axspec, self.selected_channels,
                                 self.isVisible())
         self.setting = False
 

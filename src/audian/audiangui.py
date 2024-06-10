@@ -458,19 +458,19 @@ class Audian(QMainWindow):
         self.link_amplitude = not self.link_amplitude
 
 
-    def apply_amplitude(self, amplitudefunc, ax_spec='xyu'):
-        getattr(self.browser(), amplitudefunc)(ax_spec)
+    def apply_amplitude(self, amplitudefunc, axspec='xyu'):
+        getattr(self.browser(), amplitudefunc)(axspec)
         if self.link_amplitude:
             for b in self.browsers:
                 if not b is self.browser():
-                    getattr(b, amplitudefunc)(ax_spec)
+                    getattr(b, amplitudefunc)(axspec)
 
 
-    def dispatch_amplitudes(self, ymin, ymax):
+    def dispatch_amplitudes(self, axspec, ymin, ymax):
         if self.link_amplitude:
             for b in self.browsers:
                 if not b is self.browser():
-                    b.set_amplitudes(ymin, ymax)
+                    b.set_amplitudes(axspec, ymin, ymax)
 
         
     def setup_amplitude_actions(self, menu):

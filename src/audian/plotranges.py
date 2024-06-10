@@ -51,6 +51,18 @@ class PlotRange(object):
         return n > 0
         
 
+    def get_axspec(self, viewbox):
+        for axx in self.axxs:
+            for ax in axx:
+                if ax.getViewBox() is viewbox:
+                    return self.axspec
+        for axy in self.axys:
+            for ax in axy:
+                if ax.getViewBox() is viewbox:
+                    return self.axspec
+        return None
+
+
     def set_limits(self):
         if not self.is_used():
             return
@@ -278,6 +290,14 @@ class PlotRanges(dict):
     def set_ranges(self):
         for r in self.values():
             r.set_ranges()
+
+
+    def get_axspec(self, viewbox):
+        for r in self.values():
+            axspec = r.get_axspec(viewbox)
+            if axspec:
+                return axspec
+        return None
 
             
     def show_crosshair(self, show):
