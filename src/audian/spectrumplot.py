@@ -14,9 +14,8 @@ class SpectrumPlot(TimePlot):
     
     sigUpdateFilter = Signal(object, object)
 
-
-    def __init__(self, browser, channel, xwidth, cbar):
-        super().__init__('f', '', channel, xwidth, browser)
+    def __init__(self, aspec, channel, xwidth, cbar, browser):
+        super().__init__(aspec, '', channel, xwidth, browser)
         
         # axis:
         self.getAxis('bottom').showLabel(False)
@@ -48,7 +47,6 @@ class SpectrumPlot(TimePlot):
             self.addItem(self.lowpass_handle, ignoreBounds=True)
             
         self.setVisible(browser.show_specs > 0)
-        self.sigYRangeChanged.connect(browser.update_frequencies)
         self.sigUpdateFilter.connect(browser.update_filter)
             
 

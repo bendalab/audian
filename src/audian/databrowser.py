@@ -65,8 +65,7 @@ class DataBrowser(QWidget):
     ask_region = 4
     
     sigTimesChanged = Signal(object, object, object)
-    sigAmplitudesChanged = Signal(object, object, object)
-    sigFrequenciesChanged = Signal(object, object)
+    sigRangesChanged = Signal(object, object, object)
     sigResolutionChanged = Signal()
     sigColorMapChanged = Signal()
     sigFilterChanged = Signal()
@@ -371,7 +370,7 @@ class DataBrowser(QWidget):
                     panel.add_ax(axsp)
                     panel.row = row
                 # trace plot:
-                elif panel.ax_spec in ['xt', 'yt', 'ut']:
+                elif panel.is_trace():
                     aspec = panel.ax_spec[0]
                     ylabel = panel.name if panel.name != 'trace' else ''
                     axt = TimePlot(aspec, ylabel, c, xwidth, self)
@@ -384,7 +383,6 @@ class DataBrowser(QWidget):
                     panel.row = row
                     panel.add_traces(c, self.data)
                     self.plot_ranges[aspec].add_yaxis(axt, c, True)
-                    axt.sigYRangeChanged.connect(self.update_amplitudes)
                     # add marker labels:
                     labels = []
                     for l in self.marker_labels:
@@ -397,7 +395,7 @@ class DataBrowser(QWidget):
                     self.trace_labels.append(labels)
                     self.trace_region_labels.append([])
                 # spectrogram:
-                elif panel == 'ft':
+                elif panel.is_spectrogram():
                     # color bar:
                     cbar = pg.ColorBarItem(colorMap=self.color_maps[self.color_map],
                                            interactive=True,
@@ -411,7 +409,8 @@ class DataBrowser(QWidget):
                     fig.addItem(cbar, row=row, col=1)
 
                     # spectrum:
-                    axs = SpectrumPlot(self, c, xwidth, cbar)
+                    aspec = panel.ax_spec[0]
+                    axs = SpectrumPlot(aspec, c, xwidth, cbar, self)
                     self.audio_markers[-1].append(axs.vmarker)
                     fig.addItem(axs, row=row, col=0)
                     self.axts[-1].append(axs)
@@ -420,7 +419,7 @@ class DataBrowser(QWidget):
                     panel.add_ax(axs)
                     panel.row = row
                     panel.add_traces(c, self.data)
-                    self.plot_ranges['f'].add_yaxis(axs, c, True)
+                    self.plot_ranges[aspec].add_yaxis(axs, c, True)
                     # add marker labels:
                     labels = []
                     for l in self.marker_labels:
@@ -448,21 +447,31 @@ class DataBrowser(QWidget):
         self.setting = True
         self.plot_ranges.set_limits()
         self.plot_ranges.set_ranges()
-        if not self.plot_ranges['x'].is_used():
+        if not self.plot_ranges[Panel.amplitudes[0]].is_used():
             self.acts.zoom_xamplitude_in.setEnabled(False)
             self.acts.zoom_xamplitude_out.setEnabled(False)
             self.acts.zoom_xamplitude_in.setVisible(False)
             self.acts.zoom_xamplitude_out.setVisible(False)
-        if not self.plot_ranges['y'].is_used():
+        if not self.plot_ranges[Panel.amplitudes[1]].is_used():
             self.acts.zoom_yamplitude_in.setEnabled(False)
             self.acts.zoom_yamplitude_out.setEnabled(False)
             self.acts.zoom_yamplitude_in.setVisible(False)
             self.acts.zoom_yamplitude_out.setVisible(False)
-        if not self.plot_ranges['u'].is_used():
+        if not self.plot_ranges[Panel.amplitudes[2]].is_used():
             self.acts.zoom_uamplitude_in.setEnabled(False)
             self.acts.zoom_uamplitude_out.setEnabled(False)
             self.acts.zoom_uamplitude_in.setVisible(False)
             self.acts.zoom_uamplitude_out.setVisible(False)
+        if not self.plot_ranges[Panel.frequencies[0]].is_used():
+            self.acts.zoom_ffrequency_in.setEnabled(False)
+            self.acts.zoom_ffrequency_ou.setEnabled(False)
+            self.acts.zoom_ffrequency_in.setVisible(False)
+            self.acts.zoom_ffrequency_out.setVisible(False)
+        if not self.plot_ranges[Panel.frequencies[1]].is_used():
+            self.acts.zoom_wfrequency_in.setEnabled(False)
+            self.acts.zoom_wfrequency_ou.setEnabled(False)
+            self.acts.zoom_wfrequency_in.setVisible(False)
+            self.acts.zoom_wfrequency_out.setVisible(False)
         self.setting = False
         self.data.set_need_update()
         self.set_times()
@@ -1049,9 +1058,9 @@ class DataBrowser(QWidget):
             if panel.is_visible(c):
                 if panel == 'spacer':
                     nspacers += 1
-                elif panel == 'ft':
+                elif panel.is_spectrogram():
                     nspecs += 1
-                elif panel != 'spacer':
+                elif panel.is_trace():
                     ntraces += 1
         nrows = len(self.show_channels)
         # subtract border height:
@@ -1077,9 +1086,9 @@ class DataBrowser(QWidget):
                 if panel.is_visible(c):
                     if panel == 'spacer':
                         row_height = spacer_height
-                    elif panel == 'ft':
+                    elif panel.is_spectrogram():
                         row_height = spec_height + add_height
-                    else:
+                    elif panel.is_trace():
                         row_height = trace_height + add_height
                     self.figs[c].ci.layout.setRowFixedHeight(panel.row,
                                                              row_height)
@@ -1179,27 +1188,27 @@ class DataBrowser(QWidget):
             self.set_times()
 
 
-    def set_amplitudes(self, axspec, ymin=None, ymax=None):
+    def set_ranges(self, axspec, r0=None, r1=None):
         if self.setting:
             return
         self.setting = True
-        self.plot_ranges[axspec].set_ranges(ymin, ymax,
+        self.plot_ranges[axspec].set_ranges(r0, r1,
                                             self.selected_channels,
                                             self.isVisible())
         self.setting = False
 
             
-    def update_amplitudes(self, viewbox, arange):
+    def update_ranges(self, viewbox, arange):
         if self.setting:
             return
         axspec = self.plot_ranges.get_axspec(viewbox)
         if not axspec:
             return
-        self.set_amplitudes(axspec, arange[0], arange[1])
-        self.sigAmplitudesChanged.emit(axspec, arange[0], arange[1])
+        self.set_ranges(axspec, arange[0], arange[1])
+        self.sigRangesChanged.emit(axspec, arange[0], arange[1])
 
 
-    def apply_amplitude(self, amplitudefunc, axspec):
+    def apply_ranges(self, amplitudefunc, axspec):
         self.setting = True
         getattr(self.plot_ranges, amplitudefunc)(axspec,
                                                  self.selected_channels,
@@ -1207,62 +1216,11 @@ class DataBrowser(QWidget):
         self.setting = False
         
 
-    def auto_ampl(self, axspec='xyu'):
+    def auto_ampl(self, axspec=Panel.amplitudes):
         self.setting = True
         self.plot_ranges.auto(axspec, self.data.toffset,
                               self.data.toffset + self.data.twindow,
                               self.selected_channels, self.isVisible())
-        self.setting = False
-
-
-    def set_frequencies(self, f0=None, f1=None):
-        self.setting = True
-        self.plot_ranges['x'].set_ranges(f0, f1,
-                                         self.selected_channels,
-                                         self.isVisible())
-        self.setting = False
-
-            
-    def update_frequencies(self, viewbox, frange):
-        if self.setting:
-            return
-        self.set_frequencies(frange[0], frange[1])
-        self.sigFrequenciesChanged.emit(frange[0], frange[1])
-        
-                
-    def zoom_freq_in(self, axspec='fw'):
-        self.setting = True
-        self.plot_ranges['f'].zoom_in(self.selected_channels, self.isVisible())
-        self.setting = False
-            
-        
-    def zoom_freq_out(self, axspec='fw'):
-        self.setting = True
-        self.plot_ranges['f'].zoom_out(self.selected_channels, self.isVisible())
-        self.setting = False
-                
-        
-    def freq_down(self, axspec='fw'):
-        self.setting = True
-        self.plot_ranges['f'].down(self.selected_channels, self.isVisible())
-        self.setting = False
-
-            
-    def freq_up(self, axspec='fw'):
-        self.setting = True
-        self.plot_ranges['f'].up(self.selected_channels, self.isVisible())
-        self.setting = False
-
-        
-    def freq_home(self, axspec='fw'):
-        self.setting = True
-        self.plot_ranges['f'].home(self.selected_channels, self.isVisible())
-        self.setting = False
-
-            
-    def freq_end(self, axspec='fw'):
-        self.setting = True
-        self.plot_ranges['f'].end(self.selected_channels, self.isVisible())
         self.setting = False
 
 
@@ -1659,9 +1617,9 @@ class DataBrowser(QWidget):
         if not fulldata is None:
             self.show_fulldata = fulldata
         for panel in self.panels.values():
-            if panel == 'xt':
+            if panel.is_trace():
                 panel.set_visible(self.show_traces)
-            elif panel == 'ft':
+            elif panel.is_spectrogram():
                 panel.set_visible(self.show_specs >  0)
                 for c in range(len(panel)):
                     self.cbars[c].setVisible(self.show_cbars and

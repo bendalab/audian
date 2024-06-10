@@ -100,6 +100,7 @@ class TimePlot(pg.PlotItem):
 
         # signals:
         self.sigXRangeChanged.connect(browser.update_times)
+        self.sigYRangeChanged.connect(browser.update_ranges)
         view.sigSelectedRegion.connect(browser.region_menu)
 
 

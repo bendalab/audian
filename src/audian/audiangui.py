@@ -14,6 +14,7 @@ from audioio import available_formats, PlayAudio
 from .version import __version__, __year__
 from .databrowser import DataBrowser
 from .plugins import Plugins
+from .panel import Panel
 
 
 class Audian(QMainWindow):
@@ -40,8 +41,7 @@ class Audian(QMainWindow):
 
         self.link_timezoom = True
         self.link_timescroll = False
-        self.link_amplitude = True
-        self.link_frequency = True
+        self.link_ranges = dict(x=True, y=True, u=True, f=True, w=True)
         self.link_filter = True
         self.link_power = True
         self.link_envelope = True
@@ -453,64 +453,68 @@ class Audian(QMainWindow):
         
         return time_menu
 
+
+    def apply_ranges(self, amplitudefunc, axspec):
+        self.browser().apply_ranges(amplitudefunc, axspec)
+        for s in axspec:
+            if self.link_ranges[s]:
+                for b in self.browsers:
+                    if not b is self.browser():
+                        b.apply_ranges(amplitudefunc, [s])
+
+
+    def dispatch_ranges(self, axspec, ymin, ymax):
+        for s in axspec:
+            if self.link_ranges[s]:
+                for b in self.browsers:
+                    if not b is self.browser():
+                        b.set_ranges([s], ymin, ymax)
+
         
     def toggle_link_amplitude(self):
-        self.link_amplitude = not self.link_amplitude
-
-
-    def apply_amplitude(self, amplitudefunc, axspec):
-        self.browser().apply_amplitude(amplitudefunc, axspec)
-        if self.link_amplitude:
-            for b in self.browsers:
-                if not b is self.browser():
-                    b.apply_amplitude(amplitudefunc, axspec)
+        for s in Panel.amplitudes:
+            self.link_ranges[s] = not self.link_ranges[s]
 
 
     def auto_amplitude(self):
         self.browser().auto_ampl()
-        if self.link_amplitude:
-            for b in self.browsers:
-                if not b is self.browser():
-                    b.auto_ampl()
-
-
-    def dispatch_amplitudes(self, axspec, ymin, ymax):
-        if self.link_amplitude:
-            for b in self.browsers:
-                if not b is self.browser():
-                    b.set_amplitudes(axspec, ymin, ymax)
+        for s in Panel.amplitudes:
+            if self.link_ranges[s]:
+                for b in self.browsers:
+                    if not b is self.browser():
+                        b.auto_ampl([s])
 
         
     def setup_amplitude_actions(self, menu):
         self.acts.link_amplitude = QAction('Link &amplitude', self)
         self.acts.link_amplitude.setShortcut('Alt+A')
         self.acts.link_amplitude.setCheckable(True)
-        self.acts.link_amplitude.setChecked(self.link_amplitude)
+        self.acts.link_amplitude.setChecked(self.link_ranges[Panel.amplitudes[0]])
         self.acts.link_amplitude.toggled.connect(self.toggle_link_amplitude)
         
         self.acts.zoom_xamplitude_in = QAction('Zoom &in', self)
         self.acts.zoom_xamplitude_in.setShortcut('Shift+X')
-        self.acts.zoom_xamplitude_in.triggered.connect(lambda x: self.apply_amplitude('zoom_in', 'x'))
+        self.acts.zoom_xamplitude_in.triggered.connect(lambda x: self.apply_ranges('zoom_in', Panel.amplitudes[0]))
 
         self.acts.zoom_xamplitude_out = QAction('Zoom &out', self)
         self.acts.zoom_xamplitude_out.setShortcut('X')
-        self.acts.zoom_xamplitude_out.triggered.connect(lambda x: self.apply_amplitude('zoom_out', 'x'))
+        self.acts.zoom_xamplitude_out.triggered.connect(lambda x: self.apply_ranges('zoom_out', Panel.amplitudes[0]))
         
         self.acts.zoom_yamplitude_in = QAction('Zoom y in', self)
         self.acts.zoom_yamplitude_in.setShortcut('Shift+Y')
-        self.acts.zoom_yamplitude_in.triggered.connect(lambda x: self.apply_amplitude('zoom_in', 'y'))
+        self.acts.zoom_yamplitude_in.triggered.connect(lambda x: self.apply_ranges('zoom_in', Panel.amplitudes[1]))
 
         self.acts.zoom_yamplitude_out = QAction('Zoom y out', self)
         self.acts.zoom_yamplitude_out.setShortcut('Y')
-        self.acts.zoom_yamplitude_out.triggered.connect(lambda x: self.apply_amplitude('zoom_out', 'y'))
+        self.acts.zoom_yamplitude_out.triggered.connect(lambda x: self.apply_ranges('zoom_out', Panel.amplitudes[1]))
         
         self.acts.zoom_uamplitude_in = QAction('Zoom u in', self)
         self.acts.zoom_uamplitude_in.setShortcut('Shift+U')
-        self.acts.zoom_uamplitude_in.triggered.connect(lambda x: self.apply_amplitude('zoom_in', 'u'))
+        self.acts.zoom_uamplitude_in.triggered.connect(lambda x: self.apply_ranges('zoom_in', Panel.amplitudes[2]))
 
         self.acts.zoom_uamplitude_out = QAction('Zoom u out', self)
         self.acts.zoom_uamplitude_out.setShortcut('U')
-        self.acts.zoom_uamplitude_out.triggered.connect(lambda x: self.apply_amplitude('zoom_out', 'u'))
+        self.acts.zoom_uamplitude_out.triggered.connect(lambda x: self.apply_ranges('zoom_out', Panel.amplitudes[2]))
 
         self.acts.auto_zoom_amplitude = QAction('&Auto scale', self)
         self.acts.auto_zoom_amplitude.setShortcut('v')
@@ -518,11 +522,11 @@ class Audian(QMainWindow):
 
         self.acts.reset_amplitude = QAction('&Reset', self)
         self.acts.reset_amplitude.setShortcut('Shift+V')
-        self.acts.reset_amplitude.triggered.connect(lambda x: self.apply_amplitude('reset', 'xyu'))
+        self.acts.reset_amplitude.triggered.connect(lambda x: self.apply_ranges('reset', Panel.amplitudes))
 
         self.acts.center_amplitude = QAction('&Center', self)
         self.acts.center_amplitude.setShortcut('C')
-        self.acts.center_amplitude.triggered.connect(lambda x: self.apply_amplitude('center', 'xyu'))
+        self.acts.center_amplitude.triggered.connect(lambda x: self.apply_ranges('center', Panel.amplitudes))
 
         ampl_menu = menu.addMenu('&Amplitude')
         ampl_menu.addAction(self.acts.link_amplitude)
@@ -542,59 +546,55 @@ class Audian(QMainWindow):
 
         
     def toggle_link_frequency(self):
-        self.link_frequency = not self.link_frequency
-
-
-    def apply_frequencies(self, frequencyfunc):
-        getattr(self.browser(), frequencyfunc)()
-        if self.link_frequency:
-            for b in self.browsers:
-                if not b is self.browser():
-                    getattr(b, frequencyfunc)()
-
-
-    def dispatch_frequencies(self, f0, f1):
-        if self.link_frequency:
-            for b in self.browsers:
-                if not b is self.browser():
-                    b.set_frequencies(f0, f1)
+        for s in Panel.frequencies:
+            self.link_ranges[s] = not self.link_ranges[s]
 
 
     def setup_frequency_actions(self, menu):
         self.acts.link_frequency = QAction('Link &frequency', self)
         #self.acts.link_frequency.setShortcut('Alt+F')
         self.acts.link_frequency.setCheckable(True)
-        self.acts.link_frequency.setChecked(self.link_frequency)
+        self.acts.link_frequency.setChecked(self.link_ranges[Panel.frequencies[0]])
         self.acts.link_frequency.toggled.connect(self.toggle_link_frequency)
         
-        self.acts.zoom_frequency_in = QAction('Zoom &in', self)
-        self.acts.zoom_frequency_in.setShortcut('Shift+F')
-        self.acts.zoom_frequency_in.triggered.connect(lambda x: self.apply_frequencies('zoom_freq_in'))
+        self.acts.zoom_ffrequency_in = QAction('Zoom &in', self)
+        self.acts.zoom_ffrequency_in.setShortcut('Shift+F')
+        self.acts.zoom_ffrequency_in.triggered.connect(lambda x: self.apply_ranges('zoom_in', Panel.frequencies[0]))
 
-        self.acts.zoom_frequency_out = QAction('Zoom &out', self)
-        self.acts.zoom_frequency_out.setShortcut('F')
-        self.acts.zoom_frequency_out.triggered.connect(lambda x: self.apply_frequencies('zoom_freq_out'))
+        self.acts.zoom_ffrequency_out = QAction('Zoom &out', self)
+        self.acts.zoom_ffrequency_out.setShortcut('F')
+        self.acts.zoom_ffrequency_out.triggered.connect(lambda x: self.apply_ranges('zoom_out', Panel.frequencies[0]))
+        
+        self.acts.zoom_wfrequency_in = QAction('Zoom w &in', self)
+        self.acts.zoom_wfrequency_in.setShortcut('Shift+W')
+        self.acts.zoom_wfrequency_in.triggered.connect(lambda x: self.apply_ranges('zoom_in', Panel.frequencies[1]))
+
+        self.acts.zoom_wfrequency_out = QAction('Zoom w &out', self)
+        self.acts.zoom_wfrequency_out.setShortcut('W')
+        self.acts.zoom_wfrequency_out.triggered.connect(lambda x: self.apply_ranges('zoom_out', Panel.frequencies[1]))
 
         self.acts.frequency_up = QAction('Move &up', self)
         self.acts.frequency_up.setShortcuts(QKeySequence.MoveToNextChar)
-        self.acts.frequency_up.triggered.connect(lambda x: self.apply_frequencies('freq_up'))
+        self.acts.frequency_up.triggered.connect(lambda x: self.apply_ranges('up', Panel.frequencies[0]))
 
         self.acts.frequency_down = QAction('Move &down', self)
         self.acts.frequency_down.setShortcuts(QKeySequence.MoveToPreviousChar)
-        self.acts.frequency_down.triggered.connect(lambda x: self.apply_frequencies('freq_down'))
+        self.acts.frequency_down.triggered.connect(lambda x: self.apply_ranges('down', Panel.frequencies[0]))
 
         self.acts.frequency_home = QAction('&Home', self)
         self.acts.frequency_home.setShortcuts(QKeySequence.MoveToPreviousWord)
-        self.acts.frequency_home.triggered.connect(lambda x: self.apply_frequencies('freq_home'))
+        self.acts.frequency_home.triggered.connect(lambda x: self.apply_ranges('home', Panel.frequencies[0]))
 
         self.acts.frequency_end = QAction('&End', self)
         self.acts.frequency_end.setShortcuts(QKeySequence.MoveToNextWord)
-        self.acts.frequency_end.triggered.connect(lambda x: self.apply_frequencies('freq_end'))
+        self.acts.frequency_end.triggered.connect(lambda x: self.apply_ranges('end', Panel.frequencies[0]))
         
         freq_menu = menu.addMenu('Frequenc&y')
         freq_menu.addAction(self.acts.link_frequency)
-        freq_menu.addAction(self.acts.zoom_frequency_in)
-        freq_menu.addAction(self.acts.zoom_frequency_out)
+        freq_menu.addAction(self.acts.zoom_ffrequency_in)
+        freq_menu.addAction(self.acts.zoom_ffrequency_out)
+        freq_menu.addAction(self.acts.zoom_wfrequency_in)
+        freq_menu.addAction(self.acts.zoom_wfrequency_out)
         freq_menu.addAction(self.acts.frequency_up)
         freq_menu.addAction(self.acts.frequency_down)
         freq_menu.addAction(self.acts.frequency_home)
@@ -1169,8 +1169,7 @@ Can not open file <b>{browser.file_path}</b>!''')
                 if browser is self.browser():
                     self.adapt_menu(self.tabs.currentIndex())
                 browser.sigTimesChanged.connect(self.dispatch_times)
-                browser.sigAmplitudesChanged.connect(self.dispatch_amplitudes)
-                browser.sigFrequenciesChanged.connect(self.dispatch_frequencies)
+                browser.sigRangesChanged.connect(self.dispatch_ranges)
                 browser.sigResolutionChanged.connect(self.dispatch_resolution)
                 browser.sigColorMapChanged.connect(self.dispatch_colormap)
                 browser.sigFilterChanged.connect(self.dispatch_filter)

@@ -3,6 +3,11 @@ from .specitem import SpecItem
 
 
 class Panel(object):
+
+    
+    amplitudes = 'xyu'
+    frequencies = 'fw'
+    
     
     def __init__(self, name, ax_spec, row):
         self.name = name
@@ -24,16 +29,28 @@ class Panel(object):
         return self.ax_spec[1] == 't'
 
 
-    def is_amplitude(self):
-        return self.ax_spec[0] in 'xyu'
+    def is_xamplitude(self):
+        return self.ax_spec[1] in self.amplitudes
+
+
+    def is_yamplitude(self):
+        return self.ax_spec[0] in self.amplitudes
 
 
     def is_xfrequency(self):
-        return self.ax_spec[1] == 'f'
+        return self.ax_spec[1] in self.frequencies
 
 
     def is_yfrequency(self):
-        return self.ax_spec[0] == 'f'
+        return self.ax_spec[0] in self.frequencies
+
+
+    def is_trace(self):
+        return self.is_time() and self.is_yamplitude()
+
+
+    def is_spectrogram(self):
+        return self.is_time() and self.is_yfrequency()
 
     
     def add_ax(self, ax):
@@ -77,9 +94,9 @@ class Panel(object):
         for trace in data.traces:
             if trace.panel != self.name:
                 continue
-            if self.ax_spec in ['xt', 'yt', 'ut']:
+            if self.is_trace():
                 item = TraceItem(trace, channel)
-            elif self.ax_spec == 'ft':
+            if self.is_spectrogram():
                 item = SpecItem(trace, channel)
             self.add_item(channel, item, True)
 
