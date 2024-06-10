@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+import numpy as np
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QKeySequence, QIcon
 from PyQt5.QtWidgets import QStyle, QApplication, QMainWindow, QTabWidget
@@ -1296,6 +1297,8 @@ def main(cargs):
             kws = kw.split(':')
             if len(kws) == 2:
                 load_kwargs[kws[0].strip()] = kws[1].strip()
+
+    np.seterr(all='raise')           
 
     plugins = Plugins()
     plugins.load_plugins()

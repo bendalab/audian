@@ -12,11 +12,12 @@ from .buffereddata import BufferedData
 class BufferedSpectrogram(BufferedData):
 
     def __init__(self, name='spectrogram', source='filtered',
-                 panel='spectrogram'):
+                 panel='spectrogram', nfft=256, hop_frac=0.5):
         super().__init__(name, source, tafter=10, panel=panel)
-        self.nfft = 256
-        self.hop_frac = 0.5
-        self.hop = self.nfft//2
+        self.nfft = nfft
+        self.hop_frac = hop_frac
+        self.hop = 0
+        self.set_hop()
         self.fresolution = 1
         self.tresolution = 1
         self.spec_rect = []
@@ -52,6 +53,20 @@ class BufferedSpectrogram(BufferedData):
                           len(self.buffer)/self.rate,
                           freq[-1] + self.fresolution]
 
+
+    def set_hop(self):
+        hop = int(np.round(self.hop_frac*self.nfft))
+        if hop < 1:
+            hop = 1
+        if hop > self.nfft:
+            hop = self.nfft
+        if self.hop != hop:
+            self.hop = hop
+            self.hop_frac = self.hop/self.nfft
+            return True
+        else:
+            return False
+
         
     def update(self, nfft=None, hop_frac=None):
         spec_update = False
@@ -68,14 +83,7 @@ class BufferedSpectrogram(BufferedData):
             if hop_frac > 1.0:
                 hop_frac = 1.0
             self.hop_frac = hop_frac
-        hop = int(np.round(self.hop_frac*self.nfft))
-        if hop < 1:
-            hop = 1
-        if hop > self.nfft:
-            hop = self.nfft
-        if self.hop != hop:
-            self.hop = hop
-            self.hop_frac = self.hop/self.nfft
+        if self.set_hop():
             spec_update = True
         if spec_update:
             self.tresolution = self.hop/self.source.rate

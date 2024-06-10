@@ -26,7 +26,8 @@ class SpecItem(pg.ImageItem):
         nf = self.data.buffer.shape[2]//16
         if nf < 1:
             nf = 1
-        zmin = np.percentile(decibel(self.data.buffer[:, self.channel, -nf:]), 95)
+        power = self.data.buffer[:, self.channel, -nf:]
+        zmin = np.percentile(decibel(power), 95)
         if not np.isfinite(zmin):
             zmin = -100.0
         self.zmin = zmin
