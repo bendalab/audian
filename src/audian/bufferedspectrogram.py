@@ -40,11 +40,13 @@ class BufferedSpectrogram(BufferedData):
         nsource = (len(dest) - 1)*self.hop + self.nfft
         if nsource > len(source):
             nsource = len(source)
-        freq, time, Sxx = spectrogram(source[:nsource],
-                                      self.source.rate,
-                                      nperseg=self.nfft,
-                                      noverlap=self.nfft - self.hop,
-                                      axis=0)
+
+        with np.errstate(under='ignore'):
+            freq, time, Sxx = spectrogram(source[:nsource],
+                                          self.source.rate,
+                                          nperseg=self.nfft,
+                                          noverlap=self.nfft - self.hop,
+                                          axis=0)
         n = Sxx.shape[2]
         dest[:n] = Sxx.transpose((2, 1, 0))
         dest[n:] = 0

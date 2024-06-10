@@ -1298,8 +1298,6 @@ def main(cargs):
             if len(kws) == 2:
                 load_kwargs[kws[0].strip()] = kws[1].strip()
 
-    np.seterr(all='raise')           
-
     plugins = Plugins()
     plugins.load_plugins()
     
