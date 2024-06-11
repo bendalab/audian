@@ -70,7 +70,6 @@ class DataBrowser(QWidget):
     sigColorMapChanged = Signal()
     sigFilterChanged = Signal()
     sigEnvelopeChanged = Signal()
-    sigPowerChanged = Signal()
     sigTraceChanged = Signal(object, object, object)
     sigAudioChanged = Signal(object, object, object)
 
@@ -182,7 +181,6 @@ class DataBrowser(QWidget):
         self.axts = []      # plots with time axis
         self.axgs = []      # plots with grids
         # lists with one plot item per channel:
-        self.specs = []     # spectrograms
         self.cbars = []     # color bars
         # lists with marker labels and regions:
         self.trace_labels = [] # labels on traces
@@ -318,7 +316,6 @@ class DataBrowser(QWidget):
         self.axts = []      # plots with time axis
         self.axgs = []      # plots with grids
         # lists with one plot item per channel:
-        self.specs = []     # spectrograms
         self.cbars = []     # color bars
         # lists with marker labels and regions:
         self.trace_labels = [] # labels on traces
@@ -398,7 +395,6 @@ class DataBrowser(QWidget):
                     cbar.setLabel('right', 'Power (dB)')
                     cbar.getAxis('right').setTextPen('black')
                     cbar.getAxis('right').setWidth(6*xwidth)
-                    cbar.sigLevelsChanged.connect(self.update_power)
                     cbar.setVisible(self.show_cbars)
                     self.cbars.append(cbar)
                     fig.addItem(cbar, row=row, col=1)
@@ -415,6 +411,7 @@ class DataBrowser(QWidget):
                     panel.row = row
                     panel.add_traces(c, self.data)
                     self.plot_ranges[yspec].add_yaxis(axs, c, True)
+                    self.plot_ranges[panel.z()].add_zaxis(axs, c, -200, 20, 5)
                     # add marker labels:
                     labels = []
                     for l in self.marker_labels:
@@ -427,11 +424,6 @@ class DataBrowser(QWidget):
 
                 row += 1
                 
-            # special trace items (TODO: eliminate those as soon as possible):
-            for trace in self.data.traces:
-                if trace.name == 'spectrogram':
-                    self.specs.append(trace.plot_items[c])
-
             proxy = pg.SignalProxy(fig.scene().sigMouseMoved, rateLimit=60,
                                    slot=lambda x, c=c: self.mouse_moved(x, c))
             self.sig_proxies.append(proxy)
@@ -989,6 +981,7 @@ class DataBrowser(QWidget):
         self.plot_ranges.set_ranges()
         self.data.set_need_update()
         self.panels.update_plots()
+        self.plot_ranges.set_powers()
         self.setting = False
 
                 
@@ -1106,6 +1099,7 @@ class DataBrowser(QWidget):
                 if self.isVisible():
                     self.data.set_time_range(ax)
         self.panels.update_plots()
+        self.plot_ranges.set_powers()
         self.setting = False
         if dispatch:
             self.sigTimesChanged.emit(self.data.toffset, self.data.twindow,
@@ -1218,6 +1212,7 @@ class DataBrowser(QWidget):
         spectrogram = self.data['spectrogram']
         spectrogram.update(nfft, hop_frac)
         self.panels.update_plots()
+        self.plot_ranges.set_powers()
         self.nfftw.setCurrentText(f'{spectrogram.nfft}')
         T = spectrogram.nfft/self.data.rate
         if T >= 1:
@@ -1282,63 +1277,6 @@ class DataBrowser(QWidget):
         self.set_color_map()
 
 
-    def set_power(self, zmin=None, zmax=None, dispatch=True):
-        self.setting = True
-        if not isinstance(zmin, list):
-            zmin = [zmin]*self.data.channels
-        if not isinstance(zmax, list):
-            zmax = [zmax]*self.data.channels
-        for c in self.selected_channels:
-            self.specs[c].set_power(zmin[c], zmax[c])
-        self.setting = False
-        if dispatch:
-            self.sigPowerChanged.emit()
-
-
-    def update_power(self, cbar):
-        if self.setting:
-            return
-        self.set_power(cbar.levels()[0], cbar.levels()[1])
-
-
-    def power_up(self):
-        for c in self.selected_channels:
-            self.specs[c].zmax += 5.0
-            self.specs[c].zmin += 5.0
-        self.set_power()
-
-
-    def power_down(self):
-        for c in self.selected_channels:
-            self.specs[c].zmax -= 5.0
-            self.specs[c].zmin -= 5.0
-        self.set_power()
-
-
-    def max_power_up(self):
-        for c in self.selected_channels:
-            self.specs[c].zmax += 5.0
-        self.set_power()
-
-
-    def max_power_down(self):
-        for c in self.selected_channels:
-            self.specs[c].zmax -= 5.0
-        self.set_power()
-
-
-    def min_power_up(self):
-        for c in self.selected_channels:
-            self.specs[c].zmin += 5.0
-        self.set_power()
-
-
-    def min_power_down(self):
-        for c in self.selected_channels:
-            self.specs[c].zmin -= 5.0
-        self.set_power()
-
-
     def update_filter(self, highpass_cutoff=None, lowpass_cutoff=None):
         """Called when filter cutoffs were changed by key shortcuts or handles
         in spectrum plots and when dispatching.
@@ -1361,13 +1299,14 @@ class DataBrowser(QWidget):
         self.lpfw.setValue(filtered.lowpass_cutoff)
         filtered.update()
         self.panels.update_plots()
+        self.plot_ranges.set_powers()
         self.setting = False
         self.sigFilterChanged.emit()  # dispatch
 
 
     def update_envelope(self, envelope_cutoff=None, show_envelope=None,
                         dispatch=True):
-        """Called when envelope cutoffs was changed by key shortcuts or widget.
+        """Called when envelope cutoff was changed by key shortcuts or widget.
         """
         if self.setting:
             return
@@ -1612,6 +1551,7 @@ class DataBrowser(QWidget):
         self.data.set_need_update()
         self.data.update_times()
         self.panels.update_plots()
+        self.plot_ranges.set_powers()
             
 
     def toggle_traces(self):

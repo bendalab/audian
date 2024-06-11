@@ -15,14 +15,15 @@ class SpecItem(pg.ImageItem):
         
         self.data = data
         self.channel = channel
-        self.zmin = None
-        self.zmax = None
+        self.init = True
         self.cbar = None
 
         self.data.plot_items[self.channel] = self
 
 
     def estimate_noiselevels(self):
+        if not self.init or len(self.data.buffer) == 0 or len(self.data.buffer.shape) < 3:
+            return -np.inf, +np.inf
         nf = self.data.buffer.shape[2]//16
         if nf < 1:
             nf = 1
@@ -31,24 +32,13 @@ class SpecItem(pg.ImageItem):
             zmin = np.percentile(decibel(power), 95)
         if not np.isfinite(zmin):
             zmin = -100.0
-        self.zmin = zmin
-        self.zmax = zmin + 60.0
+        self.init = False
+        return zmin, zmin + 60
 
             
     def set_cbar(self, cbar):
         self.cbar = cbar
-        self.cbar.setLevels([self.zmin, self.zmax])
         self.cbar.setImageItem(self)
-
-
-    def set_power(self, zmin=None, zmax=None):
-        if not zmin is None:
-            self.zmin = zmin
-        if not zmax is None:
-            self.zmax = zmax
-        self.setLevels((self.zmin, self.zmax), update=True)
-        if not self.cbar is None:
-            self.cbar.setLevels((self.zmin, self.zmax))
 
 
     def get_power(self, t, f):
@@ -64,9 +54,6 @@ class SpecItem(pg.ImageItem):
     def update_plot(self):
         if not self.data.buffer_changed[self.channel]:
             return
-        if self.zmin is None:
-            self.estimate_noiselevels()
-            self.set_power()
         self.setImage(decibel(self.data.buffer[:, self.channel, :].T),
                       autoLevels=False)
         self.setRect(*self.data.spec_rect)

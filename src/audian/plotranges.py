@@ -20,9 +20,9 @@ class PlotRange(object):
         self.min_dr = None
         self.r0 = [None]*nchannels
         self.r1 = [None]*nchannels
-        self.axxs = [[]]*nchannels
-        self.axys = [[]]*nchannels
-        self.axls = [[]]*nchannels
+        self.axxs = [[] for i in range(nchannels)]
+        self.axys = [[] for i in range(nchannels)]
+        self.axzs = [[] for i in range(nchannels)]
 
 
     def add_xaxis(self, ax, channel, has_data=False):
@@ -45,14 +45,14 @@ class PlotRange(object):
         self.axys[channel].append(ax)
 
 
-    def add_laxis(self, ax, channel, rmin, rmax, rstep):
+    def add_zaxis(self, ax, channel, rmin, rmax, rstep):
         if self.rmin is None or rmin < self.rmin:
             self.rmin = rmin
         if self.rmax is None or rmax > self.rmax:
             self.rmax = rmax
         if self.rstep is None or rstep < self.rstep:
             self.rstep = rstep
-        self.axys[channel].append(ax)
+        self.axzs[channel].append(ax)
 
 
     def is_used(self):
@@ -61,8 +61,8 @@ class PlotRange(object):
             n += len(axx)
         for axy in self.axys:
             n += len(axy)
-        for axl in self.axls:
-            n += len(axl)
+        for axz in self.axzs:
+            n += len(axz)
         return n > 0
 
     
@@ -87,8 +87,8 @@ class PlotRange(object):
             for ax in axy:
                 if ax.getViewBox() is viewbox:
                     return self.axspec
-        for axl in self.axls:
-            for ax in axl:
+        for axz in self.axzs:
+            for ax in axz:
                 if ax.getViewBox() is viewbox:
                     return self.axspec
         return None
@@ -137,7 +137,7 @@ class PlotRange(object):
         if channels is None:
             channels = range(len(self.r0))
         for c in channels:
-            if len(self.axxs[c]) + len(self.axys[c]) == 0:
+            if len(self.axxs[c]) + len(self.axys[c]) + len(self.axzs[c]) == 0:
                 continue
             if r0 is not None:
                 self.r0[c] = r0
@@ -157,8 +157,8 @@ class PlotRange(object):
                     ax.setXRange(self.r0[c], self.r1[c])
                 for ax in self.axys[c]:
                     ax.setYRange(self.r0[c], self.r1[c])
-                for ax in self.axls[c]:
-                    self.setLevels((self.r0[c], self.r1[c]), update=True)
+                for ax in self.axzs[c]:
+                    ax.setZRange(self.r0[c], self.r1[c])
 
                     
     def zoom_in(self, channels=None, do_set=True):
@@ -239,7 +239,7 @@ class PlotRange(object):
         if channels is None:
             channels = range(len(self.r0))
         for c in channels:
-            if self.r0[c] > self.rmin:
+            if self.r1[c] < self.rmax:
                 self.set_ranges(self.r0[c] + self.rstep,
                                 self.r1[c] + self.rstep,
                                 [c], do_set)
@@ -262,7 +262,7 @@ class PlotRange(object):
         if channels is None:
             channels = range(len(self.r0))
         for c in channels:
-            if self.r0[c] > self.rmin:
+            if self.r0[c] < self.rmax:
                 self.set_ranges(self.r0[c] + self.rstep, self.r1[c],
                                 [c], do_set)
                 
@@ -273,7 +273,7 @@ class PlotRange(object):
         if channels is None:
             channels = range(len(self.r0))
         for c in channels:
-            if self.r0[c] > self.rmin:
+            if self.r1[c] > self.rmin:
                 self.set_ranges(self.r0[c], self.r1[c] - self.rstep,
                                 [c], do_set)
                 
@@ -284,7 +284,7 @@ class PlotRange(object):
         if channels is None:
             channels = range(len(self.r0))
         for c in channels:
-            if self.r0[c] > self.rmin:
+            if self.r1[c] < self.rmax:
                 self.set_ranges(self.r0[c], self.r1[c] + self.rstep,
                                 [c], do_set)
                 
@@ -350,6 +350,18 @@ class PlotRange(object):
             r = max(np.abs(self.r0[c]), np.abs(self.r1[c]))
             self.set_ranges(-r, +r, [c], do_set)
 
+
+    def set_powers(self):
+        if not self.is_power() or not self.is_used():
+            return
+        for c in range(len(self.axzs)):
+            for ax in self.axzs[c]:
+                if hasattr(ax, 'data_items'):
+                    for item in ax.data_items:
+                        if hasattr(item, 'estimate_noiselevels'):
+                            z0, z1 = item.estimate_noiselevels()
+                            self.set_ranges(z0, z1, [c])
+        
             
     def show_crosshair(self, show):
         if axspec in Panel.powers:
@@ -396,6 +408,11 @@ class PlotRanges(dict):
     def set_ranges(self):
         for r in self.values():
             r.set_ranges()
+
+
+    def set_powers(self):
+        for r in self.values():
+            r.set_powers()
 
 
     def get_axspec(self, viewbox):

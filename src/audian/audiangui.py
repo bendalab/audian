@@ -41,9 +41,9 @@ class Audian(QMainWindow):
 
         self.link_timezoom = True
         self.link_timescroll = False
-        self.link_ranges = dict(x=True, y=True, u=True, f=True, w=True)
+        self.link_ranges = dict(x=True, y=True, u=True,
+                                f=True, w=True, p=True, P=True)
         self.link_filter = True
-        self.link_power = True
         self.link_envelope = True
         self.link_channels = True
         self.link_panels = True
@@ -460,7 +460,7 @@ class Audian(QMainWindow):
             if self.link_ranges[s]:
                 for b in self.browsers:
                     if not b is self.browser():
-                        b.apply_ranges(amplitudefunc, [s])
+                        b.apply_ranges(amplitudefunc, s)
 
 
     def dispatch_ranges(self, axspec, ymin, ymax):
@@ -698,48 +698,40 @@ class Audian(QMainWindow):
 
         
     def toggle_link_power(self):
-        self.link_power = not self.link_power
-
-
-    def dispatch_power(self):
-        if self.link_power and 'spectrogram' in self.browser().data:
-            zmin = [s.zmin for s in self.browser().data['spectrogram'].plot_items]
-            zmax = [s.zmax for s in self.browser().data['spectrogram'].plot_items]
-            for b in self.browsers:
-                if not b is self.browser():
-                    b.set_power(zmin, zmax, False)
+        for s in Panel.powers:
+            self.link_ranges[s] = not self.link_ranges[s]
 
 
     def setup_power_actions(self, menu):
         self.acts.link_power = QAction('Link &power', self)
         self.acts.link_power.setShortcut('Alt+P')
         self.acts.link_power.setCheckable(True)
-        self.acts.link_power.setChecked(self.link_power)
+        self.acts.link_power.setChecked(self.link_ranges[Panel.powers[0]])
         self.acts.link_power.toggled.connect(self.toggle_link_power)
         
         self.acts.power_up = QAction('Power &up', self)
         self.acts.power_up.setShortcut('Shift+D')
-        self.acts.power_up.triggered.connect(lambda x: self.browser().power_up())
+        self.acts.power_up.triggered.connect(lambda x: self.apply_ranges('step_up', Panel.powers[0]))
 
         self.acts.power_down = QAction('Power &down', self)
         self.acts.power_down.setShortcut('D')
-        self.acts.power_down.triggered.connect(lambda x: self.browser().power_down())
+        self.acts.power_down.triggered.connect(lambda x: self.apply_ranges('step_down', Panel.powers[0]))
 
         self.acts.max_power_up = QAction('Max up', self)
         self.acts.max_power_up.setShortcut('Shift+K')
-        self.acts.max_power_up.triggered.connect(lambda x: self.browser().max_power_up())
+        self.acts.max_power_up.triggered.connect(lambda x: self.apply_ranges('max_up', Panel.powers[0]))
 
         self.acts.max_power_down = QAction('Max down', self)
         self.acts.max_power_down.setShortcut('K')
-        self.acts.max_power_down.triggered.connect(lambda x: self.browser().max_power_down())
+        self.acts.max_power_down.triggered.connect(lambda x: self.apply_ranges('max_down', Panel.powers[0]))
 
         self.acts.min_power_up = QAction('Min up', self)
         self.acts.min_power_up.setShortcut('Shift+J')
-        self.acts.min_power_up.triggered.connect(lambda x: self.browser().min_power_up())
+        self.acts.min_power_up.triggered.connect(lambda x: self.apply_ranges('min_up', Panel.powers[0]))
 
         self.acts.min_power_down = QAction('Min down', self)
         self.acts.min_power_down.setShortcut('J')
-        self.acts.min_power_down.triggered.connect(lambda x: self.browser().min_power_down())
+        self.acts.min_power_down.triggered.connect(lambda x: self.apply_ranges('min_down', Panel.powers[0]))
         
         power_menu = menu.addMenu('&Power')
         power_menu.addAction(self.acts.link_power)
@@ -1188,7 +1180,6 @@ Can not open file <b>{browser.file_path}</b>!''')
                 browser.sigColorMapChanged.connect(self.dispatch_colormap)
                 browser.sigFilterChanged.connect(self.dispatch_filter)
                 browser.sigEnvelopeChanged.connect(self.dispatch_envelope)
-                browser.sigPowerChanged.connect(self.dispatch_power)
                 browser.sigTraceChanged.connect(self.dispatch_trace)
                 browser.sigAudioChanged.connect(self.dispatch_audio)
                 browser.set_times(enable_starttime=self.acts.toggle_start_time.isChecked(), dispatch=False)

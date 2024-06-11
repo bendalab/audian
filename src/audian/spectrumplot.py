@@ -61,6 +61,13 @@ class SpectrumPlot(TimePlot):
                 self.lowpass_handle.setBounds((item.data.ampl_min,
                                                item.data.ampl_max))
 
+
+    def setZRange(self, zmin, zmax):
+        for item in self.data_items:
+            if hasattr(item, 'setLevels'):
+                item.setLevels((zmin, zmax), update=True)
+        self.cbar.setLevels((zmin, zmax))
+
             
     def set_filter_handles(self, highpass_cutoff=None, lowpass_cutoff=None):
         if highpass_cutoff is not None:

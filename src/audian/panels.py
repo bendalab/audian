@@ -184,7 +184,7 @@ class Panels(dict):
 
     def add_trace(self, name='trace'):
         # find amplitude that is not used yet:
-        amps = [False] * len(Panel.amplitudes)
+        amps = [False]*len(Panel.amplitudes)
         for panel in self.values():
             if panel.is_trace():
                 amps[Panel.amplitudes.index(panel.y())] = True
@@ -198,8 +198,8 @@ class Panels(dict):
         
     def add_spectrogram(self, name='spectrogram'):
         # find frequencies and powers that are not used yet:
-        freqs = [False] * len(Panel.frequencies)
-        pwrs = [False] * len(Panel.powers)
+        freqs = [False]*len(Panel.frequencies)
+        pwrs = [False]*len(Panel.powers)
         for panel in self.values():
             if panel.is_spectrogram():
                 freqs[Panel.frequencies.index(panel.y())] = True
