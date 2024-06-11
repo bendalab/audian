@@ -15,30 +15,42 @@ class PlotRange(object):
         self.axspec = axspec
         self.rmin = None
         self.rmax = None
+        self.rstep = None
         self.min_dr = None
         self.r0 = [None]*nchannels
         self.r1 = [None]*nchannels
         self.axxs = [[]]*nchannels
         self.axys = [[]]*nchannels
+        self.axls = [[]]*nchannels
 
 
     def add_xaxis(self, ax, channel, has_data=False):
         if has_data:
-            amin, amax = ax.range()
-            if self.rmin is None or amin < self.rmin:
-                self.rmin = amin
-            if self.rmax is None or amax > self.rmax:
-                self.rmax = amax
+            rmin, rmax = ax.range()
+            if self.rmin is None or rmin < self.rmin:
+                self.rmin = rmin
+            if self.rmax is None or rmax > self.rmax:
+                self.rmax = rmax
         self.axxs[channel].append(ax)
         
 
     def add_yaxis(self, ax, channel, has_data=False):
         if has_data:
-            amin, amax = ax.range()
-            if self.rmin is None or amin < self.rmin:
-                self.rmin = amin
-            if self.rmax is None or amax > self.rmax:
-                self.rmax = amax
+            rmin, rmax = ax.range()
+            if self.rmin is None or rmin < self.rmin:
+                self.rmin = rmin
+            if self.rmax is None or rmax > self.rmax:
+                self.rmax = rmax
+        self.axys[channel].append(ax)
+
+
+    def add_laxis(self, ax, channel, rmin, rmax, rstep):
+        if self.rmin is None or rmin < self.rmin:
+            self.rmin = rmin
+        if self.rmax is None or rmax > self.rmax:
+            self.rmax = rmax
+        if self.rstep is None or rstep < self.rstep:
+            self.rstep = rstep
         self.axys[channel].append(ax)
 
 
@@ -48,6 +60,8 @@ class PlotRange(object):
             n += len(axx)
         for axy in self.axys:
             n += len(axy)
+        for axl in self.axls:
+            n += len(axl)
         return n > 0
         
 
@@ -58,6 +72,10 @@ class PlotRange(object):
                     return self.axspec
         for axy in self.axys:
             for ax in axy:
+                if ax.getViewBox() is viewbox:
+                    return self.axspec
+        for axl in self.axls:
+            for ax in axl:
                 if ax.getViewBox() is viewbox:
                     return self.axspec
         return None
@@ -126,8 +144,10 @@ class PlotRange(object):
                     ax.setXRange(self.r0[c], self.r1[c])
                 for ax in self.axys[c]:
                     ax.setYRange(self.r0[c], self.r1[c])
+                for ax in self.axls[c]:
+                    self.setLevels((self.r0[c], self.r1[c]), update=True)
 
-
+                    
     def zoom_in(self, channels=None, do_set=True):
         if not self.is_used():
             return
@@ -185,6 +205,74 @@ class PlotRange(object):
             if self.r1[c] < self.rmax:
                 dr = self.r1[c] - self.r0[c]
                 self.set_ranges(self.r0[c] + 0.5*dr, self.r1[c] + 0.5*dr,
+                                [c], do_set)
+                
+                
+    def step_down(self, channels=None, do_set=True):
+        if not self.is_used():
+            return
+        if channels is None:
+            channels = range(len(self.r0))
+        for c in channels:
+            if self.r0[c] > self.rmin:
+                self.set_ranges(self.r0[c] - self.rstep,
+                                self.r1[c] - self.rstep,
+                                [c], do_set)
+                
+                
+    def step_up(self, channels=None, do_set=True):
+        if not self.is_used():
+            return
+        if channels is None:
+            channels = range(len(self.r0))
+        for c in channels:
+            if self.r0[c] > self.rmin:
+                self.set_ranges(self.r0[c] + self.rstep,
+                                self.r1[c] + self.rstep,
+                                [c], do_set)
+                
+                
+    def min_down(self, channels=None, do_set=True):
+        if not self.is_used():
+            return
+        if channels is None:
+            channels = range(len(self.r0))
+        for c in channels:
+            if self.r0[c] > self.rmin:
+                self.set_ranges(self.r0[c] - self.rstep, self.r1[c],
+                                [c], do_set)
+                
+                
+    def min_up(self, channels=None, do_set=True):
+        if not self.is_used():
+            return
+        if channels is None:
+            channels = range(len(self.r0))
+        for c in channels:
+            if self.r0[c] > self.rmin:
+                self.set_ranges(self.r0[c] + self.rstep, self.r1[c],
+                                [c], do_set)
+                
+                
+    def max_down(self, channels=None, do_set=True):
+        if not self.is_used():
+            return
+        if channels is None:
+            channels = range(len(self.r0))
+        for c in channels:
+            if self.r0[c] > self.rmin:
+                self.set_ranges(self.r0[c], self.r1[c] - self.rstep,
+                                [c], do_set)
+                
+                
+    def max_up(self, channels=None, do_set=True):
+        if not self.is_used():
+            return
+        if channels is None:
+            channels = range(len(self.r0))
+        for c in channels:
+            if self.r0[c] > self.rmin:
+                self.set_ranges(self.r0[c], self.r1[c] + self.rstep,
                                 [c], do_set)
                 
                 
@@ -251,6 +339,8 @@ class PlotRange(object):
 
             
     def show_crosshair(self, show):
+        if axspec in 'p':
+            return
         for axx in self.axxs:
             for ax in axx:
                 ax.xline.setVisible(show)
@@ -260,6 +350,8 @@ class PlotRange(object):
         
 
     def set_crosshair(self, pos):
+        if axspec in 'p':
+            return
         for axx in self.axxs:
             for ax in axx:
                 ax.xline.setPos(pos)
@@ -272,13 +364,14 @@ class PlotRanges(dict):
     
     def __init__(self):
         super().__init__()
-        for m in ['zoom_in', 'zoom_out', 'down', 'up',
+        for m in ['zoom_in', 'zoom_out', 'down', 'up', 'step_down', 'step_up',
+                  'min_down', 'min_up', 'max_down', 'max_up',
                   'home', 'end', 'auto', 'reset', 'center']:
             setattr(self, m, partial(PlotRanges._apply, self, m))
 
 
     def setup(self, nchannels):
-        for s in 'xyufw':
+        for s in 'xyufwp':
             self[s] = PlotRange(s, nchannels)
 
 
