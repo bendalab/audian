@@ -164,6 +164,7 @@ class Data(object):
         self.data.follow = int(self.follow_time*self.data.rate)
         self.data.name = 'data'
         self.data.panel = 'trace'
+        self.data.panel_type =  'trace'
         self.data.plot_items = [None]*self.data.channels
         self.data.color = '#0000ee'
         self.data.lw_thin = 1.1

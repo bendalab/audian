@@ -10,7 +10,8 @@ class BufferedFilter(BufferedData):
     def __init__(self, name='filtered', source='data', panel='trace',
                  color='#00ee00', lw_thin=1.1, lw_thick=2):
         super().__init__(name, source, tbefore=10, panel=panel,
-                         color=color, lw_thin=lw_thin, lw_thick=lw_thick)
+                         panel_type='trace', color=color,
+                         lw_thin=lw_thin, lw_thick=lw_thick)
         self.highpass_cutoff = 0
         self.lowpass_cutoff = 1
         self.filter_order = 2

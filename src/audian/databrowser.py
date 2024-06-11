@@ -279,7 +279,8 @@ class DataBrowser(QWidget):
                 self.marker_labels.append(MarkerLabel(l, l[0].lower(),
                                 list(colors.keys())[i % len(colors.keys())]))
 
-        # insert spacers:
+        # make panels:
+        self.panels.fill(self.data)
         self.panels.insert_spacers()
             
         # setup plots:

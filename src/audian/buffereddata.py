@@ -8,12 +8,14 @@ from audioio import BufferedArray
 class BufferedData(BufferedArray):
 
     def __init__(self, name, source_name, tbefore=0, tafter=0,
-                 panel='none', color='#00ee00', lw_thin=1.1, lw_thick=2):
+                 panel='none', panel_type='trace',
+                 color='#00ee00', lw_thin=1.1, lw_thick=2):
         self.name = name
         self.source_name = source_name
         self.tbefore = 0
         self.tafter = 0
         self.panel = panel
+        self.panel_type = panel_type
         self.plot_items = []
         self.color = color
         self.lw_thin = lw_thin

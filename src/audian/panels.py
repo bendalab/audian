@@ -161,6 +161,13 @@ class Panels(dict):
         super().__init__(self)
 
 
+    def __str__(self):
+        s = ''
+        for panel in self.values():
+            s += f'{panel.name}: {panel.ax_spec} @ {panel.row}\n'
+        return s
+
+
     def add(self, name, axes, row=None):
         if row is None:
             row = self.max_row() + 1
@@ -206,8 +213,16 @@ class Panels(dict):
             if not pwrs[k]:
                 axspec = axspec[:2] + Panel.powers[k]
                 break
-        print(name, axspec)
         self.add(name, axspec)
+
+
+    def fill(self, data):
+        for trace in data.traces:
+            if trace.panel not in self:
+                if trace.panel_type == 'trace':
+                    self.add_trace(trace.panel)
+                elif trace.panel_type == 'spectrogram':
+                    self.add_spectrogram(trace.panel)
         
 
     def remove(self, name):
