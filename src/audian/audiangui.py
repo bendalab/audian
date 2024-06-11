@@ -381,11 +381,11 @@ class Audian(QMainWindow):
         self.acts.toggle_start_time.toggled.connect(lambda x: self.browser().set_times(enable_starttime=x))
 
         self.acts.zoom_time_in = QAction('Zoom &in', self)
-        self.acts.zoom_time_in.setShortcuts([QKeySequence.ZoomIn, '+', '='])
+        self.acts.zoom_time_in.setShortcuts([QKeySequence.ZoomIn, '+', '=', 'Shift+T'])
         self.acts.zoom_time_in.triggered.connect(lambda x: self.browser().zoom_time_in())
         
         self.acts.zoom_time_out = QAction('Zoom &out', self)
-        self.acts.zoom_time_out.setShortcuts([QKeySequence.ZoomOut, '-'])
+        self.acts.zoom_time_out.setShortcuts([QKeySequence.ZoomOut, '-', 'T'])
         self.acts.zoom_time_out.triggered.connect(lambda x: self.browser().zoom_time_out())
         
         self.acts.link_time_scroll = QAction('Link &time scroll', self)

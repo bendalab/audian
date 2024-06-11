@@ -332,7 +332,7 @@ class DataBrowser(QWidget):
             for name in reversed(self.panels):
                 panel = self.panels[name]
                 # spacer:
-                if panel == 'spacer':
+                if panel.is_spacer():
                     axsp = fig.addLayout(row=row, col=0)
                     axsp.setContentsMargins(0, 0, 0, 0)
                     panel.add_ax(axsp)
@@ -968,7 +968,7 @@ class DataBrowser(QWidget):
         for c in range(self.data.channels):
             first = True
             for panel in self.panels.values():
-                if panel == 'spacer':
+                if panel.is_spacer():
                     continue
                 if first and c == self.show_channels[-1] and \
                    panel.is_visible(c):
@@ -1003,9 +1003,9 @@ class DataBrowser(QWidget):
         nspacers = 0
         c = self.show_channels[0]
         for panel in self.panels.values():
-            if panel.is_visible(c) and (panel == 'spacer' or
+            if panel.is_visible(c) and (panel.is_spacer() or
                                         panel.has_visible_traces(c)):
-                if panel == 'spacer':
+                if panel.is_spacer():
                     nspacers += 1
                 elif panel.is_spectrogram():
                     nspecs += 1
@@ -1032,9 +1032,9 @@ class DataBrowser(QWidget):
                                             ntraces*trace_height +
                                             add_height)))
             for panel in self.panels.values():
-                if panel.is_visible(c) and (panel == 'spacer' or
+                if panel.is_visible(c) and (panel.is_spacer() or
                                             panel.has_visible_traces(c)):
-                    if panel == 'spacer':
+                    if panel.is_spacer():
                         row_height = spacer_height
                     elif panel.is_spectrogram():
                         row_height = spec_height + add_height

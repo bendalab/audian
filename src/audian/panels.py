@@ -11,9 +11,12 @@ from .specitem import SpecItem
 
 class Panel(object):
 
-    
+
+    times = 't'
     amplitudes = 'xyu'
     frequencies = 'fw'
+    powers = 'pP'
+    spacer = 'spacer'
     
     
     def __init__(self, name, ax_spec, row):
@@ -33,7 +36,7 @@ class Panel(object):
 
 
     def is_time(self):
-        return self.ax_spec[1] == 't'
+        return self.ax_spec[1] in self.times
 
 
     def is_xamplitude(self):
@@ -52,12 +55,20 @@ class Panel(object):
         return self.ax_spec[0] in self.frequencies
 
 
+    def is_ypower(self):
+        return self.ax_spec[0] in self.powers
+
+
     def is_trace(self):
         return self.is_time() and self.is_yamplitude()
 
 
     def is_spectrogram(self):
         return self.is_time() and self.is_yfrequency()
+
+
+    def is_spacer(self):
+        return self.ax_spec == self.spacer
 
     
     def add_ax(self, ax):
@@ -83,7 +94,7 @@ class Panel(object):
 
 
     def has_visible_traces(self, channel):
-        if self.ax_spec == 'spacer':
+        if self.is_spacer():
             return False
         for di in self.axs[channel].data_items:
             if di.isVisible():
@@ -123,7 +134,7 @@ class Panel(object):
 
     def update_plots(self):
         for ax in self.axs:
-            if ax.isVisible() and self.ax_spec != 'spacer':
+            if ax.isVisible() and not self.is_spacer():
                 ax.update_plot()
 
 
@@ -167,7 +178,7 @@ class Panels(dict):
         for name in self:
             if row > 0:
                 panels[f'spacer{spacer}'] = Panel(f'spacer{spacer}',
-                                                  'spacer', 0)
+                                                  Panel.spacer, 0)
                 spacer += 1
             panels[name] = self[name]
             row += 1
@@ -178,7 +189,7 @@ class Panels(dict):
         prev_panel = None
         prev_spacer = None
         for panel in self.values():
-            if panel == 'spacer':
+            if panel.is_spacer():
                 if prev_panel:
                     prev_visible = prev_panel.is_visible(channel)
                     panel.set_visible(prev_visible)

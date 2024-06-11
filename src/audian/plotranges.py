@@ -7,6 +7,7 @@
 from math import ceil
 import numpy as np
 from functools import partial
+from .panels import Panel
 
 
 class PlotRange(object):
@@ -63,6 +64,18 @@ class PlotRange(object):
         for axl in self.axls:
             n += len(axl)
         return n > 0
+
+    
+    def is_amplitude(self):
+        return self.axspec in Panel.amplitudes
+        
+    
+    def is_frequency(self):
+        return self.axspec in Panel.frequencies
+        
+    
+    def is_power(self):
+        return self.axspec in Panel.powers
         
 
     def get_axspec(self, viewbox):
@@ -339,7 +352,7 @@ class PlotRange(object):
 
             
     def show_crosshair(self, show):
-        if axspec in 'p':
+        if axspec in Panel.powers:
             return
         for axx in self.axxs:
             for ax in axx:
@@ -350,7 +363,7 @@ class PlotRange(object):
         
 
     def set_crosshair(self, pos):
-        if axspec in 'p':
+        if axspec in Panel.powers:
             return
         for axx in self.axxs:
             for ax in axx:
@@ -371,7 +384,7 @@ class PlotRanges(dict):
 
 
     def setup(self, nchannels):
-        for s in 'xyufwp':
+        for s in Panel.amplitudes + Panel.frequencies + Panel.powers:
             self[s] = PlotRange(s, nchannels)
 
 
