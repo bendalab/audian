@@ -35,28 +35,45 @@ class Panel(object):
         return self.ax_spec == ax_spec
 
 
+    def x(self):
+        return self.ax_spec[0]
+
+
+    def y(self):
+        return self.ax_spec[1]
+
+
+    def z(self):
+        return self.ax_spec[2] if len(self.ax_spec) > 2 else ''
+
+
     def is_time(self):
-        return self.ax_spec[1] in self.times
+        return self.x() in self.times
 
 
     def is_xamplitude(self):
-        return self.ax_spec[1] in self.amplitudes
+        return self.x() in self.amplitudes
 
 
     def is_yamplitude(self):
-        return self.ax_spec[0] in self.amplitudes
+        return self.y() in self.amplitudes
 
 
     def is_xfrequency(self):
-        return self.ax_spec[1] in self.frequencies
+        return self.x() in self.frequencies
 
 
     def is_yfrequency(self):
-        return self.ax_spec[0] in self.frequencies
+        return self.y() in self.frequencies
 
 
     def is_ypower(self):
-        return self.ax_spec[0] in self.powers
+        return self.y() in self.powers
+
+
+    def is_zpower(self):
+        z = self.z()
+        return z and z in self.powers
 
 
     def is_trace(self):
@@ -146,7 +163,7 @@ class Panels(dict):
 
     def add(self, name, axes, row=None):
         if row is None:
-            row = len(self)
+            row = self.max_row() + 1
         for panel in self.values():
             if panel.row >= row:
                 panel.row += 1
@@ -157,13 +174,55 @@ class Panels(dict):
             inx = np.argsort(rows)
             self = {name: self[name] for name in names[inx]}
 
-            
+
+    def add_trace(self, name='trace'):
+        # find amplitude that is not used yet:
+        amps = [False] * len(Panel.amplitudes)
+        for panel in self.values():
+            if panel.is_trace():
+                amps[Panel.amplitudes.index(panel.y())] = True
+        axspec = Panel.times[0] + Panel.amplitudes[0]
+        for k in range(len(amps)):
+            if not amps[k]:
+                axspec = axspec[0] + Panel.amplitudes[k]
+                break
+        self.add(name, axspec)
+
+        
+    def add_spectrogram(self, name='spectrogram'):
+        # find frequencies and powers that are not used yet:
+        freqs = [False] * len(Panel.frequencies)
+        pwrs = [False] * len(Panel.powers)
+        for panel in self.values():
+            if panel.is_spectrogram():
+                freqs[Panel.frequencies.index(panel.y())] = True
+                pwrs[Panel.powers.index(panel.z())] = True
+        axspec = Panel.times[0] + Panel.frequencies[0] + Panel.powers[0]
+        for k in range(len(freqs)):
+            if not freqs[k]:
+                axspec = axspec[0] + Panel.frequencies[k] + axspec[2]
+                break
+        for k in range(len(pwrs)):
+            if not pwrs[k]:
+                axspec = axspec[:2] + Panel.powers[k]
+                break
+        print(name, axspec)
+        self.add(name, axspec)
+        
+
     def remove(self, name):
         del self[name]
 
 
     def clear(self):
         self = {}
+
+        
+    def max_row(self):
+        if len(self) > 0:
+            return  np.max([panel.row for panel in self.values()])
+        else:
+            return -1
 
 
     def update_plots(self):

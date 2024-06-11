@@ -88,8 +88,8 @@ class DataBrowser(QWidget):
         
         # panels:
         self.panels = Panels()
-        self.panels.add('trace', 'xt', 0)
-        self.panels.add('spectrogram', 'ft', 1)
+        self.panels.add_trace()
+        self.panels.add_spectrogram()
 
         # plugins:
         self.plugins = plugins
@@ -339,9 +339,9 @@ class DataBrowser(QWidget):
                     panel.row = row
                 # trace plot:
                 elif panel.is_trace():
-                    aspec = panel.ax_spec[0]
+                    yspec = panel.y()
                     ylabel = panel.name if panel.name != 'trace' else ''
-                    axt = TimePlot(aspec, ylabel, c, xwidth, self)
+                    axt = TimePlot(yspec, ylabel, c, xwidth, self)
                     self.audio_markers[-1].append(axt.vmarker)
                     fig.addItem(axt, row=row, col=0)
                     self.axts[-1].append(axt)
@@ -350,7 +350,7 @@ class DataBrowser(QWidget):
                     panel.add_ax(axt)
                     panel.row = row
                     panel.add_traces(c, self.data)
-                    self.plot_ranges[aspec].add_yaxis(axt, c, True)
+                    self.plot_ranges[yspec].add_yaxis(axt, c, True)
                     # add marker labels:
                     labels = []
                     for l in self.marker_labels:
@@ -377,8 +377,8 @@ class DataBrowser(QWidget):
                     fig.addItem(cbar, row=row, col=1)
 
                     # spectrum:
-                    aspec = panel.ax_spec[0]
-                    axs = SpectrumPlot(aspec, c, xwidth, cbar, self)
+                    yspec = panel.y()
+                    axs = SpectrumPlot(yspec, c, xwidth, cbar, self)
                     self.audio_markers[-1].append(axs.vmarker)
                     fig.addItem(axs, row=row, col=0)
                     self.axts[-1].append(axs)
@@ -387,7 +387,7 @@ class DataBrowser(QWidget):
                     panel.add_ax(axs)
                     panel.row = row
                     panel.add_traces(c, self.data)
-                    self.plot_ranges[aspec].add_yaxis(axs, c, True)
+                    self.plot_ranges[yspec].add_yaxis(axs, c, True)
                     # add marker labels:
                     labels = []
                     for l in self.marker_labels:
@@ -432,12 +432,12 @@ class DataBrowser(QWidget):
             self.acts.zoom_uamplitude_out.setVisible(False)
         if not self.plot_ranges[Panel.frequencies[0]].is_used():
             self.acts.zoom_ffrequency_in.setEnabled(False)
-            self.acts.zoom_ffrequency_ou.setEnabled(False)
+            self.acts.zoom_ffrequency_out.setEnabled(False)
             self.acts.zoom_ffrequency_in.setVisible(False)
             self.acts.zoom_ffrequency_out.setVisible(False)
         if not self.plot_ranges[Panel.frequencies[1]].is_used():
             self.acts.zoom_wfrequency_in.setEnabled(False)
-            self.acts.zoom_wfrequency_ou.setEnabled(False)
+            self.acts.zoom_wfrequency_out.setEnabled(False)
             self.acts.zoom_wfrequency_in.setVisible(False)
             self.acts.zoom_wfrequency_out.setVisible(False)
         self.setting = False
