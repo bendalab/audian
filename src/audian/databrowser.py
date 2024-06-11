@@ -71,6 +71,7 @@ class DataBrowser(QWidget):
     sigFilterChanged = Signal()
     sigEnvelopeChanged = Signal()
     sigPowerChanged = Signal()
+    sigTraceChanged = Signal(object, object, object)
     sigAudioChanged = Signal(object, object, object)
 
     
@@ -85,6 +86,7 @@ class DataBrowser(QWidget):
         self.schannels = channels
         self.data = Data(file_path, **load_kwargs)
         self.plot_ranges = PlotRanges()
+        self.trace_acts = []
         
         # panels:
         self.panels = Panels()
@@ -232,6 +234,21 @@ class DataBrowser(QWidget):
         panel_name = self.data[trace_name].panel
         self.panels[panel_name].add_item(channel, plot_item, False)
 
+
+    def toggle_trace(self, checked, name):
+        self.data.set_visible(name, checked)
+        self.adjust_layout(self.width(), self.height())
+        self.sigTraceChanged.emit(self, checked, name)
+
+        
+    def set_trace(self, checked, name):
+        self.data.set_visible(name, checked)
+        for act in self.trace_acts:
+            if act.text() == name:
+                act.blockSignals(True)
+                act.setChecked(checked)
+                act.blockSignals(False)
+                
         
     def open(self, gui, unwrap, unwrap_clip, highpass_cutoff, lowpass_cutoff):
         # load data:
@@ -239,6 +256,15 @@ class DataBrowser(QWidget):
         if self.data.data is None:
             return
         self.marker_data.file_path = self.data.file_path
+
+        # add traces to menu:
+        self.trace_acts = []
+        for t in self.data.traces:
+            act = QAction(t.name, self)
+            act.setCheckable(True)
+            act.setChecked(True)
+            act.toggled.connect(lambda x, name=t.name: self.toggle_trace(x, name))
+            self.trace_acts.append(act)
 
         # amplitude ranges:
         self.plot_ranges.setup(self.data.channels)

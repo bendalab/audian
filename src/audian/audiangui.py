@@ -434,7 +434,7 @@ class Audian(QMainWindow):
         self.acts.auto_scroll.setShortcut('!')
         self.acts.auto_scroll.triggered.connect(lambda x=0: self.browser().auto_scroll())
 
-        time_menu = menu.addMenu('&Time')
+        time_menu = menu.addMenu('Time')
         time_menu.addAction(self.acts.link_time_zoom)
         time_menu.addAction(self.acts.toggle_start_time)
         time_menu.addAction(self.acts.zoom_time_in)
@@ -946,6 +946,12 @@ class Audian(QMainWindow):
         
         return channel_menu
 
+
+    def dispatch_trace(self, browser, checked, name):
+        for b in self.browsers:
+            if b is not browser:
+                b.set_trace(checked, name)
+                
         
     def toggle_link_panels(self):
         self.link_panels = not self.link_panels
@@ -1075,6 +1081,8 @@ class Audian(QMainWindow):
         self.setup_envelope_actions(view_menu)
         self.setup_channel_actions(view_menu)
         self.setup_panel_actions(view_menu)
+        self.traces_menu = view_menu.addMenu('&Traces')
+        self.data_menus.append(self.traces_menu)
         view_menu.addAction(self.acts.toggle_grid)
         view_menu.addAction(self.acts.maximize_window)
         self.addAction(self.acts.next_file)
@@ -1105,6 +1113,9 @@ class Audian(QMainWindow):
             for c in range(len(self.acts.channels)):
                 self.set_channel_action(c, browser.data.channels,
                                         c in browser.show_channels, True)
+            self.traces_menu.clear()
+            for act in browser.trace_acts:
+                self.traces_menu.addAction(act)
             browser.update()
 
         
@@ -1176,6 +1187,7 @@ Can not open file <b>{browser.file_path}</b>!''')
                 browser.sigFilterChanged.connect(self.dispatch_filter)
                 browser.sigEnvelopeChanged.connect(self.dispatch_envelope)
                 browser.sigPowerChanged.connect(self.dispatch_power)
+                browser.sigTraceChanged.connect(self.dispatch_trace)
                 browser.sigAudioChanged.connect(self.dispatch_audio)
                 browser.set_times(enable_starttime=self.acts.toggle_start_time.isChecked(), dispatch=False)
                 pb = self.browser() if self.prev_browser is None else self.prev_browser
