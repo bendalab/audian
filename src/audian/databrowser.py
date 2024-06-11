@@ -607,7 +607,15 @@ class DataBrowser(QWidget):
         self.plugins.setup_analyzer(self)
         if len(self.analyzers) == 0:
             self.acts.analyze_region.setEnabled(False)            
-            self.acts.analyze_region.setVisible(False)            
+            self.acts.analyze_region.setVisible(False)
+
+        # update visibility of traces:
+        for name in self.data.keys():
+            for act in self.trace_acts:
+                if act.text() == name:
+                    act.blockSignals(True)
+                    act.setChecked(self.data.is_visible(name))
+                    act.blockSignals(False)
 
         # add marker data to plot:
         labels = [l.label for l in self.marker_labels]
@@ -1366,18 +1374,18 @@ class DataBrowser(QWidget):
         self.setting = True
         if 'envelope' not in self.data:
             return
-        envelope = self.data['envelope']
         if envelope_cutoff is not None:
+            envelope = self.data['envelope']
             envelope.envelope_cutoff = envelope_cutoff
+            envelope.update()
+            self.data.set_need_update()
+            self.panels.update_plots()
+            self.envfw.setValue(envelope.envelope_cutoff)
         if show_envelope is not None:
-            self.data.set_visible('envelope', show_envelope)
-            self.data.set_visible('envelope1', show_envelope)
-            self.data.set_visible('envelope2', show_envelope)
+            for name in self.data.keys():
+                if name.startswith('env'):
+                    self.set_trace(show_envelope, name)
             self.adjust_layout(self.width(), self.height())
-        self.data.set_need_update()
-        envelope.update()
-        self.panels.update_plots()
-        self.envfw.setValue(envelope.envelope_cutoff)
         self.setting = False
         if dispatch:
             self.sigEnvelopeChanged.emit()

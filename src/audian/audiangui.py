@@ -631,7 +631,9 @@ class Audian(QMainWindow):
             lowpass_cutoff = self.browser().data['filtered'].lowpass_cutoff
             for b in self.browsers:
                 if not b is self.browser():
+                    bs = b.blockSignals(True)
                     b.update_filter(highpass_cutoff, lowpass_cutoff)
+                    b.blockSignals(bs)
 
 
     def setup_spectrogram_actions(self, menu):
