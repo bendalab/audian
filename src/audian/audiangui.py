@@ -83,7 +83,8 @@ class Audian(QMainWindow):
         # data:
         self.unwrap = unwrap
         self.unwrap_clip = unwrap_clip
-        self.load_files(file_paths, load_kwargs)
+        self.load_kwargs = load_kwargs
+        self.load_files(file_paths)
 
         # init widgets to show:
         if len(self.browsers) > 0:
@@ -468,7 +469,7 @@ class Audian(QMainWindow):
             if self.link_ranges[s]:
                 for b in self.browsers:
                     if not b is self.browser():
-                        b.set_ranges([s], ymin, ymax)
+                        b.set_ranges(s, ymin, ymax)
 
         
     def toggle_link_amplitude(self):
@@ -1105,8 +1106,9 @@ class Audian(QMainWindow):
         browser = self.tabs.widget(index)
         if isinstance(browser, DataBrowser) and not browser.data is None:
             for c in range(len(self.acts.channels)):
+                checked = browser.show_channels is None or c in browser.show_channels
                 self.set_channel_action(c, browser.data.channels,
-                                        c in browser.show_channels, True)
+                                        checked, True)
             self.traces_menu.clear()
             for act in browser.trace_acts:
                 self.traces_menu.addAction(act)
@@ -1136,7 +1138,7 @@ class Audian(QMainWindow):
                 menu.setEnabled(True)
 
 
-    def load_files(self, file_paths, load_kwargs):
+    def load_files(self, file_paths):
         if len(self.browsers) > 0:
             self.prev_browser = self.browser()
         # prepare open files:
@@ -1144,7 +1146,7 @@ class Audian(QMainWindow):
         for file_path in file_paths:
             if not os.path.isfile(file_path):
                 continue
-            browser = DataBrowser(file_path, load_kwargs, self.plugins,
+            browser = DataBrowser(file_path, self.load_kwargs, self.plugins,
                                   self.channels, self.audio, self.acts)
             self.tabs.addTab(browser, os.path.basename(file_path))
             self.browsers.append(browser)
