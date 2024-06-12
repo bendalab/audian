@@ -15,24 +15,8 @@ class SpecItem(pg.ImageItem):
         
         self.data = data
         self.channel = channel
-        self.init = True
 
         self.data.plot_items[self.channel] = self
-
-
-    def estimate_noiselevels(self):
-        if not self.init or len(self.data.buffer) == 0 or len(self.data.buffer.shape) < 3:
-            return None, None
-        nf = self.data.buffer.shape[2]//16
-        if nf < 1:
-            nf = 1
-        with np.errstate(all='ignore'):  # check what is going on!!!
-            power = self.data.buffer[:, self.channel, -nf:]
-            zmin = np.percentile(decibel(power), 95)
-        if not np.isfinite(zmin):
-            zmin = -100.0
-        self.init = False
-        return zmin, zmin + 60
 
 
     def get_power(self, t, f):

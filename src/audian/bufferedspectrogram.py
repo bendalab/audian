@@ -24,6 +24,7 @@ class BufferedSpectrogram(BufferedData):
         self.tresolution = 1
         self.spec_rect = []
         self.use_spec = True
+        self.init = True
 
         
     def open(self, source):
@@ -94,3 +95,19 @@ class BufferedSpectrogram(BufferedData):
             self.fresolution = self.source.rate/self.nfft
             self.update_step(self.hop, more_shape=(self.nfft//2 + 1,))
             self.recompute_all()
+
+            
+    def estimate_noiselevels(self):
+        if not self.init or len(self.buffer) == 0 or len(self.buffer.shape) < 3:
+            return None, None
+        nf = self.buffer.shape[2]//16
+        if nf < 1:
+            nf = 1
+        with np.errstate(all='ignore'):  # check what is going on!!!
+            power = self.buffer[:, self.channel, -nf:]
+            zmin = np.percentile(decibel(power), 95)
+        if not np.isfinite(zmin):
+            zmin = -100.0
+        self.init = False
+        return zmin, zmin + 60
+

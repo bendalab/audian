@@ -365,7 +365,7 @@ class PlotRange(object):
         
             
     def show_crosshair(self, show):
-        if axspec in Panel.powers:
+        if self.axspec in Panel.powers:
             return
         for axx in self.axxs:
             for ax in axx:
@@ -376,7 +376,7 @@ class PlotRange(object):
         
 
     def set_crosshair(self, pos):
-        if axspec in Panel.powers:
+        if self.axspec in Panel.powers:
             return
         for axx in self.axxs:
             for ax in axx:

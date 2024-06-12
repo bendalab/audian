@@ -808,7 +808,7 @@ class DataBrowser(QWidget):
                     self.marker_time = pos.x()
             if hasattr(ax, 'yline'):
                 ax.yline.setPos(pos.y())
-                if panel.is_amplitude():
+                if panel.is_yamplitude():
                     self.marker_ampl = pos.y()
                     if not self.marker_time is None:
                         self.marker_time, self.marker_ampl = \

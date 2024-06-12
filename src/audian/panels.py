@@ -137,7 +137,7 @@ class Panel(object):
 
 
     def get_amplitude(self, channel, t, x, t1=None):
-        if not self.is_amplitude() or len(self.axs[channel].data_items) == 0:
+        if not self.is_yamplitude() or len(self.axs[channel].data_items) == 0:
             return t, None
         trace = self.axs[channel].data_items[-1]
         return trace.get_amplitude(t, x, t1)
