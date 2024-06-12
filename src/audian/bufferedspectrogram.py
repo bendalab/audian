@@ -104,10 +104,17 @@ class BufferedSpectrogram(BufferedData):
         if nf < 1:
             nf = 1
         with np.errstate(all='ignore'):  # check what is going on!!!
-            power = self.buffer[:, channel, -nf:]
-            zmin = np.percentile(decibel(power), 95)
-        if not np.isfinite(zmin):
-            zmin = -100.0
+            zmin = np.percentile(decibel(self.buffer[:, channel, -nf:]), 95)
+        zmax = np.max(decibel(self.buffer[:, channel, :]))
+        if not np.isfinite(zmin) or not np.isfinite(zmax):
+            #zmin = -100.0
+            return None, None
         self.init = False
-        return zmin, zmin + 60
+        dz = zmax - zmin
+        zmax = zmin + 0.95*dz
+        if zmax - zmin < 20:
+            zmax = zmin + 20
+        if zmax - zmin > 80:
+            zmin = zmax - 80
+        return zmin, zmax
 
