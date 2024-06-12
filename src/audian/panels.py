@@ -88,9 +88,10 @@ class Panel(object):
         return self.ax_spec == self.spacer
 
     
-    def add_ax(self, ax):
+    def add_ax(self, ax, row):
         self.axs.append(ax)
         self.items.append([])
+        self.row = row
 
 
     def is_used(self):
@@ -124,7 +125,7 @@ class Panel(object):
         self.items[channel].append(plot_item)
 
 
-    def add_traces(self, channel, data):        
+    def add_traces(self, channel, data): 
         for trace in data.traces:
             if trace.panel != self.name:
                 continue

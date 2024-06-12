@@ -16,14 +16,13 @@ class SpecItem(pg.ImageItem):
         self.data = data
         self.channel = channel
         self.init = True
-        self.cbar = None
 
         self.data.plot_items[self.channel] = self
 
 
     def estimate_noiselevels(self):
         if not self.init or len(self.data.buffer) == 0 or len(self.data.buffer.shape) < 3:
-            return -np.inf, +np.inf
+            return None, None
         nf = self.data.buffer.shape[2]//16
         if nf < 1:
             nf = 1
@@ -34,11 +33,6 @@ class SpecItem(pg.ImageItem):
             zmin = -100.0
         self.init = False
         return zmin, zmin + 60
-
-            
-    def set_cbar(self, cbar):
-        self.cbar = cbar
-        self.cbar.setImageItem(self)
 
 
     def get_power(self, t, f):

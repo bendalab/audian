@@ -359,8 +359,7 @@ class DataBrowser(QWidget):
                 if panel.is_spacer():
                     axsp = fig.addLayout(row=row, col=0)
                     axsp.setContentsMargins(0, 0, 0, 0)
-                    panel.add_ax(axsp)
-                    panel.row = row
+                    panel.add_ax(axsp, row)
                 # trace plot:
                 elif panel.is_trace():
                     yspec = panel.y()
@@ -371,8 +370,7 @@ class DataBrowser(QWidget):
                     self.axts[-1].append(axt)
                     self.axgs[-1].append(axt)
                     self.axs[-1].append(axt)
-                    panel.add_ax(axt)
-                    panel.row = row
+                    panel.add_ax(axt, row)
                     panel.add_traces(c, self.data)
                     self.plot_ranges[yspec].add_yaxis(axt, c, True)
                     # add marker labels:
@@ -388,30 +386,21 @@ class DataBrowser(QWidget):
                     self.trace_region_labels.append([])
                 # spectrogram:
                 elif panel.is_spectrogram():
-                    # color bar:
-                    cbar = pg.ColorBarItem(colorMap=self.color_maps[self.color_map],
-                                           interactive=True,
-                                           rounding=1, limits=(-200, 20))
-                    cbar.setLabel('right', 'Power (dB)')
-                    cbar.getAxis('right').setTextPen('black')
-                    cbar.getAxis('right').setWidth(6*xwidth)
-                    cbar.setVisible(self.show_cbars)
-                    self.cbars.append(cbar)
-                    fig.addItem(cbar, row=row, col=1)
-
-                    # spectrum:
                     yspec = panel.y()
-                    axs = SpectrumPlot(yspec, c, xwidth, cbar, self)
+                    axs = SpectrumPlot(yspec, c, xwidth,
+                                       self.color_maps[self.color_map],
+                                       self.show_cbars, self)
                     self.audio_markers[-1].append(axs.vmarker)
-                    fig.addItem(axs, row=row, col=0)
-                    self.axts[-1].append(axs)
-                    self.axgs[-1].append(axs)
-                    self.axs[-1].append(axs)
-                    panel.add_ax(axs)
-                    panel.row = row
+                    panel.add_ax(axs, row)
                     panel.add_traces(c, self.data)
                     self.plot_ranges[yspec].add_yaxis(axs, c, True)
                     self.plot_ranges[panel.z()].add_zaxis(axs, c, -200, 20, 5)
+                    fig.addItem(axs, row=row, col=0)
+                    fig.addItem(axs.cbar, row=row, col=1)
+                    self.cbars.append(axs.cbar)
+                    self.axts[-1].append(axs)
+                    self.axgs[-1].append(axs)
+                    self.axs[-1].append(axs)
                     # add marker labels:
                     labels = []
                     for l in self.marker_labels:

@@ -360,7 +360,8 @@ class PlotRange(object):
                     for item in ax.data_items:
                         if hasattr(item, 'estimate_noiselevels'):
                             z0, z1 = item.estimate_noiselevels()
-                            self.set_ranges(z0, z1, [c])
+                            if z0 is not None and z1 is not None:
+                                self.set_ranges(z0, z1, [c])
         
             
     def show_crosshair(self, show):

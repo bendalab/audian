@@ -7,6 +7,7 @@ except ImportError:
     from PyQt5.QtCore import pyqtSignal as Signal
 import pyqtgraph as pg
 from .timeplot import TimePlot
+from .specitem import SpecItem
 
 
 class SpectrumPlot(TimePlot):
@@ -14,16 +15,22 @@ class SpectrumPlot(TimePlot):
     
     sigUpdateFilter = Signal(object, object)
 
-    def __init__(self, aspec, channel, xwidth, cbar, browser):
+    def __init__(self, aspec, channel, xwidth, color_map, show_cbars, browser):
         super().__init__(aspec, '', channel, xwidth, browser)
         
         # axis:
         self.getAxis('bottom').showLabel(False)
         self.getAxis('bottom').setStyle(showValues=False)
         self.getAxis('left').setLabel('Frequency', 'Hz', color='black')
-
+        
         # color bar:
-        self.cbar = cbar
+        self.cbar = pg.ColorBarItem(colorMap=color_map,
+                                    interactive=True,
+                                    rounding=1, limits=(-200, 20))
+        self.cbar.setLabel('right', 'Power (dB)')
+        self.cbar.getAxis('right').setTextPen('black')
+        self.cbar.getAxis('right').setWidth(6*xwidth)
+        self.cbar.setVisible(show_cbars)
 
         # filter handles:
         self.highpass_handle = None        
@@ -52,8 +59,9 @@ class SpectrumPlot(TimePlot):
 
     def add_item(self, item, is_data):
         super().add_item(item, is_data)
-        if is_data:
-            item.set_cbar(self.cbar)
+        if is_data and isinstance(item, SpecItem):
+            self.cbar.setImageItem(item)
+            # TODO: this should go into the realm of PlotRanges:
             if self.highpass_handle is not None:
                 self.highpass_handle.setBounds((item.data.ampl_min,
                                                 item.data.ampl_max))
