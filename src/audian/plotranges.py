@@ -354,14 +354,21 @@ class PlotRange(object):
     def set_powers(self):
         if not self.is_power() or not self.is_used():
             return
+        zmin = None
+        zmax = None
         for c in range(len(self.axzs)):
             for ax in self.axzs[c]:
                 if hasattr(ax, 'data_items'):
                     for item in ax.data_items:
-                        if hasattr(item, 'estimate_noiselevels'):
-                            z0, z1 = item.estimate_noiselevels()
+                        if hasattr(item, 'data'):
+                            z0, z1 = item.data.estimate_noiselevels(c)
                             if z0 is not None and z1 is not None:
-                                self.set_ranges(z0, z1, [c])
+                                if zmin is None or z0 < zmin:
+                                    zmin = z0
+                                if zmax is None or z1 > zmax:
+                                    zmax = z1
+        if zmin is not None and zmax is not None:
+            self.set_ranges(zmin, zmax)
         
             
     def show_crosshair(self, show):

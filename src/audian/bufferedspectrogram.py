@@ -97,14 +97,14 @@ class BufferedSpectrogram(BufferedData):
             self.recompute_all()
 
             
-    def estimate_noiselevels(self):
+    def estimate_noiselevels(self, channel):
         if not self.init or len(self.buffer) == 0 or len(self.buffer.shape) < 3:
             return None, None
         nf = self.buffer.shape[2]//16
         if nf < 1:
             nf = 1
         with np.errstate(all='ignore'):  # check what is going on!!!
-            power = self.buffer[:, self.channel, -nf:]
+            power = self.buffer[:, channel, -nf:]
             zmin = np.percentile(decibel(power), 95)
         if not np.isfinite(zmin):
             zmin = -100.0
