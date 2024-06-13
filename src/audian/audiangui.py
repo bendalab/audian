@@ -607,7 +607,7 @@ class Audian(QMainWindow):
 
         
     def dispatch_resolution(self):
-        if self.link_frequency:
+        if self.link_ranges[Panel.frequencies[0]]:
             for b in self.browsers:
                 if not b is self.browser():
                     b.set_resolution(self.browser().data.nfft,
