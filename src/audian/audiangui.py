@@ -959,6 +959,7 @@ class Audian(QMainWindow):
                 if not b is self.browser():
                     b.set_panels(self.browser().show_traces,
                                  self.browser().show_specs,
+                                 self.browser().show_powers,
                                  self.browser().show_cbars,
                                  self.browser().show_fulldata)
 
@@ -970,6 +971,19 @@ class Audian(QMainWindow):
                 if not b is self.browser():
                     b.set_panels(self.browser().show_traces,
                                  self.browser().show_specs,
+                                 self.browser().show_powers,
+                                 self.browser().show_cbars,
+                                 self.browser().show_fulldata)
+
+        
+    def toggle_powers(self):
+        self.browser().toggle_powers()
+        if self.link_panels:
+            for b in self.browsers:
+                if not b is self.browser():
+                    b.set_panels(self.browser().show_traces,
+                                 self.browser().show_specs,
+                                 self.browser().show_powers,
                                  self.browser().show_cbars,
                                  self.browser().show_fulldata)
 
@@ -981,6 +995,7 @@ class Audian(QMainWindow):
                 if not b is self.browser():
                     b.set_panels(self.browser().show_traces,
                                  self.browser().show_specs,
+                                 self.browser().show_powers,
                                  self.browser().show_cbars,
                                  self.browser().show_fulldata)
 
@@ -992,6 +1007,7 @@ class Audian(QMainWindow):
                 if not b is self.browser():
                     b.set_panels(self.browser().show_traces,
                                  self.browser().show_specs,
+                                 self.browser().show_powers,
                                  self.browser().show_cbars,
                                  self.browser().show_fulldata)
 
@@ -1010,10 +1026,14 @@ class Audian(QMainWindow):
         self.acts.toggle_spectrograms = QAction('Toggle &spectrograms', self)
         self.acts.toggle_spectrograms.setShortcut('Ctrl+S')
         self.acts.toggle_spectrograms.triggered.connect(self.toggle_spectrograms)
-
+        
         self.acts.toggle_power = QAction('Toggle power', self)
         self.acts.toggle_power.setShortcut('Ctrl+P')
-        self.acts.toggle_power.triggered.connect(self.toggle_colorbars)
+        self.acts.toggle_power.triggered.connect(self.toggle_powers)
+
+        self.acts.toggle_cbars = QAction('Toggle color bars', self)
+        self.acts.toggle_cbars.setShortcut('Ctrl+B')
+        self.acts.toggle_cbars.triggered.connect(self.toggle_colorbars)
 
         self.acts.toggle_fulldata = QAction('Toggle full data', self)
         self.acts.toggle_fulldata.setShortcut('Ctrl+F')
@@ -1024,6 +1044,7 @@ class Audian(QMainWindow):
         panel_menu.addAction(self.acts.toggle_traces)
         panel_menu.addAction(self.acts.toggle_spectrograms)
         panel_menu.addAction(self.acts.toggle_power)
+        panel_menu.addAction(self.acts.toggle_cbars)
         panel_menu.addAction(self.acts.toggle_fulldata)
 
         self.data_menus.append(panel_menu)
@@ -1188,7 +1209,8 @@ Can not open file <b>{browser.file_path}</b>!''')
                 pb = self.browser() if self.prev_browser is None else self.prev_browser
                 if self.link_panels:
                     browser.set_panels(pb.show_traces, pb.show_specs,
-                                       pb.show_cbars, pb.show_fulldata)
+                                       pb.show_powers, pb.show_cbars,
+                                       pb.show_fulldata)
                 else:
                     browser.set_panels()
                 if self.link_channels:

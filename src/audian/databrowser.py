@@ -114,6 +114,7 @@ class DataBrowser(QWidget):
         self.grids = 0
         self.show_traces = True
         self.show_specs = 0
+        self.show_powers = False
         self.show_cbars = False
         self.show_fulldata = True
         
@@ -180,8 +181,6 @@ class DataBrowser(QWidget):
         self.axs  = []      # all plots
         self.axts = []      # plots with time axis
         self.axgs = []      # plots with grids
-        # lists with one plot item per channel:
-        self.cbars = []     # color bars
         # lists with marker labels and regions:
         self.trace_labels = [] # labels on traces
         self.trace_region_labels = [] # regions with labels on traces
@@ -315,8 +314,6 @@ class DataBrowser(QWidget):
         self.axs  = []      # all plots
         self.axts = []      # plots with time axis
         self.axgs = []      # plots with grids
-        # lists with one plot item per channel:
-        self.cbars = []     # color bars
         # lists with marker labels and regions:
         self.trace_labels = [] # labels on traces
         self.trace_region_labels = [] # regions with labels on traces
@@ -338,6 +335,7 @@ class DataBrowser(QWidget):
             fig.ci.layout.setContentsMargins(xwidth2, xwidth2, xwidth2, xwidth2)
             fig.ci.layout.setVerticalSpacing(0)
             fig.ci.layout.setHorizontalSpacing(xwidth2)
+            fig.ci.layout.setHorizontalSpacing(0)
             fig.setVisible(c in self.show_channels)
 
             self.vbox.addWidget(fig)
@@ -359,20 +357,19 @@ class DataBrowser(QWidget):
                 if panel.is_spacer():
                     axsp = fig.addLayout(row=row, col=0)
                     axsp.setContentsMargins(0, 0, 0, 0)
-                    panel.add_ax(axsp, row)
+                    panel.add_ax(row, axsp)
                 # trace plot:
                 elif panel.is_trace():
-                    yspec = panel.y()
                     ylabel = panel.name if panel.name != 'trace' else ''
-                    axt = TimePlot(yspec, ylabel, c, xwidth, self)
+                    axt = TimePlot(panel.ax_spec, ylabel, c, xwidth, self)
                     self.audio_markers[-1].append(axt.vmarker)
                     fig.addItem(axt, row=row, col=0)
                     self.axts[-1].append(axt)
                     self.axgs[-1].append(axt)
                     self.axs[-1].append(axt)
-                    panel.add_ax(axt, row)
+                    panel.add_ax(row, axt)
                     panel.add_traces(c, self.data)
-                    self.plot_ranges[yspec].add_yaxis(axt, c, True)
+                    self.plot_ranges[panel.y()].add_yaxis(axt, c)
                     # add marker labels:
                     labels = []
                     for l in self.marker_labels:
@@ -386,18 +383,20 @@ class DataBrowser(QWidget):
                     self.trace_region_labels.append([])
                 # spectrogram:
                 elif panel.is_spectrogram():
-                    yspec = panel.y()
-                    axs = SpectrogramPlot(yspec, c, xwidth,
+                    axs = SpectrogramPlot(panel.ax_spec, c, xwidth,
                                           self.color_maps[self.color_map],
-                                          self.show_cbars, self)
+                                          self.show_cbars, self.show_powers,
+                                          self)
                     self.audio_markers[-1].append(axs.vmarker)
-                    panel.add_ax(axs, row)
+                    panel.add_ax(row, axs, axs.powerax, axs.cbar)
                     panel.add_traces(c, self.data)
-                    self.plot_ranges[yspec].add_yaxis(axs, c, True)
+                    self.plot_ranges[panel.y()].add_yaxis(axs, c)
                     self.plot_ranges[panel.z()].add_zaxis(axs, c, -200, 20, 5)
+                    self.plot_ranges[axs.powerax.x()].add_xaxis(axs.powerax, c, -100, 20, 5)
+                    self.plot_ranges[axs.powerax.y()].add_yaxis(axs.powerax, c)
                     fig.addItem(axs, row=row, col=0)
-                    fig.addItem(axs.cbar, row=row, col=1)
-                    self.cbars.append(axs.cbar)
+                    fig.addItem(axs.powerax, row=row, col=1)
+                    fig.addItem(axs.cbar, row=row, col=2)
                     self.axts[-1].append(axs)
                     self.axgs[-1].append(axs)
                     self.axs[-1].append(axs)
@@ -814,7 +813,7 @@ class DataBrowser(QWidget):
                         self.marker_time, self.marker_ampl = \
                             panel.get_amplitude(channel, self.marker_time,
                                                 pos.y(), npos.x())
-                        # TODO: marke amplitudes for types of amplitude plots!
+                        # TODO: marker amplitudes for types of amplitude plots!
                 if panel.is_yfrequency():
                     self.marker_freq = pos.y()
                     if self.marker_time is not None:
@@ -1042,6 +1041,10 @@ class DataBrowser(QWidget):
         trace_height = trace_frac*spec_height
         bottom_channel = self.show_channels[-1]
         for c in self.show_channels:
+            if self.show_specs > 0 and self.show_powers:
+                self.figs[c].ci.layout.setColumnFixedWidth(1, 0.1*width)
+            else:
+                self.figs[c].ci.layout.setColumnFixedWidth(1, 0)
             add_height = taxis_height if c == bottom_channel else 0
             self.vbox.setStretch(c, int(10*(border_height +
                                             nspecs*spec_height +
@@ -1253,8 +1256,9 @@ class DataBrowser(QWidget):
     def set_color_map(self, color_map=None, dispatch=True):
         if color_map is not None:
             self.color_map = color_map
-        for cb in self.cbars:
-            cb.setColorMap(self.color_maps[self.color_map])
+        for panel in self.panels.values():
+            if panel.is_spectrogram():
+                panel.set_colormap(self.color_maps[self.color_map])
         if dispatch:
             self.sigColorMapChanged.emit()
 
@@ -1517,11 +1521,14 @@ class DataBrowser(QWidget):
         self.set_channels(show_channels)
         
         
-    def set_panels(self, traces=None, specs=None, cbars=None, fulldata=None):
+    def set_panels(self, traces=None, specs=None, powers=None,
+                   cbars=None, fulldata=None):
         if not traces is None:
             self.show_traces = traces
         if not specs is None:
             self.show_specs = specs
+        if not powers is None:
+            self.show_powers = powers
         if not cbars is None:
             self.show_cbars = cbars
         if not fulldata is None:
@@ -1531,9 +1538,10 @@ class DataBrowser(QWidget):
                 panel.set_visible(self.show_traces)
             elif panel.is_spectrogram():
                 panel.set_visible(self.show_specs >  0)
-                for c in range(len(panel)):
-                    self.cbars[c].setVisible(self.show_cbars and
-                                             self.show_specs > 0)
+                panel.set_hist_visible(self.show_specs >  0 and
+                                       self.show_powers)
+                panel.set_cbar_visible(self.show_specs >  0 and
+                                       self.show_cbars)
         if self.datafig is not None:
             self.datafig.setVisible(self.show_fulldata)
         self.adjust_layout(self.width(), self.height())
@@ -1561,6 +1569,11 @@ class DataBrowser(QWidget):
                 
     def toggle_colorbars(self):
         self.show_cbars = not self.show_cbars
+        self.set_panels()
+            
+                
+    def toggle_powers(self):
+        self.show_powers = not self.show_powers
         self.set_panels()
             
                 

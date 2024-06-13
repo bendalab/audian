@@ -7,20 +7,14 @@ try:
 except ImportError:
     from PyQt5.QtCore import pyqtSignal as Signal
 import pyqtgraph as pg
-from .selectviewbox import SelectViewBox
+from .rangeplot import RangePlot
 from .timeaxisitem import TimeAxisItem
 from .yaxisitem import YAxisItem
 
 
-class TimePlot(pg.PlotItem):
+class TimePlot(RangePlot):
 
     def __init__(self, aspec, ylabel, channel, xwidth, browser):
-
-        self.aspec = aspec
-        self.channel = channel
-
-        # view box:
-        view = SelectViewBox(channel)
         
         # axis:
         bottom_axis = TimeAxisItem(orientation='bottom', showValues=True)
@@ -44,22 +38,14 @@ class TimePlot(pg.PlotItem):
         right_axis = YAxisItem(orientation='right', showValues=False)
 
         # plot:
-        pg.PlotItem.__init__(self,  viewBox=view,
-                             axisItems={'bottom': bottom_axis,
-                                        'top': top_axis,
-                                        'left': left_axis,
-                                        'right': right_axis})
-        self.data_items = []
+        RangePlot.__init__(self, aspec, channel,
+                           axisItems={'bottom': bottom_axis,
+                                      'top': top_axis,
+                                      'left': left_axis,
+                                      'right': right_axis})
 
         # design:
         self.getViewBox().setBackgroundColor('black')
-        self.getViewBox().setDefaultPadding(padding=0)
-
-        # functionality:
-        self.hideButtons()
-        self.setMenuEnabled(False)
-        self.enableAutoRange(False, False)
-        self.getViewBox().init_zoom_history()
 
         # audio marker:
         self.vmarker = pg.InfiniteLine(angle=90, movable=False)
@@ -68,32 +54,6 @@ class TimePlot(pg.PlotItem):
         self.vmarker.setValue(-1)
         self.addItem(self.vmarker, ignoreBounds=True)
 
-        # cross hair:
-        self.xline = pg.InfiniteLine(angle=90, movable=False)
-        self.xline.setPen(pg.mkPen('white', width=1))
-        self.xline.setZValue(100)
-        self.xline.setValue(0)
-        self.xline.setVisible(False)
-        self.addItem(self.xline, ignoreBounds=True)
-        
-        self.yline = pg.InfiniteLine(angle=0, movable=False)
-        self.yline.setPen(pg.mkPen('white', width=1))
-        self.yline.setZValue(100)
-        self.yline.setValue(0)
-        self.yline.setVisible(False)
-        self.addItem(self.yline, ignoreBounds=True)
-
-        # previous cross hair marker:
-        self.prev_marker = pg.ScatterPlotItem(
-            size=14,
-            pen=pg.mkPen('white'),
-            brush=pg.mkBrush((255, 255, 255, 128)),
-            symbol='o',
-            hoverable=False
-        )
-        self.prev_marker.setZValue(20)
-        self.addItem(self.prev_marker, ignoreBounds=True)
-
         # ranges:
         browser.data.set_time_limits(self)
         browser.data.set_time_range(self)
@@ -101,14 +61,7 @@ class TimePlot(pg.PlotItem):
         # signals:
         self.sigXRangeChanged.connect(browser.update_times)
         self.sigYRangeChanged.connect(browser.update_ranges)
-        view.sigSelectedRegion.connect(browser.region_menu)
-
-
-    def add_item(self, item, is_data):
-        if is_data:
-            self.data_items.append(item)
-            item.ax = self
-        self.addItem(item)
+        self.getViewBox().sigSelectedRegion.connect(browser.region_menu)
 
 
     def range(self):
@@ -141,12 +94,6 @@ class TimePlot(pg.PlotItem):
             if amax is None or a1 > amax:
                 amax = a1
         return amin, amax
-
-
-    def update_plot(self):
-        for item in self.data_items:
-            if item.isVisible():
-                item.update_plot()
 
 
     def enable_start_time(self, enable):

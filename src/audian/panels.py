@@ -15,7 +15,7 @@ class Panel(object):
     times = 't'
     amplitudes = 'xyu'
     frequencies = 'fw'
-    powers = 'pP'
+    powers = 'pq'
     spacer = 'spacer'
     
     
@@ -24,7 +24,8 @@ class Panel(object):
         self.ax_spec = ax_spec
         self.row = row
         self.axs = []
-        self.items = []
+        self.axhs = []   # associated histograms
+        self.axcs = []   # associated color bars
 
 
     def __len__(self):
@@ -88,10 +89,13 @@ class Panel(object):
         return self.ax_spec == self.spacer
 
     
-    def add_ax(self, ax, row):
-        self.axs.append(ax)
-        self.items.append([])
+    def add_ax(self, row, ax, axh=None, axc=None):
         self.row = row
+        self.axs.append(ax)
+        if axh is not None:
+            self.axhs.append(axh)
+        if axc is not None:
+            self.axcs.append(axc)
 
 
     def is_used(self):
@@ -119,10 +123,40 @@ class Panel(object):
                 return True
         return False
 
+
+    def is_hist_visible(self, channel):
+        return self.axhs[channel].isVisible()
+
+
+    def set_hist_visible(self, visible):
+        changed = False
+        for ax in self.axhs:
+            if ax.isVisible() != visible:
+                changed = True
+            ax.setVisible(visible)
+        return changed
+
+
+    def is_cbar_visible(self, channel):
+        return self.axcs[channel].isVisible()
+
+
+    def set_cbar_visible(self, visible):
+        changed = False
+        for ax in self.axcs:
+            if ax.isVisible() != visible:
+                changed = True
+            ax.setVisible(visible)
+        return changed
+
+
+    def set_colormap(self, color_map):
+        for ax in self.axcs:
+            ax.setColorMap(color_map)
+
             
     def add_item(self, channel, plot_item, is_data):
         self.axs[channel].add_item(plot_item, is_data)
-        self.items[channel].append(plot_item)
 
 
     def add_traces(self, channel, data): 

@@ -25,34 +25,28 @@ class PlotRange(object):
         self.axzs = [[] for i in range(nchannels)]
 
 
-    def add_xaxis(self, ax, channel, has_data=False):
-        if has_data:
+    def _add_axis(self, axs, ax, rmin, rmax, rstep):
+        if rmin is None or rmax is None:
             rmin, rmax = ax.range()
-            if self.rmin is None or rmin < self.rmin:
-                self.rmin = rmin
-            if self.rmax is None or rmax > self.rmax:
-                self.rmax = rmax
-        self.axxs[channel].append(ax)
+        if rmin is not None and (self.rmin is None or rmin < self.rmin):
+            self.rmin = rmin
+        if rmax is not None and (self.rmax is None or rmax > self.rmax):
+            self.rmax = rmax
+        if rstep is not None and (self.rstep is None or rstep < self.rstep):
+            self.rstep = rstep
+        axs.append(ax)
         
 
-    def add_yaxis(self, ax, channel, has_data=False):
-        if has_data:
-            rmin, rmax = ax.range()
-            if self.rmin is None or rmin < self.rmin:
-                self.rmin = rmin
-            if self.rmax is None or rmax > self.rmax:
-                self.rmax = rmax
-        self.axys[channel].append(ax)
+    def add_xaxis(self, ax, channel, rmin=None, rmax=None, rstep=None):
+        self._add_axis(self.axxs[channel], ax, rmin, rmax, rstep)
+        
+
+    def add_yaxis(self, ax, channel, rmin=None, rmax=None, rstep=None):
+        self._add_axis(self.axys[channel], ax, rmin, rmax, rstep)
 
 
-    def add_zaxis(self, ax, channel, rmin, rmax, rstep):
-        if self.rmin is None or rmin < self.rmin:
-            self.rmin = rmin
-        if self.rmax is None or rmax > self.rmax:
-            self.rmax = rmax
-        if self.rstep is None or rstep < self.rstep:
-            self.rstep = rstep
-        self.axzs[channel].append(ax)
+    def add_zaxis(self, ax, channel, rmin=None, rmax=None, rstep=None):
+        self._add_axis(self.axzs[channel], ax, rmin, rmax, rstep)
 
 
     def is_used(self):
@@ -106,11 +100,11 @@ class PlotRange(object):
         for axx in self.axxs:
             for ax in axx:
                 if np.isfinite(self.rmin):
-                    self.setLimits(xMin=self.rmin)
+                    ax.setLimits(xMin=self.rmin)
                 if np.isfinite(self.rmax):
-                    self.setLimits(xMax=self.rmax)
+                    ax.setLimits(xMax=self.rmax)
                 if np.isfinite(self.rmin) and np.isfinite(self.rmax):
-                    self.setLimits(minXRange=self.min_dr,
+                    ax.setLimits(minXRange=self.min_dr,
                                    maxXRange=self.rmax - self.rmin)
         for axy in self.axys:
             for ax in axy:
@@ -372,8 +366,6 @@ class PlotRange(object):
         
             
     def show_crosshair(self, show):
-        if self.axspec in Panel.powers:
-            return
         for axx in self.axxs:
             for ax in axx:
                 ax.xline.setVisible(show)
@@ -383,8 +375,6 @@ class PlotRange(object):
         
 
     def set_crosshair(self, pos):
-        if self.axspec in Panel.powers:
-            return
         for axx in self.axxs:
             for ax in axx:
                 ax.xline.setPos(pos)
@@ -404,7 +394,7 @@ class PlotRanges(dict):
 
 
     def setup(self, nchannels):
-        for s in Panel.amplitudes + Panel.frequencies + Panel.powers:
+        for s in Panel.amplitudes + Panel.frequencies + Panel.powers + Panel.powers.upper():
             self[s] = PlotRange(s, nchannels)
 
 
