@@ -144,7 +144,7 @@ A few classes specializing some pyqtgraph features:
 Basic plots for time-series data:
 
 - `timeplot.py`: Panel for displaying any data as a function of time.
-- `spectrumplot.py`: PlotItem for interactive display of spectrograms.
+- `spectrogramplot.py`: PlotItem for interactive display of spectrograms.
 
 Basic plot items:
 

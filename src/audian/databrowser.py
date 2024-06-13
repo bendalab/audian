@@ -26,7 +26,7 @@ from .panels import Panel, Panels
 from .plotranges import PlotRanges
 from .fulltraceplot import FullTracePlot, secs_to_str
 from .timeplot import TimePlot
-from .spectrumplot import SpectrumPlot
+from .spectrogramplot import SpectrogramPlot
 from .markerdata import colors, MarkerLabel, MarkerLabelsModel
 from .markerdata import MarkerData, MarkerDataModel
 from .analyzer import PlainAnalyzer
@@ -387,9 +387,9 @@ class DataBrowser(QWidget):
                 # spectrogram:
                 elif panel.is_spectrogram():
                     yspec = panel.y()
-                    axs = SpectrumPlot(yspec, c, xwidth,
-                                       self.color_maps[self.color_map],
-                                       self.show_cbars, self)
+                    axs = SpectrogramPlot(yspec, c, xwidth,
+                                          self.color_maps[self.color_map],
+                                          self.show_cbars, self)
                     self.audio_markers[-1].append(axs.vmarker)
                     panel.add_ax(axs, row)
                     panel.add_traces(c, self.data)

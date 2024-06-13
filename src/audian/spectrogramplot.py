@@ -10,7 +10,7 @@ from .timeplot import TimePlot
 from .specitem import SpecItem
 
 
-class SpectrumPlot(TimePlot):
+class SpectrogramPlot(TimePlot):
 
     
     sigUpdateFilter = Signal(object, object)
