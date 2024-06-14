@@ -148,12 +148,12 @@ class DataBrowser(QWidget):
         self.ypos_action = None
         self.zpos_action = None
         self.cross_hair = False
+        self.marker_channel = None
         self.marker_ax = None
         self.marker_time = 0
-        self.marker_ampl = 0
-        self.marker_freq = 0
-        self.marker_power = 0
-        self.marker_channel = None
+        self.marker_ampls = 0
+        self.marker_freqs = 0
+        self.marker_powers = 0
         self.prev_time = 0
         self.prev_ampl = 0
         self.prev_freq = 0
@@ -388,8 +388,9 @@ class DataBrowser(QWidget):
                                           self.show_cbars, self.show_powers,
                                           self)
                     self.audio_markers[-1].append(axs.vmarker)
-                    panel.add_ax(row, axs, axs.powerax, axs.cbar)
+                    panel.add_ax(row, axs, axs.cbar)
                     panel.add_traces(c, self.data)
+                    self.panels.add_power_ax(panel.name, row, axs.powerax)
                     self.plot_ranges[panel.y()].add_yaxis(axs, c)
                     if panel.y() == Panel.frequencies[1]:
                         self.plot_ranges[panel.z()].add_zaxis(axs, c, -80, 0, 5)
@@ -412,6 +413,10 @@ class DataBrowser(QWidget):
                         labels.append(label)
                     self.spec_labels.append(labels)
                     self.spec_region_labels.append([])
+                # power:
+                elif panel.is_power():
+                    # was already set up with spectrogram
+                    continue
 
                 row += 1
                 
@@ -740,6 +745,7 @@ class DataBrowser(QWidget):
 
     def set_marker(self):
         self.clear_marker()
+        """
         if not self.marker_ax is None and not self.marker_time is None:
             if not self.marker_ampl is None:
                 self.marker_ax.prev_marker.setData((self.marker_time,),
@@ -753,9 +759,11 @@ class DataBrowser(QWidget):
             self.prev_freq = self.marker_freq
             self.prev_power = self.marker_power
             self.prev_channel = self.marker_channel
+        """
 
             
     def store_marker(self, label=''):
+        """
         self.marker_model.add_data(self.marker_channel,
                                    self.marker_time, self.marker_ampl,
                                    self.marker_freq,
@@ -780,7 +788,7 @@ class DataBrowser(QWidget):
             for c, sl in enumerate(self.spec_labels):
                 y = 0.0 if self.marker_freq is None else self.marker_freq
                 sl[lidx].addPoints((self.marker_time,), (y,))
-                
+        """                
         
     def mouse_moved(self, evt, channel):
         if not self.cross_hair:
@@ -788,14 +796,14 @@ class DataBrowser(QWidget):
             
         # find axes and position:
         pixel_pos = evt[0]
+        self.marker_channel = channel
         self.marker_ax = None
         self.marker_time = None
-        self.marker_ampl = None
-        self.marker_freq = None
-        self.marker_power = None
-        self.marker_channel = channel
+        self.marker_ampls = {a: None for a in Panel.amplitudes}
+        self.marker_freqs = {f: None for f in Panel.frequencies}
+        self.marker_powers = {p: None for p in Panel.powers}
         for panel in self.panels.values():
-            if not panel.is_used():
+            if not panel.is_used() and not panel.is_visible(channel):
                 continue
             ax = panel.axs[channel]
             if not ax.sceneBoundingRect().contains(pixel_pos):
@@ -803,38 +811,52 @@ class DataBrowser(QWidget):
             pos = ax.getViewBox().mapSceneToView(pixel_pos)
             pixel_pos.setX(pixel_pos.x() + 1)
             npos = ax.getViewBox().mapSceneToView(pixel_pos)
-            if hasattr(ax, 'xline'):
-                ax.xline.setPos(pos.x())
-                if panel.is_time():
-                    self.marker_ax = ax
-                    self.marker_time = pos.x()
-            if hasattr(ax, 'yline'):
-                ax.yline.setPos(pos.y())
-                if panel.is_yamplitude():
-                    self.marker_ampl = pos.y()
-                    if not self.marker_time is None:
-                        self.marker_time, self.marker_ampl = \
-                            panel.get_amplitude(channel, self.marker_time,
-                                                pos.y(), npos.x())
-                        # TODO: marker amplitudes for types of amplitude plots!
-                if panel.is_yfrequency():
-                    self.marker_freq = pos.y()
-                    if self.marker_time is not None:
-                        self.marker_power = panel.get_power(channel,
-                                                            self.marker_time,
-                                                            self.marker_freq)
+            self.marker_ax = ax
+            ax.xline.setPos(pos.x())
+            ax.yline.setPos(pos.y())
+            if panel.is_time():
+                self.marker_time = pos.x()
+            if panel.is_yamplitude():
+                self.marker_ampls[panel.y()] = pos.y()
+                """
+                if not self.marker_time is None:
+                    self.marker_time, self.marker_ampl = \
+                        panel.get_amplitude(channel, self.marker_time,
+                                            pos.y(), npos.x())
+                """
+            if panel.is_xpower():
+                self.marker_powers[panel.x()] = pos.x()
+            if panel.is_yfrequency():
+                self.marker_freqs[panel.y()] = pos.y()
+                """
+                if self.marker_time is not None:
+                    self.marker_power = panel.get_power(channel,
+                                                        self.marker_time,
+                                                        self.marker_freq)
+                """
             break
         # set cross-hair positions:
-        # TODO: add to plot_ranges:
         if self.marker_time:
+            # TODO: add to plot_ranges:
             for axts in self.axts:
                 for axt in axts:
                     axt.xline.setPos(self.marker_time)
-                    axt.xline.setPos(self.marker_time)
-        if self.marker_ampl:
-            self.plot_ranges['x'].set_crosshair(self.marker_ampl)
-        if self.marker_freq:
-            self.plot_ranges['f'].set_crosshair(self.marker_freq)
+        for ampl in self.marker_ampls.keys():
+            if self.marker_ampls[ampl]:
+                self.plot_ranges[ampl].set_crosshair(self.marker_ampls[ampl])
+            else:
+                self.plot_ranges[ampl].show_crosshair(False)
+        for freq in self.marker_freqs.keys():
+            if self.marker_freqs[freq]:
+                self.plot_ranges[freq].set_crosshair(self.marker_freqs[freq])
+            else:
+                self.plot_ranges[freq].show_crosshair(False)
+        for pwr in self.marker_powers.keys():
+            if self.marker_powers[pwr]:
+                self.plot_ranges[pwr].set_crosshair(self.marker_powers[pwr])
+            else:
+                self.plot_ranges[pwr].show_crosshair(False)
+        """
         # compute deltas:
         self.delta_time = None
         self.delta_ampl = None
@@ -852,8 +874,11 @@ class DataBrowser(QWidget):
         if self.marker_power is not None and \
            self.prev_channel is not None and self.prev_power is not None:
                 self.delta_power = self.marker_power - self.prev_power
+        """
         
         # report time on toolbar:
+        s = ''
+        """
         if self.delta_time is not None:
             sign = '-' if self.delta_time < 0 else ''
             s = f'\u0394t={sign}{secs_to_str(fabs(self.delta_time))}'
@@ -861,41 +886,52 @@ class DataBrowser(QWidget):
                 s += f': f={1/fabs(self.delta_time):.5g}Hz'
             self.xpos_action.setText(s)
         elif self.marker_time is not None:
+        """
+        if self.marker_time is not None:
             sign = '-' if self.marker_time < 0 else ''
             s = f't={sign}{secs_to_str(fabs(self.marker_time))}'
-            self.xpos_action.setText(s)
-        else:
-            self.xpos_action.setText('')
+        self.xpos_action.setText(s)
+        self.xpos_action.setVisible(len(s) > 0)
         # report amplitude or frequency on toolbar:
+        s = ''
+        """
         if self.delta_ampl is not None:
             s = f'\u0394a={self.delta_ampl:6.3f}'
             self.ypos_action.setText(s)
         elif self.marker_ampl is not None:
-            s = f'a={self.marker_ampl:6.3f}'
-            self.ypos_action.setText(s)
+        """
+        self.ypos_action.setText('')
+        for ampl in self.marker_ampls.keys():
+            if self.marker_ampls[ampl] is not None:
+                s = f'{ampl}={self.marker_ampls[ampl]:6.3f}'
+                break
+        """
         elif self.delta_freq is not None:
             s = f'\u0394f={self.delta_freq:4.0f}Hz'
-            self.ypos_action.setText(s)
         elif self.marker_freq is not None:
-            s = f'f={self.marker_freq:4.0f}Hz'
-            self.ypos_action.setText(s)
-        else:
-            self.ypos_action.setText('')
+        """
+        for freq in self.marker_freqs.keys():
+            if self.marker_freqs[freq] is not None:
+                s = f'{freq}={self.marker_freqs[freq]:4.0f}Hz'
+                break
+        self.ypos_action.setText(s)
+        self.ypos_action.setVisible(len(s) > 0)
         # report power on toolbar:
+        """
         if self.delta_power is not None:
             s = f'\u0394p={self.delta_power:6.1f}dB'
             self.zpos_action.setText(s)
         elif self.marker_power is not None:
-            s = f'p={self.marker_power:6.1f}dB'
-            self.zpos_action.setText(s)
-        else:
-            self.zpos_action.setText('')
-        self.xpos_action.setVisible(self.marker_time is not None)
-        self.ypos_action.setVisible(self.marker_ampl is not None or
-                                    self.marker_freq is not None)
-        self.zpos_action.setVisible(self.marker_power is not None)
+        """
+        s = ''
+        for pwr in self.marker_powers.keys():
+            if self.marker_powers[pwr] is not None:
+                s = f'{pwr}={self.marker_powers[pwr]:6.1f}dB'
+                break
+        self.zpos_action.setText(s)
+        self.zpos_action.setVisible(len(s) > 0)
 
-
+        
     def mouse_clicked(self, evt, channel):
         if not self.cross_hair:
             return
@@ -987,7 +1023,7 @@ class DataBrowser(QWidget):
         for c in range(self.data.channels):
             first = True
             for panel in self.panels.values():
-                if panel.is_spacer():
+                if panel.is_spacer() or panel.is_power():
                     continue
                 if first and c == self.show_channels[-1] and \
                    panel.is_visible(c):
@@ -1055,6 +1091,8 @@ class DataBrowser(QWidget):
                                             ntraces*trace_height +
                                             add_height)))
             for panel in self.panels.values():
+                if panel.is_power():
+                    continue
                 if panel.is_visible(c) and (panel.is_spacer() or
                                             panel.has_visible_traces(c)):
                     if panel.is_spacer():
@@ -1063,6 +1101,8 @@ class DataBrowser(QWidget):
                         row_height = spec_height + add_height
                     elif panel.is_trace():
                         row_height = trace_height + add_height
+                    else:
+                        continue
                     self.figs[c].ci.layout.setRowFixedHeight(panel.row,
                                                              row_height)
                     add_height = 0
@@ -1541,10 +1581,11 @@ class DataBrowser(QWidget):
                 panel.set_visible(self.show_traces)
             elif panel.is_spectrogram():
                 panel.set_visible(self.show_specs >  0)
-                panel.set_hist_visible(self.show_specs >  0 and
-                                       self.show_powers)
                 panel.set_cbar_visible(self.show_specs >  0 and
                                        self.show_cbars)
+            elif panel.is_power():
+                panel.set_visible(self.show_specs >  0 and
+                                  self.show_powers)
         if self.datafig is not None:
             self.datafig.setVisible(self.show_fulldata)
         self.adjust_layout(self.width(), self.height())

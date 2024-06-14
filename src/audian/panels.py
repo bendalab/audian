@@ -24,8 +24,11 @@ class Panel(object):
         self.ax_spec = ax_spec
         self.row = row
         self.axs = []
-        self.axhs = []   # associated histograms
         self.axcs = []   # associated color bars
+
+
+    def __str__(self):
+        return f'{self.name:20}: {self.ax_spec:6} @ {self.row:2} with {len(self.axs):2} plots\n'
 
 
     def __len__(self):
@@ -68,6 +71,10 @@ class Panel(object):
         return self.y() in self.frequencies
 
 
+    def is_xpower(self):
+        return self.x() in self.powers
+
+
     def is_ypower(self):
         return self.y() in self.powers
 
@@ -85,15 +92,17 @@ class Panel(object):
         return self.is_time() and self.is_yfrequency()
 
 
+    def is_power(self):
+        return self.is_xpower() and self.is_yfrequency()
+
+
     def is_spacer(self):
         return self.ax_spec == self.spacer
 
     
-    def add_ax(self, row, ax, axh=None, axc=None):
+    def add_ax(self, row, ax, axc=None):
         self.row = row
         self.axs.append(ax)
-        if axh is not None:
-            self.axhs.append(axh)
         if axc is not None:
             self.axcs.append(axc)
 
@@ -122,19 +131,6 @@ class Panel(object):
             if di.isVisible():
                 return True
         return False
-
-
-    def is_hist_visible(self, channel):
-        return self.axhs[channel].isVisible()
-
-
-    def set_hist_visible(self, visible):
-        changed = False
-        for ax in self.axhs:
-            if ax.isVisible() != visible:
-                changed = True
-            ax.setVisible(visible)
-        return changed
 
 
     def is_cbar_visible(self, channel):
@@ -199,25 +195,29 @@ class Panels(dict):
     def __str__(self):
         s = ''
         for panel in self.values():
-            s += f'{panel.name}: {panel.ax_spec} @ {panel.row}\n'
+            s += str(panel)
         return s
 
 
-    def add(self, name, axes, row=None):
+    def add(self, name, axes, row=None, adjust_rows=True):
         if row is None:
             row = self.max_row() + 1
-        for panel in self.values():
-            if panel.row >= row:
-                panel.row += 1
+        if adjust_rows:
+            for panel in self.values():
+                if panel.row >= row:
+                    panel.row += 1
         self[name] = Panel(name, axes, row)
         if len(self) > 1:
             names = np.array(list(self.keys()))
             rows = [self[name].row for name in names]
             inx = np.argsort(rows)
-            self = {name: self[name] for name in names[inx]}
+            panels = dict(self)
+            self.clear()
+            for name in names[inx]:
+                self[name] = panels[name]
 
 
-    def add_trace(self, name='trace'):
+    def add_trace(self, name='trace', row=None):
         # find amplitude that is not used yet:
         amps = [False]*len(Panel.amplitudes)
         for panel in self.values():
@@ -228,10 +228,10 @@ class Panels(dict):
             if not amps[k]:
                 axspec = axspec[0] + Panel.amplitudes[k]
                 break
-        self.add(name, axspec)
+        self.add(name, axspec, row)
 
         
-    def add_spectrogram(self, name='spectrogram'):
+    def add_spectrogram(self, name='spectrogram', row=None):
         # find frequencies and powers that are not used yet:
         freqs = [False]*len(Panel.frequencies)
         pwrs = [False]*len(Panel.powers)
@@ -248,7 +248,8 @@ class Panels(dict):
             if not pwrs[k]:
                 axspec = axspec[:2] + Panel.powers[k]
                 break
-        self.add(name, axspec)
+        self.add(name, axspec, row)
+        self.add(name + '-power', axspec[2] + axspec[1], self[name].row, False)
 
 
     def fill(self, data):
@@ -263,10 +264,6 @@ class Panels(dict):
     def remove(self, name):
         del self[name]
 
-
-    def clear(self):
-        self = {}
-
         
     def max_row(self):
         if len(self) > 0:
@@ -274,6 +271,12 @@ class Panels(dict):
         else:
             return -1
 
+        
+    def add_power_ax(self, name, row, ax):
+        name = name + '-power'
+        if name in self:
+            self[name].add_ax(row, ax)
+            
 
     def update_plots(self):
         for panel in self.values():
@@ -285,13 +288,15 @@ class Panels(dict):
         row = 0
         spacer = 0
         for name in self:
-            if row > 0:
+            if row > 0 and not self[name].is_power():
                 panels[f'spacer{spacer}'] = Panel(f'spacer{spacer}',
                                                   Panel.spacer, 0)
                 spacer += 1
             panels[name] = self[name]
             row += 1
-        self = panels
+        self.clear()
+        for name, value in panels.items():
+            self[name] = value
         
             
     def show_spacers(self, channel):
@@ -304,7 +309,7 @@ class Panels(dict):
                     panel.set_visible(prev_visible)
                     if prev_visible:
                         prev_spacer = panel
-            else:
+            elif not panel.is_power():
                 prev_panel = panel
                 if panel.is_visible(channel):
                     prev_spacer = None

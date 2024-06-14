@@ -378,9 +378,11 @@ class PlotRange(object):
         for axx in self.axxs:
             for ax in axx:
                 ax.xline.setPos(pos)
+                ax.xline.setVisible(True)
         for axy in self.axys:
             for ax in axy:
                 ax.yline.setPos(pos)
+                ax.yline.setVisible(True)
         
 
 class PlotRanges(dict):
