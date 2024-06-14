@@ -391,7 +391,10 @@ class DataBrowser(QWidget):
                     panel.add_ax(row, axs, axs.powerax, axs.cbar)
                     panel.add_traces(c, self.data)
                     self.plot_ranges[panel.y()].add_yaxis(axs, c)
-                    self.plot_ranges[panel.z()].add_zaxis(axs, c, -200, 20, 5)
+                    if panel.y() == Panel.frequencies[1]:
+                        self.plot_ranges[panel.z()].add_zaxis(axs, c, -80, 0, 5)
+                    else:
+                        self.plot_ranges[panel.z()].add_zaxis(axs, c, -200, 20, 5)
                     self.plot_ranges[axs.powerax.x()].add_xaxis(axs.powerax, c, -100, 20, 5)
                     self.plot_ranges[axs.powerax.y()].add_yaxis(axs.powerax, c)
                     fig.addItem(axs, row=row, col=0)

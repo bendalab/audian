@@ -43,6 +43,8 @@ class SpectrogramPlot(TimePlot):
         self.powerax.getAxis('left').setStyle(showValues=False)
         self.powerax.getAxis('bottom').showLabel(False)
         self.powerax.getAxis('bottom').setStyle(showValues=False)
+        for axis in ['left', 'right', 'bottom', 'top']:
+            self.powerax.getAxis(axis).setVisible(False)
         #self.powerax.setLabel('bottom', 'Power (dB)')
         #self.powerax.getViewBox().setBackgroundColor('black')
         self.powerax.setVisible(show_powers)

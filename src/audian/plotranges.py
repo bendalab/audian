@@ -394,7 +394,7 @@ class PlotRanges(dict):
 
 
     def setup(self, nchannels):
-        for s in Panel.amplitudes + Panel.frequencies + Panel.powers + Panel.powers.upper():
+        for s in Panel.amplitudes + Panel.frequencies + Panel.powers:
             self[s] = PlotRange(s, nchannels)
 
 
