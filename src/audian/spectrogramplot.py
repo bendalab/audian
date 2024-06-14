@@ -35,6 +35,7 @@ class SpectrogramPlot(TimePlot):
         self.cbar.getAxis('right').setTextPen('black')
         self.cbar.getAxis('right').setWidth(6*xwidth)
         self.cbar.setVisible(show_cbars)
+        self.cbar.setToolTip('Hide with Ctrl+B')
 
         # power spectrum:
         self.spec_data = None
@@ -61,6 +62,7 @@ class SpectrogramPlot(TimePlot):
         self.power_fill_item = pg.FillBetweenItem(self.power_zero_item,
                                                   self.power_item, '#000099')
         self.powerax.add_item(self.power_fill_item)
+        self.powerax.setToolTip('Hide with Ctrl+P')
 
         # filter handles:
         self.highpass_handle = None        
