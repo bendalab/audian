@@ -1,4 +1,4 @@
-""" Manage ranges shown on plot axis.
+""" Manage ranges of plot axes.
 
 `class PlotRange`: a single axis range
 `class PlotRanges`: manage all ranges
@@ -23,6 +23,9 @@ class PlotRange(object):
         self.axxs = [[] for i in range(nchannels)]
         self.axys = [[] for i in range(nchannels)]
         self.axzs = [[] for i in range(nchannels)]
+        self.marker_channel = None
+        self.marker_ax = None
+        self.marker_pos = None
 
 
     def _add_axis(self, axs, ax, rmin, rmax, rstep):
@@ -364,27 +367,32 @@ class PlotRange(object):
         if zmin is not None and zmax is not None:
             self.set_ranges(zmin, zmax)
         
-            
-    def show_crosshair(self, show):
+                
+    def clear_marker(self):
+        self.marker_channel = None
+        self.marker_ax = None
+        self.marker_pos = None
+
+        
+    def set_marker(self, channel, ax, pos):
+        self.marker_channel = channel
+        self.marker_ax = ax
+        self.marker_pos = pos
+
+
+    def update_crosshair(self):
         for axx in self.axxs:
             for ax in axx:
-                ax.xline.setVisible(show)
+                if self.marker_pos is not None:
+                    ax.xline.setPos(self.marker_pos)
+                ax.xline.setVisible(self.marker_pos is not None)
         for axy in self.axys:
             for ax in axy:
-                ax.yline.setVisible(show)
-        
+                if self.marker_pos is not None:
+                    ax.yline.setPos(self.marker_pos)
+                ax.yline.setVisible(self.marker_pos is not None)
 
-    def set_crosshair(self, pos):
-        for axx in self.axxs:
-            for ax in axx:
-                ax.xline.setPos(pos)
-                ax.xline.setVisible(True)
-        for axy in self.axys:
-            for ax in axy:
-                ax.yline.setPos(pos)
-                ax.yline.setVisible(True)
         
-
 class PlotRanges(dict):
     
     def __init__(self):
@@ -422,10 +430,34 @@ class PlotRanges(dict):
                 return axspec
         return None
 
-            
-    def show_crosshair(self, show):
+
+    def clear_marker(self):
         for r in self.values():
-            r.show_crosshair(show)
+            r.clear_marker()
+
+
+    def _marker_pos(self, ranges):
+        for r in ranges:
+            if self[r].marker_pos is not None:
+                return r, self[r].marker_pos
+        return None, None
+
+
+    def marker_amplitude(self):
+        return self._marker_pos(Panel.amplitudes)
+
+
+    def marker_frequency(self):
+        return self._marker_pos(Panel.frequencies)
+
+
+    def marker_power(self):
+        return self._marker_pos(Panel.powers)
+
+            
+    def update_crosshair(self):
+        for r in self.values():
+            r.update_crosshair()
 
             
     def _apply(self, rfunc, axspec, *args, **kwargs):
