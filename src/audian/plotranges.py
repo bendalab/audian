@@ -26,6 +26,9 @@ class PlotRange(object):
         self.marker_channel = None
         self.marker_ax = None
         self.marker_pos = None
+        self.stored_marker_channel = None
+        self.stored_marker_ax = None
+        self.stored_marker_pos = None
 
 
     def _add_axis(self, axs, ax, rmin, rmax, rstep):
@@ -379,6 +382,33 @@ class PlotRange(object):
         self.marker_ax = ax
         self.marker_pos = pos
 
+                
+    def store_marker(self):
+        self.stored_marker_channel = self.marker_channel
+        self.stored_marker_ax = self.marker_ax
+        self.stored_marker_pos = self.marker_pos
+        if self.stored_marker_channel is None:
+            return None, None, None
+        for ax in self.axxs[self.stored_marker_channel]:
+            if ax is self.stored_marker_ax:
+                return self.stored_marker_ax, self.stored_marker_pos, None
+        for ax in self.axys[self.stored_marker_channel]:
+            if ax is self.stored_marker_ax:
+                return self.stored_marker_ax, None, self.stored_marker_pos
+        return None, None, None
+
+
+    def clear_stored_marker(self):
+        for axx in self.axxs:
+            for ax in axx:
+                ax.stored_marker.setVisible(False)
+        for axy in self.axys:
+            for ax in axy:
+                ax.stored_marker.setVisible(False)
+        self.stored_marker_channel = None
+        self.stored_marker_ax = None
+        self.stored_marker_pos = None
+
 
     def update_crosshair(self):
         for axx in self.axxs:
@@ -434,6 +464,27 @@ class PlotRanges(dict):
     def clear_marker(self):
         for r in self.values():
             r.clear_marker()
+
+
+    def store_marker(self):
+        axm = None
+        xpos = None
+        ypos = None
+        for r in self.values():
+            r.clear_stored_marker()
+            ax, x, y = r.store_marker()
+            if ax is not None:
+                if axm is None:
+                    axm = ax
+                    xpos = x
+                    ypos = y
+                elif axm is ax:
+                    if xpos is None and x is not None:
+                        xpos = x
+                    if ypos is None and y is not None:
+                        ypos = y
+        if axm is not None and xpos is not None and ypos is not None:
+            axm.set_stored_marker(xpos, ypos)
 
 
     def _marker_pos(self, ranges):

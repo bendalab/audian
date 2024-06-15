@@ -44,16 +44,16 @@ class RangePlot(pg.PlotItem):
         self.yline.setVisible(False)
         self.addItem(self.yline, ignoreBounds=True)
 
-        # previous cross hair marker:
-        self.prev_marker = pg.ScatterPlotItem(
+        # stored cross hair marker:
+        self.stored_marker = pg.ScatterPlotItem(
             size=14,
             pen=pg.mkPen('white'),
             brush=pg.mkBrush((255, 255, 255, 128)),
             symbol='o',
             hoverable=False
         )
-        self.prev_marker.setZValue(20)
-        self.addItem(self.prev_marker, ignoreBounds=True)
+        self.stored_marker.setZValue(20)
+        self.addItem(self.stored_marker, ignoreBounds=True)
 
 
     def x(self):
@@ -83,6 +83,11 @@ class RangePlot(pg.PlotItem):
         return None, None
 
 
+    def set_stored_marker(self, x, y):
+        self.stored_marker.setData((x, ), (y, ))
+        self.stored_marker.setVisible(True)
+
+        
     def update_plot(self):
         for item in self.data_items:
             if item.isVisible():

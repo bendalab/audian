@@ -149,11 +149,7 @@ class DataBrowser(QWidget):
         self.zpos_action = None
         self.cross_hair = False
         self.marker_time = 0
-        self.prev_time = 0
-        self.prev_ampl = 0
-        self.prev_freq = 0
-        self.prev_power = 0
-        self.prev_channel = None
+        self.stored_time = None
         self.delta_time = None
         self.delta_ampl = None
         self.delta_freq = None
@@ -747,12 +743,6 @@ class DataBrowser(QWidget):
             if not self.marker_freq is None:
                 self.marker_ax.prev_marker.setData((self.marker_time,),
                                                    (self.marker_freq,))
-            # remember:
-            self.prev_time = self.marker_time
-            self.prev_ampl = self.marker_ampl
-            self.prev_freq = self.marker_freq
-            self.prev_power = self.marker_power
-            self.prev_channel = self.marker_channel
         """
 
             
@@ -917,6 +907,7 @@ class DataBrowser(QWidget):
         # update position:
         self.mouse_moved((evt[0].scenePos(),), channel)
 
+        """
         # store marker positions:
         if (evt[0].button() & Qt.LeftButton) > 0 and \
            (evt[0].modifiers() == Qt.NoModifier or \
@@ -927,15 +918,17 @@ class DataBrowser(QWidget):
             if act in acts:
                 idx = acts.index(act)
                 self.store_marker(self.marker_labels[idx].label)
-
+        
         # clear marker:
         if (evt[0].button() & Qt.RightButton) > 0:
             self.clear_marker()
+        """
             
-        # set marker and remember position:
+        # store marker position:
         if (evt[0].button() & Qt.LeftButton) > 0 and \
            (evt[0].modifiers() & Qt.ControlModifier) == Qt.ControlModifier:
-            self.set_marker()
+            self.plot_ranges.store_marker()
+            self.stored_time = self.marker_time
 
             
     def label_editor(self):
