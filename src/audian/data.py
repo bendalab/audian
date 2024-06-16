@@ -19,9 +19,6 @@ class Data(object):
         self.data = None
         self.rate = None
         self.channels = 0
-        self.tmax = 0.0
-        self.toffset = 0.0
-        self.twindow = 10.0
         self.start_time = None
         self.meta_data = {}
         self.tbefore = 0
@@ -174,11 +171,6 @@ class Data(object):
         self.file_path = self.data.filepath
         self.rate = self.data.rate
         self.channels = self.data.channels
-        self.toffset = 0.0
-        self.twindow = 10.0
-        self.tmax = len(self.data)/self.rate
-        if self.twindow > self.tmax:
-            self.twindow = self.tmax
         # metadata:
         self.meta_data = dict(Format=self.data.format_dict())
         self.meta_data.update(self.data.metadata())
@@ -201,93 +193,11 @@ class Data(object):
             d.set_need_update()
 
             
-    def update_times(self):
+    def update_times(self, t0, t1):
         if self.data.need_update:
-            self.data.update_time(self.toffset - self.tbefore,
-                                  self.toffset + self.twindow + self.tafter)
+            self.data.update_time(t0 - self.tbefore,
+                                  t1 + self.tafter)
         for trace in self.traces[1:]:
             if trace.need_update:
                 trace.align_buffer()
         
-        
-    def set_time_limits(self, ax):
-        ax.setLimits(xMin=0, xMax=self.tmax,
-                     minXRange=10/self.rate, maxXRange=self.tmax)
-        # TODO: limit maxXRange to 60s or so!
-
-        
-    def set_time_range(self, ax):
-        ax.setXRange(self.toffset, self.toffset + self.twindow)
-        
-        
-    def zoom_time_in(self):
-        if self.twindow * self.rate >= 20:
-            self.twindow *= 0.5
-            return True
-        return False
-        
-        
-    def zoom_time_out(self):
-        if self.toffset + self.twindow < self.tmax:
-            self.twindow *= 2.0
-            return True
-        return False
-
-                
-    def time_seek_forward(self):
-        if self.toffset + self.twindow < self.tmax:
-            self.toffset += 0.5*self.twindow
-            return True
-        return False
-
-            
-    def time_seek_backward(self):
-        if self.toffset > 0:
-            self.toffset -= 0.5*self.twindow
-            if self.toffset < 0.0:
-                self.toffset = 0.0
-            return True
-        return False
-
-                
-    def time_forward(self):
-        if self.toffset + self.twindow < self.tmax:
-            self.toffset += 0.05*self.twindow
-            return True
-        return False
-
-                
-    def time_backward(self, toffs):
-        if toffs > 0.0:
-            self.toffset = toffs - 0.05*self.twindow
-            if self.toffset < 0.0:
-                self.toffset = 0.0
-            return True
-        return False
-
-                
-    def time_home(self):
-        if self.toffset > 0.0:
-            self.toffset = 0.0
-            return True
-        return False
-
-                
-    def time_end(self):
-        n2 = np.floor(self.tmax / (0.5*self.twindow))
-        toffs = max(0, n2-1)  * 0.5*self.twindow
-        if self.toffset < toffs:
-            self.toffset = toffs
-            return True
-        return False
-
-                
-    def snap_time(self):
-        twindow = 10.0 * 2**np.round(log(self.twindow/10.0)/log(2.0))
-        toffset = np.round(self.toffset / (0.5*twindow)) * (0.5*twindow)
-        if twindow != self.twindow or toffset != self.toffset:
-            self.toffset = toffset
-            self.twindow = twindow
-            return True
-        return False
-

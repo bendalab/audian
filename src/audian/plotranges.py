@@ -4,7 +4,7 @@
 `class PlotRanges`: manage all ranges
 """
 
-from math import ceil
+from math import ceil, log
 import numpy as np
 from functools import partial
 from .panels import Panel
@@ -31,9 +31,18 @@ class PlotRange(object):
         self.stored_marker_pos = None
 
 
-    def _add_axis(self, axs, ax, rmin, rmax, rstep):
-        if rmin is None or rmax is None:
-            rmin, rmax = ax.range()
+    def __str__(self):
+        rmins = f'{"-":>8}' if self.rmin is None else f'{self.rmin:8.5g}' 
+        rmaxs = f'{"-":>8}' if self.rmax is None else f'{self.rmax:8.5g}' 
+        rsteps = f'{"-":>8}' if self.rstep is None else f'{self.rstep:8.5g}' 
+        mindrs = f'{"-":>8}' if self.min_dr is None else f'{self.min_dr:8.3g}'
+        r0s = f'{"-":>8}' if self.r0[0] is None else f'{self.r0[0]:8.5g}'
+        r1s = f'{"-":>8}' if self.r1[0] is None else f'{self.r1[0]:8.5g}'
+        return f'{self.axspec}: rmin={rmins} rmax={rmaxs} rstep={rsteps} min_dr={mindrs} r0={r0s} r1={r1s}'
+
+
+    def _add_axis(self, axs, ax):
+        rmin, rmax, rstep = ax.range(self.axspec)
         if rmin is not None and (self.rmin is None or rmin < self.rmin):
             self.rmin = rmin
         if rmax is not None and (self.rmax is None or rmax > self.rmax):
@@ -43,16 +52,16 @@ class PlotRange(object):
         axs.append(ax)
         
 
-    def add_xaxis(self, ax, channel, rmin=None, rmax=None, rstep=None):
-        self._add_axis(self.axxs[channel], ax, rmin, rmax, rstep)
+    def add_xaxis(self, ax, channel):
+        self._add_axis(self.axxs[channel], ax)
         
 
-    def add_yaxis(self, ax, channel, rmin=None, rmax=None, rstep=None):
-        self._add_axis(self.axys[channel], ax, rmin, rmax, rstep)
+    def add_yaxis(self, ax, channel):
+        self._add_axis(self.axys[channel], ax)
 
 
-    def add_zaxis(self, ax, channel, rmin=None, rmax=None, rstep=None):
-        self._add_axis(self.axzs[channel], ax, rmin, rmax, rstep)
+    def add_zaxis(self, ax, channel):
+        self._add_axis(self.axzs[channel], ax)
 
 
     def is_used(self):
@@ -78,28 +87,29 @@ class PlotRange(object):
         return self.axspec in Panel.powers
         
 
-    def get_axspec(self, viewbox):
+    def enable_starttime(self, enable):
         for axx in self.axxs:
             for ax in axx:
-                if ax.getViewBox() is viewbox:
-                    return self.axspec
-        for axy in self.axys:
-            for ax in axy:
-                if ax.getViewBox() is viewbox:
-                    return self.axspec
-        for axz in self.axzs:
-            for ax in axz:
-                if ax.getViewBox() is viewbox:
-                    return self.axspec
-        return None
+                ax.enable_starttime(enable)
 
 
+    def at_end(self, channel=0):
+        return self.r1[channel] >= self.rmax
+
+
+    def at_home(self, channel=0):
+        return self.r0[channel] <= self.rmin
+
+                
     def set_limits(self):
         if not self.is_used():
             return
         if np.isfinite(self.rmin) and np.isfinite(self.rmax):
             # TODO: min_dr should eventually come from the data!!!
-            self.min_dr = (self.rmax - self.rmin)/2**16
+            if self.axspec in Panel.times:
+                self.min_dr = 0.001
+            else:
+                self.min_dr = (self.rmax - self.rmin)/2**16
         else:
             self.min_dr = 2/2**16
         # limits:
@@ -111,7 +121,7 @@ class PlotRange(object):
                     ax.setLimits(xMax=self.rmax)
                 if np.isfinite(self.rmin) and np.isfinite(self.rmax):
                     ax.setLimits(minXRange=self.min_dr,
-                                   maxXRange=self.rmax - self.rmin)
+                                 maxXRange=self.rmax - self.rmin)
         for axy in self.axys:
             for ax in axy:
                 if np.isfinite(self.rmin):
@@ -124,34 +134,51 @@ class PlotRange(object):
         # ranges:
         for c in range(len(self.r0)):
             self.r0[c] = self.rmin
-            self.r1[c] = self.rmax
+            if self.axspec in Panel.times:
+                self.r1[c] = 10
+            else:
+                self.r1[c] = self.rmax
             if not np.isfinite(self.r0[c]):
                 self.r0[c] = -1
             if not np.isfinite(self.r1[c]):
                 self.r1[c] = +1
 
 
-    def set_ranges(self, r0=None, r1=None, channels=None, do_set=True):
+    def set_ranges(self, r0=None, r1=None, dr=None,
+                   channels=None, do_set=True):
         if not self.is_used():
             return
-        if channels is None:
+        # time ranges are all the same over all the channels!
+        if channels is None or self.axspec in Panel.times:
             channels = range(len(self.r0))
+        cc = -1
         for c in channels:
             if len(self.axxs[c]) + len(self.axys[c]) + len(self.axzs[c]) == 0:
                 continue
-            if r0 is not None:
-                self.r0[c] = r0
-            if r1 is not None:
-                self.r1[c] = r1
-            dr = self.r1[c] - self.r0[c]
-            if self.r0[c] < self.rmin:
-                self.r0[c] = self.rmin
-                self.r1[c] = self.rmin + dr
-            if self.r1[c] > self.rmax:
-                self.r1[c] = self.rmax
-                self.r0[c] = self.rmax - dr
-            if self.r0[c] < self.rmin:
-                self.r0[c] = self.rmin
+            if cc >= 0:
+                self.r0[c] = self.r0[cc]
+                self.r1[c] = self.r1[cc]
+            else:
+                if r0 is not None:
+                    self.r0[c] = r0
+                if r1 is not None:
+                    self.r1[c] = r1
+                if dr is not None:
+                    if r1 is None:
+                        self.r1[c] = self.r0[c] + dr
+                    else:
+                        self.r0[c] = self.r1[c] - dr
+                dr = self.r1[c] - self.r0[c]
+                if self.r0[c] < self.rmin:
+                    self.r0[c] = self.rmin
+                    self.r1[c] = self.rmin + dr
+                if self.r1[c] > self.rmax and self.axspec not in Panel.times:
+                    self.r1[c] = self.rmax
+                    self.r0[c] = self.rmax - dr
+                if self.r0[c] < self.rmin:
+                    self.r0[c] = self.rmin
+                if self.axspec in Panel.times:
+                    cc = c
             if do_set:
                 for ax in self.axxs[c]:
                     ax.setXRange(self.r0[c], self.r1[c])
@@ -171,12 +198,12 @@ class PlotRange(object):
                 h = 0.25*(self.r1[c] - self.r0[c])
                 m = 0.5*(self.r1[c] + self.r0[c])
                 if h > self.min_dr:
-                    self.set_ranges(m - h, m + h, [c], do_set)
+                    self.set_ranges(m - h, m + h, None, [c], do_set)
             else:
                 dr = self.r1[c] - self.r0[c]
                 if dr > self.min_dr:
                     dr *= 0.5
-                    self.set_ranges(self.r0[c], self.r0[c] + dr, [c], do_set)
+                    self.set_ranges(self.r0[c], None, dr, [c], do_set)
                 
         
     def zoom_out(self, channels=None, do_set=True):
@@ -188,105 +215,98 @@ class PlotRange(object):
             if self.rmin < 0:
                 h = self.r1[c] - self.r0[c]
                 m = 0.5*(self.r1[c] + self.r0[c])
-                self.set_ranges(m - h, m + h, [c], do_set)
+                self.set_ranges(m - h, m + h, None, [c], do_set)
             else:
-                dr = self.r1[c] - self.r0[c]
-                dr *= 2.0
-                if dr > self.rmax:
-                    dr = self.rmax
-                self.set_ranges(self.r0[c], self.r0[c] + dr, [c], do_set)
+                dr = 2*(self.r1[c] - self.r0[c])
+                self.set_ranges(self.r0[c], None, dr, [c], do_set)
 
                 
-    def down(self, channels=None, do_set=True):
+    def move(self, move_fac, channels=None, do_set=True):
         if not self.is_used():
             return
         if channels is None:
             channels = range(len(self.r0))
         for c in channels:
-            if self.r0[c] > self.rmin:
+            if (move_fac > 0 and self.r1[c] < self.rmax) or \
+               (move_fac < 0 and self.r0[c] > self.rmin):
                 dr = self.r1[c] - self.r0[c]
-                self.set_ranges(self.r0[c] - 0.5*dr, self.r1[c] - 0.5*dr,
-                                [c], do_set)
+                self.set_ranges(self.r0[c] + move_fac*dr,
+                                self.r1[c] + move_fac*dr,
+                                None, [c], do_set)
+                
+    def down(self, channels=None, do_set=True):
+        self.move(-0.5, channels, do_set)
                 
                 
     def up(self, channels=None, do_set=True):
+        self.move(+0.5, channels, do_set)
+                
+                
+    def small_down(self, channels=None, do_set=True):
+        self.move(-0.05, channels, do_set)
+                
+                
+    def small_up(self, channels=None, do_set=True):
+        self.move(+0.05, channels, do_set)
+                
+                
+    def step(self, step_fac, channels=None, do_set=True):
         if not self.is_used():
             return
         if channels is None:
             channels = range(len(self.r0))
         for c in channels:
-            if self.r1[c] < self.rmax:
-                dr = self.r1[c] - self.r0[c]
-                self.set_ranges(self.r0[c] + 0.5*dr, self.r1[c] + 0.5*dr,
-                                [c], do_set)
+            if (step_fac > 0 and self.r1[c] < self.rmax) or \
+               (step_fac < 0 and self.r0[c] > self.rmin):
+                self.set_ranges(self.r0[c] + step_fac*self.rstep,
+                                self.r1[c] + step_fac*self.rstep,
+                                None, [c], do_set)
                 
                 
     def step_down(self, channels=None, do_set=True):
-        if not self.is_used():
-            return
-        if channels is None:
-            channels = range(len(self.r0))
-        for c in channels:
-            if self.r0[c] > self.rmin:
-                self.set_ranges(self.r0[c] - self.rstep,
-                                self.r1[c] - self.rstep,
-                                [c], do_set)
+        self.step(-1, channels, do_set)
                 
                 
     def step_up(self, channels=None, do_set=True):
-        if not self.is_used():
-            return
-        if channels is None:
-            channels = range(len(self.r0))
-        for c in channels:
-            if self.r1[c] < self.rmax:
-                self.set_ranges(self.r0[c] + self.rstep,
-                                self.r1[c] + self.rstep,
-                                [c], do_set)
+        self.step(+1, channels, do_set)
                 
                 
-    def min_down(self, channels=None, do_set=True):
+    def min_step(self, step_fac, channels=None, do_set=True):
         if not self.is_used():
             return
         if channels is None:
             channels = range(len(self.r0))
         for c in channels:
             if self.r0[c] > self.rmin:
-                self.set_ranges(self.r0[c] - self.rstep, self.r1[c],
-                                [c], do_set)
+                self.set_ranges(self.r0[c] + step_fac*self.rstep, self.r1[c],
+                                None, [c], do_set)
+                
+                
+    def min_down(self, channels=None, do_set=True):
+        self.min_step(-1, channels, do_set)
                 
                 
     def min_up(self, channels=None, do_set=True):
-        if not self.is_used():
-            return
-        if channels is None:
-            channels = range(len(self.r0))
-        for c in channels:
-            if self.r0[c] < self.rmax:
-                self.set_ranges(self.r0[c] + self.rstep, self.r1[c],
-                                [c], do_set)
+        self.min_step(+1, channels, do_set)
                 
                 
-    def max_down(self, channels=None, do_set=True):
+    def max_step(self, step_fac, channels=None, do_set=True):
         if not self.is_used():
             return
         if channels is None:
             channels = range(len(self.r0))
         for c in channels:
             if self.r1[c] > self.rmin:
-                self.set_ranges(self.r0[c], self.r1[c] - self.rstep,
-                                [c], do_set)
+                self.set_ranges(self.r0[c], self.r1[c] + step_fac*self.rstep,
+                                None, [c], do_set)
+                
+                
+    def max_down(self, channels=None, do_set=True):
+        self.max_step(-1, channels, do_set)
                 
                 
     def max_up(self, channels=None, do_set=True):
-        if not self.is_used():
-            return
-        if channels is None:
-            channels = range(len(self.r0))
-        for c in channels:
-            if self.r1[c] < self.rmax:
-                self.set_ranges(self.r0[c], self.r1[c] + self.rstep,
-                                [c], do_set)
+        self.max_step(+1, channels, do_set)
                 
                 
     def home(self, channels=None, do_set=True):
@@ -297,7 +317,7 @@ class PlotRange(object):
         for c in channels:
             if self.r0[c] > self.rmin:
                 dr = self.r1[c] - self.r0[c]
-                self.set_ranges(self.rmin, self.rmin + dr, [c], do_set)
+                self.set_ranges(self.rmin, None, dr, [c], do_set)
                 
                 
     def end(self, channels=None, do_set=True):
@@ -309,8 +329,30 @@ class PlotRange(object):
             if self.r1[c] < self.rmax:
                 dr = self.r1[c] - self.r0[c]
                 r1 = ceil(self.rmax/(0.5*dr))*(0.5*dr)
-                self.set_ranges(r1 - dr, r1, [c], do_set)
+                self.set_ranges(None, r1, dr, [c], do_set)
+        """
+        Former time range:
+        n2 = np.floor(self.tmax / (0.5*self.twindow))
+        toffs = max(0, n2-1)  * 0.5*self.twindow
+        if self.toffset < toffs:
+            self.toffset = toffs
+            return True
+        return False
+
+        """
                 
+                
+    def snap(self, channels=None, do_set=True):
+        if not self.is_used():
+            return
+        if channels is None:
+            channels = range(len(self.r0))
+        for c in channels:
+            dr = self.r1[c] - self.r0[c]
+            dr = 10 * 2**round(log(dr/10)/log(2))
+            r0 = round(self.r0[c]/(dr/2))*(dr/2)
+            self.set_ranges(r0, None, dr, [c], do_set)
+    
         
     def auto(self, t0, t1, channels=None, do_set=True):
         if not self.is_used():
@@ -326,7 +368,7 @@ class PlotRange(object):
                     rmin = r0
                 if rmax is None or r1 > rmax:
                     rmax = r1
-        self.set_ranges(rmin, rmax, channels, do_set)
+        self.set_ranges(rmin, rmax, None, channels, do_set)
 
         
     def reset(self, channels=None, do_set=True):
@@ -338,7 +380,7 @@ class PlotRange(object):
         rmax = self.rmax
         if not np.isfinite(rmax):
             rmax = +1
-        self.set_ranges(rmin, rmax, channels, do_set)
+        self.set_ranges(rmin, rmax, None, channels, do_set)
 
         
     def center(self, channels=None, do_set=True):
@@ -348,7 +390,7 @@ class PlotRange(object):
             channels = range(len(self.r0))
         for c in channels:
             r = max(np.abs(self.r0[c]), np.abs(self.r1[c]))
-            self.set_ranges(-r, +r, [c], do_set)
+            self.set_ranges(-r, +r, None, [c], do_set)
 
 
     def set_powers(self):
@@ -427,15 +469,30 @@ class PlotRanges(dict):
     
     def __init__(self):
         super().__init__()
-        for m in ['zoom_in', 'zoom_out', 'down', 'up', 'step_down', 'step_up',
-                  'min_down', 'min_up', 'max_down', 'max_up',
-                  'home', 'end', 'auto', 'reset', 'center']:
+        for m in ['zoom_in', 'zoom_out', 'down', 'up', 'small_down', 'small_up',
+                  'step_down', 'step_up', 'min_down', 'min_up',
+                  'max_down', 'max_up', 'home', 'end', 'snap',
+                  'auto', 'reset', 'center']:
             setattr(self, m, partial(PlotRanges._apply, self, m))
 
 
+    def __str__(self):
+        s = []
+        for r in self.values():
+            s.append(str(r))
+        return '\n'.join(s)
+
+
     def setup(self, nchannels):
-        for s in Panel.amplitudes + Panel.frequencies + Panel.powers:
+        for s in Panel.times + Panel.amplitudes + Panel.frequencies + Panel.powers:
             self[s] = PlotRange(s, nchannels)
+
+
+    def add_plot(self, ax):
+        self[ax.x()].add_xaxis(ax, ax.channel)
+        self[ax.y()].add_yaxis(ax, ax.channel)
+        if ax.z():
+            self[ax.z()].add_zaxis(ax, ax.channel)
 
 
     def set_limits(self):
@@ -452,14 +509,11 @@ class PlotRanges(dict):
         for r in self.values():
             r.set_powers()
 
-
-    def get_axspec(self, viewbox):
-        for r in self.values():
-            axspec = r.get_axspec(viewbox)
-            if axspec:
-                return axspec
-        return None
-
+            
+    def _apply(self, rfunc, axspec, *args, **kwargs):
+        for s in axspec:
+            getattr(self[s], rfunc)(*args, **kwargs)
+            
 
     def clear_marker(self):
         for r in self.values():
@@ -487,11 +541,20 @@ class PlotRanges(dict):
             axm.set_stored_marker(xpos, ypos)
 
 
+    def clear_stored_marker(self):
+        for r in self.values():
+            r.clear_stored_marker()
+
+            
     def _marker_pos(self, ranges):
         for r in ranges:
             if self[r].marker_pos is not None:
                 return r, self[r].marker_pos
         return None, None
+
+
+    def marker_time(self):
+        return self._marker_pos(Panel.times)
 
 
     def marker_amplitude(self):
@@ -510,8 +573,3 @@ class PlotRanges(dict):
         for r in self.values():
             r.update_crosshair()
 
-            
-    def _apply(self, rfunc, axspec, *args, **kwargs):
-        for s in axspec:
-            getattr(self[s], rfunc)(*args, **kwargs)
-            

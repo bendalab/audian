@@ -41,8 +41,9 @@ class Audian(QMainWindow):
 
         self.link_timezoom = True
         self.link_timescroll = False
-        self.link_ranges = dict(x=True, y=True, u=True,
-                                f=True, w=True, p=True, P=True)
+        self.link_ranges = {}
+        for s in Panel.amplitudes + Panel.frequencies + Panel.powers:
+            self.link_ranges[s] = True
         self.link_filter = True
         self.link_envelope = True
         self.link_channels = True
@@ -358,14 +359,17 @@ class Audian(QMainWindow):
         self.link_timescroll = not self.link_timescroll
 
 
-    def dispatch_times(self, toffset, twindow, enable_starttime):
-        if not self.link_timescroll:
-            toffset = None
-        if not self.link_timezoom:
-            twindow = None
+    def set_enable_starttime(self, enable):
         for b in self.browsers:
-            if not b is self.browser():
-                b.set_times(toffset, twindow, enable_starttime, False)
+            b.plot_ranges[Panel.times[0]].enable_starttime(enable)
+
+
+    def apply_time_ranges(self, timefunc, link):
+        self.browser().apply_time_ranges(timefunc)
+        if link:
+            for b in self.browsers:
+                if not b is self.browser():
+                    b.apply_time_ranges(timefunc)
 
 
     def setup_time_actions(self, menu):
@@ -379,15 +383,15 @@ class Audian(QMainWindow):
         self.acts.toggle_start_time.setCheckable(True)
         self.acts.toggle_start_time.setShortcut('Ctrl+Shift+T')
         self.acts.toggle_start_time.setChecked(True)
-        self.acts.toggle_start_time.toggled.connect(lambda x: self.browser().set_times(enable_starttime=x))
+        self.acts.toggle_start_time.toggled.connect(self.set_enable_starttime)
 
-        self.acts.zoom_time_in = QAction('Zoom &in', self)
-        self.acts.zoom_time_in.setShortcuts([QKeySequence.ZoomIn, '+', '=', 'Shift+T'])
-        self.acts.zoom_time_in.triggered.connect(lambda x: self.browser().zoom_time_in())
+        self.acts.time_zoom_in = QAction('Zoom &in', self)
+        self.acts.time_zoom_in.setShortcuts([QKeySequence.ZoomIn, '+', '=', 'Shift+T'])
+        self.acts.time_zoom_in.triggered.connect(lambda x: self.apply_time_ranges('zoom_in', self.link_timezoom))
         
-        self.acts.zoom_time_out = QAction('Zoom &out', self)
-        self.acts.zoom_time_out.setShortcuts([QKeySequence.ZoomOut, '-', 'T'])
-        self.acts.zoom_time_out.triggered.connect(lambda x: self.browser().zoom_time_out())
+        self.acts.time_zoom_out = QAction('Zoom &out', self)
+        self.acts.time_zoom_out.setShortcuts([QKeySequence.ZoomOut, '-', 'T'])
+        self.acts.time_zoom_out.triggered.connect(lambda x: self.apply_time_ranges('zoom_out', self.link_timezoom))
         
         self.acts.link_time_scroll = QAction('Link &time scroll', self)
         self.acts.link_time_scroll.setShortcut('Alt+T')
@@ -395,41 +399,41 @@ class Audian(QMainWindow):
         self.acts.link_time_scroll.setChecked(self.link_timescroll)
         self.acts.link_time_scroll.toggled.connect(self.toggle_link_timescroll)
 
-        self.acts.seek_forward = QAction('Seek &forward', self)
-        self.acts.seek_forward.setIcon(self.style().standardIcon(QStyle.SP_MediaSeekForward))
-        self.acts.seek_forward.setToolTip('Seek forward (Page down)')
-        self.acts.seek_forward.setShortcuts(QKeySequence.MoveToNextPage)
-        self.acts.seek_forward.triggered.connect(lambda x=0: self.browser().time_seek_forward())
+        self.acts.time_down = QAction('Seek &forward', self)
+        self.acts.time_down.setIcon(self.style().standardIcon(QStyle.SP_MediaSeekForward))
+        self.acts.time_down.setToolTip('Seek forward (Page down)')
+        self.acts.time_down.setShortcuts(QKeySequence.MoveToNextPage)
+        self.acts.time_down.triggered.connect(lambda x: self.apply_time_ranges('up', self.link_timescroll))
 
-        self.acts.seek_backward = QAction('Seek &backward', self)
-        self.acts.seek_backward.setIcon(self.style().standardIcon(QStyle.SP_MediaSeekBackward))
-        self.acts.seek_backward.setToolTip('Seek backward (Page up)')
-        self.acts.seek_backward.setShortcuts(QKeySequence.MoveToPreviousPage)
-        self.acts.seek_backward.triggered.connect(lambda x=0: self.browser().time_seek_backward())
+        self.acts.time_up = QAction('Seek &backward', self)
+        self.acts.time_up.setIcon(self.style().standardIcon(QStyle.SP_MediaSeekBackward))
+        self.acts.time_up.setToolTip('Seek backward (Page up)')
+        self.acts.time_up.setShortcuts(QKeySequence.MoveToPreviousPage)
+        self.acts.time_up.triggered.connect(lambda x: self.apply_time_ranges('down', self.link_timescroll))
 
-        self.acts.time_forward = QAction('Forward', self)
-        self.acts.time_forward.setShortcuts(QKeySequence.MoveToNextLine)
-        self.acts.time_forward.triggered.connect(lambda x=0: self.browser().time_forward())
+        self.acts.time_small_down = QAction('Forward', self)
+        self.acts.time_small_down.setShortcuts(QKeySequence.MoveToNextLine)
+        self.acts.time_small_down.triggered.connect(lambda x: self.apply_time_ranges('small_up', self.link_timescroll))
 
-        self.acts.time_backward = QAction('Backward', self)
-        self.acts.time_backward.setShortcuts(QKeySequence.MoveToPreviousLine)
-        self.acts.time_backward.triggered.connect(lambda x=0: self.browser().time_backward())
+        self.acts.time_small_up = QAction('Backward', self)
+        self.acts.time_small_up.setShortcuts(QKeySequence.MoveToPreviousLine)
+        self.acts.time_small_up.triggered.connect(lambda x: self.apply_time_ranges('small_down', self.link_timescroll))
 
-        self.acts.skip_forward = QAction('&End', self)
-        self.acts.skip_forward.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipForward))
-        self.acts.skip_forward.setToolTip('Skip to end of data (End)')
-        self.acts.skip_forward.setShortcuts([QKeySequence.MoveToEndOfLine, QKeySequence.MoveToEndOfDocument])
-        self.acts.skip_forward.triggered.connect(lambda x=0: self.browser().time_end())
+        self.acts.time_end = QAction('&End', self)
+        self.acts.time_end.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipForward))
+        self.acts.time_end.setToolTip('Skip to end of data (End)')
+        self.acts.time_end.setShortcuts([QKeySequence.MoveToEndOfLine, QKeySequence.MoveToEndOfDocument])
+        self.acts.time_end.triggered.connect(lambda x: self.apply_time_ranges('end', self.link_timescroll))
 
-        self.acts.skip_backward = QAction('&Home', self)
-        self.acts.skip_backward.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipBackward))
-        self.acts.skip_backward.setToolTip('Skip to beginning of data (Home)')
-        self.acts.skip_backward.setShortcuts([QKeySequence.MoveToStartOfLine, QKeySequence.MoveToStartOfDocument])
-        self.acts.skip_backward.triggered.connect(lambda x=0: self.browser().time_home())
+        self.acts.time_home = QAction('&Home', self)
+        self.acts.time_home.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipBackward))
+        self.acts.time_home.setToolTip('Skip to beginning of data (Home)')
+        self.acts.time_home.setShortcuts([QKeySequence.MoveToStartOfLine, QKeySequence.MoveToStartOfDocument])
+        self.acts.time_home.triggered.connect(lambda x: self.apply_time_ranges('home', self.link_timescroll))
 
-        self.acts.snap_time = QAction('&Snap', self)
-        self.acts.snap_time.setShortcut('.')
-        self.acts.snap_time.triggered.connect(lambda x=0: self.browser().snap_time())
+        self.acts.time_snap = QAction('&Snap', self)
+        self.acts.time_snap.setShortcut('.')
+        self.acts.time_snap.triggered.connect(lambda x: self.apply_time_ranges('snap', self.link_timescroll))
 
         self.acts.auto_scroll = QAction('&Auto scroll', self)
         self.acts.auto_scroll.setShortcut('!')
@@ -438,16 +442,16 @@ class Audian(QMainWindow):
         time_menu = menu.addMenu('Time')
         time_menu.addAction(self.acts.link_time_zoom)
         time_menu.addAction(self.acts.toggle_start_time)
-        time_menu.addAction(self.acts.zoom_time_in)
-        time_menu.addAction(self.acts.zoom_time_out)
+        time_menu.addAction(self.acts.time_zoom_in)
+        time_menu.addAction(self.acts.time_zoom_out)
         time_menu.addAction(self.acts.link_time_scroll)
-        time_menu.addAction(self.acts.seek_forward)
-        time_menu.addAction(self.acts.seek_backward)
-        time_menu.addAction(self.acts.time_forward)
-        time_menu.addAction(self.acts.time_backward)
-        time_menu.addAction(self.acts.skip_forward)
-        time_menu.addAction(self.acts.skip_backward)
-        time_menu.addAction(self.acts.snap_time)
+        time_menu.addAction(self.acts.time_down)
+        time_menu.addAction(self.acts.time_up)
+        time_menu.addAction(self.acts.time_small_down)
+        time_menu.addAction(self.acts.time_small_up)
+        time_menu.addAction(self.acts.time_end)
+        time_menu.addAction(self.acts.time_home)
+        time_menu.addAction(self.acts.time_snap)
         time_menu.addAction(self.acts.auto_scroll)
 
         self.data_menus.append(time_menu)
@@ -464,12 +468,22 @@ class Audian(QMainWindow):
                         b.apply_ranges(amplitudefunc, s)
 
 
-    def dispatch_ranges(self, axspec, ymin, ymax):
-        for s in axspec:
-            if self.link_ranges[s]:
+    def dispatch_ranges(self, axspec, arange):
+        for s in range(2):
+            if axspec[s] in Panel.times:
+                toffs = None
+                if self.link_timescroll:
+                    toffs = arange[s]
+                twin = None
+                if self.link_timezoom:
+                    twin = arange[s][1] - arange[s][0]
                 for b in self.browsers:
                     if not b is self.browser():
-                        b.set_ranges(s, ymin, ymax)
+                        b.set_times(toffs, twin)
+            elif self.link_ranges[axspec[s]]:
+                for b in self.browsers:
+                    if not b is self.browser():
+                        b.set_ranges(axspec[s], *arange[s])                     
 
         
     def toggle_link_amplitude(self):
@@ -1197,7 +1211,6 @@ Can not open file <b>{browser.file_path}</b>!''')
                         self.acts.link_channels.setChecked(self.link_channels)
                 if browser is self.browser():
                     self.adapt_menu(self.tabs.currentIndex())
-                browser.sigTimesChanged.connect(self.dispatch_times)
                 browser.sigRangesChanged.connect(self.dispatch_ranges)
                 browser.sigResolutionChanged.connect(self.dispatch_resolution)
                 browser.sigColorMapChanged.connect(self.dispatch_colormap)
@@ -1205,7 +1218,7 @@ Can not open file <b>{browser.file_path}</b>!''')
                 browser.sigEnvelopeChanged.connect(self.dispatch_envelope)
                 browser.sigTraceChanged.connect(self.dispatch_trace)
                 browser.sigAudioChanged.connect(self.dispatch_audio)
-                browser.set_times(enable_starttime=self.acts.toggle_start_time.isChecked(), dispatch=False)
+                browser.plot_ranges[Panel.times[0]].enable_starttime(self.acts.toggle_start_time.isChecked())
                 pb = self.browser() if self.prev_browser is None else self.prev_browser
                 if self.link_panels:
                     browser.set_panels(pb.show_traces, pb.show_specs,

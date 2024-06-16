@@ -14,7 +14,7 @@ from .yaxisitem import YAxisItem
 
 class TimePlot(RangePlot):
 
-    def __init__(self, aspec, ylabel, channel, xwidth, browser):
+    def __init__(self, aspec, channel, browser, xwidth, ylabel=''):
         
         # axis:
         bottom_axis = TimeAxisItem(orientation='bottom', showValues=True)
@@ -38,7 +38,7 @@ class TimePlot(RangePlot):
         right_axis = YAxisItem(orientation='right', showValues=False)
 
         # plot:
-        RangePlot.__init__(self, aspec, channel,
+        RangePlot.__init__(self, aspec, channel, browser,
                            axisItems={'bottom': bottom_axis,
                                       'top': top_axis,
                                       'left': left_axis,
@@ -54,31 +54,30 @@ class TimePlot(RangePlot):
         self.vmarker.setValue(-1)
         self.addItem(self.vmarker, ignoreBounds=True)
 
-        # ranges:
-        browser.data.set_time_limits(self)
-        browser.data.set_time_range(self)
 
-        # signals:
-        self.sigXRangeChanged.connect(browser.update_times)
-        self.sigYRangeChanged.connect(browser.update_ranges)
-        self.getViewBox().sigSelectedRegion.connect(browser.region_menu)
-
-
-    def range(self):
-        amin = None
-        amax = None
-        for item in self.data_items:
-            a0 = item.data.ampl_min
-            a1 = item.data.ampl_max
-            if amin is None or a0 < amin:
-                amin = a0
-            if amax is None or a1 > amax:
-                amax = a1
-        if amin is None:
-            amin = -1
-        if amax is None:
-            amax = +1
-        return amin, amax
+    def range(self, axspec):
+        if axspec == self.x():
+            if len(self.data_items) > 0:
+                tmax = self.data_items[0].data.frames/self.data_items[0].data.rate
+                return 0, tmax, min(10, tmax)
+            else:
+                return 0, None, 10
+        elif axspec == self.y():
+            amin = None
+            amax = None
+            astep = 1
+            for item in self.data_items:
+                a0 = item.data.ampl_min
+                a1 = item.data.ampl_max
+                if amin is None or a0 < amin:
+                    amin = a0
+                if amax is None or a1 > amax:
+                    amax = a1
+            if amin is None:
+                amin = -1
+            if amax is None:
+                amax = +1
+            return amin, amax, astep
 
 
     def amplitudes(self, t0, t1):
@@ -96,7 +95,7 @@ class TimePlot(RangePlot):
         return amin, amax
 
 
-    def enable_start_time(self, enable):
+    def enable_starttime(self, enable):
         """ Enable addition of start time to tick labels.
 
         Parameters

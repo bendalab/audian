@@ -28,7 +28,7 @@ class Panel(object):
 
 
     def __str__(self):
-        return f'{self.name:20}: {self.ax_spec:6} @ {self.row:2} with {len(self.axs):2} plots\n'
+        return f'{self.name:20}: {self.ax_spec:6} @ {self.row:2} with {len(self.axs):2} plots'
 
 
     def __len__(self):
@@ -133,6 +133,13 @@ class Panel(object):
         return False
 
 
+    def has_viewbox(self, viewbox):
+        for ax in self.axs:
+            if ax.getViewBox() is viewbox:
+                return True
+        return False
+
+
     def is_cbar_visible(self, channel):
         return self.axcs[channel].isVisible()
 
@@ -193,10 +200,10 @@ class Panels(dict):
 
 
     def __str__(self):
-        s = ''
+        s = []
         for panel in self.values():
-            s += str(panel)
-        return s
+            s.append(str(panel))
+        return '\n'.join(s)
 
 
     def add(self, name, axes, row=None, adjust_rows=True):
@@ -277,6 +284,13 @@ class Panels(dict):
         if name in self:
             self[name].add_ax(row, ax)
             
+
+    def get_panel(self, viewbox):
+        for panel in self.values():
+            if panel.has_viewbox(viewbox):
+                return panel
+        return None
+
 
     def update_plots(self):
         for panel in self.values():

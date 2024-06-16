@@ -8,7 +8,7 @@ from .selectviewbox import SelectViewBox
 
 class RangePlot(pg.PlotItem):
 
-    def __init__(self, aspec, channel, *args, **kwargs):
+    def __init__(self, aspec, channel, browser, *args, **kwargs):
 
         self.aspec = aspec
         self.channel = channel
@@ -28,6 +28,10 @@ class RangePlot(pg.PlotItem):
         self.setMenuEnabled(False)
         self.enableAutoRange(False, False)
         self.getViewBox().init_zoom_history()
+
+        # signals:
+        self.sigRangeChanged.connect(browser.update_ranges)
+        self.getViewBox().sigSelectedRegion.connect(browser.region_menu)
 
         # cross hair:
         self.xline = pg.InfiniteLine(angle=90, movable=False)
@@ -75,8 +79,8 @@ class RangePlot(pg.PlotItem):
         self.addItem(item)
 
 
-    def range(self):
-        return None, None
+    def range(self, axspec):
+        return None, None, None
 
     
     def amplitudes(self, t0, t1):

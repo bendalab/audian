@@ -64,8 +64,7 @@ class DataBrowser(QWidget):
     save_region = 3
     ask_region = 4
     
-    sigTimesChanged = Signal(object, object, object)
-    sigRangesChanged = Signal(object, object, object)
+    sigRangesChanged = Signal(object, object)
     sigResolutionChanged = Signal()
     sigColorMapChanged = Signal()
     sigFilterChanged = Signal()
@@ -148,8 +147,6 @@ class DataBrowser(QWidget):
         self.ypos_action = None
         self.zpos_action = None
         self.cross_hair = False
-        self.marker_time = 0
-        self.stored_time = None
         self.delta_time = None
         self.delta_ampl = None
         self.delta_freq = None
@@ -170,7 +167,6 @@ class DataBrowser(QWidget):
         self.sig_proxies = []
         # nested lists (channel, panel):
         self.axs  = []      # all plots
-        self.axts = []      # plots with time axis
         self.axgs = []      # plots with grids
         # lists with marker labels and regions:
         self.trace_labels = [] # labels on traces
@@ -254,7 +250,7 @@ class DataBrowser(QWidget):
             act.toggled.connect(lambda x, name=t.name: self.toggle_trace(x, name))
             self.trace_acts.append(act)
 
-        # amplitude ranges:
+        # ranges:
         self.plot_ranges.setup(self.data.channels)
         
         # requested filtering:
@@ -303,7 +299,6 @@ class DataBrowser(QWidget):
         self.sig_proxies = []
         # nested lists (channel, panel):
         self.axs  = []      # all plots
-        self.axts = []      # plots with time axis
         self.axgs = []      # plots with grids
         # lists with marker labels and regions:
         self.trace_labels = [] # labels on traces
@@ -316,7 +311,6 @@ class DataBrowser(QWidget):
         xwidth2 = xwidth/2
         for c in range(self.data.channels):
             self.axs.append([])
-            self.axts.append([])
             self.axgs.append([])
             self.audio_markers.append([])
             
@@ -352,15 +346,14 @@ class DataBrowser(QWidget):
                 # trace plot:
                 elif panel.is_trace():
                     ylabel = panel.name if panel.name != 'trace' else ''
-                    axt = TimePlot(panel.ax_spec, ylabel, c, xwidth, self)
+                    axt = TimePlot(panel.ax_spec, c, self, xwidth, ylabel)
                     self.audio_markers[-1].append(axt.vmarker)
                     fig.addItem(axt, row=row, col=0)
-                    self.axts[-1].append(axt)
                     self.axgs[-1].append(axt)
                     self.axs[-1].append(axt)
                     panel.add_ax(row, axt)
                     panel.add_traces(c, self.data)
-                    self.plot_ranges[panel.y()].add_yaxis(axt, c)
+                    self.plot_ranges.add_plot(axt)
                     # add marker labels:
                     labels = []
                     for l in self.marker_labels:
@@ -374,25 +367,18 @@ class DataBrowser(QWidget):
                     self.trace_region_labels.append([])
                 # spectrogram:
                 elif panel.is_spectrogram():
-                    axs = SpectrogramPlot(panel.ax_spec, c, xwidth,
+                    axs = SpectrogramPlot(panel.ax_spec, c, self, xwidth,
                                           self.color_maps[self.color_map],
-                                          self.show_cbars, self.show_powers,
-                                          self)
+                                          self.show_cbars, self.show_powers)
                     self.audio_markers[-1].append(axs.vmarker)
                     panel.add_ax(row, axs, axs.cbar)
                     panel.add_traces(c, self.data)
                     self.panels.add_power_ax(panel.name, row, axs.powerax)
-                    self.plot_ranges[panel.y()].add_yaxis(axs, c)
-                    if panel.y() == Panel.frequencies[1]:
-                        self.plot_ranges[panel.z()].add_zaxis(axs, c, -80, 0, 5)
-                    else:
-                        self.plot_ranges[panel.z()].add_zaxis(axs, c, -200, 20, 5)
-                    self.plot_ranges[axs.powerax.x()].add_xaxis(axs.powerax, c, -100, 20, 5)
-                    self.plot_ranges[axs.powerax.y()].add_yaxis(axs.powerax, c)
+                    self.plot_ranges.add_plot(axs)
+                    self.plot_ranges.add_plot(axs.powerax)
                     fig.addItem(axs, row=row, col=0)
                     fig.addItem(axs.powerax, row=row, col=1)
                     fig.addItem(axs.cbar, row=row, col=2)
-                    self.axts[-1].append(axs)
                     self.axgs[-1].append(axs)
                     self.axs[-1].append(axs)
                     # add marker labels:
@@ -452,10 +438,10 @@ class DataBrowser(QWidget):
         
         # tool bar:
         self.toolbar = QToolBar()
-        self.toolbar.addAction(self.acts.skip_backward)
-        self.toolbar.addAction(self.acts.seek_backward)
-        self.toolbar.addAction(self.acts.seek_forward)
-        self.toolbar.addAction(self.acts.skip_forward)
+        self.toolbar.addAction(self.acts.time_home)
+        self.toolbar.addAction(self.acts.time_up)
+        self.toolbar.addAction(self.acts.time_down)
+        self.toolbar.addAction(self.acts.time_end)
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.acts.play_window)
         self.audiofacw = QComboBox(self)
@@ -631,7 +617,7 @@ class DataBrowser(QWidget):
                 else:
                     sl[lidx].addPoints((t1,), (0.0,), data=(ds,), tip=marker_tip)
 
-
+                    
     def show_metadata(self):
         
         def format_dict(md, level):
@@ -703,19 +689,14 @@ class DataBrowser(QWidget):
                 l.action.setShortcut(l.key_shortcut)
                 l.action.setEnabled(True)
             self.plot_ranges.clear_marker()
-            # TODO: add to plot_ranges:
-            self.marker_time = None
+            self.plot_ranges.clear_stored_marker()
         else:
             self.xpos_action.setVisible(False)
             self.ypos_action.setVisible(False)
             self.zpos_action.setVisible(False)
             self.plot_ranges.clear_marker()
+            self.plot_ranges.clear_stored_marker()
             self.plot_ranges.update_crosshair()
-            # TODO: add to plot_ranges:
-            self.marker_time = None
-            for axts in self.axts:
-                for ax in axts:
-                    ax.xline.setVisible(False)
             # disable marker actions:
             for l in self.marker_labels:
                 l.action.setEnabled(False)
@@ -725,16 +706,8 @@ class DataBrowser(QWidget):
             self.marker_orig_acts = []
 
 
-    def clear_marker(self):
-        for axs in self.axs:
-            for axp in axs:
-                if hasattr(axp, 'prev_marker'):
-                    axp.prev_marker.clear()
-        self.prev_channel = None
-
-
     def set_marker(self):
-        self.clear_marker()
+        pass
         """
         if not self.marker_ax is None and not self.marker_time is None:
             if not self.marker_ampl is None:
@@ -780,7 +753,6 @@ class DataBrowser(QWidget):
             
         # find axes and position:
         pixel_pos = evt[0]
-        self.marker_time = None
         self.plot_ranges.clear_marker()
         for panel in self.panels.values():
             if not panel.is_used() and not panel.is_visible(channel):
@@ -793,10 +765,7 @@ class DataBrowser(QWidget):
             npos = ax.getViewBox().mapSceneToView(pixel_pos)
             ax.xline.setPos(pos.x())
             ax.yline.setPos(pos.y())
-            if panel.is_time():
-                self.marker_time = pos.x()
-            else:
-                self.plot_ranges[panel.x()].set_marker(channel, ax, pos.x())
+            self.plot_ranges[panel.x()].set_marker(channel, ax, pos.x())
             self.plot_ranges[panel.y()].set_marker(channel, ax, pos.y())
             """
             if not self.marker_time is None:
@@ -816,12 +785,6 @@ class DataBrowser(QWidget):
             """
             break
         # set cross-hair positions:
-        # TODO: add to plot_ranges:
-        for axts in self.axts:
-            for axt in axts:
-                if self.marker_time is not None:
-                    axt.xline.setPos(self.marker_time)
-                ax.xline.setVisible(self.marker_time is not None)
         self.plot_ranges.update_crosshair()
         """
         # compute deltas:
@@ -854,9 +817,10 @@ class DataBrowser(QWidget):
             self.xpos_action.setText(s)
         elif self.marker_time is not None:
         """
-        if self.marker_time is not None:
-            sign = '-' if self.marker_time < 0 else ''
-            s = f't={sign}{secs_to_str(fabs(self.marker_time))}'
+        time, pos = self.plot_ranges.marker_time()
+        if pos is not None:
+            sign = '-' if pos < 0 else ''
+            s = f't={sign}{secs_to_str(fabs(pos))}'
         self.xpos_action.setText(s)
         self.xpos_action.setVisible(len(s) > 0)
         # report amplitude or frequency on toolbar:
@@ -928,7 +892,6 @@ class DataBrowser(QWidget):
         if (evt[0].button() & Qt.LeftButton) > 0 and \
            (evt[0].modifiers() & Qt.ControlModifier) == Qt.ControlModifier:
             self.plot_ranges.store_marker()
-            self.stored_time = self.marker_time
 
             
     def label_editor(self):
@@ -972,10 +935,6 @@ class DataBrowser(QWidget):
         if self.data is None:
             return
         self.setting = True
-        for c in range(self.data.channels):
-            # update time ranges: TODO add to plot_ranges
-            for ax in self.axts[c]:
-                self.data.set_time_range(ax)
         self.plot_ranges.set_ranges()
         self.data.set_need_update()
         self.panels.update_plots()
@@ -1086,111 +1045,61 @@ class DataBrowser(QWidget):
         # update:
         for c in self.show_channels:
             self.figs[c].update()
-        
 
-    def set_times(self, toffset=None, twindow=None, enable_starttime=None,
-                  dispatch=True):
+            
+    def update_ranges(self, viewbox, arange):
+        """
+        TODO: a newer version of pyqtgraph might need:
+        def update_ranges(self, viewbox, arange):
+        """
+        if self.setting:
+            return
+        panel = self.panels.get_panel(viewbox)
+        if not panel:
+            return
+        axspec = panel.ax_spec
+        for s in range(2):
+            r0, r1 = arange[s]
+            if axspec[s] in Panel.times:
+                self.set_times(r0, r1 - r0)
+            else:
+                self.set_ranges(axspec[s], r0, r1)
+        self.sigRangesChanged.emit(axspec, arange)
+
+
+    def set_times(self, toffset=None, twindow=None):
         if self.setting:
             return
         self.setting = True
-        if not toffset is None:
-            self.data.toffset = toffset
-        if not twindow is None:
-            self.data.twindow = twindow
-        self.data.update_times()
-        for axs in self.axts:
-            for ax in axs:
-                if enable_starttime is not None:
-                    ax.enable_start_time(enable_starttime)
-                if self.isVisible():
-                    self.data.set_time_range(ax)
+        trange = self.plot_ranges[Panel.times[0]]
+        trange.set_ranges(toffset, None, twindow,
+                          self.selected_channels, self.isVisible())
+        self.data.update_times(trange.r0[0], trange.r0[1])
         self.panels.update_plots()
         self.plot_ranges.set_powers()
         self.setting = False
-        if dispatch:
-            self.sigTimesChanged.emit(self.data.toffset, self.data.twindow,
-                                      enable_starttime)
-
-            
-    def update_times(self, viewbox, trange):
-        if self.setting:
-            return
-        self.set_times(trange[0], trange[1] - trange[0])
         
+
+    def apply_time_ranges(self, timefunc):
+        self.setting = True
+        getattr(self.plot_ranges, timefunc)(Panel.times[0], None,
+                                            self.isVisible())
+        trange = self.plot_ranges[Panel.times[0]]
+        self.data.update_times(trange.r0[0], trange.r0[1])
+        # TODO: set time range here!
+        self.panels.update_plots()
+        self.plot_ranges.set_powers()
+        self.setting = False
         
-    def zoom_time_in(self):
-        if self.data.zoom_time_in():
-            self.set_times()
-        
-        
-    def zoom_time_out(self):
-        if self.data.zoom_time_out():
-            self.set_times()
-
-                
-    def time_seek_forward(self):
-        if self.data.time_seek_forward():
-            self.set_times()
-
-            
-    def time_seek_backward(self):
-        if self.data.time_seek_backward():
-            self.set_times()
-
-                
-    def time_forward(self):
-        if self.data.time_forward():
-            self.set_times()
-
-                
-    def time_backward(self):
-        axt = None
-        for axs in self.axts:
-            if len(axs) > 0:
-                axt = axs[0]
-        if axt is None:
-            return
-        rect = axt.getViewBox().viewRect()
-        toffs = self.data.toffset
-        if toffs > rect.left():
-            toffs = rect.left()
-        if self.data.time_backward(toffs):
-            self.set_times()
-
-                
-    def time_home(self):
-        if self.data.time_home():
-            self.set_times()
-
-                
-    def time_end(self):
-        if self.data.time_end():
-            self.set_times()
-
-                
-    def snap_time(self):
-        if self.data.snap_time():
-            self.set_times()
-
 
     def set_ranges(self, axspec, r0=None, r1=None):
         if self.setting:
             return
         self.setting = True
-        self.plot_ranges[axspec].set_ranges(r0, r1,
+        self.plot_ranges[axspec].set_ranges(r0, r1, None,
                                             self.selected_channels,
                                             self.isVisible())
         self.setting = False
-
-            
-    def update_ranges(self, viewbox, arange):
-        if self.setting:
-            return
-        axspec = self.plot_ranges.get_axspec(viewbox)
-        if not axspec:
-            return
-        self.set_ranges(axspec, arange[0], arange[1])
-        self.sigRangesChanged.emit(axspec, arange[0], arange[1])
 
 
     def apply_ranges(self, amplitudefunc, axspec):
@@ -1203,8 +1112,10 @@ class DataBrowser(QWidget):
 
     def auto_ampl(self, axspec=Panel.amplitudes):
         self.setting = True
-        self.plot_ranges.auto(axspec, self.data.toffset,
-                              self.data.toffset + self.data.twindow,
+        trange = self.plot_ranges[Panel.times[0]]
+        t0 = trange.r0[0]
+        t1 = trange.r1[0]
+        self.plot_ranges.auto(axspec, t0, t1,
                               self.selected_channels, self.isVisible())
         self.setting = False
 
@@ -1561,7 +1472,8 @@ class DataBrowser(QWidget):
             self.datafig.setVisible(self.show_fulldata)
         self.adjust_layout(self.width(), self.height())
         self.data.set_need_update()
-        self.data.update_times()
+        trange = self.plot_ranges[Panel.times[0]]
+        self.data.update_times(trange.r0[0], trange.r0[1])
         self.panels.update_plots()
         self.plot_ranges.set_powers()
             
@@ -1700,11 +1612,12 @@ class DataBrowser(QWidget):
 
         
     def scroll_further(self):
-        if self.data.toffset + self.data.twindow > self.data.tmax:
+        trange = self.plot_ranges[Panel.times[0]]
+        if trange.at_end():
             self.scroll_timer.stop()
             self.scroll_step /= 2
         else:
-            self.set_times(self.data.toffset + self.data.twindow*self.scroll_step)
+            self.set_times(trange.r0[0] + (trange.r1[0] - trange.r0[0])*self.scroll_step)
 
 
     def set_audio(self, rate_fac=None,
@@ -1763,14 +1676,8 @@ class DataBrowser(QWidget):
 
 
     def play_window(self):
-        axt = None
-        for axs in self.axts:
-            if len(axs) > 0:
-                axt = axs[0]
-        if axt is None:
-            return
-        rect = axt.getViewBox().viewRect()
-        self.play_region(rect.left(), rect.right())
+        trange = self.plot_ranges[Panel.times[0]]
+        self.play_region(trange.r0[0], trange.r0[1])
 
         
     def mark_audio(self):
@@ -1930,5 +1837,5 @@ class DataBrowser(QWidget):
 
         
     def save_window(self):
-        self.save_region(self.data.toffset, self.data.toffset +
-                         self.data.twindow)
+        trange = self.plot_ranges[Panel.times[0]]
+        self.save_region(trange.r0[0], trange.r0[1])

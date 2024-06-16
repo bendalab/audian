@@ -8,19 +8,57 @@ except ImportError:
     from PyQt5.QtCore import pyqtSignal as Signal
 import pyqtgraph as pg
 from thunderlab.powerspectrum import decibel
+from .panels import Panel
 from .rangeplot import RangePlot
 from .timeplot import TimePlot
 from .specitem import SpecItem
 
+
+class PowerPlot(RangePlot):
+    
+    def __init__(self, aspec, channel, browser, *args, **kwargs):
+        super().__init__(aspec, channel, browser, *args, **kwargs)
+        self.getAxis('left').showLabel(False)
+        self.getAxis('left').setStyle(showValues=False)
+        self.getAxis('bottom').showLabel(False)
+        self.getAxis('bottom').setStyle(showValues=False)
+        for axis in ['left', 'right', 'bottom', 'top']:
+            self.getAxis(axis).setVisible(False)
+        #self.setLabel('bottom', 'Power (dB)')
+        #self.getViewBox().setBackgroundColor('black')
+        self.xline.setPen(0.7)
+        self.yline.setPen(0.7)
+        # data:
+        self.power_item = pg.PlotCurveItem(connect='all',
+                                           antialias=False,
+                                           skipFiniteCheck=True)
+        self.power_item.setPen(dict(color='#000099', width=2))
+        self.add_item(self.power_item)
+        self.zero_item = pg.PlotCurveItem(connect='all',
+                                          antialias=False,
+                                          skipFiniteCheck=True)
+        self.zero_item.setPen(dict(color='#000099', width=2))
+        self.add_item(self.zero_item)
+        self.fill_item = pg.FillBetweenItem(self.zero_item,
+                                            self.power_item, '#000099')
+        self.add_item(self.fill_item)
+
+        
+    def range(self, axspec):
+        if axspec == self.x():
+            return -100, 20, 5
+        elif axspec == self.y():
+            return super().range(axspec)
+        
 
 class SpectrogramPlot(TimePlot):
 
     
     sigUpdateFilter = Signal(object, object)
 
-    def __init__(self, aspec, channel, xwidth, color_map, show_cbars,
-                 show_powers, browser):
-        super().__init__(aspec, '', channel, xwidth, browser)
+    def __init__(self, aspec, channel, browser, xwidth, color_map, show_cbars,
+                 show_powers):
+        super().__init__(aspec, channel, browser, xwidth)
         
         # axis:
         self.getAxis('bottom').showLabel(False)
@@ -38,31 +76,8 @@ class SpectrogramPlot(TimePlot):
 
         # power spectrum:
         self.spec_data = None
-        self.powerax = RangePlot(self.z() + self.y(), channel)
-        self.powerax.getAxis('left').showLabel(False)
-        self.powerax.getAxis('left').setStyle(showValues=False)
-        self.powerax.getAxis('bottom').showLabel(False)
-        self.powerax.getAxis('bottom').setStyle(showValues=False)
-        for axis in ['left', 'right', 'bottom', 'top']:
-            self.powerax.getAxis(axis).setVisible(False)
-        #self.powerax.setLabel('bottom', 'Power (dB)')
-        #self.powerax.getViewBox().setBackgroundColor('black')
+        self.powerax = PowerPlot(self.z() + self.y(), channel, browser)
         self.powerax.setVisible(show_powers)
-        self.power_item = pg.PlotCurveItem(connect='all',
-                                           antialias=False,
-                                           skipFiniteCheck=True)
-        self.power_item.setPen(dict(color='#000099', width=2))
-        self.powerax.add_item(self.power_item)
-        self.power_zero_item = pg.PlotCurveItem(connect='all',
-                                                antialias=False,
-                                                skipFiniteCheck=True)
-        self.power_zero_item.setPen(dict(color='#000099', width=2))
-        self.powerax.add_item(self.power_zero_item)
-        self.power_fill_item = pg.FillBetweenItem(self.power_zero_item,
-                                                  self.power_item, '#000099')
-        self.powerax.add_item(self.power_fill_item)
-        self.powerax.xline.setPen(0.7)
-        self.powerax.yline.setPen(0.7)
 
         # filter handles:
         self.highpass_handle = None        
@@ -119,9 +134,26 @@ class SpectrogramPlot(TimePlot):
         power[power<-200] = -200
         freqs = np.arange(len(power))*self.spec_data.fresolution
         zeros = np.zeros(len(freqs)) - 200
-        self.power_item.setData(power, freqs)
-        self.power_zero_item.setData(zeros, freqs)
+        self.powerax.power_item.setData(power, freqs)
+        self.powerax.zero_item.setData(zeros, freqs)
         
+
+    def range(self, axspec):
+        if axspec == self.x():
+            return super().range(axspec)
+        elif axspec == self.y():
+            return super().range(axspec)
+        elif axspec == self.z():
+            if self.y() == Panel.frequencies[1]:
+                return -80, 0, 5
+            else:
+                return -200, 20, 5
+
+
+    def amplitudes(self, t0, t1):
+        amin, amax, astep = self.range(self.y())
+        return amin, amax
+
 
     def setZRange(self, zmin, zmax):
         for item in self.data_items:
