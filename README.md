@@ -126,7 +126,7 @@ part in memory (buffer).
 - `class BufferedEnvelope`: Compute envelope on the fly (`bufferedenvelope.py`).
 - `class BufferedSpectrogram`: Spectrogram of source data on the fly (`bufferedspectrogram.py`).
 
-- `class Data`: Handles all the raw data traces, filtered traces, spectrogram data, etc (`data.py`).
+- `class Data`: Handles all the raw and derived data traces like filtered data, spectrogram data, etc (`data.py`).
 
 - `markerdata.py`: All marker related stuff. TODO: Split it into widgets and marker data.
 
@@ -136,27 +136,31 @@ All the data audian is dealing with are displayed in plots.
 
 A few classes specializing some pyqtgraph features:
 
-- `timeaxisitem.py`: Label time-axis of OscillogramPlot and SpectrumPlot.
-- `yaxisitem.py`: Label y-axis of OscillogramPlot and SpectrumPlot.
-- `selectviewbox.py`: Handles zooming and selection on OscillogramPlot
-  and SpectrumPlot.
+- `timeaxisitem.py`: Label time-axis of TimePlot.
+- `yaxisitem.py`: Label y-axis of TimePlot.
+- `selectviewbox.py`: Handles zooming and selection on all RangePlot.
+
+Managing plots:
+
+- `plotranges.py`: Manage ranges of plot axes.
+- `panels.py`: Manage plot panels.
 
 Basic plots for time-series data:
 
-- `timeplot.py`: Panel for displaying any data as a function of time.
-- `spectrogramplot.py`: PlotItem for interactive display of spectrograms.
+- `rangeplot.py`: Plot displaying any data with specified range type.
+- `timeplot.py`: Plot displaying data as a function of time.
+- `spectrogramplot.py`: Plot displaying spectrograms.
 
 Basic plot items:
 
-- `traceitem.py`: PlotDataItem for OscillogramPlot.
-- `specitem.py`: ImageItem for SpectrumPlot.
+- `traceitem.py`: PlotDataItem for TimePlot.
+- `specitem.py`: ImageItem for SpectrogramPlot.
 - `fulltraceplot.py`: GraphicsLayoutWidget showing the full raw data traces.
 
 #### Controller
 
 - `audiangui.py`: Main GUI, handles DataBrowser widgets and key shortcuts.
 - `databrowser.py`: Each data file is displayed in a DataBrowser widget.
-- `panel.py`: Defines and controlls plot panels.
 
 #### Plugins
 
