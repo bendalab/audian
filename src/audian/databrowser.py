@@ -147,10 +147,6 @@ class DataBrowser(QWidget):
         self.ypos_action = None
         self.zpos_action = None
         self.cross_hair = False
-        self.delta_time = None
-        self.delta_ampl = None
-        self.delta_freq = None
-        self.delta_power = None
         self.marker_data = MarkerData()
         self.marker_model = MarkerDataModel(self.marker_data)
         self.marker_labels = []
@@ -772,12 +768,8 @@ class DataBrowser(QWidget):
                 self.marker_time, self.marker_ampl = \
                     panel.get_amplitude(channel, self.marker_time,
                                         pos.y(), npos.x())
-            """
-            """
             if panel.z():
                 self.plot_ranges[panel.z()].set_marker(channel, ax, XXX)
-            """
-            """
             if self.marker_time is not None:
                 self.marker_power = panel.get_power(channel,
                                                     self.marker_time,
@@ -786,59 +778,43 @@ class DataBrowser(QWidget):
             break
         # set cross-hair positions:
         self.plot_ranges.update_crosshair()
-        """
-        # compute deltas:
-        self.delta_time = None
-        self.delta_ampl = None
-        self.delta_freq = None
-        self.delta_power = None
-        if self.marker_time is not None and \
-           self.prev_channel is not None and self.prev_time is not None:
-                self.delta_time = self.marker_time - self.prev_time
-        if self.marker_ampl is not None and \
-           self.prev_channel is not None and self.prev_ampl is not None:
-                self.delta_ampl = self.marker_ampl - self.prev_ampl
-        if self.marker_freq is not None and \
-           self.prev_channel is not None and self.prev_freq is not None:
-                self.delta_freq = self.marker_freq - self.prev_freq
-        if self.marker_power is not None and \
-           self.prev_channel is not None and self.prev_power is not None:
-                self.delta_power = self.marker_power - self.prev_power
-        """
         
         # report time on toolbar:
         s = ''
-        """
-        if self.delta_time is not None:
-            sign = '-' if self.delta_time < 0 else ''
-            s = f'\u0394t={sign}{secs_to_str(fabs(self.delta_time))}'
-            if fabs(self.delta_time) > 1e-6:
-                s += f': f={1/fabs(self.delta_time):.5g}Hz'
-            self.xpos_action.setText(s)
-        elif self.marker_time is not None:
-        """
+        time, delta_time = self.plot_ranges.marker_delta_time()
+        if delta_time is not None:
+            sign = '-' if delta_time < 0 else ''
+            s = f'\u0394{time}={sign}{secs_to_str(fabs(delta_time))}'
+            if fabs(delta_time) > 1e-6:
+                if 1/fabs(delta_time) > 1000:
+                    s += f' ({0.001/fabs(delta_time):.4g}kHz)'
+                elif 1/fabs(delta_time) < 1:
+                    s += f' ({1000/fabs(delta_time):.4g}mHz)'
+                else:
+                    s += f' ({1/fabs(delta_time):.4g}Hz)'
         time, pos = self.plot_ranges.marker_time()
-        if pos is not None:
+        if not s and pos is not None:
             sign = '-' if pos < 0 else ''
             s = f't={sign}{secs_to_str(fabs(pos))}'
         self.xpos_action.setText(s)
         self.xpos_action.setVisible(len(s) > 0)
         # report amplitude or frequency on toolbar:
         s = ''
-        """
-        if self.delta_ampl is not None:
-            s = f'\u0394a={self.delta_ampl:6.3f}'
+        ampl, delta_ampl = self.plot_ranges.marker_delta_amplitude()
+        freq, delta_freq = self.plot_ranges.marker_delta_frequency()
+        if delta_ampl is not None:
+            s = f'\u0394{ampl}={delta_ampl:6.3f}'
             self.ypos_action.setText(s)
-        elif self.marker_ampl is not None:
-        """
+        elif delta_freq is not None:
+            if abs(delta_freq) > 1000:
+                s = f'\u0394{freq}={delta_freq/1000:.4g}kHz'
+            elif abs(delta_freq) < 1:
+                s = f'\u0394{freq}={delta_freq*1000:.4g}mHz'
+            else:
+                s = f'\u0394{freq}={delta_freq:.4g}Hz'
         ampl, pos = self.plot_ranges.marker_amplitude()
-        if pos is not None:
+        if not s and pos is not None:
             s = f'{ampl}={pos:.5g}'
-        """
-        elif self.delta_freq is not None:
-            s = f'\u0394f={self.delta_freq:4.0f}Hz'
-        elif self.marker_freq is not None:
-        """
         freq, pos = self.plot_ranges.marker_frequency()
         if not s and pos is not None:
             if pos > 1000:
@@ -850,15 +826,12 @@ class DataBrowser(QWidget):
         self.ypos_action.setText(s)
         self.ypos_action.setVisible(len(s) > 0)
         # report power on toolbar:
-        """
-        if self.delta_power is not None:
-            s = f'\u0394p={self.delta_power:6.1f}dB'
-            self.zpos_action.setText(s)
-        elif self.marker_power is not None:
-        """
         s = ''
+        pwr, delta_power = self.plot_ranges.marker_delta_power()
+        if delta_power is not None:
+            s = f'\u0394{pwr}={delta_power:6.1f}dB'
         pwr, pos = self.plot_ranges.marker_power()
-        if pos is not None:
+        if not s and pos is not None:
             s = f'{pwr}={pos:6.1f}dB'
         self.zpos_action.setText(s)
         self.zpos_action.setVisible(len(s) > 0)
@@ -883,14 +856,14 @@ class DataBrowser(QWidget):
                 idx = acts.index(act)
                 self.store_marker(self.marker_labels[idx].label)
         
+        """
         # clear marker:
         if (evt[0].button() & Qt.RightButton) > 0:
-            self.clear_marker()
-        """
+            self.plot_ranges.clear_stored_marker()
             
         # store marker position:
-        if (evt[0].button() & Qt.LeftButton) > 0 and \
-           (evt[0].modifiers() & Qt.ControlModifier) == Qt.ControlModifier:
+        if (evt[0].button() & Qt.LeftButton) > 0: # and \
+           #(evt[0].modifiers() & Qt.ControlModifier) == Qt.ControlModifier:
             self.plot_ranges.store_marker()
 
             

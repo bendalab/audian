@@ -569,6 +569,30 @@ class PlotRanges(dict):
         return self._marker_pos(Panel.powers)
 
             
+    def _marker_delta(self, ranges):
+        for r in ranges:
+            if self[r].marker_pos is not None and \
+               self[r].stored_marker_pos is not None:
+                return r, self[r].marker_pos - self[r].stored_marker_pos
+        return None, None
+
+
+    def marker_delta_time(self):
+        return self._marker_delta(Panel.times)
+
+
+    def marker_delta_amplitude(self):
+        return self._marker_delta(Panel.amplitudes)
+
+
+    def marker_delta_frequency(self):
+        return self._marker_delta(Panel.frequencies)
+
+
+    def marker_delta_power(self):
+        return self._marker_delta(Panel.powers)
+
+            
     def update_crosshair(self):
         for r in self.values():
             r.update_crosshair()
