@@ -94,6 +94,21 @@ class TimePlot(RangePlot):
                 amax = a1
         return amin, amax
 
+    
+    def get_marker_pos(self, x0, x1, y):
+        for item in reversed(self.data_items):
+            if item.isVisible():
+                i0 = int(np.round(x0*item.rate))
+                i1 = int(np.round(x1*item.rate))
+                y0 = np.min(item.data[i0:i1, item.channel])
+                y1 = np.max(item.data[i0:i1, item.channel])
+                yc = (y0 + y1)/2
+                if y >= yc:
+                    return x0, y1, None
+                else:
+                    return x0, y0, None
+        return x0, y, None
+
 
     def enable_starttime(self, enable):
         """ Enable addition of start time to tick labels.

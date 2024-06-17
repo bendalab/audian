@@ -759,10 +759,14 @@ class DataBrowser(QWidget):
             pos = ax.getViewBox().mapSceneToView(pixel_pos)
             pixel_pos.setX(pixel_pos.x() + 1)
             npos = ax.getViewBox().mapSceneToView(pixel_pos)
-            ax.xline.setPos(pos.x())
-            ax.yline.setPos(pos.y())
-            self.plot_ranges[panel.x()].set_marker(channel, ax, pos.x())
-            self.plot_ranges[panel.y()].set_marker(channel, ax, pos.y())
+            x0 = pos.x()
+            x1 = npos.x()
+            y = pos.y()
+            x, y, z = ax.get_marker_pos(x0, x1, y)
+            self.plot_ranges[panel.x()].set_marker(channel, ax, x)
+            self.plot_ranges[panel.y()].set_marker(channel, ax, y)
+            if z is not None:
+                self.plot_ranges[panel.z()].set_marker(channel, ax, z)
             """
             if not self.marker_time is None:
                 self.marker_time, self.marker_ampl = \

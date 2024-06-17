@@ -51,6 +51,13 @@ class PowerPlot(RangePlot):
             return super().range(axspec)
         
 
+    def get_marker_pos(self, x0, x1, y):
+        xdata, ydata = self.power_item.getData()
+        i = np.argmin(np.abs(ydata - y))
+        x = xdata[i]
+        return x, y, None
+
+
 class SpectrogramPlot(TimePlot):
 
     
@@ -131,7 +138,7 @@ class SpectrogramPlot(TimePlot):
             i1 = len(self.spec_data)
         power = np.mean(self.spec_data[i0:i1, self.channel, :], axis=0)
         power = decibel(power)
-        power[power<-200] = -200
+        power[power < -200] = -200
         freqs = np.arange(len(power))*self.spec_data.fresolution
         zeros = np.zeros(len(freqs)) - 200
         self.powerax.power_item.setData(power, freqs)
@@ -160,6 +167,14 @@ class SpectrogramPlot(TimePlot):
             if hasattr(item, 'setLevels'):
                 item.setLevels((zmin, zmax), update=True)
         self.cbar.setLevels((zmin, zmax))
+
+
+    def get_marker_pos(self, x0, x1, y):
+        for item in reversed(self.data_items):
+            if item.isVisible() and isinstance(item, SpecItem):
+                z = item.get_power(x0, y)
+                return x0, y, z
+        return x0, y, None
 
             
     def set_filter_handles(self, highpass_cutoff=None, lowpass_cutoff=None):

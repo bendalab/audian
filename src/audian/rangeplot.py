@@ -82,9 +82,13 @@ class RangePlot(pg.PlotItem):
     def range(self, axspec):
         return None, None, None
 
-    
+   
     def amplitudes(self, t0, t1):
         return None, None
+
+    
+    def get_marker_pos(self, x0, x1, y):
+        return x0, y, None
 
 
     def set_stored_marker(self, x, y):
