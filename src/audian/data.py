@@ -24,6 +24,7 @@ class Data(object):
         self.tbefore = 0
         self.tafter = 0
         self.traces = []
+        self.sources = []
 
 
     def add_trace(self, trace):

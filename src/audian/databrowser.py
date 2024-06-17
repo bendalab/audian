@@ -1049,9 +1049,8 @@ class DataBrowser(QWidget):
             return
         self.setting = True
         trange = self.plot_ranges[Panel.times[0]]
-        trange.set_ranges(toffset, None, twindow,
-                          self.selected_channels, self.isVisible())
-        self.data.update_times(trange.r0[0], trange.r0[1])
+        trange.set_ranges(toffset, None, twindow, None, True)
+        self.data.update_times(trange.r0[0], trange.r1[0])
         self.panels.update_plots()
         self.plot_ranges.set_powers()
         self.setting = False
@@ -1062,7 +1061,7 @@ class DataBrowser(QWidget):
         getattr(self.plot_ranges, timefunc)(Panel.times[0], None,
                                             self.isVisible())
         trange = self.plot_ranges[Panel.times[0]]
-        self.data.update_times(trange.r0[0], trange.r0[1])
+        self.data.update_times(trange.r0[0], trange.r1[0])
         # TODO: set time range here!
         self.panels.update_plots()
         self.plot_ranges.set_powers()
@@ -1450,7 +1449,7 @@ class DataBrowser(QWidget):
         self.adjust_layout(self.width(), self.height())
         self.data.set_need_update()
         trange = self.plot_ranges[Panel.times[0]]
-        self.data.update_times(trange.r0[0], trange.r0[1])
+        self.data.update_times(trange.r0[0], trange.r1[0])
         self.panels.update_plots()
         self.plot_ranges.set_powers()
             

@@ -43,20 +43,22 @@ class BufferedSpectrogram(BufferedData):
         nsource = (len(dest) - 1)*self.hop + self.nfft
         if nsource > len(source):
             nsource = len(source)
-
-        with np.errstate(under='ignore'):
-            freq, time, Sxx = spectrogram(source[:nsource],
-                                          self.source.rate,
-                                          nperseg=self.nfft,
-                                          noverlap=self.nfft - self.hop,
-                                          axis=0)
-        n = Sxx.shape[2]
-        dest[:n] = Sxx.transpose((2, 1, 0))
-        dest[n:] = 0
+        if nsource >= self.nfft:
+            with np.errstate(under='ignore'):
+                freq, time, Sxx = spectrogram(source[:nsource],
+                                              self.source.rate,
+                                              nperseg=self.nfft,
+                                              noverlap=self.nfft - self.hop,
+                                              axis=0)
+            n = Sxx.shape[2]
+            dest[:n] = Sxx.transpose((2, 1, 0))
+            dest[n:] = 0
+        else:
+            dest[:] = 0
         # extent of the full buffer:
         self.spec_rect = [self.offset/self.rate, 0,
                           len(self.buffer)/self.rate,
-                          freq[-1] + self.fresolution]
+                          self.source.rate/2 + self.fresolution]
 
 
     def set_hop(self):
