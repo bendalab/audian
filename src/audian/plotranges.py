@@ -75,6 +75,10 @@ class PlotRange(object):
         return n > 0
 
     
+    def is_time(self):
+        return self.axspec in Panel.times
+        
+    
     def is_amplitude(self):
         return self.axspec in Panel.amplitudes
         
@@ -106,7 +110,7 @@ class PlotRange(object):
             return
         if np.isfinite(self.rmin) and np.isfinite(self.rmax):
             # TODO: min_dr should eventually come from the data!!!
-            if self.axspec in Panel.times:
+            if self.is_time():
                 self.min_dr = 0.001
             else:
                 self.min_dr = (self.rmax - self.rmin)/2**16
@@ -134,7 +138,7 @@ class PlotRange(object):
         # ranges:
         for c in range(len(self.r0)):
             self.r0[c] = self.rmin
-            if self.axspec in Panel.times:
+            if self.is_time():
                 self.r1[c] = 10
             else:
                 self.r1[c] = self.rmax
@@ -149,7 +153,7 @@ class PlotRange(object):
         if not self.is_used():
             return
         # time ranges are all the same over all the channels!
-        if channels is None or self.axspec in Panel.times:
+        if channels is None or self.is_time():
             channels = range(len(self.r0))
         cc = -1
         for c in channels:
@@ -172,12 +176,12 @@ class PlotRange(object):
                 if self.r0[c] < self.rmin:
                     self.r0[c] = self.rmin
                     self.r1[c] = self.rmin + dr
-                if self.r1[c] > self.rmax and self.axspec not in Panel.times:
+                if self.r1[c] > self.rmax and self.is_time():
                     self.r1[c] = self.rmax
                     self.r0[c] = self.rmax - dr
                 if self.r0[c] < self.rmin:
                     self.r0[c] = self.rmin
-                if self.axspec in Panel.times:
+                if self.is_time():
                     cc = c
             if do_set:
                 for ax in self.axxs[c]:
@@ -193,6 +197,8 @@ class PlotRange(object):
             return
         if channels is None:
             channels = range(len(self.r0))
+        if self.is_time():
+            channels = [0]
         for c in channels:
             if self.rmin < 0:
                 h = 0.25*(self.r1[c] - self.r0[c])
@@ -211,6 +217,8 @@ class PlotRange(object):
             return
         if channels is None:
             channels = range(len(self.r0))
+        if self.is_time():
+            channels = [0]
         for c in channels:
             if self.rmin < 0:
                 h = self.r1[c] - self.r0[c]
@@ -226,6 +234,8 @@ class PlotRange(object):
             return
         if channels is None:
             channels = range(len(self.r0))
+        if self.is_time():
+            channels = [0]
         for c in channels:
             if (move_fac > 0 and self.r1[c] < self.rmax) or \
                (move_fac < 0 and self.r0[c] > self.rmin):
@@ -255,6 +265,8 @@ class PlotRange(object):
             return
         if channels is None:
             channels = range(len(self.r0))
+        if self.is_time():
+            channels = [0]
         for c in channels:
             if (step_fac > 0 and self.r1[c] < self.rmax) or \
                (step_fac < 0 and self.r0[c] > self.rmin):
@@ -276,6 +288,8 @@ class PlotRange(object):
             return
         if channels is None:
             channels = range(len(self.r0))
+        if self.is_time():
+            channels = [0]
         for c in channels:
             if self.r0[c] > self.rmin:
                 self.set_ranges(self.r0[c] + step_fac*self.rstep, self.r1[c],
@@ -295,6 +309,8 @@ class PlotRange(object):
             return
         if channels is None:
             channels = range(len(self.r0))
+        if self.is_time():
+            channels = [0]
         for c in channels:
             if self.r1[c] > self.rmin:
                 self.set_ranges(self.r0[c], self.r1[c] + step_fac*self.rstep,
@@ -314,6 +330,8 @@ class PlotRange(object):
             return
         if channels is None:
             channels = range(len(self.r0))
+        if self.is_time():
+            channels = [0]
         for c in channels:
             if self.r0[c] > self.rmin:
                 dr = self.r1[c] - self.r0[c]
@@ -325,6 +343,8 @@ class PlotRange(object):
             return
         if channels is None:
             channels = range(len(self.r0))
+        if self.is_time():
+            channels = [0]
         for c in channels:
             if self.r1[c] < self.rmax:
                 dr = self.r1[c] - self.r0[c]
@@ -347,6 +367,8 @@ class PlotRange(object):
             return
         if channels is None:
             channels = range(len(self.r0))
+        if self.is_time():
+            channels = [0]
         for c in channels:
             dr = self.r1[c] - self.r0[c]
             dr = 10 * 2**round(log(dr/10)/log(2))
@@ -355,7 +377,7 @@ class PlotRange(object):
     
         
     def auto(self, t0, t1, channels=None, do_set=True):
-        if not self.is_used():
+        if not self.is_used() or self.is_time():
             return
         if channels is None:
             channels = range(len(self.r0))
@@ -384,7 +406,7 @@ class PlotRange(object):
 
         
     def center(self, channels=None, do_set=True):
-        if not self.is_used():
+        if not self.is_used() or self.is_time():
             return
         if channels is None:
             channels = range(len(self.r0))
