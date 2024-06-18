@@ -1292,17 +1292,11 @@ Can not open file <b>{browser.file_path}</b>!''')
 
 
 def main(cargs):
-    # config file name:
-    cfgfile = __package__ + '.cfg'
-    
     # command line arguments:
     parser = argparse.ArgumentParser(description='Browse and analyze recordings of animal vocalizations..', epilog=f'version {__version__} by Jan Benda (2015-{__year__})')
     parser.add_argument('--version', action='version', version=__version__)
     parser.add_argument('-v', action='count', dest='verbose',
                         help='Print debug information')
-    parser.add_argument('--config', nargs='?', default='',
-                        const=cfgfile, type=str, metavar='CFGFILE',
-                        help='Save configuration to file cfgfile (defaults to {0})'.format(cfgfile))
     parser.add_argument('-c', dest='channels', default='',
                         type=str, metavar='CHANNELS',
                         help='Comma separated list of channels to be displayed (first channel is 0).')
@@ -1322,7 +1316,7 @@ def main(cargs):
                         metavar='UNWRAP', const=1.5, nargs='?',
                         help='unwrap clipped data with threshold relative to maximum input range and clip using unwrap() from audioio package')
     parser.add_argument('files', nargs='*', default=[], type=str,
-                        help='name of the file with the time series data')
+                        help='name of files with the time series data')
     args, qt_args = parser.parse_known_args(cargs)
 
     cs = [s.strip() for s in args.channels.split(',')]
