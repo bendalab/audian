@@ -140,6 +140,21 @@ class Panel(object):
         return False
 
 
+    def show_grid(self, grids):
+        if self.is_spacer():
+            return False
+        for ax in self.axs:
+            ax.showGrid(x=(grids & 1) > 0, y=(grids & 2) > 0,
+                        alpha=0.8)
+            """
+            # fix grid bug:
+            ax.getAxis('bottom').setGrid(False)
+            ax.getAxis('left').setGrid(False)
+            for axis in ['right', 'top']:
+                ax.showAxis(axis)
+                ax.getAxis(axis).setStyle(showValues=False)
+            """
+
     def is_cbar_visible(self, channel):
         return self.axcs[channel].isVisible()
 
@@ -291,7 +306,12 @@ class Panels(dict):
                 return panel
         return None
 
+    
+    def show_grid(self, grids):
+        for panel in self.values():
+            panel.show_grid(grids)
 
+            
     def update_plots(self):
         for panel in self.values():
             panel.update_plots()

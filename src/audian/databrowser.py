@@ -1489,16 +1489,7 @@ class DataBrowser(QWidget):
         self.grids -= 1
         if self.grids < 0:
             self.grids = 3
-        for c in self.selected_channels:
-            for ax in self.axgs[c]:
-                ax.showGrid(x=(self.grids & 1) > 0, y=(self.grids & 2) > 0,
-                            alpha=0.8)
-                # fix grid bug:
-                ax.getAxis('bottom').setGrid(False)
-                ax.getAxis('left').setGrid(False)
-                for axis in ['right', 'top']:
-                    ax.showAxis(axis)
-                    ax.getAxis(axis).setStyle(showValues=False)
+        self.panels.show_grid(self.grids)
 
 
     def set_zoom_mode(self, mode):
