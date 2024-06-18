@@ -3,13 +3,11 @@ import sys
 import glob
 import importlib
 from .bufferedfilter import BufferedFilter
-from .bufferedenvelope import BufferedEnvelope
 from .bufferedspectrogram import BufferedSpectrogram
 
 
 def default_setup_traces(browser):
     browser.add_trace(BufferedFilter())
-    browser.add_trace(BufferedEnvelope())
     browser.add_trace(BufferedSpectrogram())
 
 
