@@ -1593,7 +1593,8 @@ class DataBrowser(QWidget):
             self.scroll_timer.stop()
             self.scroll_step /= 2
         else:
-            self.set_times(trange.r0[0] + (trange.r1[0] - trange.r0[0])*self.scroll_step)
+            twin = trange.r1[0] - trange.r0[0]
+            self.set_times(trange.r0[0] + twin*self.scroll_step, twin)
 
 
     def set_audio(self, rate_fac=None,
@@ -1653,7 +1654,7 @@ class DataBrowser(QWidget):
 
     def play_window(self):
         trange = self.plot_ranges[Panel.times[0]]
-        self.play_region(trange.r0[0], trange.r0[1])
+        self.play_region(trange.r0[0], trange.r1[0])
 
         
     def mark_audio(self):
@@ -1814,4 +1815,4 @@ class DataBrowser(QWidget):
         
     def save_window(self):
         trange = self.plot_ranges[Panel.times[0]]
-        self.save_region(trange.r0[0], trange.r0[1])
+        self.save_region(trange.r0[0], trange.r1[0])
