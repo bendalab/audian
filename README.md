@@ -3,8 +3,8 @@
 
 # audian - AUDIoANalyzer
 
-Python-based GUI for viewing and analyzing recordings of animal
-vocalizations.
+Python- and [pyqtgraph](https://pyqtgraph.readthedocs.io)-based GUI
+for viewing and analyzing recordings of animal vocalizations.
 
 ![audian](docs/audian-v1.7.png)
 
@@ -20,13 +20,8 @@ vocalizations.
 - Extensive and intuitive key shortcuts for most functions.
 - Plugins for additional computed traces, plot panels, and analysis.
 
-## New pyqtgraph based version
-
-New implementation of `audian` based on
-[pyqtgraph](https://pyqtgraph.readthedocs.io).
-
 ``` sh
-audiangui data.wav
+audian data.wav
 ```
 
 I currently explore various possibilities for interactive analysis of
@@ -169,27 +164,7 @@ Basic plot items:
 - `statisticsanalyzer.py`: Compute basic descriptive statistics.
 
 
-## Old matplotlib-based version
-
-Not further developed. As soon as audiangui is able to show power
-spectra of both raw traces and envelopes, this script will be removed from the repository.
-
-Simply run it from a terminal:
-``` sh
-audian data.wav
-```
-
-or call it from a script (see `runfile.py`):
-
-``` py
-import audian
-
-filepath = 'data.wav'
-high_pass = 500.0
-audian.main(['-f', f'{high_pass}', filepath])
-```
-
-### Installation of audiangui in Anaconda3 on windows
+### Installation of audian in Anaconda3 on windows
 
 Anaconda supports really old versions of PyQt5 and Qt5 only that are
 not compatible with a recent pyqtgraph. No fun.
@@ -207,14 +182,26 @@ Then we use `pip` to install PyQt5:
 ``` sh
 pip install PyQt5
 ```
-Change into a directory where you want to put audioio and audian. First, download audioio and install it:
+
+Change into a directory where you want to put
+[AudioIO](https://github.com/bendalab/audioio),
+[ThunderLab](https://github.com/bendalab/thunderlab), and
+audian. First, download [AudioIO](https://github.com/bendalab/audioio)
+and install it:
 ``` sh
 git clone https://github.com/janscience/audioio.git
 cd audioio
 pip install .
 cd ..
 ```
-And then do the same with audian:
+And then do the same with [ThunderLab](https://github.com/bendalab/thunderlab)
+``` sh
+git clone https://github.com/bendalab/thunderlab.git
+cd thunderlab
+pip install .
+cd ..
+```
+and with audian:
 ``` sh
 git cone https://github.com/bendalab/audian.git
 cd audian
@@ -222,7 +209,7 @@ pip install .
 ```
 This installs many other packages (numpy, scipy, etc.).
 
-Then you should be able to run `audiangui` from the power shell
+Then you should be able to run `audian` from the power shell
 
 For updating audian do
 ``` sh
@@ -230,7 +217,7 @@ cd audian
 git pull origin master
 pip install .
 ```
-Same for audioio.
+Same for audioio and thunderlab.
 
 
 ## Run Audian from Spyder IPython console:

@@ -46,7 +46,6 @@ Repository    = "https://github.com/bendalab/audian"
 
 [project.scripts]
 audian    = "audian.audian:run"
-audiangui = "audian.audiangui:run"
 
 [tool.setuptools.dynamic]
 version = {attr = "audian.version.__version__"}
