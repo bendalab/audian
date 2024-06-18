@@ -1291,7 +1291,7 @@ Can not open file <b>{browser.file_path}</b>!''')
         QApplication.quit()
 
 
-def main(cargs):
+def audian_cli(cargs=[], plugins=None):
     # command line arguments:
     parser = argparse.ArgumentParser(description='Browse and analyze recordings of animal vocalizations..', epilog=f'version {__version__} by Jan Benda (2015-{__year__})')
     parser.add_argument('--version', action='version', version=__version__)
@@ -1343,9 +1343,6 @@ def main(cargs):
             kws = kw.split(':')
             if len(kws) == 2:
                 load_kwargs[kws[0].strip()] = kws[1].strip()
-
-    plugins = Plugins()
-    plugins.load_plugins()
     
     app = QApplication(sys.argv[:1] + qt_args)
     main = Audian(args.files, load_kwargs, plugins, channels,
@@ -1354,6 +1351,12 @@ def main(cargs):
     main.show()
     app.exec_()
 
+
+def main(cargs):
+    plugins = Plugins()
+    plugins.load_plugins()
+    audian_cli(cargs, plugins)
+    
 
 def run():
     main(sys.argv[1:])
