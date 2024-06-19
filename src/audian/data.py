@@ -69,6 +69,14 @@ class Data(object):
         return [trace.name for trace in self.traces]
 
 
+    def get_trace_names(self, class_name):
+        traces = []
+        for trace in self.traces:
+            if isinstance(trace, class_name):
+                traces.append(trace.name)
+        return traces
+
+
     def is_visible(self, name):
         if name in self:
             for pi in self[name].plot_items:

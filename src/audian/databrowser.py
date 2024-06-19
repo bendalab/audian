@@ -24,6 +24,7 @@ from .version import __version__, __year__
 from .data import Data
 from .panels import Panel, Panels
 from .plotranges import PlotRanges
+from .bufferedspectrogram import BufferedSpectrogram
 from .fulltraceplot import FullTracePlot, secs_to_str
 from .timeplot import TimePlot
 from .spectrogramplot import SpectrogramPlot
@@ -85,6 +86,7 @@ class DataBrowser(QWidget):
         self.data = Data(file_path, **load_kwargs)
         self.plot_ranges = PlotRanges()
         self.trace_acts = []
+        self.spec_acts = []
         
         # panels:
         self.panels = Panels()
@@ -109,6 +111,10 @@ class DataBrowser(QWidget):
         self.trace_fracs = {0: 1, 1: 1, 2: 0.5, 3: 0.25, 4: 0.15}
 
         self.region_mode = DataBrowser.ask_region
+
+        specs = self.data.get_trace_names(BufferedSpectrogram)
+        self.spectrogram = specs[0] if len(specs) > 0 else ''
+        self.spectrogram_power = ''
         
         self.grids = 0
         self.show_traces = True
@@ -245,7 +251,15 @@ class DataBrowser(QWidget):
             act.setChecked(True)
             act.toggled.connect(lambda x, name=t.name: self.toggle_trace(x, name))
             self.trace_acts.append(act)
-
+        # add spectrogram selection to menu:
+        self.spec_acts = []
+        for spec in self.data.get_trace_names(BufferedSpectrogram):
+            act = QAction(spec, self)
+            act.setCheckable(True)
+            act.setChecked(False)
+            act.toggled.connect(lambda x, name=spec: self.set_spectrogram(x, name))
+            self.spec_acts.append(act)
+            
         # ranges:
         self.plot_ranges.setup(self.data.channels)
         
@@ -465,6 +479,8 @@ class DataBrowser(QWidget):
         self.toolbar.addAction(self.acts.zoom_forward)
         self.toolbar.addSeparator()
 
+        if self.spectrogram:
+            self.spectrogram_power = self.panels[self.data[self.spectrogram].panel].z()
         if 'spectrogram' in self.data:
             self.toolbar.addWidget(QLabel('N:'))
             self.nfftw = QComboBox(self)
@@ -1096,13 +1112,21 @@ class DataBrowser(QWidget):
         self.setting = False
 
 
+    def set_spectrogram(self, checked, spec):
+        if checked:
+            self.spectrogram = spec
+            if self.spectrogram:
+                self.spectrogram_power = self.panels[self.data[self.spectrogram].panel].z()
+            self.set_resolution()
+
+        
     def set_resolution(self, nfft=None, hop_frac=None, dispatch=True):
         if self.setting:
             return
         self.setting = True
-        if 'spectrogram' not in self.data:
+        if not self.spectrogram and self.spectrogram not in self.data:
             return
-        spectrogram = self.data['spectrogram']
+        spectrogram = self.data[self.spectrogram]
         spectrogram.update(nfft, hop_frac)
         self.panels.update_plots()
         self.plot_ranges.set_powers()
@@ -1135,23 +1159,23 @@ class DataBrowser(QWidget):
 
         
     def freq_resolution_down(self):
-        if 'spectrogram' in self.data:
-            self.set_resolution(nfft=self.data['spectrogram'].nfft//2)
+        if self.spectrogram in self.data:
+            self.set_resolution(nfft=self.data[self.spectrogram].nfft//2)
 
         
     def freq_resolution_up(self):
-        if 'spectrogram' in self.data:
-            self.set_resolution(nfft=2*self.data['spectrogram'].nfft)
+        if self.spectrogram in self.data:
+            self.set_resolution(nfft=2*self.data[self.spectrogram].nfft)
 
 
     def hop_frac_down(self):
-        if 'spectrogram' in self.data:
-            self.set_resolution(hop_frac=self.data['spectrogram'].hop_frac/2)
+        if self.spectrogram in self.data:
+            self.set_resolution(hop_frac=self.data[self.spectrogram].hop_frac/2)
 
 
     def hop_frac_up(self):
-        if 'spectrogram' in self.data:
-            self.set_resolution(hop_frac=2*self.data['spectrogram'].hop_frac)
+        if self.spectrogram in self.data:
+            self.set_resolution(hop_frac=2*self.data[self.spectrogram].hop_frac)
 
         
     def set_color_map(self, color_map=None, dispatch=True):

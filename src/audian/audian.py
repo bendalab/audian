@@ -462,6 +462,8 @@ class Audian(QMainWindow):
 
 
     def apply_ranges(self, amplitudefunc, axspec):
+        if not axspec:
+            return
         self.browser().apply_ranges(amplitudefunc, axspec)
         for s in axspec:
             if self.link_ranges[s]:
@@ -621,6 +623,11 @@ class Audian(QMainWindow):
         
         return freq_menu
 
+
+    def set_spectrogram(self, spec):
+        for b in self.browsers:
+            b.set_spectrogram(False, spec)
+
         
     def dispatch_resolution(self):
         if self.link_ranges[Panel.frequencies[0]]:
@@ -636,6 +643,15 @@ class Audian(QMainWindow):
         for b in self.browsers:
             if not b is self.browser():
                 b.set_color_map(cm, False)
+
+        
+    def toggle_link_power(self):
+        for s in Panel.powers:
+            self.link_ranges[s] = not self.link_ranges[s]
+
+
+    def apply_power_ranges(self, amplitudefunc):
+        self.apply_ranges(amplitudefunc, self.browser().spectrogram_power)
 
         
     def toggle_link_filter(self):
@@ -674,6 +690,36 @@ class Audian(QMainWindow):
         self.acts.color_map_cycler.setShortcut('Shift+C')
         self.acts.color_map_cycler.triggered.connect(lambda x: self.browser().color_map_cycler())
 
+        self.acts.link_power = QAction('Link &power', self)
+        self.acts.link_power.setShortcut('Alt+P')
+        self.acts.link_power.setCheckable(True)
+        self.acts.link_power.setChecked(self.link_ranges[Panel.powers[0]])
+        self.acts.link_power.toggled.connect(self.toggle_link_power)
+        
+        self.acts.power_up = QAction('Power &up', self)
+        self.acts.power_up.setShortcut('Shift+D')
+        self.acts.power_up.triggered.connect(lambda x: self.apply_power_ranges('step_up'))
+
+        self.acts.power_down = QAction('Power &down', self)
+        self.acts.power_down.setShortcut('D')
+        self.acts.power_down.triggered.connect(lambda x: self.apply_power_ranges('step_down'))
+
+        self.acts.max_power_up = QAction('Max up', self)
+        self.acts.max_power_up.setShortcut('Shift+K')
+        self.acts.max_power_up.triggered.connect(lambda x: self.apply_power_ranges('max_up'))
+
+        self.acts.max_power_down = QAction('Max down', self)
+        self.acts.max_power_down.setShortcut('K')
+        self.acts.max_power_down.triggered.connect(lambda x: self.apply_power_ranges('max_down'))
+
+        self.acts.min_power_up = QAction('Min up', self)
+        self.acts.min_power_up.setShortcut('Shift+J')
+        self.acts.min_power_up.triggered.connect(lambda x: self.apply_power_ranges('min_up'))
+
+        self.acts.min_power_down = QAction('Min down', self)
+        self.acts.min_power_down.setShortcut('J')
+        self.acts.min_power_down.triggered.connect(lambda x: self.apply_power_ranges('min_down'))
+
         self.acts.link_filter = QAction('Link &filter', self)
         #self.acts.link_filter.setShortcut('Alt+F')
         self.acts.link_filter.setCheckable(True)
@@ -697,11 +743,22 @@ class Audian(QMainWindow):
         self.acts.lowpass_down.triggered.connect(lambda x: self.browser().lpfw.stepDown())
         
         spec_menu = menu.addMenu('&Spectrogram')
+        self.spectrogram_group = QActionGroup(self)
+        self.spectrogram_menu = spec_menu.addMenu('&Active')
+        self.data_menus.append(self.spectrogram_menu)
         spec_menu.addAction(self.acts.frequency_resolution_up)
         spec_menu.addAction(self.acts.frequency_resolution_down)
         spec_menu.addAction(self.acts.overlap_up)
         spec_menu.addAction(self.acts.overlap_down)
         spec_menu.addAction(self.acts.color_map_cycler)
+        spec_menu.addSeparator()
+        spec_menu.addAction(self.acts.link_power)
+        spec_menu.addAction(self.acts.power_up)
+        spec_menu.addAction(self.acts.power_down)
+        spec_menu.addAction(self.acts.max_power_up)
+        spec_menu.addAction(self.acts.max_power_down)
+        spec_menu.addAction(self.acts.min_power_up)
+        spec_menu.addAction(self.acts.min_power_down)
         spec_menu.addSeparator()
         spec_menu.addAction(self.acts.link_filter)
         spec_menu.addAction(self.acts.highpass_up)
@@ -712,56 +769,6 @@ class Audian(QMainWindow):
         self.data_menus.append(spec_menu)
         
         return spec_menu
-
-        
-    def toggle_link_power(self):
-        for s in Panel.powers:
-            self.link_ranges[s] = not self.link_ranges[s]
-
-
-    def setup_power_actions(self, menu):
-        self.acts.link_power = QAction('Link &power', self)
-        self.acts.link_power.setShortcut('Alt+P')
-        self.acts.link_power.setCheckable(True)
-        self.acts.link_power.setChecked(self.link_ranges[Panel.powers[0]])
-        self.acts.link_power.toggled.connect(self.toggle_link_power)
-        
-        self.acts.power_up = QAction('Power &up', self)
-        self.acts.power_up.setShortcut('Shift+D')
-        self.acts.power_up.triggered.connect(lambda x: self.apply_ranges('step_up', Panel.powers[0]))
-
-        self.acts.power_down = QAction('Power &down', self)
-        self.acts.power_down.setShortcut('D')
-        self.acts.power_down.triggered.connect(lambda x: self.apply_ranges('step_down', Panel.powers[0]))
-
-        self.acts.max_power_up = QAction('Max up', self)
-        self.acts.max_power_up.setShortcut('Shift+K')
-        self.acts.max_power_up.triggered.connect(lambda x: self.apply_ranges('max_up', Panel.powers[0]))
-
-        self.acts.max_power_down = QAction('Max down', self)
-        self.acts.max_power_down.setShortcut('K')
-        self.acts.max_power_down.triggered.connect(lambda x: self.apply_ranges('max_down', Panel.powers[0]))
-
-        self.acts.min_power_up = QAction('Min up', self)
-        self.acts.min_power_up.setShortcut('Shift+J')
-        self.acts.min_power_up.triggered.connect(lambda x: self.apply_ranges('min_up', Panel.powers[0]))
-
-        self.acts.min_power_down = QAction('Min down', self)
-        self.acts.min_power_down.setShortcut('J')
-        self.acts.min_power_down.triggered.connect(lambda x: self.apply_ranges('min_down', Panel.powers[0]))
-        
-        power_menu = menu.addMenu('&Power')
-        power_menu.addAction(self.acts.link_power)
-        power_menu.addAction(self.acts.power_up)
-        power_menu.addAction(self.acts.power_down)
-        power_menu.addAction(self.acts.max_power_up)
-        power_menu.addAction(self.acts.max_power_down)
-        power_menu.addAction(self.acts.min_power_up)
-        power_menu.addAction(self.acts.min_power_down)
-
-        self.data_menus.append(power_menu)
-        
-        return power_menu
 
         
     def toggle_link_envelope(self):
@@ -1109,7 +1116,6 @@ class Audian(QMainWindow):
         self.setup_time_actions(view_menu)
         self.setup_amplitude_actions(view_menu)
         self.setup_frequency_actions(view_menu)
-        self.setup_power_actions(view_menu)
         self.setup_envelope_actions(view_menu)
         self.setup_channel_actions(view_menu)
         self.setup_panel_actions(view_menu)
@@ -1149,6 +1155,15 @@ class Audian(QMainWindow):
             self.traces_menu.clear()
             for act in browser.trace_acts:
                 self.traces_menu.addAction(act)
+            for act in self.spectrogram_group.actions():
+                self.spectrogram_group.removeAction(act)
+            self.spectrogram_menu.clear()
+            for act in browser.spec_acts:
+                self.spectrogram_menu.addAction(act)
+                self.spectrogram_group.addAction(act)
+            if len(browser.spec_acts) > 0:
+                browser.spec_acts[0].setChecked(True)
+            self.spectrogram_menu.menuAction().setVisible(len(browser.spec_acts) > 1)
             browser.update()
 
         

@@ -291,7 +291,8 @@ class PlotRange(object):
         if self.is_time():
             channels = [0]
         for c in channels:
-            if self.r0[c] > self.rmin:
+            if (step_fac > 0 and self.r0[c] < self.r1[c]) or \
+               (step_fac < 0 and self.r0[c] > self.rmin):
                 self.set_ranges(self.r0[c] + step_fac*self.rstep, self.r1[c],
                                 None, [c], do_set)
                 
@@ -312,7 +313,8 @@ class PlotRange(object):
         if self.is_time():
             channels = [0]
         for c in channels:
-            if self.r1[c] > self.rmin:
+            if (step_fac > 0 and self.r1[c] < self.rmax) or \
+               (step_fac < 0 and self.r1[c] > self.r0[c]):
                 self.set_ranges(self.r0[c], self.r1[c] + step_fac*self.rstep,
                                 None, [c], do_set)
                 
