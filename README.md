@@ -50,8 +50,9 @@ handles all GUI aspects.
     - [x] Logarithmic and high-pass filtered envelope
     - [ ] Envelope from visible frequency range of spectrogram
     - [ ] Feature expansion (kernel filter)
-  - [ ] Add events and marker ranges to the Data class
-    - [ ] Load events from csv files provide along with the raw data.
+- [ ] Improve zoom stack behavior!!!
+- [ ] Add events and marker ranges to the Data class
+  - [ ] Load events from csv files provide along with the raw data.
   - [ ] Provide interface for event detectors
   - [ ] Provide interface for event filters?
 - [ ] Implement a proper layout for showing the plot panels:
@@ -61,15 +62,18 @@ handles all GUI aspects.
   - [x] Add yt plot with independent y-axis key shortcut
   - [ ] Update cross-hair code to the new plot_ranges
   - [ ] Support optional grid layout
-- [ ] New plot widget showing power spectrum of visible range
-  or slice at current cursor position. Cycle with Ctrl+P through no power plot, color bar, power spectrum to the right, power spectrum on top.
+- [x] New plot widget showing power spectrum of visible range.
+- [ ] Support horizontal power spectrum
+- [ ] Cycle with Ctrl+P through no power plot, power spectrum to the right, power spectrum on top.
 - [ ] FullTracePlot:
-  - [ ] fix offset problem.
+  - [ ] fix offset problem? Does it still exist?
   - [ ] indicate time under mouse cursor.
 - [x] Add a toolbar widget for spectrum overlap
 - [x] SpinBox for envelope cutoff frequency needs to show digits
   after decimal point.
 - [ ] Interactive high- and low-pass filtering:
+  - [ ] make the lines and the corrseponding toolbar widget a general property of the spectrogram plot
+  - [ ] allow for flexible connetctions of these features to some bufferedata update function.
   - [ ] high- and low-pass filter lines must not cross! Update limits.
   - [ ] add a toolbar widget for setting filter order.
 - [ ] Implement downsampling of spectrograms! Or make it even dependent on window size.

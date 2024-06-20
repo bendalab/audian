@@ -1545,7 +1545,8 @@ class DataBrowser(QWidget):
 
 
     def region_menu(self, channel, vbox, rect):
-        if self.region_mode == DataBrowser.zoom_region:
+        panel = self.panels.get_panel(vbox)
+        if self.region_mode == DataBrowser.zoom_region or not panel.is_time():
             vbox.zoom_region(rect)
         elif self.region_mode == DataBrowser.play_region:
             self.play_region(rect.left(), rect.right())
