@@ -630,12 +630,16 @@ class Audian(QMainWindow):
 
         
     def dispatch_resolution(self):
+        pass
+        """
+        TODO: should set nfft and hop for all spectrograms!!!
         if self.link_ranges[Panel.frequencies[0]]:
             for b in self.browsers:
                 if not b is self.browser():
                     b.set_resolution(self.browser().data.nfft,
                                      self.browser().data.hop_frac,
                                      False)
+        """
 
         
     def dispatch_colormap(self):
