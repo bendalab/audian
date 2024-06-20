@@ -216,9 +216,9 @@ class DataBrowser(QWidget):
         self.analyzers = []
 
 
-    def add_to_panel(self, trace_name, channel, plot_item):
+    def add_to_panel_trace(self, trace_name, channel, plot_item):
         panel_name = self.data[trace_name].panel
-        self.panels[panel_name].add_item(channel, plot_item, False)
+        self.panels[panel_name].add_item(plot_item, channel, False)
 
 
     def toggle_trace(self, checked, name):
@@ -614,10 +614,10 @@ class DataBrowser(QWidget):
                                                  movable=False,
                                                  span=(0.02, 0.05))
                     region.setZValue(-10)
-                    self.panels['trace'].add_item(c, region, False)
+                    self.panels['trace'].add_item(region, c, False)
                     #text = pg.TextItem(ds, color='green', anchor=(0, 0))
                     #text.setPos(t0, 0)
-                    #self.panels['trace'].add_item(c, text, False)
+                    #self.panels['trace'].add_item(text, c, False)
                     self.trace_region_labels[c].append(region)
                 else:
                     tl[lidx].addPoints((t1,), (self.data.data[idx1, c],), data=(ds,), tip=marker_tip)

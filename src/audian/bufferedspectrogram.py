@@ -20,6 +20,7 @@ class BufferedSpectrogram(BufferedData):
         self.hop_frac = hop_frac
         self.hop = 0
         self.set_hop()
+        self.frequencies = np.zeros(0)
         self.fresolution = 1
         self.tresolution = 1
         self.spec_rect = []
@@ -30,6 +31,8 @@ class BufferedSpectrogram(BufferedData):
     def open(self, source):
         self.hop = int(self.nfft*self.hop_frac)
         self.fresolution = source.rate/self.nfft
+        self.frequencies = np.arange(0, source.rate/2 + self.fresolution/2,
+                                     self.fresolution)
         self.tresolution = self.hop/source.rate
         self.spec_rect = []
         self.use_spec = True
@@ -53,6 +56,7 @@ class BufferedSpectrogram(BufferedData):
             n = Sxx.shape[2]
             dest[:n] = Sxx.transpose((2, 1, 0))
             dest[n:] = 0
+            self.frequencies = freq
         else:
             dest[:] = 0
         # extent of the full buffer:

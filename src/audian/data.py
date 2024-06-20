@@ -6,6 +6,7 @@ and the time window shown.
 import numpy as np
 from audioio import get_datetime
 from thunderlab.dataloader import DataLoader
+from .bufferedspectrogram import BufferedSpectrogram
 
 
 class Data(object):
@@ -105,7 +106,13 @@ class Data(object):
             i1 = int(t1*t.rate) + 1
             if i1 > len(t):
                 i1 = len(t)
-            traces[t.name] = (np.arange(i0, i1)/t.rate, t[i0:i1, channel])
+            time = np.arange(i0, i1)/t.rate
+            data = t[i0:i1, channel]
+            if isinstance(t, BufferedSpectrogram):
+                freqs = t.frequencies
+                traces[t.name] = (time, freqs, data)
+            else:
+                traces[t.name] = (time, data)
         return traces
     
         

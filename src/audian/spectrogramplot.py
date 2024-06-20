@@ -111,7 +111,7 @@ class SpectrogramPlot(TimePlot):
         self.sigUpdateFilter.connect(browser.update_filter)
             
 
-    def add_item(self, item, is_data):
+    def add_item(self, item, is_data=False):
         super().add_item(item, is_data)
         if is_data and isinstance(item, SpecItem):
             self.spec_data = item.data

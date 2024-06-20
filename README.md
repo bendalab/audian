@@ -58,6 +58,7 @@ handles all GUI aspects.
 - [ ] Implement a proper layout for showing the plot panels:
   - [x] Support additional plots from plugins
   - [ ] Proper y-labels for xt plots: channel not for single trace plot, otherwise plot name with unit.
+  - [ ] add units to amplitude axes
   - [x] Amplitude ranges should consider ampl_min/ampl_max of all traces
   - [x] Add yt plot with independent y-axis key shortcut
   - [ ] Update cross-hair code to the new plot_ranges

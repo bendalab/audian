@@ -173,8 +173,12 @@ class Panel(object):
             ax.setColorMap(color_map)
 
             
-    def add_item(self, channel, plot_item, is_data):
-        self.axs[channel].add_item(plot_item, is_data)
+    def add_item(self, plot_item, channel=-1, is_data=False):
+        if channel >= 0:
+            self.axs[channel].add_item(plot_item, is_data)
+        else:
+            for ax in self.axs:
+                ax.add_item(plot_item, is_data)
 
 
     def add_traces(self, channel, data): 
@@ -185,7 +189,7 @@ class Panel(object):
                 item = TraceItem(trace, channel)
             if self.is_spectrogram():
                 item = SpecItem(trace, channel)
-            self.add_item(channel, item, True)
+            self.add_item(item, channel, True)
 
 
     def get_amplitude(self, channel, t, x, t1=None):
