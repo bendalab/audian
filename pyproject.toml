@@ -15,7 +15,7 @@ dependencies = [
   "pyqtgraph",
   "thunderlab"
 ]
-requires-python = ">=3.4"
+requires-python = ">=3.6"
 authors = [
   {name = "Jan Benda", email = "jan.benda@uni-tuebingen.de"},
 ]
