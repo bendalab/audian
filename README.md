@@ -13,7 +13,7 @@ for viewing and analyzing recordings of animal vocalizations.
 - Interactive viewer for single and multi-channel audio signals.
 - Can handle many file formats and long recordings - holds only part of the recordings in memory.
 - Displays raw traces, filtered traces, envelopes, and spectrogram.
-- Change spectrogramm resolution, overlap, color bar range and color map interactively.
+- Change spectrogram resolution, overlap, color bar range and color map interactively.
 - Change low- and high-pass filter cutoff frequencies interactively.
 - Optional envelope with lowpass-filter cutoff frequency that can be changed interactively.
 - Hide and show channels as well as plot panels.
@@ -169,9 +169,9 @@ Basic plot items:
 - `statisticsanalyzer.py`: Compute basic descriptive statistics.
 
 
-## Run Audian from Spyder IPython console:
+## Run audian from Spyder IPython console:
 
-Call the audian script via a shell excape:
+Call the audian script via a shell escape:
 ``` py
 ! audian
 ```
