@@ -169,74 +169,17 @@ Basic plot items:
 - `statisticsanalyzer.py`: Compute basic descriptive statistics.
 
 
-### Installation of audian in Anaconda3 on windows
-
-Anaconda supports really old versions of PyQt5 and Qt5 only that are
-not compatible with a recent pyqtgraph. No fun.
-
-A workaround is to first create a new conda environment. For this open
-the windows powershell from the Anaconda navigator. Type in and execute
-``` sh
-conda create -n Qt python=3.9
-```
-Then activate the new `Qt` environment:
-``` sh
-conda activate Qt
-```
-Then we use `pip` to install PyQt5:
-``` sh
-pip install PyQt5
-```
-
-Change into a directory where you want to put
-[AudioIO](https://github.com/bendalab/audioio),
-[ThunderLab](https://github.com/bendalab/thunderlab), and
-audian. First, download [AudioIO](https://github.com/bendalab/audioio)
-and install it:
-``` sh
-git clone https://github.com/janscience/audioio.git
-cd audioio
-pip install .
-cd ..
-```
-And then do the same with [ThunderLab](https://github.com/bendalab/thunderlab)
-``` sh
-git clone https://github.com/bendalab/thunderlab.git
-cd thunderlab
-pip install .
-cd ..
-```
-and with audian:
-``` sh
-git clone https://github.com/bendalab/audian.git
-cd audian
-pip install .
-```
-This installs many other packages (numpy, scipy, etc.).
-
-Then you should be able to run `audian` from the power shell
-
-For updating audian do
-``` sh
-cd audian
-git pull origin master
-pip install .
-```
-Same for audioio and thunderlab.
-
-
 ## Run Audian from Spyder IPython console:
 
-In the IPython console do:
+Call the audian script via a shell excape:
 ``` py
-%set_env MPLBACKEND=
-! audian -f 1000 -l 15000 data.wav
+! audian
 ```
 
 ## Installation
 
 Simply run (as superuser):
-```
+```sh
 pip install audian
 ```
 
@@ -244,30 +187,38 @@ This should also install:
 - [ThunderLab](https://github.com/bendalab/thunderlab)
 - [AudioIO](https://github.com/bendalab/audioio)
 
+From the (spyder) IPython console, you can install it via
+```sh
+%pip install audian
+```
 
 ## Options
 
 Output of `audian --help`:
 
 ``` txt
-usage: audian [-h] [--version] [-v] [-c [cfgfile]] [-f FREQ] [-l FREQ] [file] [channel]
+usage: audian [-h] [--version] [-v] [-c CHANNELS] [-f FREQ] [-l FREQ] [-i KWARGS] [-u [UNWRAP]] [-U [UNWRAP]]
+              [files ...]
 
-Display waveform, spectrogram, power spectrum, envelope, and envelope spectrum of time series data.
+Browse and analyze recordings of animal vocalizations..
 
 positional arguments:
-  file                  name of the file with the time series data
-  channel               channel to be displayed
+  files        name of files with the time series data
 
-optional arguments:
-  -h, --help            show this help message and exit
-  --version             show program's version number and exit
-  -v                    print debug information
-  -c [cfgfile], --save-config [cfgfile]
-                        save configuration to file cfgfile (defaults to /usr/local/bin/audian.cfg)
-  -f FREQ               cutoff frequency of highpass filter in Hz
-  -l FREQ               cutoff frequency of lowpass filter in Hz
+options:
+  -h, --help   show this help message and exit
+  --version    show program's version number and exit
+  -v           Print debug information
+  -c CHANNELS  Comma separated list of channels to be displayed (first channel is 0).
+  -f FREQ      Cutoff frequency of highpass filter in Hz
+  -l FREQ      Cutoff frequency of lowpass filter in Hz
+  -i KWARGS    key-word arguments for the data loader function
+  -u [UNWRAP]  unwrap clipped data with threshold relative to maximum input range and divide by two using unwrap()
+               from audioio package
+  -U [UNWRAP]  unwrap clipped data with threshold relative to maximum input range and clip using unwrap() from audioio
+               package
 
-version 1.0 by Jan Benda (2015-2022)
+version 2.0 by Jan Benda (2015-2024)
 ```
 
 ## Other scientific software for working on timeseries data
