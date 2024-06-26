@@ -1,6 +1,7 @@
 """Base class for computed data.
 """
 
+from math import floor, ceil
 import numpy as np
 from audioio import BufferedArray
 
@@ -71,17 +72,17 @@ class BufferedData(BufferedArray):
 
         
     def align_buffer(self):
-        offset = self.source.offset
-        nframes = len(self.source.buffer)
-        if offset > 0:
-            n = int(self.source_tbefore*self.source.rate)
-            offset += n
-            nframes -= n
+        soffset = self.source.offset
+        snframes = len(self.source.buffer)
+        if soffset > 0:
+            n = floor(self.source_tbefore*self.source.rate)
+            soffset += n
+            snframes -= n
         if self.source.offset + len(self.source.buffer) < self.source.frames:
-            n = int(self.source_tafter*self.source.rate)
-            nframes -= n
-        offset = int(np.ceil(offset*self.rate/self.source.rate))
-        nframes = int(np.floor(nframes*self.rate/self.source.rate))
+            n = floor(self.source_tafter*self.source.rate)
+            snframes -= n
+        offset = ceil(soffset*self.rate/self.source.rate)
+        nframes = floor((soffset + snframes)*self.rate/self.source.rate) - offset
         self.move_buffer(offset, nframes)
         self.bufferframes = len(self.buffer)
 
@@ -89,14 +90,16 @@ class BufferedData(BufferedArray):
     def load_buffer(self, offset, nframes, buffer):
         print(f'load {self.name} {offset/self.rate:.3f} - {(offset + nframes)/self.rate:.3f}')
         # transform to rate of source buffer:
-        soffset = int(offset*self.source.rate/self.rate)
-        snframes = int(nframes*self.source.rate/self.rate)
-        nbefore = int(self.source_tbefore/self.source.rate)
+        soffset = floor(offset*self.source.rate/self.rate)
+        snframes = ceil((offset + nframes)*self.source.rate/self.rate) - soffset
+        nbefore = floor(self.source_tbefore/self.source.rate)
         soffset -= nbefore
         snframes += nbefore
+        nafter = ceil(self.source_tafter/self.source.rate)
+        snframes += nafter
         soffset -= self.source.offset
         if soffset < 0:
-            snbefore += soffset
+            nbefore += soffset
             snframes += soffset
             soffset = 0
         if soffset + snframes > len(self.source.buffer):

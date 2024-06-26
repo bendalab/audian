@@ -1338,6 +1338,7 @@ def audian_cli(cargs=[], plugins=None):
                         help='name of files with the time series data')
     args, qt_args = parser.parse_known_args(cargs)
 
+    # selected channels:
     cs = [s.strip() for s in args.channels.split(',')]
     channels = []
     for c in cs:
@@ -1349,6 +1350,7 @@ def audian_cli(cargs=[], plugins=None):
         else:
             channels.append(int(c))
 
+    # unwrap:
     if args.unwrap_clip > 1e-3:
         args.unwrap = args.unwrap_clip
         args.unwrap_clip = True
@@ -1362,9 +1364,17 @@ def audian_cli(cargs=[], plugins=None):
             kws = kw.split(':')
             if len(kws) == 2:
                 load_kwargs[kws[0].strip()] = kws[1].strip()
+
+    # expand wildcard patterns:
+    files = []
+    if os.name == 'nt':
+        for fn in args.files:
+            files.extend(sorted(glob.glob(fn)))
+    else:
+        files = args.files
     
     app = QApplication(sys.argv[:1] + qt_args)
-    main = Audian(args.files, load_kwargs, plugins, channels,
+    main = Audian(files, load_kwargs, plugins, channels,
                   args.highpass_cutoff, args.lowpass_cutoff,
                   args.unwrap, args.unwrap_clip)
     main.show()

@@ -208,7 +208,7 @@ cd ..
 ```
 and with audian:
 ``` sh
-git cone https://github.com/bendalab/audian.git
+git clone https://github.com/bendalab/audian.git
 cd audian
 pip install .
 ```
