@@ -388,12 +388,20 @@ class Audian(QMainWindow):
         self.acts.toggle_start_time.toggled.connect(self.set_enable_starttime)
 
         self.acts.time_zoom_in = QAction('Zoom &in', self)
-        self.acts.time_zoom_in.setShortcuts([QKeySequence.ZoomIn, '+', '=', 'Shift+T'])
+        self.acts.time_zoom_in.setShortcuts([QKeySequence.ZoomIn, '+', '='])
         self.acts.time_zoom_in.triggered.connect(lambda x: self.apply_time_ranges('zoom_in', self.link_timezoom))
         
         self.acts.time_zoom_out = QAction('Zoom &out', self)
-        self.acts.time_zoom_out.setShortcuts([QKeySequence.ZoomOut, '-', 'T'])
+        self.acts.time_zoom_out.setShortcuts([QKeySequence.ZoomOut, '-'])
         self.acts.time_zoom_out.triggered.connect(lambda x: self.apply_time_ranges('zoom_out', self.link_timezoom))
+
+        self.acts.time_zoom_in_centered = QAction('Zoom in centered', self)
+        self.acts.time_zoom_in_centered.setShortcuts(['Shift+T'])
+        self.acts.time_zoom_in_centered.triggered.connect(lambda x: self.apply_time_ranges('zoom_in_centered', self.link_timezoom))
+        
+        self.acts.time_zoom_out_centered = QAction('Zoom out centered', self)
+        self.acts.time_zoom_out_centered.setShortcuts(['T'])
+        self.acts.time_zoom_out_centered.triggered.connect(lambda x: self.apply_time_ranges('zoom_out_centered', self.link_timezoom))
         
         self.acts.link_time_scroll = QAction('Link &time scroll', self)
         self.acts.link_time_scroll.setShortcut('Alt+T')
@@ -446,6 +454,8 @@ class Audian(QMainWindow):
         time_menu.addAction(self.acts.toggle_start_time)
         time_menu.addAction(self.acts.time_zoom_in)
         time_menu.addAction(self.acts.time_zoom_out)
+        time_menu.addAction(self.acts.time_zoom_in_centered)
+        time_menu.addAction(self.acts.time_zoom_out_centered)
         time_menu.addAction(self.acts.link_time_scroll)
         time_menu.addAction(self.acts.time_down)
         time_menu.addAction(self.acts.time_up)

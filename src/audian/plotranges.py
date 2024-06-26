@@ -176,7 +176,7 @@ class PlotRange(object):
                 if self.r0[c] < self.rmin:
                     self.r0[c] = self.rmin
                     self.r1[c] = self.rmin + dr
-                if self.r1[c] > self.rmax and self.is_time():
+                if self.r1[c] > self.rmax and not self.is_time():
                     self.r1[c] = self.rmax
                     self.r0[c] = self.rmax - dr
                 if self.r0[c] < self.rmin:
@@ -227,6 +227,33 @@ class PlotRange(object):
             else:
                 dr = 2*(self.r1[c] - self.r0[c])
                 self.set_ranges(self.r0[c], None, dr, [c], do_set)
+
+                    
+    def zoom_in_centered(self, channels=None, do_set=True):
+        if not self.is_used():
+            return
+        if channels is None:
+            channels = range(len(self.r0))
+        if self.is_time():
+            channels = [0]
+        for c in channels:
+            h = 0.25*(self.r1[c] - self.r0[c])
+            m = 0.5*(self.r1[c] + self.r0[c])
+            if h > self.min_dr:
+                self.set_ranges(m - h, m + h, None, [c], do_set)
+                
+        
+    def zoom_out_centered(self, channels=None, do_set=True):
+        if not self.is_used():
+            return
+        if channels is None:
+            channels = range(len(self.r0))
+        if self.is_time():
+            channels = [0]
+        for c in channels:
+            h = self.r1[c] - self.r0[c]
+            m = 0.5*(self.r1[c] + self.r0[c])
+            self.set_ranges(m - h, m + h, None, [c], do_set)
 
                 
     def move(self, move_fac, channels=None, do_set=True):
@@ -493,7 +520,9 @@ class PlotRanges(dict):
     
     def __init__(self):
         super().__init__()
-        for m in ['zoom_in', 'zoom_out', 'down', 'up', 'small_down', 'small_up',
+        for m in ['zoom_in', 'zoom_out',
+                  'zoom_in_centered', 'zoom_out_centered',
+                  'down', 'up', 'small_down', 'small_up',
                   'step_down', 'step_up', 'min_down', 'min_up',
                   'max_down', 'max_up', 'home', 'end', 'snap',
                   'auto', 'reset', 'center']:
