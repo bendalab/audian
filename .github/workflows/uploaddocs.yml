@@ -1,0 +1,69 @@
+name: tests
+on: [push]
+
+jobs:
+  build-doc:
+    if: github.repository == 'bendalab/audian'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout audian
+        uses: actions/checkout@v4
+        
+      - name: Setup python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov
+          pip install build
+          pip install pdoc3
+          pip install mkdocs
+          pip install genbadge[coverage]
+          pip install -r requirements.txt
+
+      - name: Build
+        run: python -m build
+        shell: bash
+
+      - name: Install
+        run: pip install .
+        shell: bash
+
+      - name: Build documentation
+        run: ./build-docs.sh
+        shell: bash
+        
+      - name: Commit generated files
+        run: |
+          cd site
+          git config --global init.defaultBranch main
+          git init
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          git commit -m 'deploy'
+          
+      - name: Push to github pages
+        uses: ad-m/github-push-action@master
+        # https://github.com/ad-m/github-push-action
+        with:
+          github_token: ${{ secrets.AUDIAN_DOCU }}
+          branch: gh-pages
+          force: true
+          directory: site
+          
+        # Personal Access Token (PAT):
+        # - Generate it on your user's
+        #   Settings->Developer settings->personal access tokens
+        #   Set 90 days or 1 year, click repo.
+        # - Make it known on the repositories (it is the bendalab repository)
+        #   Settings->Secrets and variables->Actions->Repository secrets
+        #   under the name AUDIAN_DOCU.
+        
+        # NOTE:
+        # the github.io/project page is the gh-pages branch of that project,
+        # NOT the gh-pages branch of the bendalab.github.io repository!!!
