@@ -1,0 +1,13 @@
+site_name: audian
+
+repo_url: https://github.com/bendalab/audian/
+
+edit_uri: ""
+
+site_author: Benda-Lab
+
+theme: readthedocs
+    
+nav:
+    - Home: 'index.md'
+    - API reference: 'api/index.html'
