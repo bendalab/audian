@@ -1,0 +1,940 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.1">
+<title>audian.markerdata API documentation</title>
+<meta name="description" content="">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script type="text/x-mathjax-config">MathJax.Hub.Config({ tex2jax: { inlineMath: [ ['$','$'], ["\\(","\\)"] ], processEscapes: true } });</script>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML" integrity="sha256-kZafAc6mZvK3W3v1pHOcUix30OHQN6pU/NO2oFkqZVw=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+})</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>audian.markerdata</code></h1>
+</header>
+<section id="section-intro">
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="audian.markerdata.ColorIconEngine"><code class="flex name class">
+<span>class <span class="ident">ColorIconEngine</span></span>
+<span>(</span><span>color)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>QIconEngine()
+QIconEngine(other: QIconEngine)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ColorIconEngine(QIconEngine):
+
+    def __init__(self, color):
+        super().__init__()
+        self.color = colors[color]
+
+
+    def paint(self, painter, rect, mode=QIcon.Normal, state=QIcon.Off):
+        painter.setBrush(QColor(&#39;black&#39;))
+        painter.setPen(Qt.NoPen)
+        painter.drawRect(rect)
+        painter.setBrush(QColor(self.color))
+        painter.setPen(Qt.NoPen)
+        d = rect.width()//5
+        painter.drawEllipse(rect.adjusted(d, d, -d, -d))</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>PyQt5.QtGui.QIconEngine</li>
+<li>sip.wrapper</li>
+<li>sip.simplewrapper</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="audian.markerdata.ColorIconEngine.paint"><code class="name flex">
+<span>def <span class="ident">paint</span></span>(<span>self, painter, rect, mode=0, state=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>paint(self, painter: Optional[QPainter], rect: QRect, mode: QIcon.Mode, state: QIcon.State)</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="audian.markerdata.ColorDelegate"><code class="flex name class">
+<span>class <span class="ident">ColorDelegate</span></span>
+<span>(</span><span>parent=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>QStyledItemDelegate(parent: Optional[QObject] = None)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ColorDelegate(QStyledItemDelegate):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+
+    def createEditor(self, parent, option, index):
+        editor = QComboBox(parent)
+        for c in colors:
+            editor.addItem(index.model().icons[c], c)
+        editor.setEditable(False)
+        return editor
+
+
+    def setEditorData(self, editor, index):
+        value = index.model().data(index, Qt.EditRole)
+        editor.setCurrentText(value)
+
+
+    def setModelData(self, editor, model, index):
+        value = editor.currentText()
+        model.setData(index, value, Qt.EditRole)
+
+
+    def updateEditorGeometry(self, editor, option, index):
+        editor.setGeometry(option.rect)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>PyQt5.QtWidgets.QStyledItemDelegate</li>
+<li>PyQt5.QtWidgets.QAbstractItemDelegate</li>
+<li>PyQt5.QtCore.QObject</li>
+<li>sip.wrapper</li>
+<li>sip.simplewrapper</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="audian.markerdata.ColorDelegate.createEditor"><code class="name flex">
+<span>def <span class="ident">createEditor</span></span>(<span>self, parent, option, index)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>createEditor(self, parent: Optional[QWidget], option: QStyleOptionViewItem, index: QModelIndex) -&gt; Optional[QWidget]</p></div>
+</dd>
+<dt id="audian.markerdata.ColorDelegate.setEditorData"><code class="name flex">
+<span>def <span class="ident">setEditorData</span></span>(<span>self, editor, index)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>setEditorData(self, editor: Optional[QWidget], index: QModelIndex)</p></div>
+</dd>
+<dt id="audian.markerdata.ColorDelegate.setModelData"><code class="name flex">
+<span>def <span class="ident">setModelData</span></span>(<span>self, editor, model, index)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>setModelData(self, editor: Optional[QWidget], model: Optional[QAbstractItemModel], index: QModelIndex)</p></div>
+</dd>
+<dt id="audian.markerdata.ColorDelegate.updateEditorGeometry"><code class="name flex">
+<span>def <span class="ident">updateEditorGeometry</span></span>(<span>self, editor, option, index)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>updateEditorGeometry(self, editor: Optional[QWidget], option: QStyleOptionViewItem, index: QModelIndex)</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="audian.markerdata.MarkerLabel"><code class="flex name class">
+<span>class <span class="ident">MarkerLabel</span></span>
+<span>(</span><span>label, key_shortcut, color, action=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MarkerLabel:
+
+    def __init__(self, label, key_shortcut, color, action=None):
+        self.label = label
+        self.key_shortcut = key_shortcut
+        self.color = color
+        self.action = action
+
+
+    def copy(self):
+        ml = MarkerLabel(self.label, self.key_shortcut, self.color, self.action)
+        return ml</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="audian.markerdata.MarkerLabel.copy"><code class="name flex">
+<span>def <span class="ident">copy</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="audian.markerdata.MarkerLabelsModel"><code class="flex name class">
+<span>class <span class="ident">MarkerLabelsModel</span></span>
+<span>(</span><span>labels, acts, parent=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>QAbstractTableModel(parent: Optional[QObject] = None)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MarkerLabelsModel(QAbstractTableModel):
+    
+    def __init__(self, labels, acts, parent=None):
+        QAbstractTableModel.__init__(self, parent)
+        self.orig_labels = labels
+        self.labels = [x.copy() for x in labels]
+        self.header = [&#39;label&#39;, &#39;key&#39;, &#39;color&#39;]
+        self.dialog = None
+        self.view = None
+        self.key_delegate = None
+        self.acts = acts
+        self.icons = {}
+        for c in colors:
+            self.icons[c] = QIcon(ColorIconEngine(c))
+
+        
+    def rowCount(self, parent=None):
+        return len(self.labels)
+
+    
+    def columnCount(self, parent=None):
+        return 3
+
+
+    def headerData(self, index, orientation, role=Qt.DisplayRole):
+        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+            return self.header[index]
+        if orientation == Qt.Vertical and role == Qt.DisplayRole:
+            return f&#39;{index}&#39;
+        return QVariant()
+
+    
+    def data(self, index, role=Qt.DisplayRole):
+        if not index.isValid():
+            return QVariant()
+        
+        # data:
+        if role == Qt.DisplayRole or role == Qt.EditRole:
+            label = self.labels[index.row()]
+            if index.column() == 0:
+                return label.label
+            elif index.column() == 1:
+                return label.key_shortcut
+            elif index.column() == 2:
+                return label.color
+            else:
+                return QVariant()
+
+        # icons:
+        if role == Qt.DecorationRole:
+            label = self.labels[index.row()]
+            if index.column() == 2:
+                return self.icons[label.color]
+                
+        # alignment:
+        if role == Qt.TextAlignmentRole:
+            return Qt.AlignLeft | Qt.AlignVCenter
+
+        return QVariant()
+
+    
+    def flags(self, index):
+        if not index.isValid():
+            return Qt.NoItemFlag
+        flags = Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsEnabled | Qt.ItemIsEditable
+        return flags
+
+
+    def setData(self, index, value, role=Qt.EditRole):
+        if not index.isValid():
+            return False
+        if index.column() == 0:
+            self.labels[index.row()].label = value
+        elif index.column() == 1:
+            self.labels[index.row()].key_shortcut = value
+            act = self.find_action(value)
+            if not act is None:
+                act_text = act.text().replace(&#39;&amp;&#39;, &#39;&#39;)
+                QMessageBox.information(self.parent(), &#34;Audian key shortcut&#34;,
+                                        f&#39;Key shortcut &lt;b&gt;{value}&lt;/b&gt; for label &lt;b&gt;{self.labels[index.row()].label}&lt;/b&gt; disables &lt;b&gt;{act_text}&lt;/b&gt;&#39;)
+        elif index.column() == 2:
+            self.labels[index.row()].color = value
+        else:
+            return False
+        self.dataChanged.emit(index, index)
+        return True
+
+
+    def find_action(self, key_shortcut):
+        ks = QKeySequence(key_shortcut)
+        for a in dir(self.acts):
+            act = getattr(self.acts, a)
+            if isinstance(act, QAction) and act.shortcut() == ks:
+                return act
+        return None
+
+                
+    def store(self):
+        for k in range(len(self.labels)):
+            if k &lt; len(self.orig_labels):
+                self.orig_labels[k] = self.labels[k]
+            else:
+                self.orig_labels.append(self.labels[k])
+
+                
+    def set(self, labels):
+        self.beginResetModel()
+        self.orig_labels = labels
+        self.labels = [x.copy() for x in labels]
+        self.endResetModel()
+
+
+    def insertRows(self, row, count, parent=QModelIndex()):
+        if row &gt; len(self.labels):
+            return False
+        self.beginInsertRows(parent, row, row+count-1)
+        for k in range(count):
+            color = list(colors.keys())[(row+k)%len(colors)]
+            self.labels.insert(row+k, MarkerLabel(chr(ord(&#39;A&#39;)+row+k),
+                                                  &#39;&#39;, color))
+        self.endInsertRows()
+        return True
+
+        
+    def add_row(self):
+        self.insertRows(len(self.labels), 1)
+
+
+    def removeRows(self, row, count, parent=QModelIndex()):
+        if row &gt;= len(self.labels):
+            return False
+        self.beginRemoveRows(parent, row, row+count-1)
+        for k in range(count):
+            self.labels.pop(row)
+        self.endRemoveRows()
+        return True
+
+        
+    def remove_rows(self):
+        selection = self.view.selectionModel()
+        if selection.hasSelection():
+            rows = [r.row() for r in selection.selectedRows()]
+            for r in reversed(sorted(rows)):
+                self.removeRow(r)
+
+    
+    def edit(self, parent):
+        if not self.dialog is None:
+            return
+        xwidth = parent.fontMetrics().averageCharWidth()
+        self.dialog = QDialog(parent)
+        self.dialog.setWindowTitle(&#39;Audian label editor&#39;)
+        vbox = QVBoxLayout()
+        vbox.setContentsMargins(10, 10, 10, 10)
+        self.dialog.setLayout(vbox)
+        hbox = QHBoxLayout()
+        hbox.setContentsMargins(0, 0, 0, 0)
+        vbox.addLayout(hbox)
+        self.view = QTableView()
+        self.view.setModel(self)
+        self.view.resizeColumnsToContents()
+        self.view.setColumnWidth(0, max(8*xwidth,
+                                        self.view.columnWidth(0)) +
+                                 4*xwidth)
+        self.view.setColumnWidth(2, max(12*xwidth,
+                                        self.view.columnWidth(2)))
+        self.view.horizontalHeader().setStretchLastSection(True)
+        self.view.setSelectionBehavior(self.view.SelectRows)
+        if has_key_editor:
+            self.key_delegate = KeySequenceDelegate(self.dialog)
+            self.view.setItemDelegateForColumn(1, self.key_delegate)
+        color_delegate = ColorDelegate(self.dialog)
+        self.view.setItemDelegateForColumn(2, color_delegate)
+        hbox.addWidget(self.view)
+        bbox = QVBoxLayout()
+        bbox.setContentsMargins(0, 0, 0, 0)
+        hbox.addLayout(bbox)
+        addb = QPushButton(&#39;&amp;Add&#39;)
+        addb.clicked.connect(self.add_row)
+        bbox.addWidget(addb)
+        delb = QPushButton(&#39;&amp;Remove&#39;)
+        delb.clicked.connect(self.remove_rows)
+        bbox.addWidget(delb)
+        buttons = QDialogButtonBox(QDialogButtonBox.Cancel |
+                                   QDialogButtonBox.Ok)
+        buttons.rejected.connect(self.dialog.reject)
+        buttons.accepted.connect(self.dialog.accept)
+        vbox.addWidget(buttons)
+        width = 50 + delb.sizeHint().width()
+        width += self.view.verticalHeader().width()
+        for c in range(self.columnCount()):
+            width += self.view.columnWidth(c)
+        self.dialog.setMaximumWidth(width)
+        self.dialog.resize(width, 30*xwidth)
+        self.dialog.finished.connect(self.finished)
+        self.dialog.show()
+
+
+    def finished(self, result=0):
+        if result == QDialog.Accepted:
+            self.store()
+        self.dialog = None</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>PyQt5.QtCore.QAbstractTableModel</li>
+<li>PyQt5.QtCore.QAbstractItemModel</li>
+<li>PyQt5.QtCore.QObject</li>
+<li>sip.wrapper</li>
+<li>sip.simplewrapper</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="audian.markerdata.MarkerLabelsModel.rowCount"><code class="name flex">
+<span>def <span class="ident">rowCount</span></span>(<span>self, parent=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>rowCount(self, parent: QModelIndex = QModelIndex()) -&gt; int</p></div>
+</dd>
+<dt id="audian.markerdata.MarkerLabelsModel.columnCount"><code class="name flex">
+<span>def <span class="ident">columnCount</span></span>(<span>self, parent=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>columnCount(self, parent: QModelIndex = QModelIndex()) -&gt; int</p></div>
+</dd>
+<dt id="audian.markerdata.MarkerLabelsModel.headerData"><code class="name flex">
+<span>def <span class="ident">headerData</span></span>(<span>self, index, orientation, role=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>headerData(self, section: int, orientation: Qt.Orientation, role: int = Qt.ItemDataRole.DisplayRole) -&gt; Any</p></div>
+</dd>
+<dt id="audian.markerdata.MarkerLabelsModel.data"><code class="name flex">
+<span>def <span class="ident">data</span></span>(<span>self, index, role=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -&gt; Any</p></div>
+</dd>
+<dt id="audian.markerdata.MarkerLabelsModel.flags"><code class="name flex">
+<span>def <span class="ident">flags</span></span>(<span>self, index)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>flags(self, index: QModelIndex) -&gt; Qt.ItemFlags</p></div>
+</dd>
+<dt id="audian.markerdata.MarkerLabelsModel.setData"><code class="name flex">
+<span>def <span class="ident">setData</span></span>(<span>self, index, value, role=2)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>setData(self, index: QModelIndex, value: Any, role: int = Qt.ItemDataRole.EditRole) -&gt; bool</p></div>
+</dd>
+<dt id="audian.markerdata.MarkerLabelsModel.find_action"><code class="name flex">
+<span>def <span class="ident">find_action</span></span>(<span>self, key_shortcut)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.markerdata.MarkerLabelsModel.store"><code class="name flex">
+<span>def <span class="ident">store</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.markerdata.MarkerLabelsModel.set"><code class="name flex">
+<span>def <span class="ident">set</span></span>(<span>self, labels)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.markerdata.MarkerLabelsModel.insertRows"><code class="name flex">
+<span>def <span class="ident">insertRows</span></span>(<span>self, row, count, parent=&lt;PyQt5.QtCore.QModelIndex object&gt;)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>insertRows(self, row: int, count: int, parent: QModelIndex = QModelIndex()) -&gt; bool</p></div>
+</dd>
+<dt id="audian.markerdata.MarkerLabelsModel.add_row"><code class="name flex">
+<span>def <span class="ident">add_row</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.markerdata.MarkerLabelsModel.removeRows"><code class="name flex">
+<span>def <span class="ident">removeRows</span></span>(<span>self, row, count, parent=&lt;PyQt5.QtCore.QModelIndex object&gt;)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>removeRows(self, row: int, count: int, parent: QModelIndex = QModelIndex()) -&gt; bool</p></div>
+</dd>
+<dt id="audian.markerdata.MarkerLabelsModel.remove_rows"><code class="name flex">
+<span>def <span class="ident">remove_rows</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.markerdata.MarkerLabelsModel.edit"><code class="name flex">
+<span>def <span class="ident">edit</span></span>(<span>self, parent)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.markerdata.MarkerLabelsModel.finished"><code class="name flex">
+<span>def <span class="ident">finished</span></span>(<span>self, result=0)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="audian.markerdata.MarkerData"><code class="flex name class">
+<span>class <span class="ident">MarkerData</span></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MarkerData:
+
+    def __init__(self):
+        self.file_path = None
+        self.channels = []
+        self.times = []
+        self.amplitudes = []
+        self.frequencies = []
+        self.powers = []
+        self.delta_times = []
+        self.delta_amplitudes = []
+        self.delta_frequencies = []
+        self.delta_powers = []
+        self.labels = []
+        self.texts = []
+        self.keys = [&#39;channels&#39;, &#39;times&#39;, &#39;amplitudes&#39;,
+                     &#39;frequencies&#39;, &#39;powers&#39;,
+                     &#39;delta_times&#39;, &#39;delta_amplitudes&#39;,
+                     &#39;delta_frequencies&#39;, &#39;delta_powers&#39;, &#39;labels&#39;, &#39;texts&#39;]
+        self.headers = [&#39;channel&#39;, &#39;time/s&#39;, &#39;amplitude&#39;,
+                       &#39;frequency/Hz&#39;, &#39;power/dB&#39;,
+                       &#39;time-diff/s&#39;, &#39;ampl-diff&#39;,
+                        &#39;freq-diff/Hz&#39;, &#39;power-diff/dB&#39;, &#39;label&#39;, &#39;text&#39;]
+
+        
+    def clear(self):
+        self.channels = []
+        self.times = []
+        self.amplitudes = []
+        self.frequencies = []
+        self.powers = []
+        self.delta_times = []
+        self.delta_amplitudes = []
+        self.delta_frequencies = []
+        self.delta_powers = []
+        self.labels = []
+        self.texts = []
+
+
+    def add_data(self, channel, time, amplitude=None,
+                 frequency=None, power=None,
+                 delta_time=None, delta_amplitude=None,
+                 delta_frequency=None, delta_power=None,
+                 label=&#39;&#39;, text=&#39;&#39;):
+        self.channels.append(channel)
+        self.times.append(time if not time is None else np.nan)
+        self.amplitudes.append(amplitude if not amplitude is None else np.nan)
+        self.frequencies.append(frequency if not frequency is None else np.nan)
+        self.powers.append(power if not power is None else np.nan)
+        self.delta_times.append(delta_time if not delta_time is None else np.nan)
+        self.delta_amplitudes.append(delta_amplitude if not delta_amplitude is None else np.nan)
+        self.delta_frequencies.append(delta_frequency if not delta_frequency is None else np.nan)
+        self.delta_powers.append(delta_power if not delta_power is None else np.nan)
+        self.labels.append(label)
+        self.texts.append(text)
+
+        
+    def set_label(self, index, label):
+        self.labels[index] = label
+
+        
+    def set_text(self, index, text):
+        self.texts[index] = text
+
+
+    def data_frame(self):
+        table_dict = {}
+        for key, header in zip(self.keys, self.headers):
+            table_dict[header] = getattr(self, key)
+        return pd.DataFrame(table_dict)
+
+
+    def set_markers(self, locs, labels, rate):
+        for i in range(len(locs)):
+            l = &#39;&#39;
+            t = &#39;&#39;
+            if i &lt; len(labels):
+                l = labels[i,0]
+                t = labels[i,1]
+            tstart = float(locs[i,0])/rate
+            tspan = float(locs[i,1])/rate
+            self.add_data(0, tstart + tspan, delta_time=tspan,
+                          label=l, text=t)
+
+            
+    def get_markers(self, rate):
+        n = len(self.times)
+        locs = np.zeros((n, 2), dtype=int)
+        labels = np.zeros((n, 3), dtype=object)
+        for k in range(n):
+            ispan = int(np.round(self.delta_times[k]*rate))
+            i1 = int(np.round(self.times[k]*rate))
+            locs[k,0] = i1 - ispan
+            locs[k,1] = ispan
+            labels[k,0] = self.labels[k]
+            labels[k,1] = self.texts[k]
+        return locs, labels</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="audian.markerdata.MarkerData.clear"><code class="name flex">
+<span>def <span class="ident">clear</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.markerdata.MarkerData.add_data"><code class="name flex">
+<span>def <span class="ident">add_data</span></span>(<span>self, channel, time, amplitude=None, frequency=None, power=None, delta_time=None, delta_amplitude=None, delta_frequency=None, delta_power=None, label='', text='')</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.markerdata.MarkerData.set_label"><code class="name flex">
+<span>def <span class="ident">set_label</span></span>(<span>self, index, label)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.markerdata.MarkerData.set_text"><code class="name flex">
+<span>def <span class="ident">set_text</span></span>(<span>self, index, text)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.markerdata.MarkerData.data_frame"><code class="name flex">
+<span>def <span class="ident">data_frame</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.markerdata.MarkerData.set_markers"><code class="name flex">
+<span>def <span class="ident">set_markers</span></span>(<span>self, locs, labels, rate)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.markerdata.MarkerData.get_markers"><code class="name flex">
+<span>def <span class="ident">get_markers</span></span>(<span>self, rate)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="audian.markerdata.MarkerDataModel"><code class="flex name class">
+<span>class <span class="ident">MarkerDataModel</span></span>
+<span>(</span><span>data, parent=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>QAbstractTableModel(parent: Optional[QObject] = None)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MarkerDataModel(QAbstractTableModel):
+    
+    def __init__(self, data, parent=None):
+        QAbstractTableModel.__init__(self, parent)
+        self.data = data
+
+        
+    def rowCount(self, parent=None):
+        return len(self.data.channels)
+
+    
+    def columnCount(self, parent=None):
+        return len(self.data.keys)
+
+
+    def headerData(self, index, orientation, role=Qt.DisplayRole):
+        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+            return self.data.headers[index]
+        if orientation == Qt.Vertical and role == Qt.DisplayRole:
+            return f&#39;{index}&#39;
+        return QVariant()
+
+    
+    def data(self, index, role=Qt.DisplayRole):
+        if not index.isValid():
+            return QVariant()
+        
+        key = self.data.keys[index.column()]
+        item = getattr(self.data, key)[index.row()]
+        
+        # data:
+        if role == Qt.DisplayRole or role == Qt.EditRole:
+            if key == &#39;labels&#39; or key == &#39;texts&#39;:
+                return item
+            else:
+                if item is np.nan:
+                    return &#39;-&#39;
+                else:
+                    return f&#39;{item:.5g}&#39;
+                
+        # alignment:
+        if role == Qt.TextAlignmentRole:
+            if key == &#39;labels&#39; or key == &#39;texts&#39;:
+                return Qt.AlignLeft | Qt.AlignVCenter
+            else:
+                if item is np.nan:
+                    return Qt.AlignHCenter | Qt.AlignVCenter
+                else:
+                    return Qt.AlignRight | Qt.AlignVCenter
+
+        return QVariant()
+
+    
+    def flags(self, index):
+        if not index.isValid():
+            return Qt.NoItemFlag
+        flags = Qt.ItemIsSelectable | Qt.ItemIsDragEnabled | Qt.ItemIsEnabled
+        key = self.data.keys[index.column()]
+        if key == &#39;labels&#39;:
+            return flags | Qt.ItemIsEditable
+        else:
+            return flags
+
+
+    def setData(self, index, value, role=Qt.EditRole):
+        if not index.isValid():
+            return False
+        key = self.data.keys[index.column()]
+        if key == &#39;labels&#39;:
+            self.data.labels[index.row()] = value
+            self.dataChanged.emit(index, index)
+            return True
+        else:
+            return False
+        
+
+    def clear(self):
+        self.beginResetModel()
+        self.data.clear()
+        self.endResetModel()
+
+
+    def save(self, parent):
+        name = os.path.splitext(os.path.basename(self.data.file_path))[0]
+        file_name = f&#39;{name}-events.csv&#39;
+        filters = &#39;All files (*);;Comma separated values CSV (*.csv)&#39;
+        has_excel = False
+        try:
+            import openpyxl
+            has_excel = True
+            filters += &#39;;;Excel spreadsheet XLSX (*.xlsx)&#39;
+        except ImportError:
+            pass
+        file_path = os.path.join(os.path.dirname(self.data.file_path),
+                                 file_name)
+        file_path = QFileDialog.getSaveFileName(parent, &#39;Save marker data&#39;,
+                                                file_path, filters)[0]
+        if file_path:
+            df = self.data.data_frame()
+            ext = os.path.splitext(file_path)[1]
+            if has_excel and ext.lower() == &#39;.xlsx&#39;:
+                df.to_excel(file_path, index=False)
+            else:
+                df.to_csv(file_path, index=False)
+            
+
+    def add_data(self, channel, time, amplitude, frequency, power,
+                 delta_time=None, delta_amplitude=None,
+                 delta_frequency=None, delta_power=None, label=&#39;&#39;):
+        self.beginInsertRows(QModelIndex(),
+                             len(self.data.channels), len(self.data.channels))
+        self.data.add_data(channel, time, amplitude, frequency, power,
+                           delta_time, delta_amplitude,
+                           delta_frequency, delta_power, label)
+        self.endInsertRows()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>PyQt5.QtCore.QAbstractTableModel</li>
+<li>PyQt5.QtCore.QAbstractItemModel</li>
+<li>PyQt5.QtCore.QObject</li>
+<li>sip.wrapper</li>
+<li>sip.simplewrapper</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="audian.markerdata.MarkerDataModel.rowCount"><code class="name flex">
+<span>def <span class="ident">rowCount</span></span>(<span>self, parent=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>rowCount(self, parent: QModelIndex = QModelIndex()) -&gt; int</p></div>
+</dd>
+<dt id="audian.markerdata.MarkerDataModel.columnCount"><code class="name flex">
+<span>def <span class="ident">columnCount</span></span>(<span>self, parent=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>columnCount(self, parent: QModelIndex = QModelIndex()) -&gt; int</p></div>
+</dd>
+<dt id="audian.markerdata.MarkerDataModel.headerData"><code class="name flex">
+<span>def <span class="ident">headerData</span></span>(<span>self, index, orientation, role=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>headerData(self, section: int, orientation: Qt.Orientation, role: int = Qt.ItemDataRole.DisplayRole) -&gt; Any</p></div>
+</dd>
+<dt id="audian.markerdata.MarkerDataModel.data"><code class="name flex">
+<span>def <span class="ident">data</span></span>(<span>self, index, role=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -&gt; Any</p></div>
+</dd>
+<dt id="audian.markerdata.MarkerDataModel.flags"><code class="name flex">
+<span>def <span class="ident">flags</span></span>(<span>self, index)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>flags(self, index: QModelIndex) -&gt; Qt.ItemFlags</p></div>
+</dd>
+<dt id="audian.markerdata.MarkerDataModel.setData"><code class="name flex">
+<span>def <span class="ident">setData</span></span>(<span>self, index, value, role=2)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>setData(self, index: QModelIndex, value: Any, role: int = Qt.ItemDataRole.EditRole) -&gt; bool</p></div>
+</dd>
+<dt id="audian.markerdata.MarkerDataModel.clear"><code class="name flex">
+<span>def <span class="ident">clear</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.markerdata.MarkerDataModel.save"><code class="name flex">
+<span>def <span class="ident">save</span></span>(<span>self, parent)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.markerdata.MarkerDataModel.add_data"><code class="name flex">
+<span>def <span class="ident">add_data</span></span>(<span>self, channel, time, amplitude, frequency, power, delta_time=None, delta_amplitude=None, delta_frequency=None, delta_power=None, label='')</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="audian" href="index.html">audian</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="audian.markerdata.ColorIconEngine" href="#audian.markerdata.ColorIconEngine">ColorIconEngine</a></code></h4>
+<ul class="">
+<li><code><a title="audian.markerdata.ColorIconEngine.paint" href="#audian.markerdata.ColorIconEngine.paint">paint</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="audian.markerdata.ColorDelegate" href="#audian.markerdata.ColorDelegate">ColorDelegate</a></code></h4>
+<ul class="">
+<li><code><a title="audian.markerdata.ColorDelegate.createEditor" href="#audian.markerdata.ColorDelegate.createEditor">createEditor</a></code></li>
+<li><code><a title="audian.markerdata.ColorDelegate.setEditorData" href="#audian.markerdata.ColorDelegate.setEditorData">setEditorData</a></code></li>
+<li><code><a title="audian.markerdata.ColorDelegate.setModelData" href="#audian.markerdata.ColorDelegate.setModelData">setModelData</a></code></li>
+<li><code><a title="audian.markerdata.ColorDelegate.updateEditorGeometry" href="#audian.markerdata.ColorDelegate.updateEditorGeometry">updateEditorGeometry</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="audian.markerdata.MarkerLabel" href="#audian.markerdata.MarkerLabel">MarkerLabel</a></code></h4>
+<ul class="">
+<li><code><a title="audian.markerdata.MarkerLabel.copy" href="#audian.markerdata.MarkerLabel.copy">copy</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="audian.markerdata.MarkerLabelsModel" href="#audian.markerdata.MarkerLabelsModel">MarkerLabelsModel</a></code></h4>
+<ul class="two-column">
+<li><code><a title="audian.markerdata.MarkerLabelsModel.rowCount" href="#audian.markerdata.MarkerLabelsModel.rowCount">rowCount</a></code></li>
+<li><code><a title="audian.markerdata.MarkerLabelsModel.columnCount" href="#audian.markerdata.MarkerLabelsModel.columnCount">columnCount</a></code></li>
+<li><code><a title="audian.markerdata.MarkerLabelsModel.headerData" href="#audian.markerdata.MarkerLabelsModel.headerData">headerData</a></code></li>
+<li><code><a title="audian.markerdata.MarkerLabelsModel.data" href="#audian.markerdata.MarkerLabelsModel.data">data</a></code></li>
+<li><code><a title="audian.markerdata.MarkerLabelsModel.flags" href="#audian.markerdata.MarkerLabelsModel.flags">flags</a></code></li>
+<li><code><a title="audian.markerdata.MarkerLabelsModel.setData" href="#audian.markerdata.MarkerLabelsModel.setData">setData</a></code></li>
+<li><code><a title="audian.markerdata.MarkerLabelsModel.find_action" href="#audian.markerdata.MarkerLabelsModel.find_action">find_action</a></code></li>
+<li><code><a title="audian.markerdata.MarkerLabelsModel.store" href="#audian.markerdata.MarkerLabelsModel.store">store</a></code></li>
+<li><code><a title="audian.markerdata.MarkerLabelsModel.set" href="#audian.markerdata.MarkerLabelsModel.set">set</a></code></li>
+<li><code><a title="audian.markerdata.MarkerLabelsModel.insertRows" href="#audian.markerdata.MarkerLabelsModel.insertRows">insertRows</a></code></li>
+<li><code><a title="audian.markerdata.MarkerLabelsModel.add_row" href="#audian.markerdata.MarkerLabelsModel.add_row">add_row</a></code></li>
+<li><code><a title="audian.markerdata.MarkerLabelsModel.removeRows" href="#audian.markerdata.MarkerLabelsModel.removeRows">removeRows</a></code></li>
+<li><code><a title="audian.markerdata.MarkerLabelsModel.remove_rows" href="#audian.markerdata.MarkerLabelsModel.remove_rows">remove_rows</a></code></li>
+<li><code><a title="audian.markerdata.MarkerLabelsModel.edit" href="#audian.markerdata.MarkerLabelsModel.edit">edit</a></code></li>
+<li><code><a title="audian.markerdata.MarkerLabelsModel.finished" href="#audian.markerdata.MarkerLabelsModel.finished">finished</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="audian.markerdata.MarkerData" href="#audian.markerdata.MarkerData">MarkerData</a></code></h4>
+<ul class="two-column">
+<li><code><a title="audian.markerdata.MarkerData.clear" href="#audian.markerdata.MarkerData.clear">clear</a></code></li>
+<li><code><a title="audian.markerdata.MarkerData.add_data" href="#audian.markerdata.MarkerData.add_data">add_data</a></code></li>
+<li><code><a title="audian.markerdata.MarkerData.set_label" href="#audian.markerdata.MarkerData.set_label">set_label</a></code></li>
+<li><code><a title="audian.markerdata.MarkerData.set_text" href="#audian.markerdata.MarkerData.set_text">set_text</a></code></li>
+<li><code><a title="audian.markerdata.MarkerData.data_frame" href="#audian.markerdata.MarkerData.data_frame">data_frame</a></code></li>
+<li><code><a title="audian.markerdata.MarkerData.set_markers" href="#audian.markerdata.MarkerData.set_markers">set_markers</a></code></li>
+<li><code><a title="audian.markerdata.MarkerData.get_markers" href="#audian.markerdata.MarkerData.get_markers">get_markers</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="audian.markerdata.MarkerDataModel" href="#audian.markerdata.MarkerDataModel">MarkerDataModel</a></code></h4>
+<ul class="two-column">
+<li><code><a title="audian.markerdata.MarkerDataModel.rowCount" href="#audian.markerdata.MarkerDataModel.rowCount">rowCount</a></code></li>
+<li><code><a title="audian.markerdata.MarkerDataModel.columnCount" href="#audian.markerdata.MarkerDataModel.columnCount">columnCount</a></code></li>
+<li><code><a title="audian.markerdata.MarkerDataModel.headerData" href="#audian.markerdata.MarkerDataModel.headerData">headerData</a></code></li>
+<li><code><a title="audian.markerdata.MarkerDataModel.data" href="#audian.markerdata.MarkerDataModel.data">data</a></code></li>
+<li><code><a title="audian.markerdata.MarkerDataModel.flags" href="#audian.markerdata.MarkerDataModel.flags">flags</a></code></li>
+<li><code><a title="audian.markerdata.MarkerDataModel.setData" href="#audian.markerdata.MarkerDataModel.setData">setData</a></code></li>
+<li><code><a title="audian.markerdata.MarkerDataModel.clear" href="#audian.markerdata.MarkerDataModel.clear">clear</a></code></li>
+<li><code><a title="audian.markerdata.MarkerDataModel.save" href="#audian.markerdata.MarkerDataModel.save">save</a></code></li>
+<li><code><a title="audian.markerdata.MarkerDataModel.add_data" href="#audian.markerdata.MarkerDataModel.add_data">add_data</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.1</a>.</p>
+</footer>
+</body>
+</html>
