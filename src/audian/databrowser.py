@@ -1797,7 +1797,7 @@ class DataBrowser(QWidget):
         file_name = f'{name}-{t0s}-{t1s}.wav'
         formats = available_formats()
         for f in ['MP3', 'OGG', 'WAV']:
-            if 'WAV' in formats:
+            if f in formats:
                 formats.remove(f)
                 formats.insert(0, f)
         filters = ['All files (*)'] + [f'{f} files (*.{f}, *.{f.lower()})' for f in formats]
