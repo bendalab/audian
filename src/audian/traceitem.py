@@ -57,6 +57,7 @@ class TraceItem(pg.PlotDataItem):
             start = int(floor(start/self.step)*self.step)
             stop = int(ceil(stop/self.step + 1)*self.step)
             self.setPen(dict(color=self.color, width=self.lw_thin))
+            self.setSymbol(None)
             n = (stop - start)//self.step
             pdata = np.zeros(2*n)
             i = 0
