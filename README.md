@@ -8,6 +8,10 @@ for viewing and analyzing recordings of animal vocalizations.
 
 ![audian](docs/audian-v1.7.png)
 
+[Documentation](https://bendalab.github.io/audian) |
+[API Reference](https://bendalab.github.io/audian/api)
+
+
 ## Features
 
 - Interactive viewer for single and multi-channel audio signals.
