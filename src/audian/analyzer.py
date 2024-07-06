@@ -75,6 +75,15 @@ class Analyzer(object):
         self.events = {}
         self.browser.add_analyzer(self)
 
+
+    def clear(self):
+        """Clear the data table and the markers.
+        """
+        self.data.clear_data()
+        for name in self.events:
+            for c in range(len(self.events[name])):
+                self.events[name][c].clear()
+
         
     def analyze(self, t0, t1, channel, traces):
         """Analysis function.

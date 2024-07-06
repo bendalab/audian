@@ -1747,7 +1747,7 @@ class DataBrowser(QWidget):
         if self.analysis_table is not None:
             self.analysis_table.clear()
         for a in self.analyzers:
-            a.data = []
+            a.clear()
 
             
     def save_analysis(self):

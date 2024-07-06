@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.2
+
+- Fixed clearing of analysis data
+
+
 ## v2.1 - 2024.07.04
 
 - Centered zooming of time axis with T and Shift+T
