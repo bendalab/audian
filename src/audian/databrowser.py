@@ -1637,6 +1637,9 @@ class DataBrowser(QWidget):
         rate = data.rate
         i0 = int(np.round(t0*rate))
         i1 = int(np.round(t1*rate))
+        if i0 < 0:
+            i0 = 0
+            t0 = 0.0
         if i1 > len(data):
             i1 = len(data)
             t1 = i1/rate
@@ -1687,6 +1690,10 @@ class DataBrowser(QWidget):
 
                     
     def analyze_region(self, t0, t1, channel):
+        if t0 < 0:
+            t0 = 0
+        if t1 > self.data.data.frames/self.data.data.rate:
+            t1 = self.data.data.frames/self.data.data.rate
         traces = self.data.get_region(t0, t1, channel)
         for a in self.analyzers:
             a.analyze(t0, t1, channel, traces)
@@ -1789,6 +1796,12 @@ class DataBrowser(QWidget):
 
         i0 = int(np.round(t0*self.data.rate))
         i1 = int(np.round(t1*self.data.rate))
+        if i0 < 0:
+            i0 = 0
+            t0 = 0.0
+        if i1 > len(self.data.data):
+            i1 = len(self.data.data)
+            t1 = i1/rate
         name = os.path.splitext(os.path.basename(self.data.file_path))[0]
         #if self.channel > 0:
         #    filename = f'{name}-{channel:d}-{t0:.4g}s-{t1s:.4g}s.wav'

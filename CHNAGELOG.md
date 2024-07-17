@@ -3,6 +3,7 @@
 ## v2.2
 
 - Fixed clearing of analysis data
+- Handle selected regions that start at negative times or end beyond the data
 
 
 ## v2.1 - 2024.07.04
