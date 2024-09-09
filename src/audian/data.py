@@ -44,10 +44,9 @@ class Data(object):
 
         
     def __del__(self):
-        if not self.data is None:
-            self.data.close()
+        self.close()
 
-
+            
     def __len__(self):
         return len(self.traces)
 
@@ -195,6 +194,12 @@ class Data(object):
         for trace, source in zip(self.traces[1:], self.sources[1:]):
             trace.open(self.traces[source])
         self.set_need_update()
+
+
+    def close(self):
+        if not self.data is None:
+            self.data.close()
+            self.data = None
 
             
     def set_need_update(self):

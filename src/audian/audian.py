@@ -1307,8 +1307,11 @@ Can not open file <b>{browser.file_path}</b>!''')
             if index is None:
                 index = self.tabs.currentIndex()
             if not self.startup_active:
-                self.browsers.remove(self.tabs.widget(index))
+                w = self.tabs.widget(index)
+                self.browsers.remove(w)
                 self.tabs.removeTab(index)
+                w.close()
+                del w
         if self.tabs.count() == 0:
             self.tabs.addTab(self.startup, 'Startup')
             self.startup.setVisible(True)

@@ -629,6 +629,10 @@ class DataBrowser(QWidget):
                 else:
                     sl[lidx].addPoints((t1,), (0.0,), data=(ds,), tip=marker_tip)
 
+
+    def close(self):
+        self.data.close()
+
                     
     def show_metadata(self):
         
