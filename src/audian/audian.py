@@ -1321,6 +1321,11 @@ Can not open file <b>{browser.file_path}</b>!''')
 
             
     def quit(self):
+        for w in self.browsers:
+            index = self.tabs.indexOf(w)
+            self.tabs.removeTab(index)
+            w.close()
+            del w
         QApplication.quit()
 
 

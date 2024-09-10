@@ -178,6 +178,10 @@ class DataBrowser(QWidget):
         # full traces:
         self.datafig = None
 
+        
+    def __del__(self):
+        self.close()
+
 
     def get_trace(self, name):
         return self.data[name]
