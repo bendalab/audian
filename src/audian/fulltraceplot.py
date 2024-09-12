@@ -10,6 +10,7 @@ from math import floor, fabs
 import numpy as np
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import QGraphicsSimpleTextItem, QApplication
+from PyQt5.QtGui import QPalette
 import pyqtgraph as pg
 from .traceitem import down_sample_peak
 
@@ -129,6 +130,12 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             self.axs.append(axt)
             
         QTimer.singleShot(10, self.load_data)
+
+        
+    def polish(self):
+        text_color = self.palette().color(QPalette.WindowText)
+        for label in self.labels:
+            label.setBrush(text_color)
 
 
     def load_data(self):

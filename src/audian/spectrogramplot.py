@@ -6,6 +6,7 @@ try:
     from PyQt5.QtCore import Signal
 except ImportError:
     from PyQt5.QtCore import pyqtSignal as Signal
+from PyQt5.QtGui import QPalette
 import pyqtgraph as pg
 from thunderlab.powerspectrum import decibel
 from .panels import Panel
@@ -70,14 +71,14 @@ class SpectrogramPlot(TimePlot):
         # axis:
         self.getAxis('bottom').showLabel(False)
         self.getAxis('bottom').setStyle(showValues=False)
-        self.getAxis('left').setLabel('Frequency', 'Hz', color='black')
+        self.getAxis('left').setLabel('Frequency', 'Hz')
+        self.getAxis('left').enableAutoSIPrefix()
         
         # color bar:
         self.cbar = pg.ColorBarItem(colorMap=color_map,
                                     interactive=True,
                                     rounding=1, limits=(-200, 20))
         self.cbar.setLabel('right', 'Power (dB)')
-        self.cbar.getAxis('right').setTextPen('black')
         self.cbar.getAxis('right').setWidth(6*xwidth)
         self.cbar.setVisible(show_cbars)
 
@@ -110,6 +111,12 @@ class SpectrogramPlot(TimePlot):
         self.setVisible(browser.show_specs > 0)
         self.sigUpdateFilter.connect(browser.update_filter)
             
+
+    def polish(self):
+        TimePlot.polish(self)
+        text_color = self.palette().color(QPalette.WindowText)
+        self.cbar.getAxis('right').setTextPen(text_color)
+
 
     def add_item(self, item, is_data=False):
         super().add_item(item, is_data)

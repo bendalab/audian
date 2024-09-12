@@ -6,6 +6,8 @@ try:
     from PyQt5.QtCore import Signal
 except ImportError:
     from PyQt5.QtCore import pyqtSignal as Signal
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPalette, QColor
 import pyqtgraph as pg
 from .rangeplot import RangePlot
 from .timeaxisitem import TimeAxisItem
@@ -15,31 +17,21 @@ from .yaxisitem import YAxisItem
 class TimePlot(RangePlot):
 
     def __init__(self, aspec, channel, browser, xwidth, ylabel=''):
-
-        # text color:
-        #text_color = self.palette().color( QPalette.WindowText )
-        # TODO: palette() can not be called within constructor.
-        # We need some late initialization of the colors.
-        
         # axis:
         bottom_axis = TimeAxisItem(orientation='bottom', showValues=True)
-        bottom_axis.setLabel('Time', 's', color='black')
-        bottom_axis.setPen('white')
-        bottom_axis.setTextPen('black')
+        bottom_axis.setLabel('Time', 's')
         bottom_axis.set_start_time(browser.data.start_time)
         top_axis = TimeAxisItem(orientation='top', showValues=False)
         top_axis.set_start_time(browser.data.start_time)
         left_axis = YAxisItem(orientation='left', showValues=True)
-        left_axis.setPen('white')
-        left_axis.setTextPen('black')
         left_axis.setWidth(8*xwidth)
         if ylabel:
-            left_axis.setLabel(ylabel, color='black')
+            left_axis.setLabel(ylabel)
         else:
             if browser.data.channels > 4:
-                left_axis.setLabel(f'C{channel}', color='black')
+                left_axis.setLabel(f'C{channel}')
             else:
-                left_axis.setLabel(f'channel {channel}', color='black')
+                left_axis.setLabel(f'channel {channel}')
         right_axis = YAxisItem(orientation='right', showValues=False)
 
         # plot:
@@ -60,6 +52,20 @@ class TimePlot(RangePlot):
         self.addItem(self.vmarker, ignoreBounds=True)
 
 
+    def polish(self):
+        text_color = self.palette().color(QPalette.Text)
+        for axis in ['left', 'right', 'top', 'bottom']:
+            self.getAxis(axis).setPen(style=Qt.NoPen)
+            self.getAxis(axis).setTickPen(style=Qt.SolidLine)
+            self.getAxis(axis).setTextPen(text_color)
+        self.getAxis('left').setLabel(self.getAxis('left').labelText,
+                                      self.getAxis('left').labelUnits,
+                                      color=text_color)
+        self.getAxis('bottom').setLabel(self.getAxis('bottom').labelText,
+                                        self.getAxis('bottom').labelUnits,
+                                        color=text_color)
+        
+        
     def range(self, axspec):
         if axspec == self.x():
             if len(self.data_items) > 0:

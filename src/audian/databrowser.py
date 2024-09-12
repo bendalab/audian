@@ -9,7 +9,7 @@ try:
 except ImportError:
     from PyQt5.QtCore import pyqtSignal as Signal
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QCursor, QKeySequence
+from PyQt5.QtGui import QCursor, QKeySequence, QPalette
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QScrollArea
 from PyQt5.QtWidgets import QAction, QMenu, QToolBar, QComboBox, QCheckBox
 from PyQt5.QtWidgets import QLabel, QSizePolicy, QTableView
@@ -165,6 +165,7 @@ class DataBrowser(QWidget):
         # plots:
         self.color_map = 0  # index into color_maps
         self.figs = []      # all GraphicsLayoutWidgets - one for each channel
+        self.border_height = 1
         self.borders = []
         self.sig_proxies = []
         # nested lists (channel, panel):
@@ -177,6 +178,10 @@ class DataBrowser(QWidget):
         self.spec_region_labels = [] # regions with labels on spectrograms
         # full traces:
         self.datafig = None
+        # default colors:
+        text_color = self.palette().color(QPalette.WindowText)
+        pg.setConfigOption('background', 'black')
+        pg.setConfigOption('foreground', text_color)
 
         
     def __del__(self):
@@ -323,6 +328,7 @@ class DataBrowser(QWidget):
         # font size:
         xwidth = self.fontMetrics().averageCharWidth()
         xwidth2 = xwidth/2
+        self.border_height = 0.5*xwidth
         for c in range(self.data.channels):
             self.axs.append([])
             self.axgs.append([])
@@ -332,7 +338,7 @@ class DataBrowser(QWidget):
             fig = pg.GraphicsLayoutWidget()
             fig.setBackground(None)
             fig.ci.layout.setContentsMargins(xwidth2, xwidth2, xwidth2, xwidth2)
-            fig.ci.layout.setVerticalSpacing(0)
+            fig.ci.layout.setVerticalSpacing(-1)
             fig.ci.layout.setHorizontalSpacing(xwidth2)
             fig.ci.layout.setHorizontalSpacing(0)
             fig.setVisible(c in self.show_channels)
@@ -343,7 +349,7 @@ class DataBrowser(QWidget):
             # border:
             border = QGraphicsRectItem()
             border.setZValue(-1000)
-            border.setPen(pg.mkPen('#aaaaaa', width=xwidth+1))
+            border.setPen(pg.mkPen('#aaaaaa', width=self.border_height))
             fig.scene().addItem(border)
             fig.sigDeviceRangeChanged.connect(self.update_borders)
             self.borders.append(border)
@@ -361,6 +367,7 @@ class DataBrowser(QWidget):
                 elif panel.is_trace():
                     ylabel = panel.name if panel.name != 'trace' else ''
                     axt = TimePlot(panel.ax_spec, c, self, xwidth, ylabel)
+                    axt.polish()
                     self.audio_markers[-1].append(axt.vmarker)
                     fig.addItem(axt, row=row, col=0)
                     self.axgs[-1].append(axt)
@@ -384,6 +391,7 @@ class DataBrowser(QWidget):
                     axs = SpectrogramPlot(panel.ax_spec, c, self, xwidth,
                                           self.color_maps[self.color_map],
                                           self.show_cbars, self.show_powers)
+                    axs.polish()
                     self.audio_markers[-1].append(axs.vmarker)
                     panel.add_ax(row, axs, axs.cbar)
                     panel.add_traces(c, self.data)
@@ -577,6 +585,7 @@ class DataBrowser(QWidget):
         
         # full data:
         self.datafig = FullTracePlot(self.data.data, self.panels['trace'].axs)
+        self.datafig.polish()
         self.vbox.addWidget(self.datafig)
 
         self.setEnabled(True)
@@ -999,7 +1008,7 @@ class DataBrowser(QWidget):
                     ntraces += 1
         nrows = len(self.show_channels)
         # subtract border height:
-        border_height = 1.5*xwidth
+        border_height = self.border_height
         height -= nrows*border_height
         # subtract spacer height:
         spacer_height = 0*xheight
