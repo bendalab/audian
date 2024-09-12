@@ -15,6 +15,11 @@ from .yaxisitem import YAxisItem
 class TimePlot(RangePlot):
 
     def __init__(self, aspec, channel, browser, xwidth, ylabel=''):
+
+        # text color:
+        #text_color = self.palette().color( QPalette.WindowText )
+        # TODO: palette() can not be called within constructor.
+        # We need some late initialization of the colors.
         
         # axis:
         bottom_axis = TimeAxisItem(orientation='bottom', showValues=True)
