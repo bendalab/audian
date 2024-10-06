@@ -11,6 +11,7 @@ class BufferedData(BufferedArray):
     def __init__(self, name, source_name, tbefore=0, tafter=0,
                  panel='none', panel_type='trace',
                  color='#00ee00', lw_thin=1.1, lw_thick=2):
+        super().__init__(verbose=0)
         self.name = name
         self.source_name = source_name
         self.tbefore = 0
@@ -26,7 +27,6 @@ class BufferedData(BufferedArray):
         self.source_tafter = tafter
         self.dests = []
         self.need_update = False
-        self.verbose = 0
 
 
     def expand_times(self, tbefore, tafter):
