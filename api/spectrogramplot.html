@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.1">
+<title>audian.spectrogramplot API documentation</title>
+<meta name="description" content="PlotItem for interactive display of spectrograms.">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script type="text/x-mathjax-config">MathJax.Hub.Config({ tex2jax: { inlineMath: [ ['$','$'], ["\\(","\\)"] ], processEscapes: true } });</script>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML" integrity="sha256-kZafAc6mZvK3W3v1pHOcUix30OHQN6pU/NO2oFkqZVw=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+})</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>audian.spectrogramplot</code></h1>
+</header>
+<section id="section-intro">
+<p>PlotItem for interactive display of spectrograms.</p>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="audian.spectrogramplot.PowerPlot"><code class="flex name class">
+<span>class <span class="ident">PowerPlot</span></span>
+<span>(</span><span>aspec, channel, browser, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>GraphicsWidget implementing a standard 2D plotting area with axes.</p>
+<p><strong>Bases:</strong> :class:<code>GraphicsWidget &lt;pyqtgraph.GraphicsWidget&gt;</code></p>
+<p>This class provides the ViewBox-plus-axes that appear when using
+:func:<code>pg.plot() &lt;pyqtgraph.plot&gt;</code>, :class:<code>PlotWidget &lt;pyqtgraph.PlotWidget&gt;</code>,
+and :func:<code>GraphicsLayout.addPlot() &lt;pyqtgraph.GraphicsLayout.addPlot&gt;</code>.</p>
+<p>It's main functionality is:</p>
+<ul>
+<li>Manage placement of ViewBox, AxisItems, and LabelItems</li>
+<li>Create and manage a list of PlotDataItems displayed inside the ViewBox</li>
+<li>Implement a context menu with commonly used display and analysis options</li>
+</ul>
+<p>Use :func:<code>plot() &lt;pyqtgraph.PlotItem.plot&gt;</code> to create a new PlotDataItem and
+add it to the view. Use :func:<code>addItem() &lt;pyqtgraph.PlotItem.addItem&gt;</code> to
+add any QGraphicsItem to the view.</p>
+<p>This class wraps several methods from its internal ViewBox:
+- :func:<code>setXRange &lt;pyqtgraph.ViewBox.setXRange&gt;</code>
+- :func:<code>setYRange &lt;pyqtgraph.ViewBox.setYRange&gt;</code>
+- :func:<code>setRange &lt;pyqtgraph.ViewBox.setRange&gt;</code>
+- :func:<code>autoRange &lt;pyqtgraph.ViewBox.autoRange&gt;</code>
+- :func:<code>setDefaultPadding &lt;pyqtgraph.ViewBox.setDefaultPadding&gt;</code>
+- :func:<code>setXLink &lt;pyqtgraph.ViewBox.setXLink&gt;</code>
+- :func:<code>setYLink &lt;pyqtgraph.ViewBox.setYLink&gt;</code>
+- :func:<code>setAutoPan &lt;pyqtgraph.ViewBox.setAutoPan&gt;</code>
+- :func:<code>setAutoVisible &lt;pyqtgraph.ViewBox.setAutoVisible&gt;</code>
+- :func:<code>setLimits &lt;pyqtgraph.ViewBox.setLimits&gt;</code>
+- :func:<code>viewRect &lt;pyqtgraph.ViewBox.viewRect&gt;</code>
+- :func:<code>viewRange &lt;pyqtgraph.ViewBox.viewRange&gt;</code>
+- :func:<code>setMouseEnabled &lt;pyqtgraph.ViewBox.setMouseEnabled&gt;</code>
+- :func:<code>enableAutoRange &lt;pyqtgraph.ViewBox.enableAutoRange&gt;</code>
+- :func:<code>disableAutoRange &lt;pyqtgraph.ViewBox.disableAutoRange&gt;</code>
+- :func:<code>setAspectLocked &lt;pyqtgraph.ViewBox.setAspectLocked&gt;</code>
+- :func:<code>invertY &lt;pyqtgraph.ViewBox.invertY&gt;</code>
+- :func:<code>invertX &lt;pyqtgraph.ViewBox.invertX&gt;</code>
+- :func:<code>register &lt;pyqtgraph.ViewBox.register&gt;</code>
+- :func:<code>unregister &lt;pyqtgraph.ViewBox.unregister&gt;</code></p>
+<p>The ViewBox itself can be accessed by calling :func:<code>getViewBox() &lt;pyqtgraph.PlotItem.getViewBox&gt;</code> </p>
+<p>==================== =======================================================================
+<strong>Signals:</strong>
+sigYRangeChanged
+wrapped from :class:<code>ViewBox &lt;pyqtgraph.ViewBox&gt;</code>
+sigXRangeChanged
+wrapped from :class:<code>ViewBox &lt;pyqtgraph.ViewBox&gt;</code>
+sigRangeChanged
+wrapped from :class:<code>ViewBox &lt;pyqtgraph.ViewBox&gt;</code>
+==================== =======================================================================</p>
+<p>Create a new PlotItem. All arguments are optional.
+Any extra keyword arguments are passed to :func:<code>PlotItem.plot() &lt;pyqtgraph.PlotItem.plot&gt;</code>.</p>
+<p>==============
+==========================================================================================
+<strong>Arguments:</strong>
+<em>title</em>
+Title to display at the top of the item. Html is allowed.
+<em>labels</em>
+A dictionary specifying the axis labels to display::</p>
+<pre><code>                {'left': (args), 'bottom': (args), ...}
+
+            The name of each axis and the corresponding arguments are passed to 
+            :func:`PlotItem.setLabel() &lt;pyqtgraph.PlotItem.setLabel&gt;`
+            Optionally, PlotItem my also be initialized with the keyword arguments left,
+            right, top, or bottom to achieve the same effect.
+</code></pre>
+<p><em>name</em>
+Registers a name for this view so that others may link to it
+<em>viewBox</em>
+If specified, the PlotItem will be constructed with this as its ViewBox.
+<em>axisItems</em>
+Optional dictionary instructing the PlotItem to use pre-constructed items
+for its axes. The dict keys must be axis names ('left', 'bottom', 'right', 'top')
+and the values must be instances of AxisItem (or at least compatible with AxisItem).
+==============
+==========================================================================================</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PowerPlot(RangePlot):
+    
+    def __init__(self, aspec, channel, browser, *args, **kwargs):
+        super().__init__(aspec, channel, browser, *args, **kwargs)
+        self.getAxis(&#39;left&#39;).showLabel(False)
+        self.getAxis(&#39;left&#39;).setStyle(showValues=False)
+        self.getAxis(&#39;bottom&#39;).showLabel(False)
+        self.getAxis(&#39;bottom&#39;).setStyle(showValues=False)
+        for axis in [&#39;left&#39;, &#39;right&#39;, &#39;bottom&#39;, &#39;top&#39;]:
+            self.getAxis(axis).setVisible(False)
+        #self.setLabel(&#39;bottom&#39;, &#39;Power (dB)&#39;)
+        #self.getViewBox().setBackgroundColor(&#39;black&#39;)
+        self.xline.setPen(0.7)
+        self.yline.setPen(0.7)
+        # data:
+        self.power_item = pg.PlotCurveItem(connect=&#39;all&#39;,
+                                           antialias=False,
+                                           skipFiniteCheck=True)
+        self.power_item.setPen(dict(color=&#39;#000099&#39;, width=2))
+        self.add_item(self.power_item)
+        self.zero_item = pg.PlotCurveItem(connect=&#39;all&#39;,
+                                          antialias=False,
+                                          skipFiniteCheck=True)
+        self.zero_item.setPen(dict(color=&#39;#000099&#39;, width=2))
+        self.add_item(self.zero_item)
+        self.fill_item = pg.FillBetweenItem(self.zero_item,
+                                            self.power_item, &#39;#000099&#39;)
+        self.add_item(self.fill_item)
+
+        
+    def range(self, axspec):
+        if axspec == self.x():
+            return -100, 20, 5
+        elif axspec == self.y():
+            return super().range(axspec)
+        
+
+    def get_marker_pos(self, x0, x1, y):
+        xdata, ydata = self.power_item.getData()
+        i = np.argmin(np.abs(ydata - y))
+        x = xdata[i]
+        return x, y, None</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="audian.rangeplot.RangePlot" href="rangeplot.html#audian.rangeplot.RangePlot">RangePlot</a></li>
+<li>pyqtgraph.graphicsItems.PlotItem.PlotItem.PlotItem</li>
+<li>pyqtgraph.graphicsItems.GraphicsWidget.GraphicsWidget</li>
+<li>pyqtgraph.graphicsItems.GraphicsItem.GraphicsItem</li>
+<li>PyQt5.QtWidgets.QGraphicsWidget</li>
+<li>PyQt5.QtWidgets.QGraphicsObject</li>
+<li>PyQt5.QtCore.QObject</li>
+<li>PyQt5.QtWidgets.QGraphicsItem</li>
+<li>PyQt5.QtWidgets.QGraphicsLayoutItem</li>
+<li>sip.wrapper</li>
+<li>sip.simplewrapper</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="audian.spectrogramplot.PowerPlot.range"><code class="name flex">
+<span>def <span class="ident">range</span></span>(<span>self, axspec)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.spectrogramplot.PowerPlot.get_marker_pos"><code class="name flex">
+<span>def <span class="ident">get_marker_pos</span></span>(<span>self, x0, x1, y)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="audian.rangeplot.RangePlot" href="rangeplot.html#audian.rangeplot.RangePlot">RangePlot</a></b></code>:
+<ul class="hlist">
+<li><code><a title="audian.rangeplot.RangePlot.x" href="rangeplot.html#audian.rangeplot.RangePlot.x">x</a></code></li>
+<li><code><a title="audian.rangeplot.RangePlot.y" href="rangeplot.html#audian.rangeplot.RangePlot.y">y</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="audian.spectrogramplot.SpectrogramPlot"><code class="flex name class">
+<span>class <span class="ident">SpectrogramPlot</span></span>
+<span>(</span><span>aspec, channel, browser, xwidth, color_map, show_cbars, show_powers)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>GraphicsWidget implementing a standard 2D plotting area with axes.</p>
+<p><strong>Bases:</strong> :class:<code>GraphicsWidget &lt;pyqtgraph.GraphicsWidget&gt;</code></p>
+<p>This class provides the ViewBox-plus-axes that appear when using
+:func:<code>pg.plot() &lt;pyqtgraph.plot&gt;</code>, :class:<code>PlotWidget &lt;pyqtgraph.PlotWidget&gt;</code>,
+and :func:<code>GraphicsLayout.addPlot() &lt;pyqtgraph.GraphicsLayout.addPlot&gt;</code>.</p>
+<p>It's main functionality is:</p>
+<ul>
+<li>Manage placement of ViewBox, AxisItems, and LabelItems</li>
+<li>Create and manage a list of PlotDataItems displayed inside the ViewBox</li>
+<li>Implement a context menu with commonly used display and analysis options</li>
+</ul>
+<p>Use :func:<code>plot() &lt;pyqtgraph.PlotItem.plot&gt;</code> to create a new PlotDataItem and
+add it to the view. Use :func:<code>addItem() &lt;pyqtgraph.PlotItem.addItem&gt;</code> to
+add any QGraphicsItem to the view.</p>
+<p>This class wraps several methods from its internal ViewBox:
+- :func:<code>setXRange &lt;pyqtgraph.ViewBox.setXRange&gt;</code>
+- :func:<code>setYRange &lt;pyqtgraph.ViewBox.setYRange&gt;</code>
+- :func:<code>setRange &lt;pyqtgraph.ViewBox.setRange&gt;</code>
+- :func:<code>autoRange &lt;pyqtgraph.ViewBox.autoRange&gt;</code>
+- :func:<code>setDefaultPadding &lt;pyqtgraph.ViewBox.setDefaultPadding&gt;</code>
+- :func:<code>setXLink &lt;pyqtgraph.ViewBox.setXLink&gt;</code>
+- :func:<code>setYLink &lt;pyqtgraph.ViewBox.setYLink&gt;</code>
+- :func:<code>setAutoPan &lt;pyqtgraph.ViewBox.setAutoPan&gt;</code>
+- :func:<code>setAutoVisible &lt;pyqtgraph.ViewBox.setAutoVisible&gt;</code>
+- :func:<code>setLimits &lt;pyqtgraph.ViewBox.setLimits&gt;</code>
+- :func:<code>viewRect &lt;pyqtgraph.ViewBox.viewRect&gt;</code>
+- :func:<code>viewRange &lt;pyqtgraph.ViewBox.viewRange&gt;</code>
+- :func:<code>setMouseEnabled &lt;pyqtgraph.ViewBox.setMouseEnabled&gt;</code>
+- :func:<code>enableAutoRange &lt;pyqtgraph.ViewBox.enableAutoRange&gt;</code>
+- :func:<code>disableAutoRange &lt;pyqtgraph.ViewBox.disableAutoRange&gt;</code>
+- :func:<code>setAspectLocked &lt;pyqtgraph.ViewBox.setAspectLocked&gt;</code>
+- :func:<code>invertY &lt;pyqtgraph.ViewBox.invertY&gt;</code>
+- :func:<code>invertX &lt;pyqtgraph.ViewBox.invertX&gt;</code>
+- :func:<code>register &lt;pyqtgraph.ViewBox.register&gt;</code>
+- :func:<code>unregister &lt;pyqtgraph.ViewBox.unregister&gt;</code></p>
+<p>The ViewBox itself can be accessed by calling :func:<code>getViewBox() &lt;pyqtgraph.PlotItem.getViewBox&gt;</code> </p>
+<p>==================== =======================================================================
+<strong>Signals:</strong>
+sigYRangeChanged
+wrapped from :class:<code>ViewBox &lt;pyqtgraph.ViewBox&gt;</code>
+sigXRangeChanged
+wrapped from :class:<code>ViewBox &lt;pyqtgraph.ViewBox&gt;</code>
+sigRangeChanged
+wrapped from :class:<code>ViewBox &lt;pyqtgraph.ViewBox&gt;</code>
+==================== =======================================================================</p>
+<p>Create a new PlotItem. All arguments are optional.
+Any extra keyword arguments are passed to :func:<code>PlotItem.plot() &lt;pyqtgraph.PlotItem.plot&gt;</code>.</p>
+<p>==============
+==========================================================================================
+<strong>Arguments:</strong>
+<em>title</em>
+Title to display at the top of the item. Html is allowed.
+<em>labels</em>
+A dictionary specifying the axis labels to display::</p>
+<pre><code>                {'left': (args), 'bottom': (args), ...}
+
+            The name of each axis and the corresponding arguments are passed to 
+            :func:`PlotItem.setLabel() &lt;pyqtgraph.PlotItem.setLabel&gt;`
+            Optionally, PlotItem my also be initialized with the keyword arguments left,
+            right, top, or bottom to achieve the same effect.
+</code></pre>
+<p><em>name</em>
+Registers a name for this view so that others may link to it
+<em>viewBox</em>
+If specified, the PlotItem will be constructed with this as its ViewBox.
+<em>axisItems</em>
+Optional dictionary instructing the PlotItem to use pre-constructed items
+for its axes. The dict keys must be axis names ('left', 'bottom', 'right', 'top')
+and the values must be instances of AxisItem (or at least compatible with AxisItem).
+==============
+==========================================================================================</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SpectrogramPlot(TimePlot):
+
+    
+    sigUpdateFilter = Signal(object, object)
+
+    def __init__(self, aspec, channel, browser, xwidth, color_map, show_cbars,
+                 show_powers):
+        super().__init__(aspec, channel, browser, xwidth)
+        
+        # axis:
+        self.getAxis(&#39;bottom&#39;).showLabel(False)
+        self.getAxis(&#39;bottom&#39;).setStyle(showValues=False)
+        self.getAxis(&#39;left&#39;).setLabel(&#39;Frequency&#39;, &#39;Hz&#39;)
+        self.getAxis(&#39;left&#39;).enableAutoSIPrefix()
+        
+        # color bar:
+        self.cbar = pg.ColorBarItem(colorMap=color_map,
+                                    interactive=True,
+                                    rounding=1, limits=(-200, 20))
+        self.cbar.setLabel(&#39;right&#39;, &#39;Power (dB)&#39;)
+        self.cbar.getAxis(&#39;right&#39;).setWidth(6*xwidth)
+        self.cbar.setVisible(show_cbars)
+
+        # power spectrum:
+        self.spec_data = None
+        self.powerax = PowerPlot(self.z() + self.y(), channel, browser)
+        self.powerax.setVisible(show_powers)
+
+        # filter handles:
+        self.highpass_handle = None        
+        self.lowpass_handle = None        
+        if &#39;filtered&#39; in browser.data:
+            self.highpass_cutoff = browser.data[&#39;filtered&#39;].highpass_cutoff
+            self.lowpass_cutoff = browser.data[&#39;filtered&#39;].lowpass_cutoff
+            self.highpass_handle = pg.InfiniteLine(angle=0, movable=True)
+            self.highpass_handle.setPen(pg.mkPen(&#39;white&#39;, width=2))
+            self.highpass_handle.addMarker(&#39;o&#39;, position=0.75, size=6)
+            self.highpass_handle.setZValue(100)
+            self.highpass_handle.setValue(self.highpass_cutoff)
+            self.highpass_handle.sigPositionChangeFinished.connect(self.highpass_changed)
+            self.addItem(self.highpass_handle, ignoreBounds=True)
+            self.lowpass_handle = pg.InfiniteLine(angle=0, movable=True)
+            self.lowpass_handle.setPen(pg.mkPen(&#39;white&#39;, width=2))
+            self.lowpass_handle.addMarker(&#39;o&#39;, position=0.75, size=6)
+            self.lowpass_handle.setZValue(100)
+            self.lowpass_handle.setValue(self.lowpass_cutoff)
+            self.lowpass_handle.sigPositionChangeFinished.connect(self.lowpass_changed)
+            self.addItem(self.lowpass_handle, ignoreBounds=True)
+            
+        self.setVisible(browser.show_specs &gt; 0)
+        self.sigUpdateFilter.connect(browser.update_filter)
+            
+
+    def polish(self):
+        TimePlot.polish(self)
+        text_color = self.palette().color(QPalette.WindowText)
+        self.cbar.getAxis(&#39;right&#39;).setTextPen(text_color)
+
+
+    def add_item(self, item, is_data=False):
+        super().add_item(item, is_data)
+        if is_data and isinstance(item, SpecItem):
+            self.spec_data = item.data
+            self.cbar.setImageItem(item)
+            # TODO: this should go into the realm of PlotRanges:
+            if self.highpass_handle is not None:
+                self.highpass_handle.setBounds((item.data.ampl_min,
+                                                item.data.ampl_max))
+            if self.lowpass_handle is not None:
+                self.lowpass_handle.setBounds((item.data.ampl_min,
+                                               item.data.ampl_max))
+
+                
+    def update_plot(self):
+        super().update_plot()
+        if self.spec_data is None:
+            return
+        t0, t1 = self.getViewBox().viewRange()[0]
+        i0 = int(t0*self.spec_data.rate)
+        if i0 &lt; 0:
+            i0 = 0
+        i1 = int(t1*self.spec_data.rate)
+        if i1 &gt; len(self.spec_data):
+            i1 = len(self.spec_data)
+        power = np.mean(self.spec_data[i0:i1, self.channel, :], axis=0)
+        power = decibel(power)
+        power[power &lt; -200] = -200
+        freqs = np.arange(len(power))*self.spec_data.fresolution
+        zeros = np.zeros(len(freqs)) - 200
+        self.powerax.power_item.setData(power, freqs)
+        self.powerax.zero_item.setData(zeros, freqs)
+        
+
+    def range(self, axspec):
+        if axspec == self.x():
+            return super().range(axspec)
+        elif axspec == self.y():
+            return super().range(axspec)
+        elif axspec == self.z():
+            if self.y() == Panel.frequencies[1]:
+                return -80, 0, 5
+            else:
+                return -200, 20, 5
+
+
+    def amplitudes(self, t0, t1):
+        amin, amax, astep = self.range(self.y())
+        return amin, amax
+
+
+    def setZRange(self, zmin, zmax):
+        for item in self.data_items:
+            if hasattr(item, &#39;setLevels&#39;):
+                item.setLevels((zmin, zmax), update=True)
+        self.cbar.setLevels((zmin, zmax))
+
+
+    def get_marker_pos(self, x0, x1, y):
+        for item in reversed(self.data_items):
+            if item.isVisible() and isinstance(item, SpecItem):
+                z = item.get_power(x0, y)
+                return x0, y, z
+        return x0, y, None
+
+            
+    def set_filter_handles(self, highpass_cutoff=None, lowpass_cutoff=None):
+        if highpass_cutoff is not None:
+            self.highpass_cutoff = highpass_cutoff
+            self.highpass_handle.setValue(self.highpass_cutoff)
+        if lowpass_cutoff is not None:
+            self.lowpass_cutoff = lowpass_cutoff
+            self.lowpass_handle.setValue(self.lowpass_cutoff)
+
+
+    def highpass_changed(self):
+        self.highpass_cutoff = self.highpass_handle.value()
+        self.sigUpdateFilter.emit(self.highpass_cutoff,
+                                  self.lowpass_cutoff)
+        
+
+    def lowpass_changed(self):
+        self.lowpass_cutoff = self.lowpass_handle.value()
+        self.sigUpdateFilter.emit(self.highpass_cutoff,
+                                  self.lowpass_cutoff)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="audian.timeplot.TimePlot" href="timeplot.html#audian.timeplot.TimePlot">TimePlot</a></li>
+<li><a title="audian.rangeplot.RangePlot" href="rangeplot.html#audian.rangeplot.RangePlot">RangePlot</a></li>
+<li>pyqtgraph.graphicsItems.PlotItem.PlotItem.PlotItem</li>
+<li>pyqtgraph.graphicsItems.GraphicsWidget.GraphicsWidget</li>
+<li>pyqtgraph.graphicsItems.GraphicsItem.GraphicsItem</li>
+<li>PyQt5.QtWidgets.QGraphicsWidget</li>
+<li>PyQt5.QtWidgets.QGraphicsObject</li>
+<li>PyQt5.QtCore.QObject</li>
+<li>PyQt5.QtWidgets.QGraphicsItem</li>
+<li>PyQt5.QtWidgets.QGraphicsLayoutItem</li>
+<li>sip.wrapper</li>
+<li>sip.simplewrapper</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="audian.spectrogramplot.SpectrogramPlot.sigUpdateFilter"><code class="name flex">
+<span>def <span class="ident">sigUpdateFilter</span></span>(<span>...)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>pyqtSignal(*types, name: str = &hellip;, revision: int = &hellip;, arguments: Sequence = &hellip;) -&gt; PYQT_SIGNAL</p>
+<p>types is normally a sequence of individual types.
+Each type is either a
+type object or a string that is the name of a C++ type.
+Alternatively
+each type could itself be a sequence of types each describing a different
+overloaded signal.
+name is the optional C++ name of the signal.
+If it is not specified then
+the name of the class attribute that is bound to the signal is used.
+revision is the optional revision of the signal that is exported to QML.
+If it is not specified then 0 is used.
+arguments is the optional sequence of the names of the signal's arguments.</p></div>
+</dd>
+<dt id="audian.spectrogramplot.SpectrogramPlot.polish"><code class="name flex">
+<span>def <span class="ident">polish</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.spectrogramplot.SpectrogramPlot.add_item"><code class="name flex">
+<span>def <span class="ident">add_item</span></span>(<span>self, item, is_data=False)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.spectrogramplot.SpectrogramPlot.update_plot"><code class="name flex">
+<span>def <span class="ident">update_plot</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.spectrogramplot.SpectrogramPlot.range"><code class="name flex">
+<span>def <span class="ident">range</span></span>(<span>self, axspec)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.spectrogramplot.SpectrogramPlot.amplitudes"><code class="name flex">
+<span>def <span class="ident">amplitudes</span></span>(<span>self, t0, t1)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.spectrogramplot.SpectrogramPlot.setZRange"><code class="name flex">
+<span>def <span class="ident">setZRange</span></span>(<span>self, zmin, zmax)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.spectrogramplot.SpectrogramPlot.get_marker_pos"><code class="name flex">
+<span>def <span class="ident">get_marker_pos</span></span>(<span>self, x0, x1, y)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.spectrogramplot.SpectrogramPlot.set_filter_handles"><code class="name flex">
+<span>def <span class="ident">set_filter_handles</span></span>(<span>self, highpass_cutoff=None, lowpass_cutoff=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.spectrogramplot.SpectrogramPlot.highpass_changed"><code class="name flex">
+<span>def <span class="ident">highpass_changed</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.spectrogramplot.SpectrogramPlot.lowpass_changed"><code class="name flex">
+<span>def <span class="ident">lowpass_changed</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="audian.timeplot.TimePlot" href="timeplot.html#audian.timeplot.TimePlot">TimePlot</a></b></code>:
+<ul class="hlist">
+<li><code><a title="audian.timeplot.TimePlot.enable_starttime" href="timeplot.html#audian.timeplot.TimePlot.enable_starttime">enable_starttime</a></code></li>
+<li><code><a title="audian.timeplot.TimePlot.x" href="rangeplot.html#audian.rangeplot.RangePlot.x">x</a></code></li>
+<li><code><a title="audian.timeplot.TimePlot.y" href="rangeplot.html#audian.rangeplot.RangePlot.y">y</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="audian" href="index.html">audian</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="audian.spectrogramplot.PowerPlot" href="#audian.spectrogramplot.PowerPlot">PowerPlot</a></code></h4>
+<ul class="">
+<li><code><a title="audian.spectrogramplot.PowerPlot.range" href="#audian.spectrogramplot.PowerPlot.range">range</a></code></li>
+<li><code><a title="audian.spectrogramplot.PowerPlot.get_marker_pos" href="#audian.spectrogramplot.PowerPlot.get_marker_pos">get_marker_pos</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="audian.spectrogramplot.SpectrogramPlot" href="#audian.spectrogramplot.SpectrogramPlot">SpectrogramPlot</a></code></h4>
+<ul class="two-column">
+<li><code><a title="audian.spectrogramplot.SpectrogramPlot.sigUpdateFilter" href="#audian.spectrogramplot.SpectrogramPlot.sigUpdateFilter">sigUpdateFilter</a></code></li>
+<li><code><a title="audian.spectrogramplot.SpectrogramPlot.polish" href="#audian.spectrogramplot.SpectrogramPlot.polish">polish</a></code></li>
+<li><code><a title="audian.spectrogramplot.SpectrogramPlot.add_item" href="#audian.spectrogramplot.SpectrogramPlot.add_item">add_item</a></code></li>
+<li><code><a title="audian.spectrogramplot.SpectrogramPlot.update_plot" href="#audian.spectrogramplot.SpectrogramPlot.update_plot">update_plot</a></code></li>
+<li><code><a title="audian.spectrogramplot.SpectrogramPlot.range" href="#audian.spectrogramplot.SpectrogramPlot.range">range</a></code></li>
+<li><code><a title="audian.spectrogramplot.SpectrogramPlot.amplitudes" href="#audian.spectrogramplot.SpectrogramPlot.amplitudes">amplitudes</a></code></li>
+<li><code><a title="audian.spectrogramplot.SpectrogramPlot.setZRange" href="#audian.spectrogramplot.SpectrogramPlot.setZRange">setZRange</a></code></li>
+<li><code><a title="audian.spectrogramplot.SpectrogramPlot.get_marker_pos" href="#audian.spectrogramplot.SpectrogramPlot.get_marker_pos">get_marker_pos</a></code></li>
+<li><code><a title="audian.spectrogramplot.SpectrogramPlot.set_filter_handles" href="#audian.spectrogramplot.SpectrogramPlot.set_filter_handles">set_filter_handles</a></code></li>
+<li><code><a title="audian.spectrogramplot.SpectrogramPlot.highpass_changed" href="#audian.spectrogramplot.SpectrogramPlot.highpass_changed">highpass_changed</a></code></li>
+<li><code><a title="audian.spectrogramplot.SpectrogramPlot.lowpass_changed" href="#audian.spectrogramplot.SpectrogramPlot.lowpass_changed">lowpass_changed</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.1</a>.</p>
+</footer>
+</body>
+</html>

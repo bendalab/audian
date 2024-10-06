@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.1">
+<title>audian.traceitem API documentation</title>
+<meta name="description" content="PlotDataItem for time series trace as a function of time.">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script type="text/x-mathjax-config">MathJax.Hub.Config({ tex2jax: { inlineMath: [ ['$','$'], ["\\(","\\)"] ], processEscapes: true } });</script>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML" integrity="sha256-kZafAc6mZvK3W3v1pHOcUix30OHQN6pU/NO2oFkqZVw=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+})</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>audian.traceitem</code></h1>
+</header>
+<section id="section-intro">
+<p>PlotDataItem for time series trace as a function of time.</p>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="audian.traceitem.down_sample_peak"><code class="name flex">
+<span>def <span class="ident">down_sample_peak</span></span>(<span>data, step)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="audian.traceitem.TraceItem"><code class="flex name class">
+<span>class <span class="ident">TraceItem</span></span>
+<span>(</span><span>data, channel, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><strong>Bases:</strong> :class:<code>GraphicsObject &lt;pyqtgraph.GraphicsObject&gt;</code></p>
+<p>:class:<code>PlotDataItem</code> provides a unified interface for displaying plot curves, scatter plots, or both.
+It also contains methods to transform or decimate the original data before it is displayed. </p>
+<p>As pyqtgraph's standard plotting object, <code>plot()</code> methods such as :func:<code>pyqtgraph.plot</code> and
+:func:<code>PlotItem.plot() &lt;pyqtgraph.PlotItem.plot&gt;</code> create instances of :class:<code>PlotDataItem</code>.</p>
+<p>While it is possible to use :class:<code>PlotCurveItem &lt;pyqtgraph.PlotCurveItem&gt;</code> or
+:class:<code>ScatterPlotItem &lt;pyqtgraph.ScatterPlotItem&gt;</code> individually, this is recommended only
+where performance is critical and the limited functionality of these classes is sufficient.</p>
+<p>==================================
+==============================================
+<strong>Signals:</strong>
+sigPlotChanged(self)
+Emitted when the data in this item is updated.
+sigClicked(self, ev)
+Emitted when the item is clicked.
+sigPointsClicked(self, points, ev)
+Emitted when a plot point is clicked
+Sends the list of points under the mouse.
+sigPointsHovered(self, points, ev)
+Emitted when a plot point is hovered over.
+Sends the list of points under the mouse.
+==================================
+==============================================</p>
+<p>There are many different ways to create a PlotDataItem.</p>
+<p><strong>Data initialization arguments:</strong> (x,y data only)</p>
+<pre><code>========================== =========================================
+PlotDataItem(x, y)         x, y: array_like coordinate values
+PlotDataItem(y)            y values only -- x will be
+                           automatically set to &lt;code&gt;range(len(y))&lt;/code&gt;
+PlotDataItem(x=x, y=y)     x and y given by keyword arguments
+PlotDataItem(ndarray(N,2)) single numpy array with shape (N, 2),
+                           where ``x=data[:,0]`` and ``y=data[:,1]``
+========================== =========================================
+</code></pre>
+<p><strong>Data initialization arguments:</strong> (x,y data AND may include spot style)</p>
+<pre><code>============================ ===============================================
+PlotDataItem(recarray)       numpy record array with ``dtype=[('x', float),
+                             ('y', float), ...]``
+PlotDataItem(list-of-dicts)  ``[{'x': x, 'y': y, ...},   ...]``
+PlotDataItem(dict-of-lists)  ``{'x': [...], 'y': [...],  ...}``
+============================ ===============================================
+</code></pre>
+<p><strong>Line style keyword arguments:</strong></p>
+<pre><code>============ ==============================================================================
+connect      Specifies how / whether vertexes should be connected. See below for details.
+pen          Pen to use for drawing the lines between points.
+             Default is solid grey, 1px width. Use None to disable line drawing.
+             May be a &lt;code&gt;QPen&lt;/code&gt; or any single argument accepted by 
+             :func:`mkPen() &lt;pyqtgraph.mkPen&gt;`
+shadowPen    Pen for secondary line to draw behind the primary line. Disabled by default.
+             May be a &lt;code&gt;QPen&lt;/code&gt; or any single argument accepted by 
+             :func:`mkPen() &lt;pyqtgraph.mkPen&gt;`
+fillLevel    If specified, the area between the curve and fillLevel is filled.
+fillOutline  (bool) If True, an outline surrounding the *fillLevel* area is drawn.
+fillBrush    Fill to use in the *fillLevel* area. May be any single argument accepted by 
+             :func:`mkBrush() &lt;pyqtgraph.mkBrush&gt;`
+stepMode     (str or None) If specified and not None, a stepped curve is drawn.
+             For 'left' the specified points each describe the left edge of a step.
+             For 'right', they describe the right edge. 
+             For 'center', the x coordinates specify the location of the step boundaries.
+             This mode is commonly used for histograms. Note that it requires an additional
+             x value, such that len(x) = len(y) + 1 .
+
+============ ==============================================================================
+</code></pre>
+<p><code>connect</code> supports the following arguments:</p>
+<ul>
+<li>'all' connects all points.
+</li>
+<li>'pairs' generates lines between every other point.</li>
+<li>'finite' creates a break when a nonfinite points is encountered. </li>
+<li>If an ndarray is passed, it should contain <code>N</code> int32 values of 0 or 1.
+Values of 1 indicate that the respective point will be connected to the next.</li>
+<li>In the default 'auto' mode, PlotDataItem will normally use 'all', but if any
+nonfinite data points are detected, it will automatically switch to 'finite'.</li>
+</ul>
+<p>See :func:<code>arrayToQPath() &lt;pyqtgraph.arrayToQPath&gt;</code> for more details.</p>
+<p><strong>Point style keyword arguments:</strong>
+(see :func:<code>ScatterPlotItem.setData() &lt;pyqtgraph.ScatterPlotItem.setData&gt;</code> for more information)</p>
+<pre><code>============ ======================================================
+symbol       Symbol to use for drawing points, or a list of symbols
+             for each. The default is no symbol.
+symbolPen    Outline pen for drawing points, or a list of pens, one
+             per point. May be any single argument accepted by
+             :func:`mkPen() &lt;pyqtgraph.mkPen&gt;`.
+symbolBrush  Brush for filling points, or a list of brushes, one 
+             per point. May be any single argument accepted by
+             :func:`mkBrush() &lt;pyqtgraph.mkBrush&gt;`.
+symbolSize   Diameter of symbols, or list of diameters.
+pxMode       (bool) If True, then symbolSize is specified in
+             pixels. If False, then symbolSize is
+             specified in data coordinates.
+============ ======================================================
+</code></pre>
+<p>Any symbol recognized by :class:<code>ScatterPlotItem &lt;pyqtgraph.ScatterPlotItem&gt;</code> can be specified,
+including 'o' (circle), 's' (square), 't', 't1', 't2', 't3' (triangles of different orientation),
+'d' (diamond), '+' (plus sign), 'x' (x mark), 'p' (pentagon), 'h' (hexagon) and 'star'.</p>
+<p>Symbols can also be directly given in the form of a :class:<code>QtGui.QPainterPath</code> instance.</p>
+<p><strong>Optimization keyword arguments:</strong></p>
+<pre><code>================= =======================================================================
+useCache          (bool) By default, generated point graphics items are cached to
+                  improve performance. Setting this to False can improve image quality
+                  in certain situations.
+antialias         (bool) By default, antialiasing is disabled to improve performance.
+                  Note that in some cases (in particular, when ``pxMode=True``), points
+                  will be rendered antialiased even if this is set to &lt;code&gt;False&lt;/code&gt;.
+downsample        (int) Reduce the number of samples displayed by the given factor.
+downsampleMethod  'subsample': Downsample by taking the first of N samples.
+                  This method is fastest and least accurate.
+                  'mean': Downsample by taking the mean of N samples.
+                  'peak': Downsample by drawing a saw wave that follows the min
+                  and max of the original data. This method produces the best
+                  visual representation of the data but is slower.
+autoDownsample    (bool) If &lt;code&gt;True&lt;/code&gt;, resample the data before plotting to avoid plotting
+                  multiple line segments per pixel. This can improve performance when
+                  viewing very high-density data, but increases the initial overhead
+                  and memory usage.
+clipToView        (bool) If &lt;code&gt;True&lt;/code&gt;, only data visible within the X range of the containing
+                  :class:&lt;code&gt;ViewBox&lt;/code&gt; is plotted. This can improve performance when plotting
+                  very large data sets where only a fraction of the data is visible
+                  at any time.
+dynamicRangeLimit (float or &lt;code&gt;None&lt;/code&gt;) Limit off-screen y positions of data points. 
+                  &lt;code&gt;None&lt;/code&gt; disables the limiting. This can increase performance but may
+                  cause plots to disappear at high levels of magnification.
+                  The default of 1e6 limits data to approximately 1,000,000 times the 
+                  :class:&lt;code&gt;ViewBox&lt;/code&gt; height.
+dynamicRangeHyst  (float) Permits changes in vertical zoom up to the given hysteresis
+                  factor (the default is 3.0) before the limit calculation is repeated.
+skipFiniteCheck   (bool, default &lt;code&gt;False&lt;/code&gt;) Optimization flag that can speed up plotting by not 
+                  checking and compensating for NaN values.  If set to &lt;code&gt;True&lt;/code&gt;, and NaN 
+                  values exist, unpredictable behavior will occur. The data may not be
+                  displayed or the plot may take a significant performance hit.
+
+                  In the default 'auto' connect mode, &lt;code&gt;PlotDataItem&lt;/code&gt; will automatically
+                  override this setting.
+================= =======================================================================
+</code></pre>
+<p><strong>Meta-info keyword arguments:</strong></p>
+<pre><code>==========   ================================================
+name         (string) Name of item for use in the plot legend
+==========   ================================================
+</code></pre>
+<p><strong>Notes on performance:</strong></p>
+<p>Plotting lines with the default single-pixel width is the fastest available option. For such lines,
+translucent colors (<code>alpha</code> &lt; 1) do not result in a significant slowdown.</p>
+<p>Wider lines increase the complexity due to the overlap of individual line segments. Translucent colors
+require merging the entire plot into a single entity before the alpha value can be applied. For plots with more
+than a few hundred points, this can result in excessive slowdown.</p>
+<p>Since version 0.12.4, this slowdown is automatically avoided by an algorithm that draws line segments
+separately for fully opaque lines. Setting <code>alpha</code> &lt; 1 reverts to the previous, slower drawing method.</p>
+<p>For lines with a width of more than 4 pixels, :func:<code>pyqtgraph.mkPen() &lt;pyqtgraph.mkPen&gt;</code> will automatically
+create a <code>QPen</code> with <code>Qt.PenCapStyle.RoundCap</code> to ensure a smooth connection of line segments. This incurs a
+small performance penalty.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TraceItem(pg.PlotDataItem):
+    
+    def __init__(self, data, channel, *args, **kwargs):
+        self.data = data
+        self.rate = self.data.rate
+        self.channel = channel
+        self.step = 1
+        self.color = self.data.color
+        self.lw_thin = self.data.lw_thin
+        self.lw_thick = self.data.lw_thick
+
+        self.data.plot_items[self.channel] = self
+        
+        pg.PlotDataItem.__init__(self, *args, connect=&#39;all&#39;,
+                                 antialias=False, skipFiniteCheck=True,
+                                 **kwargs)
+        self.setPen(dict(color=self.color, width=self.lw_thin))
+        self.setSymbolSize(8)
+        self.setSymbolBrush(color=self.color)
+        self.setSymbolPen(color=self.color)
+        self.setSymbol(None)
+
+
+    def update_plot(self):
+        vb = self.getViewBox()
+        if not isinstance(vb, pg.ViewBox):
+            return
+        t0, t1 = vb.viewRange()[0]
+        
+        start = max(0, int(t0*self.rate))
+        tstop = int(t1*self.rate+1)
+        stop = min(len(self.data), tstop)
+        max_pixel = QApplication.desktop().screenGeometry().width()
+        self.step = max(1, (tstop - start)//max_pixel)
+        if self.step &gt; 1:
+            start = int(floor(start/self.step)*self.step)
+            stop = int(ceil(stop/self.step + 1)*self.step)
+            self.setPen(dict(color=self.color, width=self.lw_thin))
+            self.setSymbol(None)
+            n = (stop - start)//self.step
+            pdata = np.zeros(2*n)
+            i = 0
+            nb = (self.data.bufferframes//self.step)*self.step
+            for dd in self.data.blocks(nb, 0, start, stop):
+                dsd = down_sample_peak(dd[:, self.channel], self.step)
+                pdata[i:i+len(dsd)] = dsd
+                i += len(dsd)
+            #pdata = down_sample_peak(self.data[start:stop, self.channel], self.step)
+            step2 = self.step/2
+            time = np.arange(start, start + len(pdata)*step2, step2)/self.rate
+            self.setData(time, pdata)
+        elif self.step &gt; 1:  # TODO: not used
+            # subsample:
+            self.setData(np.arange(start, stop, self.step)/self.rate,
+                         self.data[start:stop:self.step, self.channel])
+            self.setPen(dict(color=self.color, width=self.lw_thin))
+        else:
+            # all data:
+            self.setData(np.arange(start, stop)/self.rate,
+                         self.data[start:stop, self.channel])
+            self.setPen(dict(color=self.color, width=self.lw_thick))
+            if max_pixel/(stop - start) &gt;= 10:
+                self.setSymbol(&#39;o&#39;)
+            else:
+                self.setSymbol(None)
+        self.data.buffer_changed[self.channel] = False
+
+
+    def get_amplitude(self, x, y, x1=None):
+        &#34;&#34;&#34;Get trace amplitude next to cursor position. &#34;&#34;&#34;
+        idx = int(np.round(x*self.rate))
+        step = self.step
+        if x1 is not None:
+            idx1 = int(np.round(x1*self.rate))
+            step = max(1, idx1 - idx)
+        if step &gt; 1:
+            idx = (idx//step)*step
+            data_block = self.data[idx:idx + step, self.channel]
+            mini = np.argmin(data_block)
+            maxi = np.argmax(data_block)
+            amin = data_block[mini]
+            amax = data_block[maxi]
+            if fabs(y - amax) &lt; fabs(y - amin):
+                return (idx+maxi)/self.rate, amax
+            else:
+                return (idx+mini)/self.rate, amin
+        else:
+            return idx/self.rate, self.data[idx, self.channel]</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>pyqtgraph.graphicsItems.PlotDataItem.PlotDataItem</li>
+<li>pyqtgraph.graphicsItems.GraphicsObject.GraphicsObject</li>
+<li>pyqtgraph.graphicsItems.GraphicsItem.GraphicsItem</li>
+<li>PyQt5.QtWidgets.QGraphicsObject</li>
+<li>PyQt5.QtCore.QObject</li>
+<li>PyQt5.QtWidgets.QGraphicsItem</li>
+<li>sip.wrapper</li>
+<li>sip.simplewrapper</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="audian.traceitem.TraceItem.update_plot"><code class="name flex">
+<span>def <span class="ident">update_plot</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.traceitem.TraceItem.get_amplitude"><code class="name flex">
+<span>def <span class="ident">get_amplitude</span></span>(<span>self, x, y, x1=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get trace amplitude next to cursor position.</p></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="audian" href="index.html">audian</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="audian.traceitem.down_sample_peak" href="#audian.traceitem.down_sample_peak">down_sample_peak</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="audian.traceitem.TraceItem" href="#audian.traceitem.TraceItem">TraceItem</a></code></h4>
+<ul class="">
+<li><code><a title="audian.traceitem.TraceItem.update_plot" href="#audian.traceitem.TraceItem.update_plot">update_plot</a></code></li>
+<li><code><a title="audian.traceitem.TraceItem.get_amplitude" href="#audian.traceitem.TraceItem.get_amplitude">get_amplitude</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.1</a>.</p>
+</footer>
+</body>
+</html>
