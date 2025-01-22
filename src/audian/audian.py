@@ -1206,28 +1206,50 @@ class Audian(QMainWindow):
 
 
     def load_files(self, file_paths):
+        if len(file_paths) == 0:
+            return
         if len(self.browsers) > 0:
             self.prev_browser = self.browser()
-        # prepare open files:
-        first = True
-        for file_path in file_paths:
-            if not os.path.isfile(file_path):
-                continue
-            browser = DataBrowser(file_path, self.load_kwargs, self.plugins,
-                                  self.channels, self.audio, self.acts)
-            self.tabs.addTab(browser, os.path.basename(file_path))
-            self.browsers.append(browser)
-            if first:
-                self.tabs.setCurrentWidget(browser)
-                first = False
+        # prepare open all files in a single buffer:
+        browser = DataBrowser(file_paths, self.load_kwargs, self.plugins,
+                              self.channels, self.audio, self.acts)
+        self.tabs.addTab(browser, os.path.basename(file_paths[0]))
+        self.browsers.append(browser)
+        self.tabs.setCurrentWidget(browser)
         QTimer.singleShot(100, self.load_data)
 
             
     def load_data(self):
         for browser in self.browsers:
             if browser.data.data is None:
-                browser.open(self, self.unwrap, self.unwrap_clip,
-                             self.highpass_cutoff, self.lowpass_cutoff)
+                try:
+                    browser.open(self, self.unwrap, self.unwrap_clip,
+                                 self.highpass_cutoff, self.lowpass_cutoff)
+                except:
+                    file_paths = browser.data.file_path
+                    if isinstance(file_paths, (list, tuple, np.ndarray)):
+                        self.tabs.removeTab(self.tabs.indexOf(browser))
+                        self.browsers.remove(browser)
+                        # loading into a single buffer failed,
+                        # load each file separately:
+                        first = True
+                        for file_path in file_paths:
+                            if not os.path.isfile(file_path):
+                                continue
+                            browser = DataBrowser(file_path,
+                                                  self.load_kwargs,
+                                                  self.plugins,
+                                                  self.channels,
+                                                  self.audio,
+                                                  self.acts)
+                            self.tabs.addTab(browser,
+                                             os.path.basename(file_path))
+                            self.browsers.append(browser)
+                            if first:
+                                self.tabs.setCurrentWidget(browser)
+                                first = False
+                        QTimer.singleShot(100, self.load_data)
+                        return
                 if browser.data is None:
                     self.tabs.removeTab(self.tabs.indexOf(browser))
                     self.browsers.remove(browser)
