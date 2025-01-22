@@ -1225,7 +1225,8 @@ class Audian(QMainWindow):
                 try:
                     browser.open(self, self.unwrap, self.unwrap_clip,
                                  self.highpass_cutoff, self.lowpass_cutoff)
-                except:
+                except Exception as e:
+                    print(e)
                     file_paths = browser.data.file_path
                     if isinstance(file_paths, (list, tuple, np.ndarray)):
                         self.tabs.removeTab(self.tabs.indexOf(browser))
