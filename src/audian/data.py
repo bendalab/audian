@@ -164,8 +164,10 @@ class Data(object):
         # raw data:        
         tbuffer = self.buffer_time + self.tbefore + self.tafter
         tback = self.back_time + self.tbefore
+        verbose = isinstance(self.file_path, (list, tuple, np.ndarray))
         try:
             self.data = DataLoader(self.file_path, tbuffer, tback,
+                                   verbose=verbose,
                                    **self.load_kwargs)
         except IOError:
             self.data = None

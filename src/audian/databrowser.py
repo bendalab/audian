@@ -188,6 +188,13 @@ class DataBrowser(QWidget):
         self.close()
 
 
+    def name(self):
+        if isinstance(self.data.file_path, (list, tuple, np.ndarray)):
+            return os.path.basename(self.data.file_path[0])
+        else:
+            return os.path.basename(self.data.file_path)
+
+        
     def get_trace(self, name):
         return self.data[name]
 

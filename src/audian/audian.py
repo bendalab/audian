@@ -1213,7 +1213,7 @@ class Audian(QMainWindow):
         # prepare open all files in a single buffer:
         browser = DataBrowser(file_paths, self.load_kwargs, self.plugins,
                               self.channels, self.audio, self.acts)
-        self.tabs.addTab(browser, os.path.basename(file_paths[0]))
+        self.tabs.addTab(browser, browser.name())
         self.browsers.append(browser)
         self.tabs.setCurrentWidget(browser)
         QTimer.singleShot(100, self.load_data)
@@ -1243,8 +1243,7 @@ class Audian(QMainWindow):
                                                   self.channels,
                                                   self.audio,
                                                   self.acts)
-                            self.tabs.addTab(browser,
-                                             os.path.basename(file_path))
+                            self.tabs.addTab(browser, browser.name())
                             self.browsers.append(browser)
                             if first:
                                 self.tabs.setCurrentWidget(browser)
@@ -1258,7 +1257,7 @@ class Audian(QMainWindow):
 Can not open file <b>{browser.file_path}</b>!''')
                     break
                 self.tabs.setTabText(self.tabs.indexOf(browser),
-                                     os.path.basename(browser.data.file_path))
+                                     browser.name())
                 for b in self.browsers:
                     if not b.data.data is None and \
                        b.data.channels != browser.data.channels:
