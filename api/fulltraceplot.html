@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.5">
+<title>audian.fulltraceplot API documentation</title>
+<meta name="description" content="FullTracePlot …">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script type="text/x-mathjax-config">MathJax.Hub.Config({ tex2jax: { inlineMath: [ ['$','$'], ["\\(","\\)"] ], processEscapes: true } });</script>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML" integrity="sha256-kZafAc6mZvK3W3v1pHOcUix30OHQN6pU/NO2oFkqZVw=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>audian.fulltraceplot</code></h1>
+</header>
+<section id="section-intro">
+<p>FullTracePlot</p>
+<h2 id="todo">TODO</h2>
+<ul>
+<li>secs_to_str and secs_format to extra module or even thunderlab?</li>
+<li>Have a class for a single channel that we could add to the toolbar.</li>
+<li>Only use Data class</li>
+</ul>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="audian.fulltraceplot.secs_to_str"><code class="name flex">
+<span>def <span class="ident">secs_to_str</span></span>(<span>time)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def secs_to_str(time):
+    hours = int(time//3600)
+    time -= 3600*hours
+    mins = int(time//60)
+    time -= 60*mins
+    secs = int(floor(time))
+    time -= secs
+    if hours &gt; 0:
+        return f&#39;{hours}:{mins:02d}:{secs:02d}&#39;
+    elif mins &gt; 0:
+        return f&#39;{mins:02d}:{secs:02d}&#39;
+    elif secs &gt; 0:
+        return f&#39;{secs}.{1000*time:03.0f}s&#39;
+    elif time &gt;= 0.01:
+        return f&#39;{1000*time:03.0f}ms&#39;
+    elif time &gt;= 0.001:
+        return f&#39;{1000*time:.2f}ms&#39;
+    else:
+        return f&#39;{1e6*time:.0f}\u00b5s&#39;</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.fulltraceplot.secs_format"><code class="name flex">
+<span>def <span class="ident">secs_format</span></span>(<span>time)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def secs_format(time):
+    if time &gt;= 3600.0:
+        return &#39;h:mm:ss&#39;
+    elif time &gt;= 60.0:
+        return &#39;mm:ss&#39;
+    elif time &gt; 1.0:
+        return &#39;s.ms&#39;
+    else:
+        return &#39;ms&#39;</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="audian.fulltraceplot.FullTracePlot"><code class="flex name class">
+<span>class <span class="ident">FullTracePlot</span></span>
+<span>(</span><span>data, axtraces, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FullTracePlot(pg.GraphicsLayoutWidget):
+
+    
+    def __init__(self, data, axtraces, *args, **kwargs):
+        pg.GraphicsLayoutWidget.__init__(self, *args, **kwargs)
+
+        self.data = data
+        self.frames = self.data.frames
+        self.tmax = self.frames/self.data.rate
+        self.axtraces = axtraces
+        self.no_signal = False
+
+        self.setBackground(None)
+        self.ci.layout.setContentsMargins(0, 0, 0, 0)
+        self.ci.layout.setVerticalSpacing(0)
+
+        # for each channel prepare a plot panel:
+        xwidth = self.fontMetrics().averageCharWidth()
+        self.axs = []
+        self.lines = []
+        self.regions = []
+        self.labels = []
+        for c in range(self.data.channels):
+            # setup plot panel:
+            axt = pg.PlotItem()
+            axt.showAxes(True, False)
+            axt.getAxis(&#39;left&#39;).setWidth(8*xwidth)
+            axt.getViewBox().setBackgroundColor(None)
+            axt.getViewBox().setDefaultPadding(padding=0.0)
+            axt.hideButtons()
+            axt.setMenuEnabled(False)
+            axt.setMouseEnabled(False, False)
+            axt.enableAutoRange(False, False)
+            axt.setLimits(xMin=0, xMax=self.tmax,
+                          minXRange=self.tmax, maxXRange=self.tmax)
+            axt.setXRange(0, self.tmax)
+
+            # add region marker:
+            region = pg.LinearRegionItem(pen=dict(color=&#39;#110353&#39;, width=2),
+                                         brush=(34, 6, 167, 127),
+                                         hoverPen=dict(color=&#39;#aa77ff&#39;, width=2),
+                                         hoverBrush=(34, 6, 167, 255),
+                                         movable=True,
+                                         swapMode=&#39;block&#39;)
+            region.setZValue(50)
+            region.setBounds((0, self.tmax))
+            region.setRegion((self.axtraces[c].viewRange()[0]))
+            region.sigRegionChanged.connect(self.update_time_range)
+            self.axtraces[c].sigXRangeChanged.connect(self.update_region)
+            axt.addItem(region)
+            self.regions.append(region)
+
+            # add time label:
+            label = QGraphicsSimpleTextItem(axt.getAxis(&#39;left&#39;))
+            label.setToolTip(f&#39;Total duration in {secs_format(self.tmax)}&#39;)
+            label.setText(secs_to_str(self.tmax))
+            label.setPos(int(xwidth), xwidth/2)
+            self.labels.append(label)
+
+            # init data:
+            max_pixel = QApplication.desktop().screenGeometry().width()
+            self.step = max(1, self.frames//max_pixel)
+            self.index = 0
+            self.nblock = int(20.0*self.data.rate//self.step)*self.step
+            self.times = np.arange(0, self.frames, self.step/2)/self.data.rate
+            self.datas = np.zeros((len(self.times), self.data.channels))
+            
+            # add data:
+            line = pg.PlotDataItem(antialias=True,
+                                   pen=dict(color=&#39;#2206a7&#39;, width=1.1),
+                                   skipFiniteCheck=True, autDownsample=False)
+            line.setZValue(10)
+            axt.addItem(line)
+            self.lines.append(line)
+
+            # add zero line:
+            zero_line = axt.addLine(y=0, movable=False, pen=dict(color=&#39;grey&#39;, width=1))
+            zero_line.setZValue(20)
+            
+            self.addItem(axt, row=c, col=0)
+            self.axs.append(axt)
+            
+        QTimer.singleShot(10, self.load_data)
+
+        
+    def polish(self):
+        text_color = self.palette().color(QPalette.WindowText)
+        for label in self.labels:
+            label.setBrush(text_color)
+
+
+    def load_data(self):
+        i = 2*self.index//self.step
+        n = min(self.nblock, self.frames - self.index)
+        buffer = np.zeros((n, self.data.channels))
+        self.data.load_buffer(self.index, n, buffer)
+        for c in range(self.data.channels):
+            data = down_sample_peak(buffer[:,c], self.step)
+            self.datas[i:i+len(data), c] = data
+            self.lines[c].setData(self.times, self.datas[:,c])
+        self.index += n
+        if self.index &lt; self.frames:
+            QTimer.singleShot(10, self.load_data)
+        else:
+            # TODO: do we really datas? Couldn&#39;t we take it from lines? 
+            for c in range(self.data.channels):
+                ymin = np.min(self.datas[:,c])
+                ymax = np.max(self.datas[:,c])
+                y = max(fabs(ymin), fabs(ymax))
+                self.axs[c].setYRange(-y, y)
+                self.axs[c].setLimits(yMin=-y, yMax=y,
+                                      minYRange=2*y, maxYRange=2*y)
+            self.times = None
+            self.datas = None
+
+        
+    def update_layout(self, channels, data_height):
+        first = True
+        for c in range(self.data.channels):
+            self.axs[c].setVisible(c in channels)
+            if c in channels:
+                self.ci.layout.setRowFixedHeight(c, data_height)
+                self.labels[c].setVisible(first)
+                first = False
+            else:
+                self.ci.layout.setRowFixedHeight(c, 0)
+                self.labels[c].setVisible(False)
+        self.setFixedHeight(len(channels)*data_height)
+
+
+    def update_time_range(self, region):
+        if self.no_signal:
+            return
+        self.no_signal = True
+        xmin, xmax = region.getRegion()
+        for ax, reg in zip(self.axtraces, self.regions):
+            if reg is region:
+                ax.setXRange(xmin, xmax)
+                break
+        self.no_signal = False
+
+
+    def update_region(self, vbox, x_range):
+        for ax, region in zip(self.axtraces, self.regions):
+            if ax.getViewBox() is vbox:
+                region.setRegion(x_range)
+                break
+
+        
+    def mousePressEvent(self, ev):
+        if ev.button() == Qt.MouseButton.LeftButton:
+            for ax, region in zip(self.axs, self.regions):
+                pos = ax.getViewBox().mapSceneToView(ev.pos())
+                [xmin, xmax], [ymin, ymax] = ax.viewRange()
+                if xmin &lt;= pos.x() &lt;= xmax and ymin &lt;= pos.y() &lt;= ymax:
+                    dx = (xmax - xmin)/self.width()
+                    x = pos.x()
+                    xmin, xmax = region.getRegion()
+                    if x &lt; xmin-2*dx or x &gt; xmax + 2*dx:
+                        dx = xmax - xmin
+                        xmin = max(0, x - dx/2)
+                        xmax = xmin + dx
+                        if xmax &gt; self.tmax:
+                            xmin = max(0, xmax - dx)
+                        region.setRegion((xmin, xmax))
+                        ev.accept()
+                        return
+                    break
+        ev.ignore()
+        super().mousePressEvent(ev)</code></pre>
+</details>
+<div class="desc"><p>Convenience class consisting of a :class:<code>GraphicsView
+&lt;pyqtgraph.GraphicsView&gt;</code> with a single :class:<code>GraphicsLayout
+&lt;pyqtgraph.GraphicsLayout&gt;</code> as its central item. </p>
+<p>This widget is an easy starting point for generating multi-panel figures.
+Example::</p>
+<pre><code>w = pg.GraphicsLayoutWidget()
+p1 = w.addPlot(row=0, col=0)
+p2 = w.addPlot(row=0, col=1)
+v = w.addViewBox(row=1, col=0, colspan=2)
+</code></pre>
+<p>=========
+=================================================================
+parent
+(QWidget or None) The parent widget.
+show
+(bool) If True, then immediately show the widget after it is
+created. If the widget has no parent, then it will be shown
+inside a new window.
+size
+(width, height) tuple. Optionally resize the widget. Note: if
+this widget is placed inside a layout, then this argument has no
+effect.
+title
+(str or None) If specified, then set the window title for this
+widget.
+kargs
+All extra arguments are passed to
+:meth:<code>GraphicsLayout.__init__
+&lt;pyqtgraph.GraphicsLayout.__init__&gt;</code>
+=========
+=================================================================</p>
+<p>This class wraps several methods from its internal GraphicsLayout:
+:func:<code>nextRow &lt;pyqtgraph.GraphicsLayout.nextRow&gt;</code>
+:func:<code>nextColumn &lt;pyqtgraph.GraphicsLayout.nextColumn&gt;</code>
+:func:<code>addPlot &lt;pyqtgraph.GraphicsLayout.addPlot&gt;</code>
+:func:<code>addViewBox &lt;pyqtgraph.GraphicsLayout.addViewBox&gt;</code>
+:func:<code>addItem &lt;pyqtgraph.GraphicsLayout.addItem&gt;</code>
+:func:<code>getItem &lt;pyqtgraph.GraphicsLayout.getItem&gt;</code>
+:func:<code>addLabel &lt;pyqtgraph.GraphicsLayout.addLabel&gt;</code>
+:func:<code>addLayout &lt;pyqtgraph.GraphicsLayout.addLayout&gt;</code>
+:func:<code>removeItem &lt;pyqtgraph.GraphicsLayout.removeItem&gt;</code>
+:func:<code>itemIndex &lt;pyqtgraph.GraphicsLayout.itemIndex&gt;</code>
+:func:<code>clear &lt;pyqtgraph.GraphicsLayout.clear&gt;</code></p>
+<p>==============
+============================================================
+<strong>Arguments:</strong>
+parent
+Optional parent widget
+useOpenGL
+If True, the GraphicsView will use OpenGL to do all of its
+rendering. This can improve performance on some systems,
+but may also introduce bugs (the combination of
+QGraphicsView and QOpenGLWidget is still an 'experimental'
+feature of Qt)
+background
+Set the background color of the GraphicsView. Accepts any
+single argument accepted by
+:func:<code>mkColor &lt;pyqtgraph.mkColor&gt;</code>. By
+default, the background color is determined using the
+'backgroundColor' configuration option (see
+:func:<code>setConfigOptions &lt;pyqtgraph.setConfigOptions&gt;</code>).
+==============
+============================================================</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>pyqtgraph.widgets.GraphicsLayoutWidget.GraphicsLayoutWidget</li>
+<li>pyqtgraph.widgets.GraphicsView.GraphicsView</li>
+<li>PyQt5.QtWidgets.QGraphicsView</li>
+<li>PyQt5.QtWidgets.QAbstractScrollArea</li>
+<li>PyQt5.QtWidgets.QFrame</li>
+<li>PyQt5.QtWidgets.QWidget</li>
+<li>PyQt5.QtCore.QObject</li>
+<li>sip.wrapper</li>
+<li>PyQt5.QtGui.QPaintDevice</li>
+<li>sip.simplewrapper</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="audian.fulltraceplot.FullTracePlot.polish"><code class="name flex">
+<span>def <span class="ident">polish</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def polish(self):
+    text_color = self.palette().color(QPalette.WindowText)
+    for label in self.labels:
+        label.setBrush(text_color)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.fulltraceplot.FullTracePlot.load_data"><code class="name flex">
+<span>def <span class="ident">load_data</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_data(self):
+    i = 2*self.index//self.step
+    n = min(self.nblock, self.frames - self.index)
+    buffer = np.zeros((n, self.data.channels))
+    self.data.load_buffer(self.index, n, buffer)
+    for c in range(self.data.channels):
+        data = down_sample_peak(buffer[:,c], self.step)
+        self.datas[i:i+len(data), c] = data
+        self.lines[c].setData(self.times, self.datas[:,c])
+    self.index += n
+    if self.index &lt; self.frames:
+        QTimer.singleShot(10, self.load_data)
+    else:
+        # TODO: do we really datas? Couldn&#39;t we take it from lines? 
+        for c in range(self.data.channels):
+            ymin = np.min(self.datas[:,c])
+            ymax = np.max(self.datas[:,c])
+            y = max(fabs(ymin), fabs(ymax))
+            self.axs[c].setYRange(-y, y)
+            self.axs[c].setLimits(yMin=-y, yMax=y,
+                                  minYRange=2*y, maxYRange=2*y)
+        self.times = None
+        self.datas = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.fulltraceplot.FullTracePlot.update_layout"><code class="name flex">
+<span>def <span class="ident">update_layout</span></span>(<span>self, channels, data_height)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_layout(self, channels, data_height):
+    first = True
+    for c in range(self.data.channels):
+        self.axs[c].setVisible(c in channels)
+        if c in channels:
+            self.ci.layout.setRowFixedHeight(c, data_height)
+            self.labels[c].setVisible(first)
+            first = False
+        else:
+            self.ci.layout.setRowFixedHeight(c, 0)
+            self.labels[c].setVisible(False)
+    self.setFixedHeight(len(channels)*data_height)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.fulltraceplot.FullTracePlot.update_time_range"><code class="name flex">
+<span>def <span class="ident">update_time_range</span></span>(<span>self, region)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_time_range(self, region):
+    if self.no_signal:
+        return
+    self.no_signal = True
+    xmin, xmax = region.getRegion()
+    for ax, reg in zip(self.axtraces, self.regions):
+        if reg is region:
+            ax.setXRange(xmin, xmax)
+            break
+    self.no_signal = False</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.fulltraceplot.FullTracePlot.update_region"><code class="name flex">
+<span>def <span class="ident">update_region</span></span>(<span>self, vbox, x_range)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_region(self, vbox, x_range):
+    for ax, region in zip(self.axtraces, self.regions):
+        if ax.getViewBox() is vbox:
+            region.setRegion(x_range)
+            break</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.fulltraceplot.FullTracePlot.mousePressEvent"><code class="name flex">
+<span>def <span class="ident">mousePressEvent</span></span>(<span>self, ev)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mousePressEvent(self, ev):
+    if ev.button() == Qt.MouseButton.LeftButton:
+        for ax, region in zip(self.axs, self.regions):
+            pos = ax.getViewBox().mapSceneToView(ev.pos())
+            [xmin, xmax], [ymin, ymax] = ax.viewRange()
+            if xmin &lt;= pos.x() &lt;= xmax and ymin &lt;= pos.y() &lt;= ymax:
+                dx = (xmax - xmin)/self.width()
+                x = pos.x()
+                xmin, xmax = region.getRegion()
+                if x &lt; xmin-2*dx or x &gt; xmax + 2*dx:
+                    dx = xmax - xmin
+                    xmin = max(0, x - dx/2)
+                    xmax = xmin + dx
+                    if xmax &gt; self.tmax:
+                        xmin = max(0, xmax - dx)
+                    region.setRegion((xmin, xmax))
+                    ev.accept()
+                    return
+                break
+    ev.ignore()
+    super().mousePressEvent(ev)</code></pre>
+</details>
+<div class="desc"><p>mousePressEvent(self, event: Optional[QMouseEvent])</p></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul>
+<li><a href="#todo">TODO</a></li>
+</ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="audian" href="index.html">audian</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="audian.fulltraceplot.secs_to_str" href="#audian.fulltraceplot.secs_to_str">secs_to_str</a></code></li>
+<li><code><a title="audian.fulltraceplot.secs_format" href="#audian.fulltraceplot.secs_format">secs_format</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="audian.fulltraceplot.FullTracePlot" href="#audian.fulltraceplot.FullTracePlot">FullTracePlot</a></code></h4>
+<ul class="two-column">
+<li><code><a title="audian.fulltraceplot.FullTracePlot.polish" href="#audian.fulltraceplot.FullTracePlot.polish">polish</a></code></li>
+<li><code><a title="audian.fulltraceplot.FullTracePlot.load_data" href="#audian.fulltraceplot.FullTracePlot.load_data">load_data</a></code></li>
+<li><code><a title="audian.fulltraceplot.FullTracePlot.update_layout" href="#audian.fulltraceplot.FullTracePlot.update_layout">update_layout</a></code></li>
+<li><code><a title="audian.fulltraceplot.FullTracePlot.update_time_range" href="#audian.fulltraceplot.FullTracePlot.update_time_range">update_time_range</a></code></li>
+<li><code><a title="audian.fulltraceplot.FullTracePlot.update_region" href="#audian.fulltraceplot.FullTracePlot.update_region">update_region</a></code></li>
+<li><code><a title="audian.fulltraceplot.FullTracePlot.mousePressEvent" href="#audian.fulltraceplot.FullTracePlot.mousePressEvent">mousePressEvent</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
+</footer>
+</body>
+</html>
