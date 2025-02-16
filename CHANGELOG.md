@@ -1,6 +1,8 @@
 # Changelog
 
-## v2.2
+## v2.3
+
+## v2.2 - 2025.02.16
 
 - Support of opening multiple files in a single buffer
 - Fixed clearing of analysis data

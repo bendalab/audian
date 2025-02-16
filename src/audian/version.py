@@ -1,7 +1,7 @@
-__version__='2.1'
+__version__='2.2'
 """Current version of the audian package."""
 
-__year__ = '2024'
+__year__ = '2025'
 """Current year for copyright messages."""
 
 __pdoc__ = {}
