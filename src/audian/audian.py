@@ -1181,6 +1181,11 @@ class Audian(QMainWindow):
             self.spectrogram_menu.menuAction().setVisible(len(browser.spec_acts) > 1)
             browser.update()
 
+
+    def set_tab_title(self, browser, fname):
+        self.tabs.setTabText(self.tabs.indexOf(browser),
+                             os.path.basename(fname))
+
         
     def open_files(self):
         formats = available_formats()
@@ -1266,6 +1271,7 @@ Can not open file <b>{browser.file_path}</b>!''')
                 if browser is self.browser():
                     self.adapt_menu(self.tabs.currentIndex())
                 browser.sigRangesChanged.connect(self.dispatch_ranges)
+                browser.sigFilenameChanged.connect(self.set_tab_title)
                 browser.sigResolutionChanged.connect(self.dispatch_resolution)
                 browser.sigColorMapChanged.connect(self.dispatch_colormap)
                 browser.sigFilterChanged.connect(self.dispatch_filter)

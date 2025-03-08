@@ -66,6 +66,7 @@ class DataBrowser(QWidget):
     ask_region = 4
     
     sigRangesChanged = Signal(object, object)
+    sigFilenameChanged = Signal(object, str)
     sigResolutionChanged = Signal()
     sigColorMapChanged = Signal()
     sigFilterChanged = Signal()
@@ -1090,7 +1091,8 @@ class DataBrowser(QWidget):
         self.setting = True
         trange = self.plot_ranges[Panel.times[0]]
         trange.set_ranges(toffset, None, twindow, None, True)
-        self.data.update_times(trange.r0[0], trange.r1[0])
+        fn, _ = self.data.update_times(trange.r0[0], trange.r1[0])
+        self.sigFilenameChanged.emit(self, fn)
         self.panels.update_plots()
         self.plot_ranges.set_powers()
         self.setting = False
@@ -1101,7 +1103,8 @@ class DataBrowser(QWidget):
         getattr(self.plot_ranges, timefunc)(Panel.times[0], None,
                                             self.isVisible())
         trange = self.plot_ranges[Panel.times[0]]
-        self.data.update_times(trange.r0[0], trange.r1[0])
+        fn, _ = self.data.update_times(trange.r0[0], trange.r1[0])
+        self.sigFilenameChanged.emit(self, fn)
         # TODO: set time range here!
         self.panels.update_plots()
         self.plot_ranges.set_powers()
@@ -1497,7 +1500,8 @@ class DataBrowser(QWidget):
         self.adjust_layout(self.width(), self.height())
         self.data.set_need_update()
         trange = self.plot_ranges[Panel.times[0]]
-        self.data.update_times(trange.r0[0], trange.r1[0])
+        fn, _ = self.data.update_times(trange.r0[0], trange.r1[0])
+        self.sigFilenameChanged.emit(self, fn)
         self.panels.update_plots()
         self.plot_ranges.set_powers()
             
