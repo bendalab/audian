@@ -91,10 +91,10 @@ class PlotRange(object):
         return self.axspec in Panel.powers
         
 
-    def enable_starttime(self, enable):
+    def set_starttime(self, mode):
         for axx in self.axxs:
             for ax in axx:
-                ax.enable_starttime(enable)
+                ax.set_starttime(mode)
 
 
     def at_end(self, channel=0):

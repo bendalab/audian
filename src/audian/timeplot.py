@@ -18,10 +18,12 @@ class TimePlot(RangePlot):
 
     def __init__(self, aspec, channel, browser, xwidth, ylabel=''):
         # axis:
-        bottom_axis = TimeAxisItem(orientation='bottom', showValues=True)
+        bottom_axis = TimeAxisItem(browser.data.data.file_start_times(),
+                                   orientation='bottom', showValues=True)
         bottom_axis.setLabel('Time', 's')
         bottom_axis.set_start_time(browser.data.start_time)
-        top_axis = TimeAxisItem(orientation='top', showValues=False)
+        top_axis = TimeAxisItem(browser.data.data.file_start_times(),
+                                orientation='top', showValues=False)
         top_axis.set_start_time(browser.data.start_time)
         left_axis = YAxisItem(orientation='left', showValues=True)
         left_axis.setWidth(8*xwidth)
@@ -121,14 +123,7 @@ class TimePlot(RangePlot):
         return x0, y, None
 
 
-    def enable_starttime(self, enable):
-        """ Enable addition of start time to tick labels.
-
-        Parameters
-        ----------
-        enable: bool
-            If True enable addition of start time to tick labels.
-        """
-        self.getAxis('bottom').enable_start_time(enable)
-        self.getAxis('top').enable_start_time(enable)
+    def set_starttime(self, mode):
+        self.getAxis('bottom').set_starttime_mode(mode)
+        self.getAxis('top').set_starttime_mode(mode)
 

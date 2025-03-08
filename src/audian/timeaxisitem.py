@@ -7,11 +7,12 @@ import pyqtgraph as pg
 
 class TimeAxisItem(pg.AxisItem):
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, times, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setPen('white')
-        self._start_time = None
-        self._enable_start_time = False
+        self._times = times
+        self._starttime = None
+        self._starttime_mode = 0
 
 
     def setLogMode(self, *args, **kwargs):
@@ -27,22 +28,15 @@ class TimeAxisItem(pg.AxisItem):
         time: datetime or None
             A datetime object for the data and time of the first data element. 
         """
-        self._start_time = time
-        self.enableAutoSIPrefix(self._start_time is None or
-                                not self._enable_start_time)
+        self._starttime = time
+        self.enableAutoSIPrefix(self._starttime is None or
+                                self._starttime_mode == 0)
 
 
-    def enable_start_time(self, enable):
-        """ Enable addition of start time to tick labels.
-
-        Parameters
-        ----------
-        enable: bool
-            If True enable addition of start time to tick labels.
-        """
-        self._enable_start_time = enable
-        self.enableAutoSIPrefix(self._start_time is None or
-                                not self._enable_start_time)
+    def set_starttime_mode(self, mode):
+        self._starttime_mode = mode
+        self.enableAutoSIPrefix(self._starttime is None or
+                                self._starttime_mode == 0)
 
 
     def tickSpacing(self, minVal, maxVal, size):
@@ -50,15 +44,25 @@ class TimeAxisItem(pg.AxisItem):
         if diff == 0:
             return []
 
+        if self._starttime_mode == 2:
+            min_idx = np.nonzero(self._times <= minVal)[0][-1]
+            max_idx = np.nonzero(self._times <= maxVal)[0][-1]
+            if min_idx != max_idx:
+                max_value = self._times[max_idx] - self._times[min_idx]
+            else:
+                max_value = maxVal - self._times[max_idx]
+        else:
+            max_value = maxVal
+
         # estimate width of xtick labels:
         xwidth = QFontMetrics(self.font()).averageCharWidth()
-        if self._start_time and self._enable_start_time:
+        if self._starttime and self._starttime_mode == 1:
             nx = 8
-        elif maxVal < 1.0:
+        elif max_value < 1.0:
             nx = 0
-        elif maxVal >= 3600:
+        elif max_value >= 3600:
             nx = 8
-        elif maxVal >= 60:
+        elif max_value >= 60:
             nx = 5
         else:
             nx = 2
@@ -103,10 +107,19 @@ class TimeAxisItem(pg.AxisItem):
             self.setLabel('Time', units='s')
             return [f'{v*scale:.5g}' for v in values]
 
-        if (self._start_time and self._enable_start_time) or np.max(values) > 3600:
+        if self._starttime_mode == 2:
+            vals = []
+            for time in values:
+                toffs = self._times[np.nonzero(self._times <= time)[0][-1]]
+                vals.append(time - toffs)
+            values = vals
+        max_value = np.max(values)
+
+        if (self._starttime and self._starttime_mode == 1) or \
+           max_value > 3600:
             self.setLabel('Time (h:m:s)', units=None)
             fs = '{hours:.0f}:{mins:02.0f}:{secs:02.0f}'
-        elif np.max(values) > 60:
+        elif max_value > 60:
             self.setLabel('Time (m:s)', units=None)
             fs = '{mins:.0f}:{secs:02.0f}'
         else:
@@ -116,8 +129,8 @@ class TimeAxisItem(pg.AxisItem):
             fs += '.{micros}'
         
         basetime = dt.datetime(1, 1, 1, 0, 0, 0, 0)
-        if self._start_time and self._enable_start_time:
-            basetime = self._start_time
+        if self._starttime and self._starttime_mode == 1:
+            basetime = self._starttime
         vals = []
         for time in values:
             t = basetime + dt.timedelta(seconds=time)

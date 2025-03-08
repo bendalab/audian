@@ -87,6 +87,7 @@ class Audian(QMainWindow):
         self.unwrap_clip = unwrap_clip
         self.load_kwargs = load_kwargs
         self.load_files(file_paths)
+        self.starttime_mode = 0
 
         # init widgets to show:
         if len(self.browsers) > 0:
@@ -362,9 +363,12 @@ class Audian(QMainWindow):
         self.link_timescroll = not self.link_timescroll
 
 
-    def set_enable_starttime(self, enable):
+    def toggle_starttime(self):
+        self.starttime_mode += 1
+        if self.starttime_mode > 2:
+            self.starttime_mode = 0
         for b in self.browsers:
-            b.plot_ranges[Panel.times[0]].enable_starttime(enable)
+            b.plot_ranges[Panel.times[0]].set_starttime(self.starttime_mode)
 
 
     def apply_time_ranges(self, timefunc, link):
@@ -383,10 +387,8 @@ class Audian(QMainWindow):
         self.acts.link_time_zoom.toggled.connect(self.toggle_link_timezoom)
 
         self.acts.toggle_start_time = QAction('Toggle &start time', self)
-        self.acts.toggle_start_time.setCheckable(True)
         self.acts.toggle_start_time.setShortcut('Ctrl+Shift+T')
-        self.acts.toggle_start_time.setChecked(True)
-        self.acts.toggle_start_time.toggled.connect(self.set_enable_starttime)
+        self.acts.toggle_start_time.triggered.connect(self.toggle_starttime)
 
         self.acts.time_zoom_in = QAction('Zoom &in', self)
         self.acts.time_zoom_in.setShortcuts([QKeySequence.ZoomIn, '+', '='])
@@ -1278,7 +1280,7 @@ Can not open file <b>{browser.file_path}</b>!''')
                 browser.sigEnvelopeChanged.connect(self.dispatch_envelope)
                 browser.sigTraceChanged.connect(self.dispatch_trace)
                 browser.sigAudioChanged.connect(self.dispatch_audio)
-                browser.plot_ranges[Panel.times[0]].enable_starttime(self.acts.toggle_start_time.isChecked())
+                browser.plot_ranges[Panel.times[0]].set_starttime(self.starttime_mode)
                 pb = self.browser() if self.prev_browser is None else self.prev_browser
                 if self.link_panels:
                     browser.set_panels(pb.show_traces, pb.show_specs,
