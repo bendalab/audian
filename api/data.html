@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.5">
+<title>audian.data API documentation</title>
+<meta name="description" content="Class managing all raw data, spectrograms, filtered and derived data
+and the time window shown.">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script type="text/x-mathjax-config">MathJax.Hub.Config({ tex2jax: { inlineMath: [ ['$','$'], ["\\(","\\)"] ], processEscapes: true } });</script>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML" integrity="sha256-kZafAc6mZvK3W3v1pHOcUix30OHQN6pU/NO2oFkqZVw=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>audian.data</code></h1>
+</header>
+<section id="section-intro">
+<p>Class managing all raw data, spectrograms, filtered and derived data
+and the time window shown.</p>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="audian.data.Data"><code class="flex name class">
+<span>class <span class="ident">Data</span></span>
+<span>(</span><span>file_path, **kwargs)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Data(object):
+
+    def __init__(self, file_path, **kwargs):
+        self.buffer_time = 60
+        self.back_time = 20
+        self.follow_time = 0
+        self.file_path = file_path
+        self.load_kwargs = kwargs
+        self.data = None
+        self.rate = None
+        self.channels = 0
+        self.start_time = None
+        self.meta_data = {}
+        self.tbefore = 0
+        self.tafter = 0
+        self.traces = []
+        self.sources = []
+
+
+    def add_trace(self, trace):
+        self.traces.append(trace)
+
+
+    def remove_trace(self, name):
+        t = self[name]
+        if t is not None:
+            i = self.traces.index(t)
+            del self.traces[i]
+
+
+    def clear_traces(self):
+        self.traces = []
+
+        
+    def __del__(self):
+        self.close()
+
+            
+    def __len__(self):
+        return len(self.traces)
+
+            
+    def __getitem__(self, key):
+        for trace in self.traces:
+            if trace.name.lower() == key.lower():
+                return trace
+        return None
+
+            
+    def __contains__(self, key):
+        for trace in self.traces:
+            if trace.name.lower() == key.lower():
+                return True
+        return False
+
+
+    def keys(self):
+        return [trace.name for trace in self.traces]
+
+
+    def get_trace_names(self, class_name):
+        traces = []
+        for trace in self.traces:
+            if isinstance(trace, class_name):
+                traces.append(trace.name)
+        return traces
+
+
+    def is_visible(self, name):
+        if name in self:
+            for pi in self[name].plot_items:
+                if pi is not None and pi.isVisible():
+                    return True
+        return False
+
+
+    def set_visible(self, name, show):
+        changed = False
+        if name in self:
+            for pi in self[name].plot_items:
+                if pi is not None:
+                    if pi.isVisible() != show:
+                        changed = True
+                    pi.setVisible(show)
+        return changed
+
+    
+    def get_region(self, t0, t1, channel):
+        traces = {}
+        for t in self.traces:
+            i0 = int(t0*t.rate)
+            if i0 &lt; 0:
+                i0 = 0
+            i1 = int(t1*t.rate) + 1
+            if i1 &gt; len(t):
+                i1 = len(t)
+            time = np.arange(i0, i1)/t.rate
+            data = t[i0:i1, channel]
+            if isinstance(t, BufferedSpectrogram):
+                freqs = t.frequencies
+                traces[t.name] = (time, freqs, data)
+            else:
+                traces[t.name] = (time, data)
+        return traces
+    
+        
+    def setup_traces(self):
+        &#34;&#34;&#34; order trace sequence.
+        &#34;&#34;&#34;
+        traces = []
+        self.sources = []
+        i = -1
+        while i &lt; len(traces):
+            sname = traces[i].name if i &gt;= 0 else &#39;data&#39;
+            dtraces = []
+            for k in range(len(self.traces)):
+                if self.traces[k] is not None and \
+                   self.traces[k].source_name is sname:
+                    dtraces.append(self.traces[k])
+                    self.traces[k] = None
+            for t in reversed(dtraces):
+                traces.insert(i + 1, t)
+                self.sources.insert(i + 1, i)
+            i += 1
+        if len(traces) &lt; len(self.traces):
+            for trace in self.traces:
+                if trace is not None:
+                    print(f&#39;! ERROR: source &#34;{trace.source_name}&#34; for trace &#34;{trace.name}&#34; not found!&#39;)
+            print(&#39;! the following sources are available:&#39;)
+            print(&#39;  data&#39;)
+            for source in traces:
+                print(f&#39;  {source.name}&#39;)
+        self.traces = traces
+
+        
+    def open(self, unwrap, unwrap_clip):
+        if not self.data is None:
+            self.data.close()
+        # expand buffer times:
+        self.tbefore = 0
+        self.tafter = 0
+        tbefore = [0] * len(self.traces)
+        tafter = [0] * len(self.traces)
+        for k in reversed(range(len(self.traces))):
+            tb, ta = self.traces[k].expand_times(tbefore[k], tafter[k])
+            i = self.sources[k]
+            if i &lt; 0:
+                self.tbefore = max(self.tbefore, tb)
+                self.tafter = max(self.tafter, ta)
+            else:
+                tbefore[i] = max(tbefore[i], tb)
+                tafter[i] = max(tafter[i], ta)
+        # raw data:        
+        tbuffer = self.buffer_time + self.tbefore + self.tafter
+        tback = self.back_time + self.tbefore
+        verbose = isinstance(self.file_path, (list, tuple, np.ndarray))
+        try:
+            self.data = DataLoader(self.file_path, tbuffer, tback,
+                                   verbose=verbose,
+                                   **self.load_kwargs)
+        except IOError:
+            self.data = None
+            return
+        self.data.set_unwrap(unwrap, unwrap_clip, False, self.data.unit)
+        self.data.follow = int(self.follow_time*self.data.rate)
+        self.data.name = &#39;data&#39;
+        self.data.panel = &#39;trace&#39;
+        self.data.panel_type =  &#39;trace&#39;
+        self.data.plot_items = [None]*self.data.channels
+        self.data.color = &#39;#0000ee&#39;
+        self.data.lw_thin = 1.1
+        self.data.lw_thick = 2
+        self.data.dests = []
+        self.data.need_update = False
+        self.traces.insert(0, self.data)
+        self.sources = [None] + [i + 1 for i in self.sources]
+        self.file_path = self.data.filepath
+        self.rate = self.data.rate
+        self.channels = self.data.channels
+        # metadata:
+        self.meta_data = dict(Format=self.data.format_dict())
+        self.meta_data.update(self.data.metadata())
+        self.start_time = get_datetime(self.meta_data)
+        # derived data:
+        for trace, source in zip(self.traces[1:], self.sources[1:]):
+            trace.open(self.traces[source])
+        self.set_need_update()
+
+
+    def close(self):
+        if not self.data is None:
+            self.data.close()
+            self.data = None
+
+            
+    def set_need_update(self):
+        if self.data is None:
+            return
+        self.data.need_update = False
+        for pi in self.data.plot_items:
+            if pi is not None and pi.isVisible():
+                self.data.need_update = True
+                break
+        for d in self.data.dests:
+            d.set_need_update()
+
+            
+    def update_times(self, t0, t1):
+        if self.data.need_update:
+            self.data.update_time(t0 - self.tbefore,
+                                  t1 + self.tafter)
+        for trace in self.traces[1:]:
+            if trace.need_update:
+                trace.align_buffer()
+        return self.data.get_file_index(int(t0*self.data.rate))</code></pre>
+</details>
+<div class="desc"></div>
+<h3>Methods</h3>
+<dl>
+<dt id="audian.data.Data.add_trace"><code class="name flex">
+<span>def <span class="ident">add_trace</span></span>(<span>self, trace)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_trace(self, trace):
+    self.traces.append(trace)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.data.Data.remove_trace"><code class="name flex">
+<span>def <span class="ident">remove_trace</span></span>(<span>self, name)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def remove_trace(self, name):
+    t = self[name]
+    if t is not None:
+        i = self.traces.index(t)
+        del self.traces[i]</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.data.Data.clear_traces"><code class="name flex">
+<span>def <span class="ident">clear_traces</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def clear_traces(self):
+    self.traces = []</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.data.Data.keys"><code class="name flex">
+<span>def <span class="ident">keys</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def keys(self):
+    return [trace.name for trace in self.traces]</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.data.Data.get_trace_names"><code class="name flex">
+<span>def <span class="ident">get_trace_names</span></span>(<span>self, class_name)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_trace_names(self, class_name):
+    traces = []
+    for trace in self.traces:
+        if isinstance(trace, class_name):
+            traces.append(trace.name)
+    return traces</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.data.Data.is_visible"><code class="name flex">
+<span>def <span class="ident">is_visible</span></span>(<span>self, name)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_visible(self, name):
+    if name in self:
+        for pi in self[name].plot_items:
+            if pi is not None and pi.isVisible():
+                return True
+    return False</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.data.Data.set_visible"><code class="name flex">
+<span>def <span class="ident">set_visible</span></span>(<span>self, name, show)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_visible(self, name, show):
+    changed = False
+    if name in self:
+        for pi in self[name].plot_items:
+            if pi is not None:
+                if pi.isVisible() != show:
+                    changed = True
+                pi.setVisible(show)
+    return changed</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.data.Data.get_region"><code class="name flex">
+<span>def <span class="ident">get_region</span></span>(<span>self, t0, t1, channel)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_region(self, t0, t1, channel):
+    traces = {}
+    for t in self.traces:
+        i0 = int(t0*t.rate)
+        if i0 &lt; 0:
+            i0 = 0
+        i1 = int(t1*t.rate) + 1
+        if i1 &gt; len(t):
+            i1 = len(t)
+        time = np.arange(i0, i1)/t.rate
+        data = t[i0:i1, channel]
+        if isinstance(t, BufferedSpectrogram):
+            freqs = t.frequencies
+            traces[t.name] = (time, freqs, data)
+        else:
+            traces[t.name] = (time, data)
+    return traces</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.data.Data.setup_traces"><code class="name flex">
+<span>def <span class="ident">setup_traces</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setup_traces(self):
+    &#34;&#34;&#34; order trace sequence.
+    &#34;&#34;&#34;
+    traces = []
+    self.sources = []
+    i = -1
+    while i &lt; len(traces):
+        sname = traces[i].name if i &gt;= 0 else &#39;data&#39;
+        dtraces = []
+        for k in range(len(self.traces)):
+            if self.traces[k] is not None and \
+               self.traces[k].source_name is sname:
+                dtraces.append(self.traces[k])
+                self.traces[k] = None
+        for t in reversed(dtraces):
+            traces.insert(i + 1, t)
+            self.sources.insert(i + 1, i)
+        i += 1
+    if len(traces) &lt; len(self.traces):
+        for trace in self.traces:
+            if trace is not None:
+                print(f&#39;! ERROR: source &#34;{trace.source_name}&#34; for trace &#34;{trace.name}&#34; not found!&#39;)
+        print(&#39;! the following sources are available:&#39;)
+        print(&#39;  data&#39;)
+        for source in traces:
+            print(f&#39;  {source.name}&#39;)
+    self.traces = traces</code></pre>
+</details>
+<div class="desc"><p>order trace sequence.</p></div>
+</dd>
+<dt id="audian.data.Data.open"><code class="name flex">
+<span>def <span class="ident">open</span></span>(<span>self, unwrap, unwrap_clip)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def open(self, unwrap, unwrap_clip):
+    if not self.data is None:
+        self.data.close()
+    # expand buffer times:
+    self.tbefore = 0
+    self.tafter = 0
+    tbefore = [0] * len(self.traces)
+    tafter = [0] * len(self.traces)
+    for k in reversed(range(len(self.traces))):
+        tb, ta = self.traces[k].expand_times(tbefore[k], tafter[k])
+        i = self.sources[k]
+        if i &lt; 0:
+            self.tbefore = max(self.tbefore, tb)
+            self.tafter = max(self.tafter, ta)
+        else:
+            tbefore[i] = max(tbefore[i], tb)
+            tafter[i] = max(tafter[i], ta)
+    # raw data:        
+    tbuffer = self.buffer_time + self.tbefore + self.tafter
+    tback = self.back_time + self.tbefore
+    verbose = isinstance(self.file_path, (list, tuple, np.ndarray))
+    try:
+        self.data = DataLoader(self.file_path, tbuffer, tback,
+                               verbose=verbose,
+                               **self.load_kwargs)
+    except IOError:
+        self.data = None
+        return
+    self.data.set_unwrap(unwrap, unwrap_clip, False, self.data.unit)
+    self.data.follow = int(self.follow_time*self.data.rate)
+    self.data.name = &#39;data&#39;
+    self.data.panel = &#39;trace&#39;
+    self.data.panel_type =  &#39;trace&#39;
+    self.data.plot_items = [None]*self.data.channels
+    self.data.color = &#39;#0000ee&#39;
+    self.data.lw_thin = 1.1
+    self.data.lw_thick = 2
+    self.data.dests = []
+    self.data.need_update = False
+    self.traces.insert(0, self.data)
+    self.sources = [None] + [i + 1 for i in self.sources]
+    self.file_path = self.data.filepath
+    self.rate = self.data.rate
+    self.channels = self.data.channels
+    # metadata:
+    self.meta_data = dict(Format=self.data.format_dict())
+    self.meta_data.update(self.data.metadata())
+    self.start_time = get_datetime(self.meta_data)
+    # derived data:
+    for trace, source in zip(self.traces[1:], self.sources[1:]):
+        trace.open(self.traces[source])
+    self.set_need_update()</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.data.Data.close"><code class="name flex">
+<span>def <span class="ident">close</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def close(self):
+    if not self.data is None:
+        self.data.close()
+        self.data = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.data.Data.set_need_update"><code class="name flex">
+<span>def <span class="ident">set_need_update</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_need_update(self):
+    if self.data is None:
+        return
+    self.data.need_update = False
+    for pi in self.data.plot_items:
+        if pi is not None and pi.isVisible():
+            self.data.need_update = True
+            break
+    for d in self.data.dests:
+        d.set_need_update()</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.data.Data.update_times"><code class="name flex">
+<span>def <span class="ident">update_times</span></span>(<span>self, t0, t1)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_times(self, t0, t1):
+    if self.data.need_update:
+        self.data.update_time(t0 - self.tbefore,
+                              t1 + self.tafter)
+    for trace in self.traces[1:]:
+        if trace.need_update:
+            trace.align_buffer()
+    return self.data.get_file_index(int(t0*self.data.rate))</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="audian" href="index.html">audian</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="audian.data.Data" href="#audian.data.Data">Data</a></code></h4>
+<ul class="two-column">
+<li><code><a title="audian.data.Data.add_trace" href="#audian.data.Data.add_trace">add_trace</a></code></li>
+<li><code><a title="audian.data.Data.remove_trace" href="#audian.data.Data.remove_trace">remove_trace</a></code></li>
+<li><code><a title="audian.data.Data.clear_traces" href="#audian.data.Data.clear_traces">clear_traces</a></code></li>
+<li><code><a title="audian.data.Data.keys" href="#audian.data.Data.keys">keys</a></code></li>
+<li><code><a title="audian.data.Data.get_trace_names" href="#audian.data.Data.get_trace_names">get_trace_names</a></code></li>
+<li><code><a title="audian.data.Data.is_visible" href="#audian.data.Data.is_visible">is_visible</a></code></li>
+<li><code><a title="audian.data.Data.set_visible" href="#audian.data.Data.set_visible">set_visible</a></code></li>
+<li><code><a title="audian.data.Data.get_region" href="#audian.data.Data.get_region">get_region</a></code></li>
+<li><code><a title="audian.data.Data.setup_traces" href="#audian.data.Data.setup_traces">setup_traces</a></code></li>
+<li><code><a title="audian.data.Data.open" href="#audian.data.Data.open">open</a></code></li>
+<li><code><a title="audian.data.Data.close" href="#audian.data.Data.close">close</a></code></li>
+<li><code><a title="audian.data.Data.set_need_update" href="#audian.data.Data.set_need_update">set_need_update</a></code></li>
+<li><code><a title="audian.data.Data.update_times" href="#audian.data.Data.update_times">update_times</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
+</footer>
+</body>
+</html>
