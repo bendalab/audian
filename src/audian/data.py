@@ -9,6 +9,27 @@ from thunderlab.dataloader import DataLoader
 from .bufferedspectrogram import BufferedSpectrogram
 
 
+
+import dill
+from PyQt5.QtWidgets import QApplication
+from .traceitem import down_sample_peak
+
+def load_data(index, nblock, step, ddata):
+    """ TODO, this is a successfull attempt to make the downsampling needed for FullTracePlot to work in the background """
+    data = dill.loads(ddata)
+    i = 2*index//step
+    print('LOAD', i)
+    buffer = np.zeros((nblock, data.channels))
+    data.load_buffer(index, nblock, buffer)
+    datas = np.empty((2*nblock//step, data.channels))
+    for c in range(data.channels):
+        ds_data = down_sample_peak(buffer[:,c], step)
+        datas[:, c] = ds_data
+    return i, step, datas
+
+
+        
+
 class Data(object):
 
     def __init__(self, file_path, **kwargs):
@@ -26,6 +47,8 @@ class Data(object):
         self.tafter = 0
         self.traces = []
         self.sources = []
+        
+        self.res = []
 
 
     def add_trace(self, trace):
@@ -144,7 +167,7 @@ class Data(object):
         self.traces = traces
 
         
-    def open(self, unwrap, unwrap_clip):
+    def open(self, pool, unwrap, unwrap_clip):
         if not self.data is None:
             self.data.close()
         # expand buffer times:
@@ -197,6 +220,18 @@ class Data(object):
             trace.open(self.traces[source])
         self.set_need_update()
 
+        # init data:
+        max_pixel = QApplication.desktop().screenGeometry().width()
+        step = max(1, self.data.frames//max_pixel)
+        nblock = int(20.0*self.data.rate//step)*step
+        ddata = dill.dumps(self.data)
+        self.res = []
+        for i in range(0, self.data.frames, nblock):
+            self.res.append(pool.apply_async(load_data, (i,
+                                             min(nblock, self.data.frames - i),
+                                             step, ddata)))
+        print('POOL DONE')
+        
 
     def close(self):
         if not self.data is None:

@@ -9,10 +9,9 @@
 from math import floor, fabs
 import numpy as np
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtWidgets import QGraphicsSimpleTextItem, QApplication
+from PyQt5.QtWidgets import QGraphicsSimpleTextItem
 from PyQt5.QtGui import QPalette
 import pyqtgraph as pg
-from .traceitem import down_sample_peak
 
 
 def secs_to_str(time):
@@ -54,15 +53,14 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
         pg.GraphicsLayoutWidget.__init__(self, *args, **kwargs)
 
         self.data = data
-        self.frames = self.data.frames
-        self.tmax = self.frames/self.data.rate
+        self.tmax = self.data.data.frames/self.data.rate
         self.axtraces = axtraces
         self.no_signal = False
 
         self.setBackground(None)
         self.ci.layout.setContentsMargins(0, 0, 0, 0)
         self.ci.layout.setVerticalSpacing(0)
-
+        
         # for each channel prepare a plot panel:
         xwidth = self.fontMetrics().averageCharWidth()
         self.axs = []
@@ -105,14 +103,6 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             label.setText(secs_to_str(self.tmax))
             label.setPos(int(xwidth), xwidth/2)
             self.labels.append(label)
-
-            # init data:
-            max_pixel = QApplication.desktop().screenGeometry().width()
-            self.step = max(1, self.frames//max_pixel)
-            self.index = 0
-            self.nblock = int(20.0*self.data.rate//self.step)*self.step
-            self.times = np.arange(0, self.frames, self.step/2)/self.data.rate
-            self.datas = np.zeros((len(self.times), self.data.channels))
             
             # add data:
             line = pg.PlotDataItem(antialias=True,
@@ -128,8 +118,11 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             
             self.addItem(axt, row=c, col=0)
             self.axs.append(axt)
-            
-        QTimer.singleShot(10, self.load_data)
+
+        self.times = None
+        self.datas = None
+        self.index = 0
+        QTimer.singleShot(500, self.plot_data)
 
         
     def polish(self):
@@ -138,29 +131,29 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             label.setBrush(text_color)
 
 
-    def load_data(self):
-        i = 2*self.index//self.step
-        n = min(self.nblock, self.frames - self.index)
-        buffer = np.zeros((n, self.data.channels))
-        self.data.load_buffer(self.index, n, buffer)
-        for c in range(self.data.channels):
-            data = down_sample_peak(buffer[:,c], self.step)
-            self.datas[i:i+len(data), c] = data
-            self.lines[c].setData(self.times, self.datas[:,c])
-        self.index += n
-        if self.index < self.frames:
-            QTimer.singleShot(10, self.load_data)
-        else:
-            # TODO: do we really datas? Couldn't we take it from lines? 
+    def plot_data(self):
+        print('PLOT')
+        while self.data.res[self.index].ready():
+            i, step, datas = self.data.res[self.index].get()
+            print('plot', i)
+            if self.times is None:
+                self.times = np.arange(0, self.data.data.frames,
+                                       step/2)/self.data.rate
+                self.datas = np.zeros((len(self.times), self.data.channels))
+            self.datas[i:i + len(datas), :] = datas
             for c in range(self.data.channels):
-                ymin = np.min(self.datas[:,c])
-                ymax = np.max(self.datas[:,c])
-                y = max(fabs(ymin), fabs(ymax))
-                self.axs[c].setYRange(-y, y)
-                self.axs[c].setLimits(yMin=-y, yMax=y,
-                                      minYRange=2*y, maxYRange=2*y)
-            self.times = None
-            self.datas = None
+                self.lines[c].setData(self.times, self.datas[:,c])
+            self.index += 1
+            if self.index >= len(self.data.res):
+                for c in range(self.data.channels):
+                    ymin = np.min(self.datas[:,c])
+                    ymax = np.max(self.datas[:,c])
+                    y = max(fabs(ymin), fabs(ymax))
+                    self.axs[c].setYRange(-y, y)
+                    self.axs[c].setLimits(yMin=-y, yMax=y,
+                                          minYRange=2*y, maxYRange=2*y)
+                return
+        QTimer.singleShot(500, self.plot_data)
 
         
     def update_layout(self, channels, data_height):

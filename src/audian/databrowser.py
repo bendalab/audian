@@ -253,9 +253,10 @@ class DataBrowser(QWidget):
                 act.blockSignals(False)
                 
         
-    def open(self, gui, unwrap, unwrap_clip, highpass_cutoff, lowpass_cutoff):
+    def open(self, gui, unwrap, unwrap_clip, highpass_cutoff, lowpass_cutoff,
+             pool):
         # load data:
-        self.data.open(unwrap, unwrap_clip)
+        self.data.open(pool, unwrap, unwrap_clip)
         if self.data.data is None:
             return
         self.marker_data.file_path = self.data.file_path
@@ -592,7 +593,7 @@ class DataBrowser(QWidget):
         self.vbox.addWidget(self.toolbar)
         
         # full data:
-        self.datafig = FullTracePlot(self.data.data, self.panels['trace'].axs)
+        self.datafig = FullTracePlot(self.data, self.panels['trace'].axs)
         self.datafig.polish()
         self.vbox.addWidget(self.datafig)
 
