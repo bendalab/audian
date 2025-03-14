@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "audian"
 dynamic = ["version"]
 dependencies = [
+  "dill",
   "scipy",
   "numpy",
   "numba",
