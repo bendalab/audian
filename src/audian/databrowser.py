@@ -256,7 +256,7 @@ class DataBrowser(QWidget):
     def open(self, gui, unwrap, unwrap_clip, highpass_cutoff, lowpass_cutoff,
              pool):
         # load data:
-        self.data.open(pool, unwrap, unwrap_clip)
+        self.data.open(unwrap, unwrap_clip)
         if self.data.data is None:
             return
         self.marker_data.file_path = self.data.file_path
@@ -650,6 +650,9 @@ class DataBrowser(QWidget):
                                        data=(f'start: {ds}', f'end: {ds}'))
                 else:
                     sl[lidx].addPoints((t1,), (0.0,), data=(ds,), tip=marker_tip)
+
+        # fulltrace data:
+        self.data.prepare_fulltrace(pool)
 
 
     def close(self):

@@ -2,6 +2,9 @@
 
 ## v2.3
 
+- Generate full trace plot in background processes
+
+
 ## v2.2 - 2025.02.16
 
 - Support of opening multiple files in a single buffer

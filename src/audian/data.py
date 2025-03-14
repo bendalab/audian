@@ -3,22 +3,19 @@ and the time window shown.
 
 """
 
+import dill
 import numpy as np
+from PyQt5.QtWidgets import QApplication
 from audioio import get_datetime
 from thunderlab.dataloader import DataLoader
+from .traceitem import down_sample_peak
 from .bufferedspectrogram import BufferedSpectrogram
 
 
-
-import dill
-from PyQt5.QtWidgets import QApplication
-from .traceitem import down_sample_peak
-
-def load_data(index, nblock, step, ddata):
-    """ TODO, this is a successfull attempt to make the downsampling needed for FullTracePlot to work in the background """
+def down_sample(index, nblock, step, ddata):
+    """ Worker for prepare_fulltrace() """
     data = dill.loads(ddata)
     i = 2*index//step
-    print('LOAD', i)
     buffer = np.zeros((nblock, data.channels))
     data.load_buffer(index, nblock, buffer)
     datas = np.empty((2*nblock//step, data.channels))
@@ -26,8 +23,6 @@ def load_data(index, nblock, step, ddata):
         ds_data = down_sample_peak(buffer[:,c], step)
         datas[:, c] = ds_data
     return i, step, datas
-
-
         
 
 class Data(object):
@@ -167,7 +162,7 @@ class Data(object):
         self.traces = traces
 
         
-    def open(self, pool, unwrap, unwrap_clip):
+    def open(self, unwrap, unwrap_clip):
         if not self.data is None:
             self.data.close()
         # expand buffer times:
@@ -196,6 +191,7 @@ class Data(object):
             self.data = None
             return
         self.data.set_unwrap(unwrap, unwrap_clip, False, self.data.unit)
+        self.data_pickle = dill.dumps(self.data)
         self.data.follow = int(self.follow_time*self.data.rate)
         self.data.name = 'data'
         self.data.panel = 'trace'
@@ -219,19 +215,7 @@ class Data(object):
         for trace, source in zip(self.traces[1:], self.sources[1:]):
             trace.open(self.traces[source])
         self.set_need_update()
-
-        # init data:
-        max_pixel = QApplication.desktop().screenGeometry().width()
-        step = max(1, self.data.frames//max_pixel)
-        nblock = int(20.0*self.data.rate//step)*step
-        ddata = dill.dumps(self.data)
-        self.res = []
-        for i in range(0, self.data.frames, nblock):
-            self.res.append(pool.apply_async(load_data, (i,
-                                             min(nblock, self.data.frames - i),
-                                             step, ddata)))
-        print('POOL DONE')
-        
+                
 
     def close(self):
         if not self.data is None:
@@ -260,3 +244,13 @@ class Data(object):
                 trace.align_buffer()
         return self.data.get_file_index(int(t0*self.data.rate))
         
+
+    def prepare_fulltrace(self, pool):
+        max_pixel = QApplication.desktop().screenGeometry().width()
+        step = max(1, self.data.frames//max_pixel)
+        nblock = int(60.0*self.data.rate//step)*step
+        self.res = []
+        for i in range(0, self.data.frames, nblock):
+            self.res.append(pool.apply_async(down_sample, (i,
+                                             min(nblock, self.data.frames - i),
+                                                           step, self.data_pickle)))

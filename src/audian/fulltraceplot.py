@@ -122,7 +122,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
         self.times = None
         self.datas = None
         self.index = 0
-        QTimer.singleShot(500, self.plot_data)
+        QTimer.singleShot(1000, self.plot_data)
 
         
     def polish(self):
@@ -132,10 +132,11 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
 
 
     def plot_data(self):
-        print('PLOT')
+        if len(self.data.res) == 0:
+            QTimer.singleShot(500, self.plot_data)
+            return
         while self.data.res[self.index].ready():
             i, step, datas = self.data.res[self.index].get()
-            print('plot', i)
             if self.times is None:
                 self.times = np.arange(0, self.data.data.frames,
                                        step/2)/self.data.rate
