@@ -253,8 +253,7 @@ class DataBrowser(QWidget):
                 act.blockSignals(False)
                 
         
-    def open(self, gui, unwrap, unwrap_clip, highpass_cutoff, lowpass_cutoff,
-             pool):
+    def open(self, gui, unwrap, unwrap_clip, highpass_cutoff, lowpass_cutoff):
         # load data:
         self.data.open(unwrap, unwrap_clip)
         if self.data.data is None:
@@ -652,10 +651,11 @@ class DataBrowser(QWidget):
                     sl[lidx].addPoints((t1,), (0.0,), data=(ds,), tip=marker_tip)
 
         # fulltrace data:
-        self.datafig.prepare_fulltrace(pool)
+        self.datafig.prepare()
 
 
     def close(self):
+        self.datafig.close()
         self.data.close()
 
                     

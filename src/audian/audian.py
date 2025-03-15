@@ -3,7 +3,6 @@ import sys
 import glob
 import argparse
 import numpy as np
-from multiprocessing import Pool, cpu_count
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QKeySequence, QIcon
 from PyQt5.QtWidgets import QStyle, QApplication, QMainWindow, QTabWidget
@@ -34,7 +33,6 @@ class Audian(QMainWindow):
 
         self.browsers = []
         self.prev_browser = None   # for load_data()
-        self.pool = Pool(max(1, cpu_count() - 1))
 
         self.channels = channels
         self.highpass_cutoff = highpass_cutoff
@@ -107,8 +105,6 @@ class Audian(QMainWindow):
 
 
     def __del__(self):
-        self.pool.terminate()
-        self.pool.close()
         if self.audio is not None:
             self.audio.close()
 
@@ -1235,8 +1231,7 @@ class Audian(QMainWindow):
             if browser.data.data is None:
                 try:
                     browser.open(self, self.unwrap, self.unwrap_clip,
-                                 self.highpass_cutoff, self.lowpass_cutoff,
-                                 self.pool)
+                                 self.highpass_cutoff, self.lowpass_cutoff)
                 except Exception as e:
                     print(e)
                     file_paths = browser.data.file_path

@@ -6,8 +6,11 @@
 - Only use Data class
 """
 
+import os
 from math import floor, fabs
 import numpy as np
+import ctypes as c
+from multiprocessing import Process, Array
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import QGraphicsSimpleTextItem, QApplication
 from PyQt5.QtGui import QPalette
@@ -47,19 +50,22 @@ def secs_format(time):
     else:
         return 'ms'
 
-
-def down_sample(index, nblock, step, file_paths, tbuffer, load_kwargs):
-    """ Worker for prepare_fulltrace() """
+    
+def down_sample(proc_idx, num_proc, nblock, step, array,
+                file_paths, tbuffer, load_kwargs):
+    """ Worker for prepare() """
     data = DataLoader(file_paths, tbuffer, 0,
                       verbose=0, **load_kwargs)
-    i = 2*index//step
+    datas = np.frombuffer(array.get_obj()).reshape((-1, data.channels))
     buffer = np.zeros((nblock, data.channels))
-    data.load_buffer(index, nblock, buffer)
-    datas = np.empty((2*nblock//step, data.channels))
-    for c in range(data.channels):
-        ds_data = down_sample_peak(buffer[:,c], step)
-        datas[:, c] = ds_data
-    return i, step, datas
+    for index in range(proc_idx*nblock, data.frames, num_proc*nblock):
+        data.load_buffer(index, nblock, buffer)
+        i = 2*index//step
+        with array.get_lock():
+            for c in range(data.channels):
+                ds_data = down_sample_peak(buffer[:,c], step)
+                datas[i:i + len(ds_data), c] = ds_data
+    return None
         
     
 class FullTracePlot(pg.GraphicsLayoutWidget):
@@ -72,7 +78,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
         self.tmax = self.data.data.frames/self.data.rate
         self.axtraces = axtraces
         self.no_signal = False
-        self.res = []
+        self.procs = []
 
         self.setBackground(None)
         self.ci.layout.setContentsMargins(0, 0, 0, 0)
@@ -141,52 +147,66 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
         self.datas = None
         self.index = 0
 
+
+    def __del__(self):
+        self.close()
+
+        
+    def close(self):
+        for proc in self.procs:
+            proc.terminate()
+        self.procs = []
+
         
     def polish(self):
         text_color = self.palette().color(QPalette.WindowText)
         for label in self.labels:
             label.setBrush(text_color)
-        QTimer.singleShot(500, self.plot_data)
+        QTimer.singleShot(200, self.plot_data)
 
 
-    def prepare_fulltrace(self, pool):
+    def prepare(self):
         max_pixel = QApplication.desktop().screenGeometry().width()
         step = max(1, self.data.frames//max_pixel)
-        nblock = int(60.0*self.data.rate//step)*step
-        self.res = []
-        for i in range(0, self.data.frames, nblock):
-            self.res.append(pool.apply_async(down_sample,
-                                             (i,
-                                              min(nblock, self.data.frames - i),
-                                              step, self.data.data.file_paths,
-                                              nblock/self.data.rate + 1,
-                                              self.data.load_kwargs)))
+        nblock = int(20.0*self.data.rate//step)*step
+        self.times = np.arange(0, self.data.data.frames,
+                               step/2)/self.data.rate
+        self.shared_array = Array(c.c_double, len(self.times)*self.data.channels)
+        self.datas = np.frombuffer(self.shared_array.get_obj())
+        self.datas = self.datas.reshape((len(self.times), self.data.channels))
+        self.procs = []
+        nprocs = os.cpu_count() - 1
+        for i in range(max(1, nprocs)):
+            p = Process(target=down_sample,
+                        args=(i, nprocs, nblock, step,
+                              self.shared_array,
+                              self.data.data.file_paths,
+                              nblock/self.data.rate + 1,
+                              self.data.load_kwargs))
+            p.start()
+            self.procs.append(p)
             
 
     def plot_data(self):
-        if len(self.res) == 0:
-            QTimer.singleShot(500, self.plot_data)
-            return
-        while self.res[self.index].ready():
-            i, step, datas = self.res[self.index].get()
-            if self.times is None:
-                self.times = np.arange(0, self.data.data.frames,
-                                       step/2)/self.data.rate
-                self.datas = np.zeros((len(self.times), self.data.channels))
-            self.datas[i:i + len(datas), :] = datas
+        with self.shared_array.get_lock():
             for c in range(self.data.channels):
                 self.lines[c].setData(self.times, self.datas[:,c])
-            self.index += 1
-            if self.index >= len(self.res):
-                for c in range(self.data.channels):
-                    ymin = np.min(self.datas[:,c])
-                    ymax = np.max(self.datas[:,c])
-                    y = max(fabs(ymin), fabs(ymax))
-                    self.axs[c].setYRange(-y, y)
-                    self.axs[c].setLimits(yMin=-y, yMax=y,
-                                          minYRange=2*y, maxYRange=2*y)
-                return
-        QTimer.singleShot(500, self.plot_data)
+        done = True
+        for proc in self.procs:
+            if proc.is_alive():
+                done = False
+                break
+        if done:
+            self.procs = []
+            for c in range(self.data.channels):
+                ymin = np.min(self.datas[:,c])
+                ymax = np.max(self.datas[:,c])
+                y = max(fabs(ymin), fabs(ymax))
+                self.axs[c].setYRange(-y, y)
+                self.axs[c].setLimits(yMin=-y, yMax=y,
+                                      minYRange=2*y, maxYRange=2*y)
+        else:
+            QTimer.singleShot(200, self.plot_data)
 
         
     def update_layout(self, channels, data_height):
