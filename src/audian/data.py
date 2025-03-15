@@ -12,8 +12,8 @@ from .bufferedspectrogram import BufferedSpectrogram
 class Data(object):
 
     def __init__(self, file_path, **kwargs):
-        self.buffer_time = 60
-        self.back_time = 20
+        self.buffer_time = 120
+        self.back_time = 40
         self.follow_time = 0
         self.file_path = file_path
         self.load_kwargs = kwargs

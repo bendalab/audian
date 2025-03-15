@@ -9,14 +9,12 @@ import pyqtgraph as pg
 
 
 @jit(nopython=True)
-def down_sample_peak(data, step):
-    n = len(data)//step
-    ddata = np.zeros(2*n)
-    for k in range(n):
-        dd = data[k*step:(k+1)*step]
-        ddata[2*k] = np.min(dd)
-        ddata[2*k+1] = np.max(dd)
-    return ddata
+def down_sample_peak(src_data, step, dst_data):
+    for c in range(src_data.shape[1]):
+        for k in range(len(src_data)//step):
+            dd = src_data[k*step:(k+1)*step, c]
+            dst_data[2*k, c] = np.min(dd)
+            dst_data[2*k + 1, c] = np.max(dd)
 
 
 class TraceItem(pg.PlotDataItem):
@@ -58,18 +56,18 @@ class TraceItem(pg.PlotDataItem):
             stop = int(ceil(stop/self.step + 1)*self.step)
             self.setPen(dict(color=self.color, width=self.lw_thin))
             self.setSymbol(None)
-            n = (stop - start)//self.step
-            pdata = np.zeros(2*n)
+            npdata = (stop - start)//self.step
+            pdata = np.zeros((2*npdata, 1))
             i = 0
             nb = (self.data.bufferframes//self.step)*self.step
             for dd in self.data.blocks(nb, 0, start, stop):
-                dsd = down_sample_peak(dd[:, self.channel], self.step)
-                pdata[i:i+len(dsd)] = dsd
-                i += len(dsd)
-            #pdata = down_sample_peak(self.data[start:stop, self.channel], self.step)
+                n = 2*len(dd)//self.step
+                down_sample_peak(dd[:, self.channel].reshape((-1, 1)),
+                                 self.step, pdata[i:i + n, :])
+                i += n
             step2 = self.step/2
             time = np.arange(start, start + len(pdata)*step2, step2)/self.rate
-            self.setData(time, pdata)
+            self.setData(time, pdata[:, 0])
         elif self.step > 1:  # TODO: not used
             # subsample:
             self.setData(np.arange(start, stop, self.step)/self.rate,

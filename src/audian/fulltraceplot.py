@@ -59,12 +59,15 @@ def down_sample(proc_idx, num_proc, nblock, step, array,
     datas = np.frombuffer(array.get_obj()).reshape((-1, data.channels))
     buffer = np.zeros((nblock, data.channels))
     for index in range(proc_idx*nblock, data.frames, num_proc*nblock):
+        if data.frames - index < nblock:
+            nblock = data.frames - index
+            buffer = np.zeros((nblock, data.channels))
         data.load_buffer(index, nblock, buffer)
         i = 2*index//step
+        n = 2*len(buffer)//step
         with array.get_lock():
-            for c in range(data.channels):
-                ds_data = down_sample_peak(buffer[:,c], step)
-                datas[i:i + len(ds_data), c] = ds_data
+            ds_data = down_sample_peak(buffer, step,
+                                       datas[i:i + n, :])
     return None
         
     
@@ -162,7 +165,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
         text_color = self.palette().color(QPalette.WindowText)
         for label in self.labels:
             label.setBrush(text_color)
-        QTimer.singleShot(200, self.plot_data)
+        QTimer.singleShot(500, self.plot_data)
 
 
     def prepare(self):
@@ -206,7 +209,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
                 self.axs[c].setLimits(yMin=-y, yMax=y,
                                       minYRange=2*y, maxYRange=2*y)
         else:
-            QTimer.singleShot(200, self.plot_data)
+            QTimer.singleShot(500, self.plot_data)
 
         
     def update_layout(self, channels, data_height):
