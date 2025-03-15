@@ -3,7 +3,7 @@ import sys
 import glob
 import argparse
 import numpy as np
-from multiprocessing import Pool
+from multiprocessing import Pool, cpu_count
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QKeySequence, QIcon
 from PyQt5.QtWidgets import QStyle, QApplication, QMainWindow, QTabWidget
@@ -34,7 +34,7 @@ class Audian(QMainWindow):
 
         self.browsers = []
         self.prev_browser = None   # for load_data()
-        self.pool = Pool(max(1, os.cpu_count() - 1))
+        self.pool = Pool(max(1, cpu_count() - 1))
 
         self.channels = channels
         self.highpass_cutoff = highpass_cutoff
