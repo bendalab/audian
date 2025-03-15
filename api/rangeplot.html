@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.5">
+<title>audian.rangeplot API documentation</title>
+<meta name="description" content="Basic PlotItem that can be managed by PlotRange.">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script type="text/x-mathjax-config">MathJax.Hub.Config({ tex2jax: { inlineMath: [ ['$','$'], ["\\(","\\)"] ], processEscapes: true } });</script>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML" integrity="sha256-kZafAc6mZvK3W3v1pHOcUix30OHQN6pU/NO2oFkqZVw=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>audian.rangeplot</code></h1>
+</header>
+<section id="section-intro">
+<p>Basic PlotItem that can be managed by PlotRange.</p>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="audian.rangeplot.RangePlot"><code class="flex name class">
+<span>class <span class="ident">RangePlot</span></span>
+<span>(</span><span>aspec, channel, browser, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RangePlot(pg.PlotItem):
+
+    def __init__(self, aspec, channel, browser, *args, **kwargs):
+
+        self.aspec = aspec
+        self.channel = channel
+        self.data_items = []
+
+        # view box:
+        view = SelectViewBox(channel)
+
+        # plot:
+        pg.PlotItem.__init__(self, viewBox=view, *args, **kwargs)
+
+        # design:
+        self.getViewBox().setDefaultPadding(padding=0)
+
+        # functionality:
+        self.hideButtons()
+        self.setMenuEnabled(False)
+        self.enableAutoRange(False, False)
+        self.getViewBox().init_zoom_history()
+
+        # signals:
+        self.sigRangeChanged.connect(browser.update_ranges)
+        self.getViewBox().sigSelectedRegion.connect(browser.region_menu)
+
+        # cross hair:
+        self.xline = pg.InfiniteLine(angle=90, movable=False)
+        self.xline.setPen(pg.mkPen(&#39;white&#39;, width=1))
+        self.xline.setZValue(100)
+        self.xline.setValue(0)
+        self.xline.setVisible(False)
+        self.addItem(self.xline, ignoreBounds=True)
+        
+        self.yline = pg.InfiniteLine(angle=0, movable=False)
+        self.yline.setPen(pg.mkPen(&#39;white&#39;, width=1))
+        self.yline.setZValue(100)
+        self.yline.setValue(0)
+        self.yline.setVisible(False)
+        self.addItem(self.yline, ignoreBounds=True)
+
+        # stored cross hair marker:
+        self.stored_marker = pg.ScatterPlotItem(
+            size=14,
+            pen=pg.mkPen(&#39;white&#39;),
+            brush=pg.mkBrush((255, 255, 255, 128)),
+            symbol=&#39;o&#39;,
+            hoverable=False
+        )
+        self.stored_marker.setZValue(20)
+        self.addItem(self.stored_marker, ignoreBounds=True)
+
+
+    def x(self):
+        return self.aspec[0]
+
+
+    def y(self):
+        return self.aspec[1]
+
+
+    def z(self):
+        return self.aspec[2] if len(self.aspec) &gt; 2 else &#39;&#39;
+
+
+    def add_item(self, item, is_data=False):
+        if is_data:
+            self.data_items.append(item)
+            item.ax = self
+        self.addItem(item)
+
+
+    def range(self, axspec):
+        return None, None, None
+
+   
+    def amplitudes(self, t0, t1):
+        return None, None
+
+    
+    def get_marker_pos(self, x0, x1, y):
+        return x0, y, None
+
+
+    def set_stored_marker(self, x, y):
+        self.stored_marker.setData((x, ), (y, ))
+        self.stored_marker.setVisible(True)
+
+        
+    def update_plot(self):
+        for item in self.data_items:
+            if item.isVisible():
+                item.update_plot()</code></pre>
+</details>
+<div class="desc"><p>GraphicsWidget implementing a standard 2D plotting area with axes.</p>
+<p><strong>Bases:</strong> :class:<code>GraphicsWidget &lt;pyqtgraph.GraphicsWidget&gt;</code></p>
+<p>This class provides the ViewBox-plus-axes that appear when using
+:func:<code>pg.plot() &lt;pyqtgraph.plot&gt;</code>, :class:<code>PlotWidget &lt;pyqtgraph.PlotWidget&gt;</code>,
+and :func:<code>GraphicsLayout.addPlot() &lt;pyqtgraph.GraphicsLayout.addPlot&gt;</code>.</p>
+<p>It's main functionality is:</p>
+<ul>
+<li>Manage placement of ViewBox, AxisItems, and LabelItems</li>
+<li>Create and manage a list of PlotDataItems displayed inside the ViewBox</li>
+<li>Implement a context menu with commonly used display and analysis options</li>
+</ul>
+<p>Use :func:<code>plot() &lt;pyqtgraph.PlotItem.plot&gt;</code> to create a new PlotDataItem and
+add it to the view. Use :func:<code>addItem() &lt;pyqtgraph.PlotItem.addItem&gt;</code> to
+add any QGraphicsItem to the view.</p>
+<p>This class wraps several methods from its internal ViewBox:
+- :func:<code>setXRange &lt;pyqtgraph.ViewBox.setXRange&gt;</code>
+- :func:<code>setYRange &lt;pyqtgraph.ViewBox.setYRange&gt;</code>
+- :func:<code>setRange &lt;pyqtgraph.ViewBox.setRange&gt;</code>
+- :func:<code>autoRange &lt;pyqtgraph.ViewBox.autoRange&gt;</code>
+- :func:<code>setDefaultPadding &lt;pyqtgraph.ViewBox.setDefaultPadding&gt;</code>
+- :func:<code>setXLink &lt;pyqtgraph.ViewBox.setXLink&gt;</code>
+- :func:<code>setYLink &lt;pyqtgraph.ViewBox.setYLink&gt;</code>
+- :func:<code>setAutoPan &lt;pyqtgraph.ViewBox.setAutoPan&gt;</code>
+- :func:<code>setAutoVisible &lt;pyqtgraph.ViewBox.setAutoVisible&gt;</code>
+- :func:<code>setLimits &lt;pyqtgraph.ViewBox.setLimits&gt;</code>
+- :func:<code>viewRect &lt;pyqtgraph.ViewBox.viewRect&gt;</code>
+- :func:<code>viewRange &lt;pyqtgraph.ViewBox.viewRange&gt;</code>
+- :func:<code>setMouseEnabled &lt;pyqtgraph.ViewBox.setMouseEnabled&gt;</code>
+- :func:<code>enableAutoRange &lt;pyqtgraph.ViewBox.enableAutoRange&gt;</code>
+- :func:<code>disableAutoRange &lt;pyqtgraph.ViewBox.disableAutoRange&gt;</code>
+- :func:<code>setAspectLocked &lt;pyqtgraph.ViewBox.setAspectLocked&gt;</code>
+- :func:<code>invertY &lt;pyqtgraph.ViewBox.invertY&gt;</code>
+- :func:<code>invertX &lt;pyqtgraph.ViewBox.invertX&gt;</code>
+- :func:<code>register &lt;pyqtgraph.ViewBox.register&gt;</code>
+- :func:<code>unregister &lt;pyqtgraph.ViewBox.unregister&gt;</code></p>
+<p>The ViewBox itself can be accessed by calling :func:<code>getViewBox() &lt;pyqtgraph.PlotItem.getViewBox&gt;</code> </p>
+<p>==================== =======================================================================
+<strong>Signals:</strong>
+sigYRangeChanged
+wrapped from :class:<code>ViewBox &lt;pyqtgraph.ViewBox&gt;</code>
+sigXRangeChanged
+wrapped from :class:<code>ViewBox &lt;pyqtgraph.ViewBox&gt;</code>
+sigRangeChanged
+wrapped from :class:<code>ViewBox &lt;pyqtgraph.ViewBox&gt;</code>
+==================== =======================================================================</p>
+<p>Create a new PlotItem. All arguments are optional.
+Any extra keyword arguments are passed to :func:<code>PlotItem.plot() &lt;pyqtgraph.PlotItem.plot&gt;</code>.</p>
+<p>==============
+==========================================================================================
+<strong>Arguments:</strong>
+<em>title</em>
+Title to display at the top of the item. Html is allowed.
+<em>labels</em>
+A dictionary specifying the axis labels to display::</p>
+<pre><code>                {'left': (args), 'bottom': (args), ...}
+
+            The name of each axis and the corresponding arguments are passed to 
+            :func:`PlotItem.setLabel() &lt;pyqtgraph.PlotItem.setLabel&gt;`
+            Optionally, PlotItem my also be initialized with the keyword arguments left,
+            right, top, or bottom to achieve the same effect.
+</code></pre>
+<p><em>name</em>
+Registers a name for this view so that others may link to it
+<em>viewBox</em>
+If specified, the PlotItem will be constructed with this as its ViewBox.
+<em>axisItems</em>
+Optional dictionary instructing the PlotItem to use pre-constructed items
+for its axes. The dict keys must be axis names ('left', 'bottom', 'right', 'top')
+and the values must be instances of AxisItem (or at least compatible with AxisItem).
+==============
+==========================================================================================</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>pyqtgraph.graphicsItems.PlotItem.PlotItem.PlotItem</li>
+<li>pyqtgraph.graphicsItems.GraphicsWidget.GraphicsWidget</li>
+<li>pyqtgraph.graphicsItems.GraphicsItem.GraphicsItem</li>
+<li>PyQt5.QtWidgets.QGraphicsWidget</li>
+<li>PyQt5.QtWidgets.QGraphicsObject</li>
+<li>PyQt5.QtCore.QObject</li>
+<li>PyQt5.QtWidgets.QGraphicsItem</li>
+<li>PyQt5.QtWidgets.QGraphicsLayoutItem</li>
+<li>sip.wrapper</li>
+<li>sip.simplewrapper</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="audian.spectrogramplot.PowerPlot" href="spectrogramplot.html#audian.spectrogramplot.PowerPlot">PowerPlot</a></li>
+<li><a title="audian.timeplot.TimePlot" href="timeplot.html#audian.timeplot.TimePlot">TimePlot</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="audian.rangeplot.RangePlot.x"><code class="name flex">
+<span>def <span class="ident">x</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def x(self):
+    return self.aspec[0]</code></pre>
+</details>
+<div class="desc"><p>x(self) -&gt; float</p></div>
+</dd>
+<dt id="audian.rangeplot.RangePlot.y"><code class="name flex">
+<span>def <span class="ident">y</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def y(self):
+    return self.aspec[1]</code></pre>
+</details>
+<div class="desc"><p>y(self) -&gt; float</p></div>
+</dd>
+<dt id="audian.rangeplot.RangePlot.z"><code class="name flex">
+<span>def <span class="ident">z</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def z(self):
+    return self.aspec[2] if len(self.aspec) &gt; 2 else &#39;&#39;</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.rangeplot.RangePlot.add_item"><code class="name flex">
+<span>def <span class="ident">add_item</span></span>(<span>self, item, is_data=False)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_item(self, item, is_data=False):
+    if is_data:
+        self.data_items.append(item)
+        item.ax = self
+    self.addItem(item)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.rangeplot.RangePlot.range"><code class="name flex">
+<span>def <span class="ident">range</span></span>(<span>self, axspec)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def range(self, axspec):
+    return None, None, None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.rangeplot.RangePlot.amplitudes"><code class="name flex">
+<span>def <span class="ident">amplitudes</span></span>(<span>self, t0, t1)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def amplitudes(self, t0, t1):
+    return None, None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.rangeplot.RangePlot.get_marker_pos"><code class="name flex">
+<span>def <span class="ident">get_marker_pos</span></span>(<span>self, x0, x1, y)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_marker_pos(self, x0, x1, y):
+    return x0, y, None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.rangeplot.RangePlot.set_stored_marker"><code class="name flex">
+<span>def <span class="ident">set_stored_marker</span></span>(<span>self, x, y)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_stored_marker(self, x, y):
+    self.stored_marker.setData((x, ), (y, ))
+    self.stored_marker.setVisible(True)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.rangeplot.RangePlot.update_plot"><code class="name flex">
+<span>def <span class="ident">update_plot</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_plot(self):
+    for item in self.data_items:
+        if item.isVisible():
+            item.update_plot()</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="audian" href="index.html">audian</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="audian.rangeplot.RangePlot" href="#audian.rangeplot.RangePlot">RangePlot</a></code></h4>
+<ul class="two-column">
+<li><code><a title="audian.rangeplot.RangePlot.x" href="#audian.rangeplot.RangePlot.x">x</a></code></li>
+<li><code><a title="audian.rangeplot.RangePlot.y" href="#audian.rangeplot.RangePlot.y">y</a></code></li>
+<li><code><a title="audian.rangeplot.RangePlot.z" href="#audian.rangeplot.RangePlot.z">z</a></code></li>
+<li><code><a title="audian.rangeplot.RangePlot.add_item" href="#audian.rangeplot.RangePlot.add_item">add_item</a></code></li>
+<li><code><a title="audian.rangeplot.RangePlot.range" href="#audian.rangeplot.RangePlot.range">range</a></code></li>
+<li><code><a title="audian.rangeplot.RangePlot.amplitudes" href="#audian.rangeplot.RangePlot.amplitudes">amplitudes</a></code></li>
+<li><code><a title="audian.rangeplot.RangePlot.get_marker_pos" href="#audian.rangeplot.RangePlot.get_marker_pos">get_marker_pos</a></code></li>
+<li><code><a title="audian.rangeplot.RangePlot.set_stored_marker" href="#audian.rangeplot.RangePlot.set_stored_marker">set_stored_marker</a></code></li>
+<li><code><a title="audian.rangeplot.RangePlot.update_plot" href="#audian.rangeplot.RangePlot.update_plot">update_plot</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
+</footer>
+</body>
+</html>
