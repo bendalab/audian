@@ -146,6 +146,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             self.addItem(axt, row=c, col=0)
             self.axs.append(axt)
 
+        self.shared_array = None
         self.times = None
         self.datas = None
         self.index = 0
@@ -158,6 +159,8 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
     def close(self):
         for proc in self.procs:
             proc.terminate()
+            proc.join()
+            proc.close()
         self.procs = []
 
         
@@ -178,13 +181,13 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
         self.datas = np.frombuffer(self.shared_array.get_obj())
         self.datas = self.datas.reshape((len(self.times), self.data.channels))
         self.procs = []
-        nprocs = os.cpu_count() - 1
+        nprocs = os.cpu_count() - 1 # the more processes the more memory is used!
         for i in range(max(1, nprocs)):
             p = Process(target=down_sample,
                         args=(i, nprocs, nblock, step,
                               self.shared_array,
                               self.data.data.file_paths,
-                              nblock/self.data.rate + 1,
+                              nblock/self.data.rate + 0.1,
                               self.data.load_kwargs))
             p.start()
             self.procs.append(p)
@@ -200,6 +203,8 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
                 done = False
                 break
         if done:
+            for proc in self.procs:
+                proc.close()
             self.procs = []
             for c in range(self.data.channels):
                 ymin = np.min(self.datas[:,c])
