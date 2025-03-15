@@ -652,7 +652,7 @@ class DataBrowser(QWidget):
                     sl[lidx].addPoints((t1,), (0.0,), data=(ds,), tip=marker_tip)
 
         # fulltrace data:
-        self.data.prepare_fulltrace(pool)
+        self.datafig.prepare_fulltrace(pool)
 
 
     def close(self):

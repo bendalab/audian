@@ -4,26 +4,10 @@ and the time window shown.
 """
 
 import numpy as np
-from PyQt5.QtWidgets import QApplication
 from audioio import get_datetime
 from thunderlab.dataloader import DataLoader
-from .traceitem import down_sample_peak
 from .bufferedspectrogram import BufferedSpectrogram
 
-
-def down_sample(index, nblock, step, file_paths, tbuffer, load_kwargs):
-    """ Worker for prepare_fulltrace() """
-    data = DataLoader(file_paths, tbuffer, 0,
-                      verbose=0, **load_kwargs)
-    i = 2*index//step
-    buffer = np.zeros((nblock, data.channels))
-    data.load_buffer(index, nblock, buffer)
-    datas = np.empty((2*nblock//step, data.channels))
-    for c in range(data.channels):
-        ds_data = down_sample_peak(buffer[:,c], step)
-        datas[:, c] = ds_data
-    return i, step, datas
-        
 
 class Data(object):
 
@@ -36,14 +20,13 @@ class Data(object):
         self.data = None
         self.rate = None
         self.channels = 0
+        self.frames = 0
         self.start_time = None
         self.meta_data = {}
         self.tbefore = 0
         self.tafter = 0
         self.traces = []
         self.sources = []
-        
-        self.res = []
 
 
     def add_trace(self, trace):
@@ -206,6 +189,7 @@ class Data(object):
         self.file_path = self.data.filepath
         self.rate = self.data.rate
         self.channels = self.data.channels
+        self.frames = self.data.frames
         # metadata:
         self.meta_data = dict(Format=self.data.format_dict())
         self.meta_data.update(self.data.metadata())
@@ -243,16 +227,3 @@ class Data(object):
                 trace.align_buffer()
         return self.data.get_file_index(int(t0*self.data.rate))
         
-
-    def prepare_fulltrace(self, pool):
-        max_pixel = QApplication.desktop().screenGeometry().width()
-        step = max(1, self.data.frames//max_pixel)
-        nblock = int(60.0*self.data.rate//step)*step
-        self.res = []
-        for i in range(0, self.data.frames, nblock):
-            self.res.append(pool.apply_async(down_sample,
-                                             (i,
-                                              min(nblock, self.data.frames - i),
-                                              step, self.data.file_paths,
-                                              nblock/self.data.rate + 1,
-                                              self.load_kwargs)))
