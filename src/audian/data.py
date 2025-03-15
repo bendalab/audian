@@ -3,7 +3,6 @@ and the time window shown.
 
 """
 
-import dill
 import numpy as np
 from PyQt5.QtWidgets import QApplication
 from audioio import get_datetime
@@ -12,9 +11,10 @@ from .traceitem import down_sample_peak
 from .bufferedspectrogram import BufferedSpectrogram
 
 
-def down_sample(index, nblock, step, ddata):
+def down_sample(index, nblock, step, file_paths, tbuffer, load_kwargs):
     """ Worker for prepare_fulltrace() """
-    data = dill.loads(ddata)
+    data = DataLoader(file_paths, tbuffer, 0,
+                      verbose=0, **load_kwargs)
     i = 2*index//step
     buffer = np.zeros((nblock, data.channels))
     data.load_buffer(index, nblock, buffer)
@@ -191,7 +191,6 @@ class Data(object):
             self.data = None
             return
         self.data.set_unwrap(unwrap, unwrap_clip, False, self.data.unit)
-        self.data_pickle = dill.dumps(self.data)
         self.data.follow = int(self.follow_time*self.data.rate)
         self.data.name = 'data'
         self.data.panel = 'trace'
@@ -251,6 +250,9 @@ class Data(object):
         nblock = int(60.0*self.data.rate//step)*step
         self.res = []
         for i in range(0, self.data.frames, nblock):
-            self.res.append(pool.apply_async(down_sample, (i,
-                                             min(nblock, self.data.frames - i),
-                                                           step, self.data_pickle)))
+            self.res.append(pool.apply_async(down_sample,
+                                             (i,
+                                              min(nblock, self.data.frames - i),
+                                              step, self.data.file_paths,
+                                              nblock/self.data.rate + 1,
+                                              self.load_kwargs)))
