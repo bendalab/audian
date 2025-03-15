@@ -59,7 +59,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
 
         self.setBackground(None)
         self.ci.layout.setContentsMargins(0, 0, 0, 0)
-        self.ci.layout.setVerticalSpacing(0)
+        self.ci.layout.setVerticalSpacing(-1.7)
         
         # for each channel prepare a plot panel:
         xwidth = self.fontMetrics().averageCharWidth()
@@ -73,7 +73,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             axt.showAxes(True, False)
             axt.getAxis('left').setWidth(8*xwidth)
             axt.getViewBox().setBackgroundColor(None)
-            axt.getViewBox().setDefaultPadding(padding=0.0)
+            axt.getViewBox().setDefaultPadding(padding=0)
             axt.hideButtons()
             axt.setMenuEnabled(False)
             axt.setMouseEnabled(False, False)
@@ -101,7 +101,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             label = QGraphicsSimpleTextItem(axt.getAxis('left'))
             label.setToolTip(f'Total duration in {secs_format(self.tmax)}')
             label.setText(secs_to_str(self.tmax))
-            label.setPos(int(xwidth), xwidth/2)
+            label.setPos(int(xwidth), 0)
             self.labels.append(label)
             
             # add data:
@@ -113,7 +113,8 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             self.lines.append(line)
 
             # add zero line:
-            zero_line = axt.addLine(y=0, movable=False, pen=dict(color='grey', width=1))
+            zero_line = axt.addLine(y=0, movable=False,
+                                    pen=dict(color='grey', width=1))
             zero_line.setZValue(20)
             
             self.addItem(axt, row=c, col=0)
@@ -122,13 +123,13 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
         self.times = None
         self.datas = None
         self.index = 0
-        QTimer.singleShot(1000, self.plot_data)
 
         
     def polish(self):
         text_color = self.palette().color(QPalette.WindowText)
         for label in self.labels:
             label.setBrush(text_color)
+        QTimer.singleShot(500, self.plot_data)
 
 
     def plot_data(self):
