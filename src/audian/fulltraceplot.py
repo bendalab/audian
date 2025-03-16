@@ -52,11 +52,17 @@ def secs_format(time):
 
     
 def down_sample(proc_idx, num_proc, nblock, step, array,
-                file_paths, tbuffer, unwrap_thresh, unwrap_clips,
-                load_kwargs):
+                file_paths, tbuffer, rate, channels, unit, amax, end_indices,
+                unwrap_thresh, unwrap_clips, load_kwargs):
     """ Worker for prepare() """
-    data = DataLoader(file_paths, tbuffer, 0,
-                      verbose=0, **load_kwargs)
+    if end_indices is None:
+        data = DataLoader(file_paths, tbuffer, 0,
+                          verbose=0, **load_kwargs)
+    else:
+        data = DataLoader(file_paths, tbuffer, 0,
+                          verbose=0, rate=rate, channels=channels,
+                          unit=unit, amax=amax, end_indices=end_indices,
+                          **load_kwargs)
     data.set_unwrap(unwrap_thresh, unwrap_clips, False, data.unit)
     datas = np.frombuffer(array.get_obj()).reshape((-1, data.channels))
     buffer = np.zeros((nblock, data.channels))
@@ -177,6 +183,9 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
         max_pixel = QApplication.desktop().screenGeometry().width()
         step = max(1, self.data.frames//max_pixel)
         nblock = int(20.0*self.data.rate//step)*step
+        end_indices = None
+        if len(self.data.data.file_paths) > 1:
+            end_indices = self.data.data.end_indices
         self.times = np.arange(0, self.data.data.frames,
                                step/2)/self.data.rate
         self.shared_array = Array(c.c_double, len(self.times)*self.data.channels)
@@ -190,6 +199,9 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
                               self.shared_array,
                               self.data.data.file_paths,
                               nblock/self.data.rate + 0.1,
+                              self.data.rate, self.data.channels,
+                              self.data.data.unit, self.data.data.ampl_max,
+                              end_indices,
                               self.data.data.unwrap_thresh,
                               self.data.data.unwrap_clips,
                               self.data.load_kwargs))
