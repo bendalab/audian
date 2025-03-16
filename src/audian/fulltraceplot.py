@@ -52,10 +52,12 @@ def secs_format(time):
 
     
 def down_sample(proc_idx, num_proc, nblock, step, array,
-                file_paths, tbuffer, load_kwargs):
+                file_paths, tbuffer, unwrap_thresh, unwrap_clips,
+                load_kwargs):
     """ Worker for prepare() """
     data = DataLoader(file_paths, tbuffer, 0,
                       verbose=0, **load_kwargs)
+    data.set_unwrap(unwrap_thresh, unwrap_clips, False, data.unit)
     datas = np.frombuffer(array.get_obj()).reshape((-1, data.channels))
     buffer = np.zeros((nblock, data.channels))
     for index in range(proc_idx*nblock, data.frames, num_proc*nblock):
@@ -188,6 +190,8 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
                               self.shared_array,
                               self.data.data.file_paths,
                               nblock/self.data.rate + 0.1,
+                              self.data.data.unwrap_thresh,
+                              self.data.data.unwrap_clips,
                               self.data.load_kwargs))
             p.start()
             self.procs.append(p)
