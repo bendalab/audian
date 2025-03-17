@@ -1438,7 +1438,7 @@ def main(cargs):
     
 
 def run():
-    mp.set_start_method('spawn')
+    mp.set_start_method('forkserver' if os.name == 'posix' else 'spawn')
     main(sys.argv[1:])
 
     
