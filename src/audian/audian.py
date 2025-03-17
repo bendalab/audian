@@ -3,6 +3,7 @@ import sys
 import glob
 import argparse
 import numpy as np
+import multiprocessing as mp
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QKeySequence, QIcon
 from PyQt5.QtWidgets import QStyle, QApplication, QMainWindow, QTabWidget
@@ -1437,6 +1438,7 @@ def main(cargs):
     
 
 def run():
+    mp.set_start_method('spawn')
     main(sys.argv[1:])
 
     
