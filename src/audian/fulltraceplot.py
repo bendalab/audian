@@ -7,7 +7,7 @@
 """
 
 import os
-from math import floor, fabs
+from math import floor
 import numpy as np
 import ctypes as c
 from multiprocessing import Process, Array
@@ -225,7 +225,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             for c in range(self.data.channels):
                 ymin = np.min(self.datas[:,c])
                 ymax = np.max(self.datas[:,c])
-                y = max(fabs(ymin), fabs(ymax))
+                y = max(abs(ymin), abs(ymax))
                 self.axs[c].setYRange(-y, y)
                 self.axs[c].setLimits(yMin=-y, yMax=y,
                                       minYRange=2*y, maxYRange=2*y)
