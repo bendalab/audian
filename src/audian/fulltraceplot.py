@@ -1,7 +1,7 @@
 """FullTracePlot
 
 ## TODO
-- secs_to_str and secs_format to extra module or even thunderlab?
+- secs_to_str to extra module or even thunderlab?
 - Have a class for a single channel that we could add to the toolbar.
 - Only use Data class
 """
@@ -19,36 +19,38 @@ from thunderlab.dataloader import DataLoader
 from .traceitem import down_sample_peak
 
 
-def secs_to_str(time):
-    hours = int(time//3600)
+def secs_to_str(time, msec_level=10):
+    days = time//(24*3600)
+    time -= (24*3600)*days
+    hours = time//3600
     time -= 3600*hours
-    mins = int(time//60)
+    mins = time//60
     time -= 60*mins
-    secs = int(floor(time))
+    secs = int(np.floor(time))
     time -= secs
-    if hours > 0:
-        return f'{hours}:{mins:02d}:{secs:02d}'
+    msecs = f'{1000*time:03.0f}ms'
+    if days > 0:
+        if msec_level < 4:
+            msecs = ''
+        return f'{days:.0f}d{hours:.0f}h{mins:.0f}m{secs:.0f}s{msecs}'
+    elif hours > 0:
+        if msec_level < 3:
+            msecs = ''
+        return f'{hours:.0f}h{mins:.0f}m{secs:.0f}s{msecs}'
     elif mins > 0:
-        return f'{mins:02d}:{secs:02d}'
+        if msec_level < 2:
+            msecs = ''
+        return f'{mins:.0f}m{secs:.0f}s{msecs}'
     elif secs > 0:
-        return f'{secs}.{1000*time:03.0f}s'
+        if msec_level < 1:
+            msecs = ''
+        return f'{secs:.0f}s{msecs}'
     elif time >= 0.01:
-        return f'{1000*time:03.0f}ms'
+        return msecs
     elif time >= 0.001:
         return f'{1000*time:.2f}ms'
     else:
         return f'{1e6*time:.0f}\u00b5s'
-
-
-def secs_format(time):
-    if time >= 3600.0:
-        return 'h:mm:ss'
-    elif time >= 60.0:
-        return 'mm:ss'
-    elif time > 1.0:
-        return 's.ms'
-    else:
-        return 'ms'
 
     
 def down_sample(proc_idx, num_proc, nblock, step, array,
@@ -133,8 +135,8 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
 
             # add time label:
             label = QGraphicsSimpleTextItem(axt.getAxis('left'))
-            label.setToolTip(f'Total duration in {secs_format(self.tmax)}')
-            label.setText(secs_to_str(self.tmax))
+            label.setToolTip('Total duration of the recording')
+            label.setText(secs_to_str(self.tmax, 1))
             label.setPos(int(xwidth), 0)
             self.labels.append(label)
             

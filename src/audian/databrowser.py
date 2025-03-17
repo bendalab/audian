@@ -1808,24 +1808,6 @@ class DataBrowser(QWidget):
      
                     
     def save_region(self, t0, t1):
-
-        def secs_to_str(time):
-            hours = time//3600
-            time -= 3600*hours
-            mins = time//60
-            time -= 60*mins
-            secs = int(np.floor(time))
-            time -= secs
-            msecs = f'{1000*time:03.0f}ms'
-            if hours > 0:
-                return f'{hours}h{mins}m{secs}s{msecs}'
-            elif mins > 0:
-                return f'{mins}m{secs}s{msecs}'
-            elif secs > 0:
-                return f'{secs}s{msecs}'
-            else:
-                return msecs
-
         i0 = int(np.round(t0*self.data.rate))
         i1 = int(np.round(t1*self.data.rate))
         if i0 < 0:
