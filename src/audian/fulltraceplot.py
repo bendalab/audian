@@ -16,7 +16,6 @@ from PyQt5.QtWidgets import QGraphicsSimpleTextItem, QApplication
 from PyQt5.QtGui import QPalette
 import pyqtgraph as pg
 from thunderlab.dataloader import DataLoader
-from .traceitem import down_sample_peak
 
 
 def secs_to_str(time, msec_level=10):
@@ -52,7 +51,7 @@ def secs_to_str(time, msec_level=10):
     else:
         return f'{1e6*time:.0f}\u00b5s'
 
-    
+
 def down_sample(proc_idx, num_proc, nblock, step, array,
                 file_paths, tbuffer, rate, channels, unit, amax, end_indices,
                 unwrap_thresh, unwrap_clips, load_kwargs):
@@ -73,11 +72,13 @@ def down_sample(proc_idx, num_proc, nblock, step, array,
             nblock = data.frames - index
             buffer = np.zeros((nblock, data.channels))
         data.load_buffer(index, nblock, buffer)
+        # see also https://stackoverflow.com/questions/61255208/finding-the-maximum-in-a-numpy-array-every-nth-instance
         i = 2*index//step
         n = 2*len(buffer)//step
+        dbuffer = buffer.reshape(-1, step, buffer.shape[1])
         with array.get_lock():
-            ds_data = down_sample_peak(buffer, step,
-                                       datas[i:i + n, :])
+            datas[i + 0:i + n:2] = np.min(dbuffer, 1)
+            datas[i + 1:i + n:2] = np.max(dbuffer, 1)
     return None
         
     
@@ -184,7 +185,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
     def prepare(self):
         max_pixel = QApplication.desktop().screenGeometry().width()
         step = max(1, self.data.frames//max_pixel)
-        nblock = int(20.0*self.data.rate//step)*step
+        nblock = max(step, int(30.0*self.data.rate//step)*step)
         end_indices = None
         if len(self.data.data.file_paths) > 1:
             end_indices = self.data.data.end_indices
@@ -194,7 +195,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
         self.datas = np.frombuffer(self.shared_array.get_obj())
         self.datas = self.datas.reshape((len(self.times), self.data.channels))
         self.procs = []
-        nprocs = os.cpu_count() - 1 # the more processes the more memory is used!
+        nprocs = os.cpu_count() - 1
         for i in range(max(1, nprocs)):
             p = Process(target=down_sample,
                         args=(i, nprocs, nblock, step,
@@ -212,14 +213,18 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             
 
     def plot_data(self):
-        with self.shared_array.get_lock():
-            for c in range(self.data.channels):
-                self.lines[c].setData(self.times, self.datas[:,c])
         done = True
         for proc in self.procs:
             if proc.is_alive():
                 done = False
                 break
+        lock = self.shared_array.get_lock()
+        if lock.acquire(block=False):
+            for c in range(self.data.channels):
+                self.lines[c].setData(self.times, self.datas[:,c])
+            lock.release()
+        else:
+            done = False
         if done:
             for proc in self.procs:
                 proc.close()

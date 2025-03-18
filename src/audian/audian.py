@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import QAction, QActionGroup, QPushButton
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QScrollArea
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 import pyqtgraph as pg
-from audioio import available_formats, PlayAudio
+from audioio import available_formats, PlayAudio, AudioLoader
 from .version import __version__, __year__
 from .databrowser import DataBrowser
 from .plugins import Plugins
@@ -1439,6 +1439,8 @@ def main(cargs):
 
 def run():
     mp.set_start_method('forkserver' if os.name == 'posix' else 'spawn')
+    AudioLoader.max_open_files = os.cpu_count() + 2
+    AudioLoader.max_open_loaders = 2*AudioLoader.max_open_files
     main(sys.argv[1:])
 
     

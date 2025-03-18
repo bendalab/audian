@@ -3,18 +3,8 @@
 
 from math import fabs, floor, ceil
 import numpy as np
-from numba import jit
 from PyQt5.QtWidgets import QApplication
 import pyqtgraph as pg
-
-
-@jit(nopython=True)
-def down_sample_peak(src_data, step, dst_data):
-    for c in range(src_data.shape[1]):
-        for k in range(len(src_data)//step):
-            dd = src_data[k*step:(k+1)*step, c]
-            dst_data[2*k, c] = np.min(dd)
-            dst_data[2*k + 1, c] = np.max(dd)
 
 
 class TraceItem(pg.PlotDataItem):
@@ -57,17 +47,19 @@ class TraceItem(pg.PlotDataItem):
             self.setPen(dict(color=self.color, width=self.lw_thin))
             self.setSymbol(None)
             npdata = (stop - start)//self.step
-            pdata = np.zeros((2*npdata, 1))
+            pdata = np.zeros(2*npdata)
             i = 0
             nb = (self.data.bufferframes//self.step)*self.step
+            # downsample using min and max during step frames:
             for dd in self.data.blocks(nb, 0, start, stop):
                 n = 2*len(dd)//self.step
-                down_sample_peak(dd[:, self.channel].reshape((-1, 1)),
-                                 self.step, pdata[i:i + n, :])
+                dbuffer = dd.reshape(-1, self.step, dd.shape[1])
+                pdata[i + 0:i + n:2] = np.min(dbuffer[:, :, self.channel], 1)
+                pdata[i + 1:i + n:2] = np.max(dbuffer[:, :, self.channel], 1)
                 i += n
             step2 = self.step/2
             time = np.arange(start, start + len(pdata)*step2, step2)/self.rate
-            self.setData(time, pdata[:, 0])
+            self.setData(time, pdata)
         elif self.step > 1:  # TODO: not used
             # subsample:
             self.setData(np.arange(start, stop, self.step)/self.rate,
