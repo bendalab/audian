@@ -7,10 +7,10 @@ import pyqtgraph as pg
 
 class TimeAxisItem(pg.AxisItem):
     
-    def __init__(self, times, *args, **kwargs):
+    def __init__(self, file_times, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setPen('white')
-        self._times = times
+        self._file_times = file_times
         self._starttime = None
         self._starttime_mode = 0
 
@@ -45,12 +45,12 @@ class TimeAxisItem(pg.AxisItem):
             return []
 
         if self._starttime_mode == 2:
-            min_idx = np.nonzero(self._times <= minVal)[0][-1]
-            max_idx = np.nonzero(self._times <= maxVal)[0][-1]
+            min_idx = np.nonzero(self._file_times <= minVal)[0][-1]
+            max_idx = np.nonzero(self._file_times <= maxVal)[0][-1]
             if min_idx != max_idx:
-                max_value = self._times[max_idx] - self._times[min_idx]
+                max_value = self._file_times[max_idx] - self._file_times[min_idx]
             else:
-                max_value = maxVal - self._times[max_idx]
+                max_value = maxVal - self._file_times[max_idx]
         else:
             max_value = maxVal
 
@@ -110,7 +110,7 @@ class TimeAxisItem(pg.AxisItem):
         if self._starttime_mode == 2:
             vals = []
             for time in values:
-                toffs = self._times[np.nonzero(self._times <= time)[0][-1]]
+                toffs = self._file_times[np.nonzero(self._file_times <= time)[0][-1]]
                 vals.append(time - toffs)
             values = vals
         max_value = np.max(values)
