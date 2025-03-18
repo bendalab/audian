@@ -225,5 +225,8 @@ class Data(object):
         for trace in self.traces[1:]:
             if trace.need_update:
                 trace.align_buffer()
-        return self.data.get_file_index(int(t0*self.data.rate))
+        i0 = int(t0*self.data.rate)
+        if i0 >= self.data.frames:
+            i0 = self.data.frames - 1
+        return self.data.get_file_index(i0)
         

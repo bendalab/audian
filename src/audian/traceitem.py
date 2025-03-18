@@ -46,16 +46,25 @@ class TraceItem(pg.PlotDataItem):
             stop = int(ceil(stop/self.step + 1)*self.step)
             self.setPen(dict(color=self.color, width=self.lw_thin))
             self.setSymbol(None)
-            npdata = (stop - start)//self.step
+            npdata = (stop - start + self.step - 1)//self.step
             pdata = np.zeros(2*npdata)
             i = 0
             nb = (self.data.bufferframes//self.step)*self.step
             # downsample using min and max during step frames:
+            # see also https://stackoverflow.com/questions/61255208/finding-the-maximum-in-a-numpy-array-every-nth-instance
             for dd in self.data.blocks(nb, 0, start, stop):
+                """
                 n = 2*len(dd)//self.step
                 dbuffer = dd.reshape(-1, self.step, dd.shape[1])
                 pdata[i + 0:i + n:2] = np.min(dbuffer[:, :, self.channel], 1)
                 pdata[i + 1:i + n:2] = np.max(dbuffer[:, :, self.channel], 1)
+                """
+                mind = np.minimum.reduceat(dd[:, self.channel],
+                                           np.arange(0, len(dd), self.step))
+                pdata[i + 0:i + + 0 + 2*len(mind):2] = mind
+                maxd = np.maximum.reduceat(dd[:, self.channel],
+                                           np.arange(0, len(dd), self.step))
+                pdata[i + 1:i + 1 + 2*len(maxd):2] = maxd
                 i += n
             step2 = self.step/2
             time = np.arange(start, start + len(pdata)*step2, step2)/self.rate
