@@ -61,10 +61,11 @@ class TraceItem(pg.PlotDataItem):
                 """
                 mind = np.minimum.reduceat(dd[:, self.channel],
                                            np.arange(0, len(dd), self.step))
-                pdata[i + 0:i + + 0 + 2*len(mind):2] = mind
+                n = 2*len(mind)
+                pdata[i + 0:i + 0 + n:2] = mind
                 maxd = np.maximum.reduceat(dd[:, self.channel],
                                            np.arange(0, len(dd), self.step))
-                pdata[i + 1:i + 1 + 2*len(maxd):2] = maxd
+                pdata[i + 1:i + 1 + n:2] = maxd
                 i += n
             step2 = self.step/2
             time = np.arange(start, start + len(pdata)*step2, step2)/self.rate

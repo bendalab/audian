@@ -170,9 +170,11 @@ class Data(object):
             self.data = DataLoader(self.file_path, tbuffer, tback,
                                    verbose=verbose,
                                    **self.load_kwargs)
-        except IOError:
+        except Exception as e:
             self.data = None
-            return
+            if isinstance(self.file_path, (list, tuple, np.ndarray)):
+                self.file_path = self.file_path[0]
+            raise e
         self.data.set_unwrap(unwrap, unwrap_clip, False, self.data.unit)
         self.data.follow = int(self.follow_time*self.data.rate)
         self.data.name = 'data'

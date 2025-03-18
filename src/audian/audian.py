@@ -34,6 +34,7 @@ class Audian(QMainWindow):
 
         self.browsers = []
         self.prev_browser = None   # for load_data()
+        self.file_paths = []
 
         self.channels = channels
         self.highpass_cutoff = highpass_cutoff
@@ -98,11 +99,7 @@ class Audian(QMainWindow):
             for menu in self.data_menus:
                 menu.setEnabled(True)
         else:
-            self.startup.setVisible(True)
-            self.startup_active = True
-            self.tabs.addTab(self.startup, 'Startup')
-            for menu in self.data_menus:
-                menu.setEnabled(False)
+            self.show_startup()
 
 
     def __del__(self):
@@ -132,6 +129,16 @@ class Audian(QMainWindow):
         vbox.addWidget(quit_button)
         vbox.addStretch(3)
         hbox.addStretch(2)
+
+
+    def show_startup(self):
+        if self.startup_active:
+            return
+        self.startup.setVisible(True)
+        self.startup_active = True
+        self.tabs.addTab(self.startup, 'Startup')
+        for menu in self.data_menus:
+            menu.setEnabled(False)
 
 
     def browser(self):
@@ -1216,6 +1223,7 @@ class Audian(QMainWindow):
     def load_files(self, file_paths):
         if len(file_paths) == 0:
             return
+        self.file_paths = file_paths
         if len(self.browsers) > 0:
             self.prev_browser = self.browser()
         # prepare open all files in a single buffer:
@@ -1235,34 +1243,28 @@ class Audian(QMainWindow):
                                  self.highpass_cutoff, self.lowpass_cutoff)
                 except Exception as e:
                     print(e)
-                    file_paths = browser.data.file_path
-                    if isinstance(file_paths, (list, tuple, np.ndarray)):
-                        self.tabs.removeTab(self.tabs.indexOf(browser))
-                        self.browsers.remove(browser)
-                        # loading into a single buffer failed,
-                        # load each file separately:
-                        first = True
-                        for file_path in file_paths:
-                            if not os.path.isfile(file_path):
-                                continue
-                            browser = DataBrowser(file_path,
-                                                  self.load_kwargs,
-                                                  self.plugins,
-                                                  self.channels,
-                                                  self.audio,
-                                                  self.acts)
-                            self.tabs.addTab(browser, browser.name())
-                            self.browsers.append(browser)
-                            if first:
-                                self.tabs.setCurrentWidget(browser)
-                                first = False
-                        QTimer.singleShot(100, self.load_data)
-                        return
-                if browser.data is None:
+                    QMessageBox.critical(self, 'Error', f'Can not open file <b>{browser.data.file_path}</b>!')
                     self.tabs.removeTab(self.tabs.indexOf(browser))
                     self.browsers.remove(browser)
-                    QMessageBox.critical(self, 'Error', f'''
-Can not open file <b>{browser.file_path}</b>!''')
+                    self.file_paths.remove(browser.data.file_path)
+                    if self.tabs.count() == 0:
+                        self.show_startup()
+                if browser.data.data is not None:
+                    for fn in browser.data.data.file_paths:
+                        if fn in self.file_paths:
+                            self.file_paths.remove(fn)
+                if len(self.file_paths) > 0:
+                    # still need to load some files:
+                    browser = DataBrowser(self.file_paths,
+                                          self.load_kwargs,
+                                          self.plugins,
+                                          self.channels,
+                                          self.audio,
+                                          self.acts)
+                    self.tabs.addTab(browser, browser.name())
+                    self.browsers.append(browser)
+                if browser.data.data is None:
+                    QTimer.singleShot(100, self.load_data)
                     break
                 self.tabs.setTabText(self.tabs.indexOf(browser),
                                      browser.name())
@@ -1344,11 +1346,7 @@ Can not open file <b>{browser.file_path}</b>!''')
                 w.close()
                 del w
         if self.tabs.count() == 0:
-            self.tabs.addTab(self.startup, 'Startup')
-            self.startup.setVisible(True)
-            self.startup_active = True
-            for menu in self.data_menus:
-                menu.setEnabled(False)
+            self.show_startup()
 
             
     def quit(self):

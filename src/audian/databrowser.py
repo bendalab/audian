@@ -655,8 +655,10 @@ class DataBrowser(QWidget):
 
 
     def close(self):
-        self.datafig.close()
-        self.data.close()
+        if self.datafig is not None:
+            self.datafig.close()
+        if self.data is not None:
+            self.data.close()
 
                     
     def show_metadata(self):
