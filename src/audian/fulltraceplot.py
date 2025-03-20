@@ -72,13 +72,13 @@ def down_sample(proc_idx, num_proc, nblock, step, array,
             nblock = data.frames - index
             buffer = np.zeros((nblock, data.channels))
         data.load_buffer(index, nblock, buffer)
-        # see also https://stackoverflow.com/questions/61255208/finding-the-maximum-in-a-numpy-array-every-nth-instance
         i = 2*index//step
-        n = 2*len(buffer)//step
-        dbuffer = buffer.reshape(-1, step, buffer.shape[1])
+        segments = np.arange(0, len(buffer), step)
         with array.get_lock():
-            datas[i + 0:i + n:2] = np.min(dbuffer, 1)
-            datas[i + 1:i + n:2] = np.max(dbuffer, 1)
+            mind = np.minimum.reduceat(buffer, segments)
+            datas[i + 0:i + 0 + 2*len(mind):2] = mind
+            maxd = np.maximum.reduceat(buffer, segments)
+            datas[i + 1:i + 1 + 2*len(maxd):2] = maxd
     return None
         
     
@@ -189,7 +189,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
         end_indices = None
         if len(self.data.data.file_paths) > 1:
             end_indices = self.data.data.end_indices
-        self.times = np.arange(0, self.data.data.frames,
+        self.times = np.arange(0, self.data.data.frames + step - 1,
                                step/2)/self.data.rate
         self.shared_array = Array(c.c_double, len(self.times)*self.data.channels)
         self.datas = np.frombuffer(self.shared_array.get_obj())
