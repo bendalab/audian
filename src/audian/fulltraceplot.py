@@ -67,18 +67,19 @@ def down_sample(proc_idx, num_proc, nblock, step, array,
     data.set_unwrap(unwrap_thresh, unwrap_clips, False, data.unit)
     datas = np.frombuffer(array.get_obj()).reshape((-1, data.channels))
     buffer = np.zeros((nblock, data.channels))
+    segments = np.arange(0, len(buffer), step)
     for index in range(proc_idx*nblock, data.frames, num_proc*nblock):
         if data.frames - index < nblock:
             nblock = data.frames - index
-            buffer = np.zeros((nblock, data.channels))
+            buffer = buffer[:nblock, :]
+            segments = np.arange(0, len(buffer), step)
         data.load_buffer(index, nblock, buffer)
         i = 2*index//step
-        segments = np.arange(0, len(buffer), step)
         with array.get_lock():
-            mind = np.minimum.reduceat(buffer, segments)
-            datas[i + 0:i + 0 + 2*len(mind):2] = mind
-            maxd = np.maximum.reduceat(buffer, segments)
-            datas[i + 1:i + 1 + 2*len(maxd):2] = maxd
+            np.minimum.reduceat(buffer, segments,
+                                out=datas[i + 0:i + 0 + 2*len(segments):2])
+            np.maximum.reduceat(buffer, segments,
+                                out=datas[i + 1:i + 1 + 2*len(segments):2])
     return None
         
     
