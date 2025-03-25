@@ -73,6 +73,8 @@ handles all GUI aspects.
 - [ ] FullTracePlot:
   - [ ] fix offset problem? Does it still exist?
   - [ ] indicate time under mouse cursor.
+  - [ ] compute full trace in the background.
+  - [ ] store and load full trace to user specific cache dir (see https://github.com/tox-dev/platformdirs).
 - [x] Add a toolbar widget for spectrum overlap
 - [x] SpinBox for envelope cutoff frequency needs to show digits
   after decimal point.
