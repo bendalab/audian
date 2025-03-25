@@ -47,9 +47,9 @@ class TraceItem(pg.PlotDataItem):
             stop = min(len(self.data), tstop)
             # stay within loaded buffer:
             while start < self.data.offset:
-                start += step
+                start += self.step
             while stop > self.data.offset + len(self.data.buffer):
-                stop -= step
+                stop -= self.step
             # init plot buffer:
             segments = np.arange(0, stop - start, self.step)
             plot_data = np.zeros(2*len(segments))
