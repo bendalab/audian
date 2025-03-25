@@ -7,7 +7,10 @@
 """
 
 import os
+import json
+from pathlib import Path
 from math import floor
+from datetime import datetime
 import numpy as np
 import ctypes as c
 from multiprocessing import Process, Array
@@ -15,7 +18,9 @@ from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import QGraphicsSimpleTextItem, QApplication
 from PyQt5.QtGui import QPalette
 import pyqtgraph as pg
+from audioio import load_audio, write_audio
 from thunderlab.dataloader import DataLoader
+from .version import audian_dirs
 
 
 def secs_to_str(time, msec_level=10):
@@ -84,6 +89,10 @@ def down_sample(proc_idx, num_proc, nblock, step, array,
         
     
 class FullTracePlot(pg.GraphicsLayoutWidget):
+
+
+    fulltraces_file = 'fulltraces.json'
+    max_files = 100
 
     
     def __init__(self, data, axtraces, *args, **kwargs):
@@ -162,7 +171,8 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
         self.times = None
         self.datas = None
         self.index = 0
-
+        self.load_data()
+            
 
     def __del__(self):
         self.close()
@@ -184,6 +194,9 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
 
 
     def prepare(self):
+        self.procs = []
+        if self.times is not None and self.data is not None:
+            return
         max_pixel = QApplication.desktop().screenGeometry().width()
         step = max(1, self.data.frames//max_pixel)
         nblock = max(step, int(30.0*self.data.rate//step)*step)
@@ -195,7 +208,6 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
         self.shared_array = Array(c.c_double, len(self.times)*self.data.channels)
         self.datas = np.frombuffer(self.shared_array.get_obj())
         self.datas = self.datas.reshape((len(self.times), self.data.channels))
-        self.procs = []
         nprocs = os.cpu_count() - 1
         for i in range(max(1, nprocs)):
             p = Process(target=down_sample,
@@ -214,33 +226,113 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             
 
     def plot_data(self):
-        done = True
-        for proc in self.procs:
-            if proc.is_alive():
-                done = False
-                break
-        lock = self.shared_array.get_lock()
-        if lock.acquire(block=False):
-            for c in range(self.data.channels):
-                self.lines[c].setData(self.times, self.datas[:,c])
-            lock.release()
-        else:
-            done = False
-        if done:
-            for proc in self.procs:
-                proc.close()
-            self.procs = []
-            for c in range(self.data.channels):
-                ymin = np.min(self.datas[:,c])
-                ymax = np.max(self.datas[:,c])
+
+        def set_plot_ranges():
+            for c in range(self.datas.shape[1]):
+                ymin = np.min(self.datas[:, c])
+                ymax = np.max(self.datas[:, c])
                 y = max(abs(ymin), abs(ymax))
                 self.axs[c].setYRange(-y, y)
                 self.axs[c].setLimits(yMin=-y, yMax=y,
                                       minYRange=2*y, maxYRange=2*y)
-        else:
-            QTimer.singleShot(500, self.plot_data)
 
+        if len(self.procs) == 0:
+            for c in range(self.datas.shape[1]):
+                self.lines[c].setData(self.times, self.datas[:, c])
+            set_plot_ranges()
+        else:
+            done = True
+            for proc in self.procs:
+                if proc.is_alive():
+                    done = False
+                    break
+            lock = self.shared_array.get_lock()
+            if lock.acquire(block=False):
+                for c in range(self.datas.shape[1]):
+                    self.lines[c].setData(self.times, self.datas[:, c])
+                lock.release()
+            else:
+                done = False
+            if done:
+                for proc in self.procs:
+                    proc.close()
+                self.procs = []
+                set_plot_ranges()
+                self.save_data()
+            else:
+                QTimer.singleShot(500, self.plot_data)
+
+
+    def save_data(self):
+        audian_dirs.user_cache_path.mkdir(parents=True, exist_ok=True)
+        files = {}
+        ft_path = audian_dirs.user_cache_path / FullTracePlot.fulltraces_file
+        if ft_path.exists():
+            with ft_path.open() as sf:
+                files = json.load(sf)
+        # new filename:
+        ft_name = f'{1:08X}-fulltrace.wav'
+        for k in range(1, 1000):
+            ft_name = f'{k:08X}-fulltrace.wav'
+            if not ft_name in files.keys():
+                break
+        # add to dictionary:
+        first_file = Path(self.data.data.file_paths[0]).absolute()
+        last_file = Path(self.data.data.file_paths[-1]).absolute()
+        timestamp = datetime.now().isoformat()
+        rate = 1/(self.times[1] - self.times[0])
+        ft_props = dict(first=str(first_file),
+                        last=str(last_file),
+                        rate=rate,
+                        created=timestamp,
+                        used=timestamp)
+        files[ft_name] = ft_props
+        # remove old files:
+        if len(files) > FullTracePlot.max_files:
+            ft_files = list(files)
+            timestamps = [files[ftf]['used'] for ftf in ft_files]
+            idx = np.argsort(timestamps)
+            for i in idx[:len(ft_files) - FullTracePlot.max_files]:
+                try:
+                    (audian_dirs.user_cache_path / ft_files[i]).unlink()
+                except Exception as e:
+                    print(e)
+                files.pop(ft_files[i])
+        # save json file:
+        with ft_path.open('w') as df:
+            json.dump(files, df)
+        # save file:
+        write_audio(str(audian_dirs.user_cache_path / ft_name),
+                    self.datas, 1e6*rate, format='WAV', encoding='DOUBLE')
         
+
+    def load_data(self):
+        ft_path = audian_dirs.user_cache_path / FullTracePlot.fulltraces_file
+        if audian_dirs.user_cache_path.exists() and ft_path.exists():
+            # load json file:
+            files = {}
+            with ft_path.open() as sf:
+                files = json.load(sf)
+            # search for entry with matching source files:
+            first_file = Path(self.data.data.file_paths[0]).absolute()
+            last_file = Path(self.data.data.file_paths[-1]).absolute()
+            for ft_file in files.keys():
+                ft_props = files[ft_file]
+                if ft_props['first'] == str(first_file) and \
+                   ft_props['last'] == str(last_file):
+                    # load full trace data:
+                    self.datas, rate = load_audio(str(audian_dirs.user_cache_path / ft_file))
+                    rate = ft_props['rate']
+                    self.times = np.arange(len(self.datas))/rate
+                    # update timestamp:
+                    timestamp = datetime.now().isoformat()
+                    ft_props['used'] = timestamp
+                    # save json file:
+                    with ft_path.open('w') as df:
+                        json.dump(files, df)
+                    break
+
+                    
     def update_layout(self, channels, data_height):
         first = True
         for c in range(self.data.channels):

@@ -71,10 +71,11 @@ handles all GUI aspects.
 - [ ] Support horizontal power spectrum
 - [ ] Cycle with Ctrl+P through no power plot, power spectrum to the right, power spectrum on top.
 - [ ] FullTracePlot:
-  - [ ] fix offset problem? Does it still exist?
+  - [ ] fix offset problem.
   - [ ] indicate time under mouse cursor.
   - [ ] compute full trace in the background.
-  - [ ] store and load full trace to user specific cache dir (see https://github.com/tox-dev/platformdirs).
+  - [x] store and load full trace to user specific cache dir.
+  - [ ] background computation and file saving only if long enough.
 - [x] Add a toolbar widget for spectrum overlap
 - [x] SpinBox for envelope cutoff frequency needs to show digits
   after decimal point.
