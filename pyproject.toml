@@ -11,6 +11,7 @@ dependencies = [
   "numba",
   "pandas",
   "matplotlib",
+  "platformdirs",
   "PyQt5",
   "pyqtgraph",
   "thunderlab>=1.5.1"
