@@ -1,0 +1,980 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>audian.analyzer API documentation</title>
+<meta name="description" content="Analyze a selected region …">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script type="text/x-mathjax-config">MathJax.Hub.Config({ tex2jax: { inlineMath: [ ['$','$'], ["\\(","\\)"] ], processEscapes: true } });</script>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML" integrity="sha256-kZafAc6mZvK3W3v1pHOcUix30OHQN6pU/NO2oFkqZVw=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>audian.analyzer</code></h1>
+</header>
+<section id="section-intro">
+<p>Analyze a selected region.</p>
+<ul>
+<li>class <code><a title="audian.analyzer.Analyzer" href="#audian.analyzer.Analyzer">Analyzer</a></code>: Base class for analyzing selected regions.</li>
+<li>class <code><a title="audian.analyzer.PlainAnalyzer" href="#audian.analyzer.PlainAnalyzer">PlainAnalyzer</a></code>: Implementation of an Analyzer that stores the analysis window into the table.</li>
+</ul>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="audian.analyzer.Analyzer"><code class="flex name class">
+<span>class <span class="ident">Analyzer</span></span>
+<span>(</span><span>browser, name, source_name)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Analyzer(object):
+    &#34;&#34;&#34;Base class for analyzing selected regions.
+
+    Classes inheriting the `Analyzer` class need to reimplement the
+    `analyze()` function. Their constructor takes an instance of the
+    DataBrowser as the only argument. See class `PlainAnalyzer` as an
+    example.
+
+    The constructor adds columns to the table where analysis results
+    are stored (`make_column()` function) and initializes event
+    markers to be plotted on top of traces or into specific panels
+    (`make_trace_events()` and `make_panel_events()` functions).
+
+    The `analyze()` function then stores analysis results into the
+    table (`store()` function) and plots event markers (`set_events()`
+    and `add_events()` functions).
+
+    Parameters
+    ----------
+    browser: DataBrowser
+        Instance of the data browser.
+    name: str
+        Name of the analyzer implementation.
+    source_name: str
+        Source trace on which the analyzer will work on.
+
+    Attributes
+    ----------
+    browser: DataBrowser
+        Instance of the data browser.
+    name: str
+        Name of the analyzer implementation.
+    source_name: str
+        Source trace on which the analyzer will work on.
+    source: BufferedData
+        Trace on which the analyzer will work on.
+        You rarely need to access the full source trace, since
+        `analyze()` provides all the traces of the selected region.
+    data: thunderlab.TableData
+        The table storing the analysis results.
+    events: dict of list of pyqtgraph.ScatterPlotItem
+        Dictionary of the plot items for plotting event markers.
+
+    Methods
+    -------
+    - `analyze()`: Analysis function. 
+    - `traces()`: Names of all available data traces. 
+    - `trace()`: Full data trace of a given name
+    - `make_column()`: Make a column for the table collecting the analysis results.
+    - `store()`: Store analysis results in table. 
+    - `make_trace_events()`: Prepare events for plotting on top of a specific trace.
+    - `make_panel_events()`: Prepare events for plotting in a specific panel. 
+    - `set_events()`: Plot event markers. 
+    - `add_events()`: Plot additional event markers.
+
+    &#34;&#34;&#34;
+
+    def __init__(self, browser, name, source_name):
+        self.browser = browser
+        self.name = name
+        self.source_name = source_name
+        self.source = self.trace(self.source_name)
+        self.data = TableData()
+        self.events = {}
+        self.browser.add_analyzer(self)
+
+
+    def clear(self):
+        &#34;&#34;&#34;Clear the data table and the markers.
+        &#34;&#34;&#34;
+        self.data.clear_data()
+        for name in self.events:
+            for c in range(len(self.events[name])):
+                self.events[name][c].clear()
+
+        
+    def analyze(self, t0, t1, channel, traces):
+        &#34;&#34;&#34;Analysis function.
+
+        This function is called whenever a region is selected for
+        analysis. Reimplement it for your purposes.
+
+        Parameters
+        ----------
+        t0: float
+            Start time of the selected region.
+        t1: float
+            End time of the selected region.
+        channel: int
+            Channel of the selected region.
+        traces: dict of arrays
+            Dictionary with all data traces cut out between `t0` and `t1`.
+            Keys are the names of the data traces.
+        &#34;&#34;&#34;
+        pass
+
+
+    def traces(self):
+        &#34;&#34;&#34;Names of all available data traces.
+        
+        Returns
+        -------
+        traces: list of str
+            Names of all available data traces.
+        &#34;&#34;&#34;
+        return self.browser.data.keys()
+
+
+    def trace(self, name):
+        &#34;&#34;&#34;Full data trace of a given name.
+
+        Parameters
+        ----------
+        name: str
+            Name of the requested data trace.
+
+        Returns
+        -------
+        trace: BufferedData or None
+            Full data trace or None if name was not found.
+        &#34;&#34;&#34;
+        if name in self.browser.data:
+            return self.browser.data[name]
+        else:
+            return None
+
+
+    def make_column(self, label, unit=None, formats=None):
+        &#34;&#34;&#34;Make a column for the table collecting the analysis results.
+
+        Analysis results are stored in a table. Each Analyzer can add
+        columns to this table in its constructor using this function.
+
+        Parameters
+        ----------
+        label: str
+            Label of the column.
+        unit: str
+            Unit of the values stored in this column.
+        formats: str
+            Format string for the values stored in this column.
+        &#34;&#34;&#34;
+        self.data.append(label, unit, formats)
+
+        
+    def store(self, *args):
+        &#34;&#34;&#34;Store analysis results in table.
+
+        Call this function once in `analyze()` with as many arguments
+        as columns generated using `make_column()`.
+
+        Parameters
+        ----------
+        *args: float, int, or str
+            Values to be stored in the table.
+            As many values as columns generated using `make_column()`.
+
+        &#34;&#34;&#34;
+        self.data.append_data(args, 0)
+
+        
+    def make_trace_events(self, name, trace_name, symbol, color, size):
+        &#34;&#34;&#34;Prepare events for plotting on top of a specific trace.
+
+        Call this function in the constructor if your `analyze()`
+        function wants to plot some event markers onto a trace using
+        the `set_events()` or àdd_events()` functions.
+
+        Parameters
+        ----------
+        name: str
+            Name identifying the events.
+        trace_name: str
+            Name of the trace on which the event markers should be plotted.
+        symbol: str
+            Symbol to be used for plotting event markers.
+
+            See [pyqtgraph.ScatterPlotItem.setSymbol()](https://pyqtgraph.readthedocs.io/en/latest/api_reference/graphicsItems/scatterplotitem.html)
+            for options.
+        color: pyqtgraph color specifier
+            Color of the marker symbol.
+        size: int or float
+            Size of the event marker.
+
+        &#34;&#34;&#34;
+        self.events[name] = []
+        for c in range(self.browser.data.data.channels):
+            spi = pg.ScatterPlotItem()
+            spi.setSymbol(symbol)
+            spi.setBrush(color)
+            spi.setSize(size)
+            self.events[name].append(spi)
+            self.browser.add_to_panel_trace(trace_name, c, spi)
+
+        
+    def make_panel_events(self, name, panel_name, symbol, color, size):
+        &#34;&#34;&#34;Prepare events for plotting in a specific panel.
+
+        Call this function in the constructor if your `analyze()`
+        function wants to plot some event markers in a specific panel
+        using the `set_events()` or àdd_events()` functions.
+
+        Parameters
+        ----------
+        name: str
+            Name identifying the events.
+        panel_name: str
+            Name of the panel on which the event markers should be plotted.
+        symbol: str
+            Symbol to be used for plotting event markers.
+
+            See [pyqtgraph.ScatterPlotItem.setSymbol()](https://pyqtgraph.readthedocs.io/en/latest/api_reference/graphicsItems/scatterplotitem.html)
+            for options.
+        color: pyqtgraph color specifier
+            Color of the marker symbol.
+        size: int or float
+            Size of the event marker.
+
+        &#34;&#34;&#34;
+        self.events[name] = []
+        panel = self.browser.panels[panel_name]
+        for ax in panel.axs:
+            spi = pg.ScatterPlotItem()
+            spi.setSymbol(symbol)
+            spi.setBrush(color)
+            spi.setSize(size)
+            self.events[name].append(spi)
+            ax.add_item(spi)
+
+        
+    def set_events(self, name, channel, x, y):
+        &#34;&#34;&#34;Plot event markers.
+
+        Call this function from the analyze() function
+        for plotting event markers.
+        Previously plotted event markers are erased.
+
+        Parameters
+        ----------
+        name: str
+            Name identifying the events.
+            This is the name that has been used when calling
+            `make_trace_events()` or `make_panel_events()`
+        channel: int
+            Channel where to plot the data.
+            If negative, plot them on all channels.
+        x: array of float
+            x-coordinates of the event marker.
+        y: array of float
+            y-coordinates of the event marker.
+
+        &#34;&#34;&#34;
+        for c in range(self.browser.data.data.channels):
+            if c == channel or channel &lt; 0:
+                self.events[name][c].setData(x, y)
+            else:
+                self.events[name][c].clear()
+        
+        
+    def add_events(self, name, channel, x, y):
+        &#34;&#34;&#34;Plot additional event markers.
+
+        Call this function from the analyze() function
+        for plotting event markers.
+        Previously plotted event markers are not erased.
+
+        Parameters
+        ----------
+        name: str
+            Name identifying the events.
+            This is the name that has been used when calling
+            `make_trace_events()` or `make_panel_events()`
+        channel: int
+            Channel where to plot the data.
+            If negative, plot them on all channels.
+        x: array of float
+            x-coordinates of the event marker.
+        y: array of float
+            y-coordinates of the event marker.
+
+        &#34;&#34;&#34;
+        for c in range(self.browser.data.data.channels):
+            if c == channel or channel &lt; 0:
+                self.events[name][c].addPoints(x, y)</code></pre>
+</details>
+<div class="desc"><p>Base class for analyzing selected regions.</p>
+<p>Classes inheriting the <code><a title="audian.analyzer.Analyzer" href="#audian.analyzer.Analyzer">Analyzer</a></code> class need to reimplement the
+<code>analyze()</code> function. Their constructor takes an instance of the
+DataBrowser as the only argument. See class <code><a title="audian.analyzer.PlainAnalyzer" href="#audian.analyzer.PlainAnalyzer">PlainAnalyzer</a></code> as an
+example.</p>
+<p>The constructor adds columns to the table where analysis results
+are stored (<code>make_column()</code> function) and initializes event
+markers to be plotted on top of traces or into specific panels
+(<code>make_trace_events()</code> and <code>make_panel_events()</code> functions).</p>
+<p>The <code>analyze()</code> function then stores analysis results into the
+table (<code>store()</code> function) and plots event markers (<code>set_events()</code>
+and <code>add_events()</code> functions).</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>browser</code></strong> :&ensp;<code>DataBrowser</code></dt>
+<dd>Instance of the data browser.</dd>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code></dt>
+<dd>Name of the analyzer implementation.</dd>
+<dt><strong><code>source_name</code></strong> :&ensp;<code>str</code></dt>
+<dd>Source trace on which the analyzer will work on.</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>browser</code></strong> :&ensp;<code>DataBrowser</code></dt>
+<dd>Instance of the data browser.</dd>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code></dt>
+<dd>Name of the analyzer implementation.</dd>
+<dt><strong><code>source_name</code></strong> :&ensp;<code>str</code></dt>
+<dd>Source trace on which the analyzer will work on.</dd>
+<dt><strong><code>source</code></strong> :&ensp;<code>BufferedData</code></dt>
+<dd>Trace on which the analyzer will work on.
+You rarely need to access the full source trace, since
+<code>analyze()</code> provides all the traces of the selected region.</dd>
+<dt><strong><code>data</code></strong> :&ensp;<code>thunderlab.TableData</code></dt>
+<dd>The table storing the analysis results.</dd>
+<dt><strong><code>events</code></strong> :&ensp;<code>dict</code> of <code>list</code> of <code>pyqtgraph.ScatterPlotItem</code></dt>
+<dd>Dictionary of the plot items for plotting event markers.</dd>
+</dl>
+<h2 id="methods">Methods</h2>
+<ul>
+<li><code>analyze()</code>: Analysis function. </li>
+<li><code>traces()</code>: Names of all available data traces. </li>
+<li><code>trace()</code>: Full data trace of a given name</li>
+<li><code>make_column()</code>: Make a column for the table collecting the analysis results.</li>
+<li><code>store()</code>: Store analysis results in table. </li>
+<li><code>make_trace_events()</code>: Prepare events for plotting on top of a specific trace.</li>
+<li><code>make_panel_events()</code>: Prepare events for plotting in a specific panel. </li>
+<li><code>set_events()</code>: Plot event markers. </li>
+<li><code>add_events()</code>: Plot additional event markers.</li>
+</ul></div>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="audian.analyzer.PlainAnalyzer" href="#audian.analyzer.PlainAnalyzer">PlainAnalyzer</a></li>
+<li><a title="audian.statisticsanalyzer.StatisticsAnalyzer" href="statisticsanalyzer.html#audian.statisticsanalyzer.StatisticsAnalyzer">StatisticsAnalyzer</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="audian.analyzer.Analyzer.clear"><code class="name flex">
+<span>def <span class="ident">clear</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def clear(self):
+    &#34;&#34;&#34;Clear the data table and the markers.
+    &#34;&#34;&#34;
+    self.data.clear_data()
+    for name in self.events:
+        for c in range(len(self.events[name])):
+            self.events[name][c].clear()</code></pre>
+</details>
+<div class="desc"><p>Clear the data table and the markers.</p></div>
+</dd>
+<dt id="audian.analyzer.Analyzer.analyze"><code class="name flex">
+<span>def <span class="ident">analyze</span></span>(<span>self, t0, t1, channel, traces)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def analyze(self, t0, t1, channel, traces):
+    &#34;&#34;&#34;Analysis function.
+
+    This function is called whenever a region is selected for
+    analysis. Reimplement it for your purposes.
+
+    Parameters
+    ----------
+    t0: float
+        Start time of the selected region.
+    t1: float
+        End time of the selected region.
+    channel: int
+        Channel of the selected region.
+    traces: dict of arrays
+        Dictionary with all data traces cut out between `t0` and `t1`.
+        Keys are the names of the data traces.
+    &#34;&#34;&#34;
+    pass</code></pre>
+</details>
+<div class="desc"><p>Analysis function.</p>
+<p>This function is called whenever a region is selected for
+analysis. Reimplement it for your purposes.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>t0</code></strong> :&ensp;<code>float</code></dt>
+<dd>Start time of the selected region.</dd>
+<dt><strong><code>t1</code></strong> :&ensp;<code>float</code></dt>
+<dd>End time of the selected region.</dd>
+<dt><strong><code>channel</code></strong> :&ensp;<code>int</code></dt>
+<dd>Channel of the selected region.</dd>
+<dt><strong><code>traces</code></strong> :&ensp;<code>dict</code> of <code>arrays</code></dt>
+<dd>Dictionary with all data traces cut out between <code>t0</code> and <code>t1</code>.
+Keys are the names of the data traces.</dd>
+</dl></div>
+</dd>
+<dt id="audian.analyzer.Analyzer.traces"><code class="name flex">
+<span>def <span class="ident">traces</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def traces(self):
+    &#34;&#34;&#34;Names of all available data traces.
+    
+    Returns
+    -------
+    traces: list of str
+        Names of all available data traces.
+    &#34;&#34;&#34;
+    return self.browser.data.keys()</code></pre>
+</details>
+<div class="desc"><p>Names of all available data traces.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>traces</code></strong> :&ensp;<code>list</code> of <code>str</code></dt>
+<dd>Names of all available data traces.</dd>
+</dl></div>
+</dd>
+<dt id="audian.analyzer.Analyzer.trace"><code class="name flex">
+<span>def <span class="ident">trace</span></span>(<span>self, name)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def trace(self, name):
+    &#34;&#34;&#34;Full data trace of a given name.
+
+    Parameters
+    ----------
+    name: str
+        Name of the requested data trace.
+
+    Returns
+    -------
+    trace: BufferedData or None
+        Full data trace or None if name was not found.
+    &#34;&#34;&#34;
+    if name in self.browser.data:
+        return self.browser.data[name]
+    else:
+        return None</code></pre>
+</details>
+<div class="desc"><p>Full data trace of a given name.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code></dt>
+<dd>Name of the requested data trace.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>trace</code></strong> :&ensp;<code>BufferedData</code> or <code>None</code></dt>
+<dd>Full data trace or None if name was not found.</dd>
+</dl></div>
+</dd>
+<dt id="audian.analyzer.Analyzer.make_column"><code class="name flex">
+<span>def <span class="ident">make_column</span></span>(<span>self, label, unit=None, formats=None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def make_column(self, label, unit=None, formats=None):
+    &#34;&#34;&#34;Make a column for the table collecting the analysis results.
+
+    Analysis results are stored in a table. Each Analyzer can add
+    columns to this table in its constructor using this function.
+
+    Parameters
+    ----------
+    label: str
+        Label of the column.
+    unit: str
+        Unit of the values stored in this column.
+    formats: str
+        Format string for the values stored in this column.
+    &#34;&#34;&#34;
+    self.data.append(label, unit, formats)</code></pre>
+</details>
+<div class="desc"><p>Make a column for the table collecting the analysis results.</p>
+<p>Analysis results are stored in a table. Each Analyzer can add
+columns to this table in its constructor using this function.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>label</code></strong> :&ensp;<code>str</code></dt>
+<dd>Label of the column.</dd>
+<dt><strong><code>unit</code></strong> :&ensp;<code>str</code></dt>
+<dd>Unit of the values stored in this column.</dd>
+<dt><strong><code>formats</code></strong> :&ensp;<code>str</code></dt>
+<dd>Format string for the values stored in this column.</dd>
+</dl></div>
+</dd>
+<dt id="audian.analyzer.Analyzer.store"><code class="name flex">
+<span>def <span class="ident">store</span></span>(<span>self, *args)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def store(self, *args):
+    &#34;&#34;&#34;Store analysis results in table.
+
+    Call this function once in `analyze()` with as many arguments
+    as columns generated using `make_column()`.
+
+    Parameters
+    ----------
+    *args: float, int, or str
+        Values to be stored in the table.
+        As many values as columns generated using `make_column()`.
+
+    &#34;&#34;&#34;
+    self.data.append_data(args, 0)</code></pre>
+</details>
+<div class="desc"><p>Store analysis results in table.</p>
+<p>Call this function once in <code>analyze()</code> with as many arguments
+as columns generated using <code>make_column()</code>.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>*args</code></strong> :&ensp;<code>float, int,</code> or <code>str</code></dt>
+<dd>Values to be stored in the table.
+As many values as columns generated using <code>make_column()</code>.</dd>
+</dl></div>
+</dd>
+<dt id="audian.analyzer.Analyzer.make_trace_events"><code class="name flex">
+<span>def <span class="ident">make_trace_events</span></span>(<span>self, name, trace_name, symbol, color, size)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def make_trace_events(self, name, trace_name, symbol, color, size):
+    &#34;&#34;&#34;Prepare events for plotting on top of a specific trace.
+
+    Call this function in the constructor if your `analyze()`
+    function wants to plot some event markers onto a trace using
+    the `set_events()` or àdd_events()` functions.
+
+    Parameters
+    ----------
+    name: str
+        Name identifying the events.
+    trace_name: str
+        Name of the trace on which the event markers should be plotted.
+    symbol: str
+        Symbol to be used for plotting event markers.
+
+        See [pyqtgraph.ScatterPlotItem.setSymbol()](https://pyqtgraph.readthedocs.io/en/latest/api_reference/graphicsItems/scatterplotitem.html)
+        for options.
+    color: pyqtgraph color specifier
+        Color of the marker symbol.
+    size: int or float
+        Size of the event marker.
+
+    &#34;&#34;&#34;
+    self.events[name] = []
+    for c in range(self.browser.data.data.channels):
+        spi = pg.ScatterPlotItem()
+        spi.setSymbol(symbol)
+        spi.setBrush(color)
+        spi.setSize(size)
+        self.events[name].append(spi)
+        self.browser.add_to_panel_trace(trace_name, c, spi)</code></pre>
+</details>
+<div class="desc"><p>Prepare events for plotting on top of a specific trace.</p>
+<p>Call this function in the constructor if your <code>analyze()</code>
+function wants to plot some event markers onto a trace using
+the <code>set_events()</code> or àdd_events()` functions.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code></dt>
+<dd>Name identifying the events.</dd>
+<dt><strong><code>trace_name</code></strong> :&ensp;<code>str</code></dt>
+<dd>Name of the trace on which the event markers should be plotted.</dd>
+<dt><strong><code>symbol</code></strong> :&ensp;<code>str</code></dt>
+<dd>
+<p>Symbol to be used for plotting event markers.</p>
+<p>See <a href="https://pyqtgraph.readthedocs.io/en/latest/api_reference/graphicsItems/scatterplotitem.html">pyqtgraph.ScatterPlotItem.setSymbol()</a>
+for options.</p>
+</dd>
+<dt><strong><code>color</code></strong> :&ensp;<code>pyqtgraph color specifier</code></dt>
+<dd>Color of the marker symbol.</dd>
+<dt><strong><code>size</code></strong> :&ensp;<code>int</code> or <code>float</code></dt>
+<dd>Size of the event marker.</dd>
+</dl></div>
+</dd>
+<dt id="audian.analyzer.Analyzer.make_panel_events"><code class="name flex">
+<span>def <span class="ident">make_panel_events</span></span>(<span>self, name, panel_name, symbol, color, size)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def make_panel_events(self, name, panel_name, symbol, color, size):
+    &#34;&#34;&#34;Prepare events for plotting in a specific panel.
+
+    Call this function in the constructor if your `analyze()`
+    function wants to plot some event markers in a specific panel
+    using the `set_events()` or àdd_events()` functions.
+
+    Parameters
+    ----------
+    name: str
+        Name identifying the events.
+    panel_name: str
+        Name of the panel on which the event markers should be plotted.
+    symbol: str
+        Symbol to be used for plotting event markers.
+
+        See [pyqtgraph.ScatterPlotItem.setSymbol()](https://pyqtgraph.readthedocs.io/en/latest/api_reference/graphicsItems/scatterplotitem.html)
+        for options.
+    color: pyqtgraph color specifier
+        Color of the marker symbol.
+    size: int or float
+        Size of the event marker.
+
+    &#34;&#34;&#34;
+    self.events[name] = []
+    panel = self.browser.panels[panel_name]
+    for ax in panel.axs:
+        spi = pg.ScatterPlotItem()
+        spi.setSymbol(symbol)
+        spi.setBrush(color)
+        spi.setSize(size)
+        self.events[name].append(spi)
+        ax.add_item(spi)</code></pre>
+</details>
+<div class="desc"><p>Prepare events for plotting in a specific panel.</p>
+<p>Call this function in the constructor if your <code>analyze()</code>
+function wants to plot some event markers in a specific panel
+using the <code>set_events()</code> or àdd_events()` functions.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code></dt>
+<dd>Name identifying the events.</dd>
+<dt><strong><code>panel_name</code></strong> :&ensp;<code>str</code></dt>
+<dd>Name of the panel on which the event markers should be plotted.</dd>
+<dt><strong><code>symbol</code></strong> :&ensp;<code>str</code></dt>
+<dd>
+<p>Symbol to be used for plotting event markers.</p>
+<p>See <a href="https://pyqtgraph.readthedocs.io/en/latest/api_reference/graphicsItems/scatterplotitem.html">pyqtgraph.ScatterPlotItem.setSymbol()</a>
+for options.</p>
+</dd>
+<dt><strong><code>color</code></strong> :&ensp;<code>pyqtgraph color specifier</code></dt>
+<dd>Color of the marker symbol.</dd>
+<dt><strong><code>size</code></strong> :&ensp;<code>int</code> or <code>float</code></dt>
+<dd>Size of the event marker.</dd>
+</dl></div>
+</dd>
+<dt id="audian.analyzer.Analyzer.set_events"><code class="name flex">
+<span>def <span class="ident">set_events</span></span>(<span>self, name, channel, x, y)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_events(self, name, channel, x, y):
+    &#34;&#34;&#34;Plot event markers.
+
+    Call this function from the analyze() function
+    for plotting event markers.
+    Previously plotted event markers are erased.
+
+    Parameters
+    ----------
+    name: str
+        Name identifying the events.
+        This is the name that has been used when calling
+        `make_trace_events()` or `make_panel_events()`
+    channel: int
+        Channel where to plot the data.
+        If negative, plot them on all channels.
+    x: array of float
+        x-coordinates of the event marker.
+    y: array of float
+        y-coordinates of the event marker.
+
+    &#34;&#34;&#34;
+    for c in range(self.browser.data.data.channels):
+        if c == channel or channel &lt; 0:
+            self.events[name][c].setData(x, y)
+        else:
+            self.events[name][c].clear()</code></pre>
+</details>
+<div class="desc"><p>Plot event markers.</p>
+<p>Call this function from the analyze() function
+for plotting event markers.
+Previously plotted event markers are erased.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code></dt>
+<dd>Name identifying the events.
+This is the name that has been used when calling
+<code>make_trace_events()</code> or <code>make_panel_events()</code></dd>
+<dt><strong><code>channel</code></strong> :&ensp;<code>int</code></dt>
+<dd>Channel where to plot the data.
+If negative, plot them on all channels.</dd>
+<dt><strong><code>x</code></strong> :&ensp;<code>array</code> of <code>float</code></dt>
+<dd>x-coordinates of the event marker.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>array</code> of <code>float</code></dt>
+<dd>y-coordinates of the event marker.</dd>
+</dl></div>
+</dd>
+<dt id="audian.analyzer.Analyzer.add_events"><code class="name flex">
+<span>def <span class="ident">add_events</span></span>(<span>self, name, channel, x, y)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_events(self, name, channel, x, y):
+    &#34;&#34;&#34;Plot additional event markers.
+
+    Call this function from the analyze() function
+    for plotting event markers.
+    Previously plotted event markers are not erased.
+
+    Parameters
+    ----------
+    name: str
+        Name identifying the events.
+        This is the name that has been used when calling
+        `make_trace_events()` or `make_panel_events()`
+    channel: int
+        Channel where to plot the data.
+        If negative, plot them on all channels.
+    x: array of float
+        x-coordinates of the event marker.
+    y: array of float
+        y-coordinates of the event marker.
+
+    &#34;&#34;&#34;
+    for c in range(self.browser.data.data.channels):
+        if c == channel or channel &lt; 0:
+            self.events[name][c].addPoints(x, y)</code></pre>
+</details>
+<div class="desc"><p>Plot additional event markers.</p>
+<p>Call this function from the analyze() function
+for plotting event markers.
+Previously plotted event markers are not erased.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code></dt>
+<dd>Name identifying the events.
+This is the name that has been used when calling
+<code>make_trace_events()</code> or <code>make_panel_events()</code></dd>
+<dt><strong><code>channel</code></strong> :&ensp;<code>int</code></dt>
+<dd>Channel where to plot the data.
+If negative, plot them on all channels.</dd>
+<dt><strong><code>x</code></strong> :&ensp;<code>array</code> of <code>float</code></dt>
+<dd>x-coordinates of the event marker.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>array</code> of <code>float</code></dt>
+<dd>y-coordinates of the event marker.</dd>
+</dl></div>
+</dd>
+</dl>
+</dd>
+<dt id="audian.analyzer.PlainAnalyzer"><code class="flex name class">
+<span>class <span class="ident">PlainAnalyzer</span></span>
+<span>(</span><span>browser)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PlainAnalyzer(Analyzer):
+    &#34;&#34;&#34;Implementation of an Analyzer that stores the analysis window into the table.
+
+    This analyzer is name &#39;plain&#39; and simply stores start and end time
+    of the slected region, the duration of the selected time interval,
+    and the channel into the table.
+
+    Parameters
+    ----------
+    browser: DataBrowser
+        Instance of the data browser.
+
+    Methods
+    -------
+    - `analyze()`: Analysis function.
+
+    &#34;&#34;&#34;
+
+    def __init__(self, browser):
+        super().__init__(browser, &#39;plain&#39;, &#39;data&#39;)
+        nd = int(floor(-log10(1/self.source.rate)))
+        if nd &lt; 0:
+            nd = 0
+        self.make_column(&#39;tstart&#39;, &#39;s&#39;, f&#39;%.{nd}f&#39;)
+        self.make_column(&#39;tend&#39;, &#39;s&#39;, f&#39;%.{nd}f&#39;)
+        self.make_column(&#39;duration&#39;, &#39;s&#39;, f&#39;%.{nd}f&#39;)
+        self.make_column(&#39;channel&#39;, &#39;&#39;, &#39;%.0f&#39;)
+
+        
+    def analyze(self, t0, t1, channel, traces):
+        &#34;&#34;&#34;Analyze the selected region.
+        &#34;&#34;&#34;
+        self.store(t0, t1, t1 - t0, channel)</code></pre>
+</details>
+<div class="desc"><p>Implementation of an Analyzer that stores the analysis window into the table.</p>
+<p>This analyzer is name 'plain' and simply stores start and end time
+of the slected region, the duration of the selected time interval,
+and the channel into the table.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>browser</code></strong> :&ensp;<code>DataBrowser</code></dt>
+<dd>Instance of the data browser.</dd>
+</dl>
+<h2 id="methods">Methods</h2>
+<ul>
+<li><code>analyze()</code>: Analysis function.</li>
+</ul></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="audian.analyzer.Analyzer" href="#audian.analyzer.Analyzer">Analyzer</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="audian.analyzer.PlainAnalyzer.analyze"><code class="name flex">
+<span>def <span class="ident">analyze</span></span>(<span>self, t0, t1, channel, traces)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def analyze(self, t0, t1, channel, traces):
+    &#34;&#34;&#34;Analyze the selected region.
+    &#34;&#34;&#34;
+    self.store(t0, t1, t1 - t0, channel)</code></pre>
+</details>
+<div class="desc"><p>Analyze the selected region.</p></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="audian.analyzer.Analyzer" href="#audian.analyzer.Analyzer">Analyzer</a></b></code>:
+<ul class="hlist">
+<li><code><a title="audian.analyzer.Analyzer.add_events" href="#audian.analyzer.Analyzer.add_events">add_events</a></code></li>
+<li><code><a title="audian.analyzer.Analyzer.clear" href="#audian.analyzer.Analyzer.clear">clear</a></code></li>
+<li><code><a title="audian.analyzer.Analyzer.make_column" href="#audian.analyzer.Analyzer.make_column">make_column</a></code></li>
+<li><code><a title="audian.analyzer.Analyzer.make_panel_events" href="#audian.analyzer.Analyzer.make_panel_events">make_panel_events</a></code></li>
+<li><code><a title="audian.analyzer.Analyzer.make_trace_events" href="#audian.analyzer.Analyzer.make_trace_events">make_trace_events</a></code></li>
+<li><code><a title="audian.analyzer.Analyzer.set_events" href="#audian.analyzer.Analyzer.set_events">set_events</a></code></li>
+<li><code><a title="audian.analyzer.Analyzer.store" href="#audian.analyzer.Analyzer.store">store</a></code></li>
+<li><code><a title="audian.analyzer.Analyzer.trace" href="#audian.analyzer.Analyzer.trace">trace</a></code></li>
+<li><code><a title="audian.analyzer.Analyzer.traces" href="#audian.analyzer.Analyzer.traces">traces</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="audian" href="index.html">audian</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="audian.analyzer.Analyzer" href="#audian.analyzer.Analyzer">Analyzer</a></code></h4>
+<ul class="two-column">
+<li><code><a title="audian.analyzer.Analyzer.clear" href="#audian.analyzer.Analyzer.clear">clear</a></code></li>
+<li><code><a title="audian.analyzer.Analyzer.analyze" href="#audian.analyzer.Analyzer.analyze">analyze</a></code></li>
+<li><code><a title="audian.analyzer.Analyzer.traces" href="#audian.analyzer.Analyzer.traces">traces</a></code></li>
+<li><code><a title="audian.analyzer.Analyzer.trace" href="#audian.analyzer.Analyzer.trace">trace</a></code></li>
+<li><code><a title="audian.analyzer.Analyzer.make_column" href="#audian.analyzer.Analyzer.make_column">make_column</a></code></li>
+<li><code><a title="audian.analyzer.Analyzer.store" href="#audian.analyzer.Analyzer.store">store</a></code></li>
+<li><code><a title="audian.analyzer.Analyzer.make_trace_events" href="#audian.analyzer.Analyzer.make_trace_events">make_trace_events</a></code></li>
+<li><code><a title="audian.analyzer.Analyzer.make_panel_events" href="#audian.analyzer.Analyzer.make_panel_events">make_panel_events</a></code></li>
+<li><code><a title="audian.analyzer.Analyzer.set_events" href="#audian.analyzer.Analyzer.set_events">set_events</a></code></li>
+<li><code><a title="audian.analyzer.Analyzer.add_events" href="#audian.analyzer.Analyzer.add_events">add_events</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="audian.analyzer.PlainAnalyzer" href="#audian.analyzer.PlainAnalyzer">PlainAnalyzer</a></code></h4>
+<ul class="">
+<li><code><a title="audian.analyzer.PlainAnalyzer.analyze" href="#audian.analyzer.PlainAnalyzer.analyze">analyze</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>

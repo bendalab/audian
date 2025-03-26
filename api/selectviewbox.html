@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>audian.selectviewbox API documentation</title>
+<meta name="description" content="">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script type="text/x-mathjax-config">MathJax.Hub.Config({ tex2jax: { inlineMath: [ ['$','$'], ["\\(","\\)"] ], processEscapes: true } });</script>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML" integrity="sha256-kZafAc6mZvK3W3v1pHOcUix30OHQN6pU/NO2oFkqZVw=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>audian.selectviewbox</code></h1>
+</header>
+<section id="section-intro">
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="audian.selectviewbox.SelectViewBox"><code class="flex name class">
+<span>class <span class="ident">SelectViewBox</span></span>
+<span>(</span><span>channel, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SelectViewBox(pg.ViewBox):
+
+
+    sigSelectedRegion = Signal(object, object, object)
+
+
+    def __init__(self, channel, *args, **kwargs):
+        pg.ViewBox.__init__(self, *args, **kwargs)
+        self.setMouseMode(pg.ViewBox.RectMode)
+        self.rbScaleBox.setPen(pg.mkPen((200, 200, 200), width=1))
+        self.rbScaleBox.setBrush(pg.mkBrush(200, 200, 200, 100))
+        self.channel = channel
+
+
+    def keyPressEvent(self, ev):
+        ev.ignore()
+        
+        
+    def mouseDragEvent(self, ev, axis=None):
+        ## if axis is specified, event will only affect that axis.
+        ev.accept()  ## we accept all buttons
+
+        pos = ev.pos()
+        lastPos = ev.lastPos()
+        dif = pos - lastPos
+        dif = dif * -1
+
+        ## Ignore axes if mouse is disabled
+        mouseEnabled = np.array(self.state[&#39;mouseEnabled&#39;], dtype=np.float64)
+        mask = mouseEnabled.copy()
+        if axis is not None:
+            mask[1-axis] = 0.0
+
+        ## Scale or translate based on mouse button
+        if ev.button() in [Qt.MouseButton.LeftButton, Qt.MouseButton.MiddleButton]:
+            if self.state[&#39;mouseMode&#39;] == pg.ViewBox.RectMode and axis is None:
+                if ev.isFinish():
+                    # This is the final move in the drag; change the view scale now
+                    rect = QRectF(pg.Point(ev.buttonDownPos(ev.button())), pg.Point(pos))
+                    rect = self.childGroup.mapRectFromParent(rect) # in data coordinates
+                    self.sigSelectedRegion.emit(self.channel, self, rect)
+                else:
+                    ## update shape of scale box
+                    self.updateScaleBox(ev.buttonDownPos(), ev.pos())
+            else:
+                tr = self.childGroup.transform()
+                tr = pg.functions.invertQTransform(tr)
+                tr = tr.map(dif*mask) - tr.map(pg.Point(0,0))
+
+                x = tr.x() if mask[0] == 1 else None
+                y = tr.y() if mask[1] == 1 else None
+
+                self._resetTarget()
+                if x is not None or y is not None:
+                    self.translateBy(x=x, y=y)
+                self.sigRangeChangedManually.emit(self.state[&#39;mouseEnabled&#39;])
+                if ev.isFinish():
+                    self.add_region(self.viewRect())
+        elif ev.button() &amp; Qt.MouseButton.RightButton:
+            #print &#34;vb.rightDrag&#34;
+            if self.state[&#39;aspectLocked&#39;] is not False:
+                mask[0] = 0
+
+            dif = ev.screenPos() - ev.lastScreenPos()
+            dif = np.array([dif.x(), dif.y()])
+            dif[0] *= -1
+            s = ((mask * 0.02) + 1) ** dif
+
+            tr = self.childGroup.transform()
+            tr = pg.functions.invertQTransform(tr)
+
+            x = s[0] if mouseEnabled[0] == 1 else None
+            y = s[1] if mouseEnabled[1] == 1 else None
+
+            center = pg.Point(tr.map(ev.buttonDownPos(Qt.MouseButton.RightButton)))
+            self._resetTarget()
+            self.scaleBy(x=x, y=y, center=center)
+            self.sigRangeChangedManually.emit(self.state[&#39;mouseEnabled&#39;])
+            if ev.isFinish():
+                self.add_region(self.viewRect())
+
+
+    def updateScaleBox(self, p1, p2):
+        r = QRectF(p1, p2)
+        r = self.childGroup.mapRectFromParent(r)
+        self.rbScaleBox.setPos(r.topLeft())
+        tr = QTransform.fromScale(r.width(), r.height())
+        self.rbScaleBox.setTransform(tr)
+        self.rbScaleBox.show()
+
+        
+    def hide_region(self):
+        self.rbScaleBox.hide()
+
+        
+    def add_region(self, rect):
+        self.axHistoryPointer += 1
+        self.axHistory = self.axHistory[:self.axHistoryPointer] + [rect]
+
+        
+    def zoom_region(self, rect):
+        self.hide_region()
+        self.showAxRect(rect)
+        self.add_region(rect)
+
+
+    def zoom_back(self):
+        self.scaleHistory(-1)
+
+
+    def zoom_forward(self):
+        self.scaleHistory(1)
+
+
+    def zoom_home(self):
+        self.scaleHistory(-len(self.axHistory))
+
+
+    def init_zoom_history(self):
+        self.add_region(self.viewRect())</code></pre>
+</details>
+<div class="desc"><p><strong>Bases:</strong> :class:<code>GraphicsWidget &lt;pyqtgraph.GraphicsWidget&gt;</code></p>
+<p>Box that allows internal scaling/panning of children by mouse drag.
+This class is usually created automatically as part of a :class:<code>PlotItem &lt;pyqtgraph.PlotItem&gt;</code> or :ref:<code>Canvas &lt;Canvas&gt;</code> or with :func:<code>GraphicsLayout.addViewBox() &lt;pyqtgraph.GraphicsLayout.addViewBox&gt;</code>.</p>
+<h2 id="features">Features</h2>
+<ul>
+<li>Scaling contents by mouse or auto-scale when contents change</li>
+<li>View linking&ndash;multiple views display the same data ranges</li>
+<li>Configurable by context menu</li>
+<li>Item coordinate mapping methods</li>
+</ul>
+<p>=================
+=============================================================
+<strong>Arguments:</strong>
+<em>parent</em>
+(QGraphicsWidget) Optional parent widget
+<em>border</em>
+(QPen) Do draw a border around the view, give any
+single argument accepted by :func:<code>mkPen &lt;pyqtgraph.mkPen&gt;</code>
+<em>lockAspect</em>
+(False or float) The aspect ratio to lock the view
+coorinates to. (or False to allow the ratio to change)
+<em>enableMouse</em>
+(bool) Whether mouse can be used to scale/pan the view
+<em>invertY</em>
+(bool) See :func:<code>invertY &lt;pyqtgraph.ViewBox.invertY&gt;</code>
+<em>invertX</em>
+(bool) See :func:<code>invertX &lt;pyqtgraph.ViewBox.invertX&gt;</code>
+<em>enableMenu</em>
+(bool) Whether to display a context menu when
+right-clicking on the ViewBox background.
+<em>name</em>
+(str) Used to register this ViewBox so that it appears
+in the "Link axis" dropdown inside other ViewBox
+context menus. This allows the user to manually link
+the axes of any other view to this one.
+<em>defaultPadding</em>
+(float) fraction of the data range that will be added
+as padding by default
+=================
+=============================================================</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>pyqtgraph.graphicsItems.ViewBox.ViewBox.ViewBox</li>
+<li>pyqtgraph.graphicsItems.GraphicsWidget.GraphicsWidget</li>
+<li>pyqtgraph.graphicsItems.GraphicsItem.GraphicsItem</li>
+<li>PyQt5.QtWidgets.QGraphicsWidget</li>
+<li>PyQt5.QtWidgets.QGraphicsObject</li>
+<li>PyQt5.QtCore.QObject</li>
+<li>PyQt5.QtWidgets.QGraphicsItem</li>
+<li>PyQt5.QtWidgets.QGraphicsLayoutItem</li>
+<li>sip.wrapper</li>
+<li>sip.simplewrapper</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="audian.selectviewbox.SelectViewBox.sigSelectedRegion"><code class="name flex">
+<span>def <span class="ident">sigSelectedRegion</span></span>(<span>...)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>pyqtSignal(*types, name: str = &hellip;, revision: int = &hellip;, arguments: Sequence = &hellip;) -&gt; PYQT_SIGNAL</p>
+<p>types is normally a sequence of individual types.
+Each type is either a
+type object or a string that is the name of a C++ type.
+Alternatively
+each type could itself be a sequence of types each describing a different
+overloaded signal.
+name is the optional C++ name of the signal.
+If it is not specified then
+the name of the class attribute that is bound to the signal is used.
+revision is the optional revision of the signal that is exported to QML.
+If it is not specified then 0 is used.
+arguments is the optional sequence of the names of the signal's arguments.</p></div>
+</dd>
+<dt id="audian.selectviewbox.SelectViewBox.keyPressEvent"><code class="name flex">
+<span>def <span class="ident">keyPressEvent</span></span>(<span>self, ev)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def keyPressEvent(self, ev):
+    ev.ignore()</code></pre>
+</details>
+<div class="desc"><p>This routine should capture key presses in the current view box.
+Key presses are used only when mouse mode is RectMode
+The following events are implemented:
+ctrl-A : zooms out to the default "full" view of the plot
+ctrl-+ : moves forward in the zooming stack (if it exists)
+ctrl&ndash; : moves backward in the zooming stack (if it exists)</p></div>
+</dd>
+<dt id="audian.selectviewbox.SelectViewBox.mouseDragEvent"><code class="name flex">
+<span>def <span class="ident">mouseDragEvent</span></span>(<span>self, ev, axis=None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mouseDragEvent(self, ev, axis=None):
+    ## if axis is specified, event will only affect that axis.
+    ev.accept()  ## we accept all buttons
+
+    pos = ev.pos()
+    lastPos = ev.lastPos()
+    dif = pos - lastPos
+    dif = dif * -1
+
+    ## Ignore axes if mouse is disabled
+    mouseEnabled = np.array(self.state[&#39;mouseEnabled&#39;], dtype=np.float64)
+    mask = mouseEnabled.copy()
+    if axis is not None:
+        mask[1-axis] = 0.0
+
+    ## Scale or translate based on mouse button
+    if ev.button() in [Qt.MouseButton.LeftButton, Qt.MouseButton.MiddleButton]:
+        if self.state[&#39;mouseMode&#39;] == pg.ViewBox.RectMode and axis is None:
+            if ev.isFinish():
+                # This is the final move in the drag; change the view scale now
+                rect = QRectF(pg.Point(ev.buttonDownPos(ev.button())), pg.Point(pos))
+                rect = self.childGroup.mapRectFromParent(rect) # in data coordinates
+                self.sigSelectedRegion.emit(self.channel, self, rect)
+            else:
+                ## update shape of scale box
+                self.updateScaleBox(ev.buttonDownPos(), ev.pos())
+        else:
+            tr = self.childGroup.transform()
+            tr = pg.functions.invertQTransform(tr)
+            tr = tr.map(dif*mask) - tr.map(pg.Point(0,0))
+
+            x = tr.x() if mask[0] == 1 else None
+            y = tr.y() if mask[1] == 1 else None
+
+            self._resetTarget()
+            if x is not None or y is not None:
+                self.translateBy(x=x, y=y)
+            self.sigRangeChangedManually.emit(self.state[&#39;mouseEnabled&#39;])
+            if ev.isFinish():
+                self.add_region(self.viewRect())
+    elif ev.button() &amp; Qt.MouseButton.RightButton:
+        #print &#34;vb.rightDrag&#34;
+        if self.state[&#39;aspectLocked&#39;] is not False:
+            mask[0] = 0
+
+        dif = ev.screenPos() - ev.lastScreenPos()
+        dif = np.array([dif.x(), dif.y()])
+        dif[0] *= -1
+        s = ((mask * 0.02) + 1) ** dif
+
+        tr = self.childGroup.transform()
+        tr = pg.functions.invertQTransform(tr)
+
+        x = s[0] if mouseEnabled[0] == 1 else None
+        y = s[1] if mouseEnabled[1] == 1 else None
+
+        center = pg.Point(tr.map(ev.buttonDownPos(Qt.MouseButton.RightButton)))
+        self._resetTarget()
+        self.scaleBy(x=x, y=y, center=center)
+        self.sigRangeChangedManually.emit(self.state[&#39;mouseEnabled&#39;])
+        if ev.isFinish():
+            self.add_region(self.viewRect())</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.selectviewbox.SelectViewBox.updateScaleBox"><code class="name flex">
+<span>def <span class="ident">updateScaleBox</span></span>(<span>self, p1, p2)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def updateScaleBox(self, p1, p2):
+    r = QRectF(p1, p2)
+    r = self.childGroup.mapRectFromParent(r)
+    self.rbScaleBox.setPos(r.topLeft())
+    tr = QTransform.fromScale(r.width(), r.height())
+    self.rbScaleBox.setTransform(tr)
+    self.rbScaleBox.show()</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.selectviewbox.SelectViewBox.hide_region"><code class="name flex">
+<span>def <span class="ident">hide_region</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def hide_region(self):
+    self.rbScaleBox.hide()</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.selectviewbox.SelectViewBox.add_region"><code class="name flex">
+<span>def <span class="ident">add_region</span></span>(<span>self, rect)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_region(self, rect):
+    self.axHistoryPointer += 1
+    self.axHistory = self.axHistory[:self.axHistoryPointer] + [rect]</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.selectviewbox.SelectViewBox.zoom_region"><code class="name flex">
+<span>def <span class="ident">zoom_region</span></span>(<span>self, rect)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def zoom_region(self, rect):
+    self.hide_region()
+    self.showAxRect(rect)
+    self.add_region(rect)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.selectviewbox.SelectViewBox.zoom_back"><code class="name flex">
+<span>def <span class="ident">zoom_back</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def zoom_back(self):
+    self.scaleHistory(-1)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.selectviewbox.SelectViewBox.zoom_forward"><code class="name flex">
+<span>def <span class="ident">zoom_forward</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def zoom_forward(self):
+    self.scaleHistory(1)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.selectviewbox.SelectViewBox.zoom_home"><code class="name flex">
+<span>def <span class="ident">zoom_home</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def zoom_home(self):
+    self.scaleHistory(-len(self.axHistory))</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.selectviewbox.SelectViewBox.init_zoom_history"><code class="name flex">
+<span>def <span class="ident">init_zoom_history</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def init_zoom_history(self):
+    self.add_region(self.viewRect())</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="audian" href="index.html">audian</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="audian.selectviewbox.SelectViewBox" href="#audian.selectviewbox.SelectViewBox">SelectViewBox</a></code></h4>
+<ul class="two-column">
+<li><code><a title="audian.selectviewbox.SelectViewBox.sigSelectedRegion" href="#audian.selectviewbox.SelectViewBox.sigSelectedRegion">sigSelectedRegion</a></code></li>
+<li><code><a title="audian.selectviewbox.SelectViewBox.keyPressEvent" href="#audian.selectviewbox.SelectViewBox.keyPressEvent">keyPressEvent</a></code></li>
+<li><code><a title="audian.selectviewbox.SelectViewBox.mouseDragEvent" href="#audian.selectviewbox.SelectViewBox.mouseDragEvent">mouseDragEvent</a></code></li>
+<li><code><a title="audian.selectviewbox.SelectViewBox.updateScaleBox" href="#audian.selectviewbox.SelectViewBox.updateScaleBox">updateScaleBox</a></code></li>
+<li><code><a title="audian.selectviewbox.SelectViewBox.hide_region" href="#audian.selectviewbox.SelectViewBox.hide_region">hide_region</a></code></li>
+<li><code><a title="audian.selectviewbox.SelectViewBox.add_region" href="#audian.selectviewbox.SelectViewBox.add_region">add_region</a></code></li>
+<li><code><a title="audian.selectviewbox.SelectViewBox.zoom_region" href="#audian.selectviewbox.SelectViewBox.zoom_region">zoom_region</a></code></li>
+<li><code><a title="audian.selectviewbox.SelectViewBox.zoom_back" href="#audian.selectviewbox.SelectViewBox.zoom_back">zoom_back</a></code></li>
+<li><code><a title="audian.selectviewbox.SelectViewBox.zoom_forward" href="#audian.selectviewbox.SelectViewBox.zoom_forward">zoom_forward</a></code></li>
+<li><code><a title="audian.selectviewbox.SelectViewBox.zoom_home" href="#audian.selectviewbox.SelectViewBox.zoom_home">zoom_home</a></code></li>
+<li><code><a title="audian.selectviewbox.SelectViewBox.init_zoom_history" href="#audian.selectviewbox.SelectViewBox.init_zoom_history">init_zoom_history</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>

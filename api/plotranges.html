@@ -1,0 +1,1928 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>audian.plotranges API documentation</title>
+<meta name="description" content="Manage ranges of plot axes …">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script type="text/x-mathjax-config">MathJax.Hub.Config({ tex2jax: { inlineMath: [ ['$','$'], ["\\(","\\)"] ], processEscapes: true } });</script>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML" integrity="sha256-kZafAc6mZvK3W3v1pHOcUix30OHQN6pU/NO2oFkqZVw=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>audian.plotranges</code></h1>
+</header>
+<section id="section-intro">
+<p>Manage ranges of plot axes.</p>
+<p><code>class <a title="audian.plotranges.PlotRange" href="#audian.plotranges.PlotRange">PlotRange</a></code>: a single axis range
+<code>class <a title="audian.plotranges.PlotRanges" href="#audian.plotranges.PlotRanges">PlotRanges</a></code>: manage all ranges</p>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="audian.plotranges.PlotRange"><code class="flex name class">
+<span>class <span class="ident">PlotRange</span></span>
+<span>(</span><span>axspec, nchannels)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PlotRange(object):
+
+    def __init__(self, axspec, nchannels):
+        self.axspec = axspec
+        self.rmin = None
+        self.rmax = None
+        self.rstep = None
+        self.min_dr = None
+        self.r0 = [None]*nchannels
+        self.r1 = [None]*nchannels
+        self.axxs = [[] for i in range(nchannels)]
+        self.axys = [[] for i in range(nchannels)]
+        self.axzs = [[] for i in range(nchannels)]
+        self.marker_channel = None
+        self.marker_ax = None
+        self.marker_pos = None
+        self.stored_marker_channel = None
+        self.stored_marker_ax = None
+        self.stored_marker_pos = None
+
+
+    def __str__(self):
+        rmins = f&#39;{&#34;-&#34;:&gt;8}&#39; if self.rmin is None else f&#39;{self.rmin:8.5g}&#39; 
+        rmaxs = f&#39;{&#34;-&#34;:&gt;8}&#39; if self.rmax is None else f&#39;{self.rmax:8.5g}&#39; 
+        rsteps = f&#39;{&#34;-&#34;:&gt;8}&#39; if self.rstep is None else f&#39;{self.rstep:8.5g}&#39; 
+        mindrs = f&#39;{&#34;-&#34;:&gt;8}&#39; if self.min_dr is None else f&#39;{self.min_dr:8.3g}&#39;
+        r0s = f&#39;{&#34;-&#34;:&gt;8}&#39; if self.r0[0] is None else f&#39;{self.r0[0]:8.5g}&#39;
+        r1s = f&#39;{&#34;-&#34;:&gt;8}&#39; if self.r1[0] is None else f&#39;{self.r1[0]:8.5g}&#39;
+        return f&#39;{self.axspec}: rmin={rmins} rmax={rmaxs} rstep={rsteps} min_dr={mindrs} r0={r0s} r1={r1s}&#39;
+
+
+    def _add_axis(self, axs, ax):
+        rmin, rmax, rstep = ax.range(self.axspec)
+        if rmin is not None and (self.rmin is None or rmin &lt; self.rmin):
+            self.rmin = rmin
+        if rmax is not None and (self.rmax is None or rmax &gt; self.rmax):
+            self.rmax = rmax
+        if rstep is not None and (self.rstep is None or rstep &lt; self.rstep):
+            self.rstep = rstep
+        axs.append(ax)
+        
+
+    def add_xaxis(self, ax, channel):
+        self._add_axis(self.axxs[channel], ax)
+        
+
+    def add_yaxis(self, ax, channel):
+        self._add_axis(self.axys[channel], ax)
+
+
+    def add_zaxis(self, ax, channel):
+        self._add_axis(self.axzs[channel], ax)
+
+
+    def is_used(self):
+        n = 0
+        for axx in self.axxs:
+            n += len(axx)
+        for axy in self.axys:
+            n += len(axy)
+        for axz in self.axzs:
+            n += len(axz)
+        return n &gt; 0
+
+    
+    def is_time(self):
+        return self.axspec in Panel.times
+        
+    
+    def is_amplitude(self):
+        return self.axspec in Panel.amplitudes
+        
+    
+    def is_frequency(self):
+        return self.axspec in Panel.frequencies
+        
+    
+    def is_power(self):
+        return self.axspec in Panel.powers
+        
+
+    def set_starttime(self, mode):
+        for axx in self.axxs:
+            for ax in axx:
+                ax.set_starttime(mode)
+
+
+    def at_end(self, channel=0):
+        return self.r1[channel] &gt;= self.rmax
+
+
+    def at_home(self, channel=0):
+        return self.r0[channel] &lt;= self.rmin
+
+                
+    def set_limits(self):
+        if not self.is_used():
+            return
+        if np.isfinite(self.rmin) and np.isfinite(self.rmax):
+            # TODO: min_dr should eventually come from the data!!!
+            if self.is_time():
+                self.min_dr = 0.001
+            else:
+                self.min_dr = (self.rmax - self.rmin)/2**16
+        else:
+            self.min_dr = 2/2**16
+        # limits:
+        for axx in self.axxs:
+            for ax in axx:
+                if np.isfinite(self.rmin):
+                    ax.setLimits(xMin=self.rmin)
+                if np.isfinite(self.rmax):
+                    ax.setLimits(xMax=self.rmax)
+                if np.isfinite(self.rmin) and np.isfinite(self.rmax):
+                    ax.setLimits(minXRange=self.min_dr,
+                                 maxXRange=self.rmax - self.rmin)
+        for axy in self.axys:
+            for ax in axy:
+                if np.isfinite(self.rmin):
+                    ax.setLimits(yMin=self.rmin)
+                if np.isfinite(self.rmax):
+                    ax.setLimits(yMax=self.rmax)
+                if np.isfinite(self.rmin) and np.isfinite(self.rmax):
+                    ax.setLimits(minYRange=self.min_dr,
+                                 maxYRange=self.rmax - self.rmin)
+        # ranges:
+        for c in range(len(self.r0)):
+            self.r0[c] = self.rmin
+            if self.is_time():
+                self.r1[c] = 10
+            else:
+                self.r1[c] = self.rmax
+            if not np.isfinite(self.r0[c]):
+                self.r0[c] = -1
+            if not np.isfinite(self.r1[c]):
+                self.r1[c] = +1
+
+
+    def set_ranges(self, r0=None, r1=None, dr=None,
+                   channels=None, do_set=True):
+        if not self.is_used():
+            return
+        # time ranges are all the same over all the channels!
+        if channels is None or self.is_time():
+            channels = range(len(self.r0))
+        cc = -1
+        for c in channels:
+            if len(self.axxs[c]) + len(self.axys[c]) + len(self.axzs[c]) == 0:
+                continue
+            if cc &gt;= 0:
+                self.r0[c] = self.r0[cc]
+                self.r1[c] = self.r1[cc]
+            else:
+                if r0 is not None:
+                    self.r0[c] = r0
+                if r1 is not None:
+                    self.r1[c] = r1
+                if dr is not None:
+                    if r1 is None:
+                        self.r1[c] = self.r0[c] + dr
+                    else:
+                        self.r0[c] = self.r1[c] - dr
+                dr = self.r1[c] - self.r0[c]
+                if self.r0[c] &lt; self.rmin:
+                    self.r0[c] = self.rmin
+                    self.r1[c] = self.rmin + dr
+                if self.r1[c] &gt; self.rmax and not self.is_time():
+                    self.r1[c] = self.rmax
+                    self.r0[c] = self.rmax - dr
+                if self.r0[c] &lt; self.rmin:
+                    self.r0[c] = self.rmin
+                if self.is_time():
+                    cc = c
+            if do_set:
+                for ax in self.axxs[c]:
+                    ax.setXRange(self.r0[c], self.r1[c])
+                for ax in self.axys[c]:
+                    ax.setYRange(self.r0[c], self.r1[c])
+                for ax in self.axzs[c]:
+                    ax.setZRange(self.r0[c], self.r1[c])
+
+                    
+    def zoom_in(self, channels=None, do_set=True):
+        if not self.is_used():
+            return
+        if channels is None:
+            channels = range(len(self.r0))
+        if self.is_time():
+            channels = [0]
+        for c in channels:
+            if self.rmin &lt; 0:
+                h = 0.25*(self.r1[c] - self.r0[c])
+                m = 0.5*(self.r1[c] + self.r0[c])
+                if h &gt; self.min_dr:
+                    self.set_ranges(m - h, m + h, None, [c], do_set)
+            else:
+                dr = self.r1[c] - self.r0[c]
+                if dr &gt; self.min_dr:
+                    dr *= 0.5
+                    self.set_ranges(self.r0[c], None, dr, [c], do_set)
+                
+        
+    def zoom_out(self, channels=None, do_set=True):
+        if not self.is_used():
+            return
+        if channels is None:
+            channels = range(len(self.r0))
+        if self.is_time():
+            channels = [0]
+        for c in channels:
+            if self.rmin &lt; 0:
+                h = self.r1[c] - self.r0[c]
+                m = 0.5*(self.r1[c] + self.r0[c])
+                self.set_ranges(m - h, m + h, None, [c], do_set)
+            else:
+                dr = 2*(self.r1[c] - self.r0[c])
+                self.set_ranges(self.r0[c], None, dr, [c], do_set)
+
+                    
+    def zoom_in_centered(self, channels=None, do_set=True):
+        if not self.is_used():
+            return
+        if channels is None:
+            channels = range(len(self.r0))
+        if self.is_time():
+            channels = [0]
+        for c in channels:
+            h = 0.25*(self.r1[c] - self.r0[c])
+            m = 0.5*(self.r1[c] + self.r0[c])
+            if h &gt; self.min_dr:
+                self.set_ranges(m - h, m + h, None, [c], do_set)
+                
+        
+    def zoom_out_centered(self, channels=None, do_set=True):
+        if not self.is_used():
+            return
+        if channels is None:
+            channels = range(len(self.r0))
+        if self.is_time():
+            channels = [0]
+        for c in channels:
+            h = self.r1[c] - self.r0[c]
+            m = 0.5*(self.r1[c] + self.r0[c])
+            self.set_ranges(m - h, m + h, None, [c], do_set)
+
+                
+    def move(self, move_fac, channels=None, do_set=True):
+        if not self.is_used():
+            return
+        if channels is None:
+            channels = range(len(self.r0))
+        if self.is_time():
+            channels = [0]
+        for c in channels:
+            if (move_fac &gt; 0 and self.r1[c] &lt; self.rmax) or \
+               (move_fac &lt; 0 and self.r0[c] &gt; self.rmin):
+                dr = self.r1[c] - self.r0[c]
+                self.set_ranges(self.r0[c] + move_fac*dr,
+                                self.r1[c] + move_fac*dr,
+                                None, [c], do_set)
+                
+    def down(self, channels=None, do_set=True):
+        self.move(-0.5, channels, do_set)
+                
+                
+    def up(self, channels=None, do_set=True):
+        self.move(+0.5, channels, do_set)
+                
+                
+    def small_down(self, channels=None, do_set=True):
+        self.move(-0.05, channels, do_set)
+                
+                
+    def small_up(self, channels=None, do_set=True):
+        self.move(+0.05, channels, do_set)
+                
+                
+    def step(self, step_fac, channels=None, do_set=True):
+        if not self.is_used():
+            return
+        if channels is None:
+            channels = range(len(self.r0))
+        if self.is_time():
+            channels = [0]
+        for c in channels:
+            if (step_fac &gt; 0 and self.r1[c] &lt; self.rmax) or \
+               (step_fac &lt; 0 and self.r0[c] &gt; self.rmin):
+                self.set_ranges(self.r0[c] + step_fac*self.rstep,
+                                self.r1[c] + step_fac*self.rstep,
+                                None, [c], do_set)
+                
+                
+    def step_down(self, channels=None, do_set=True):
+        self.step(-1, channels, do_set)
+                
+                
+    def step_up(self, channels=None, do_set=True):
+        self.step(+1, channels, do_set)
+                
+                
+    def min_step(self, step_fac, channels=None, do_set=True):
+        if not self.is_used():
+            return
+        if channels is None:
+            channels = range(len(self.r0))
+        if self.is_time():
+            channels = [0]
+        for c in channels:
+            if (step_fac &gt; 0 and self.r0[c] &lt; self.r1[c]) or \
+               (step_fac &lt; 0 and self.r0[c] &gt; self.rmin):
+                self.set_ranges(self.r0[c] + step_fac*self.rstep, self.r1[c],
+                                None, [c], do_set)
+                
+                
+    def min_down(self, channels=None, do_set=True):
+        self.min_step(-1, channels, do_set)
+                
+                
+    def min_up(self, channels=None, do_set=True):
+        self.min_step(+1, channels, do_set)
+                
+                
+    def max_step(self, step_fac, channels=None, do_set=True):
+        if not self.is_used():
+            return
+        if channels is None:
+            channels = range(len(self.r0))
+        if self.is_time():
+            channels = [0]
+        for c in channels:
+            if (step_fac &gt; 0 and self.r1[c] &lt; self.rmax) or \
+               (step_fac &lt; 0 and self.r1[c] &gt; self.r0[c]):
+                self.set_ranges(self.r0[c], self.r1[c] + step_fac*self.rstep,
+                                None, [c], do_set)
+                
+                
+    def max_down(self, channels=None, do_set=True):
+        self.max_step(-1, channels, do_set)
+                
+                
+    def max_up(self, channels=None, do_set=True):
+        self.max_step(+1, channels, do_set)
+                
+                
+    def home(self, channels=None, do_set=True):
+        if not self.is_used():
+            return
+        if channels is None:
+            channels = range(len(self.r0))
+        if self.is_time():
+            channels = [0]
+        for c in channels:
+            if self.r0[c] &gt; self.rmin:
+                dr = self.r1[c] - self.r0[c]
+                self.set_ranges(self.rmin, None, dr, [c], do_set)
+                
+                
+    def end(self, channels=None, do_set=True):
+        if not self.is_used():
+            return
+        if channels is None:
+            channels = range(len(self.r0))
+        if self.is_time():
+            channels = [0]
+        for c in channels:
+            if self.r1[c] &lt; self.rmax:
+                dr = self.r1[c] - self.r0[c]
+                r1 = ceil(self.rmax/(0.5*dr))*(0.5*dr)
+                self.set_ranges(None, r1, dr, [c], do_set)
+        &#34;&#34;&#34;
+        Former time range:
+        n2 = np.floor(self.tmax / (0.5*self.twindow))
+        toffs = max(0, n2-1)  * 0.5*self.twindow
+        if self.toffset &lt; toffs:
+            self.toffset = toffs
+            return True
+        return False
+
+        &#34;&#34;&#34;
+                
+                
+    def snap(self, channels=None, do_set=True):
+        if not self.is_used():
+            return
+        if channels is None:
+            channels = range(len(self.r0))
+        if self.is_time():
+            channels = [0]
+        for c in channels:
+            dr = self.r1[c] - self.r0[c]
+            dr = 10 * 2**round(log(dr/10)/log(2))
+            r0 = round(self.r0[c]/(dr/2))*(dr/2)
+            self.set_ranges(r0, None, dr, [c], do_set)
+    
+        
+    def auto(self, t0, t1, channels=None, do_set=True):
+        if not self.is_used() or self.is_time():
+            return
+        if channels is None:
+            channels = range(len(self.r0))
+        rmin = None
+        rmax = None
+        for c in channels:
+            for ax in self.axxs[c] + self.axys[c]:
+                r0, r1 = ax.amplitudes(t0, t1)
+                if rmin is None or r0 &lt; rmin:
+                    rmin = r0
+                if rmax is None or r1 &gt; rmax:
+                    rmax = r1
+        self.set_ranges(rmin, rmax, None, channels, do_set)
+
+        
+    def reset(self, channels=None, do_set=True):
+        if not self.is_used():
+            return
+        rmin = self.rmin
+        if not np.isfinite(rmin):
+            rmin = -1
+        rmax = self.rmax
+        if not np.isfinite(rmax):
+            rmax = +1
+        self.set_ranges(rmin, rmax, None, channels, do_set)
+
+        
+    def center(self, channels=None, do_set=True):
+        if not self.is_used() or self.is_time():
+            return
+        if channels is None:
+            channels = range(len(self.r0))
+        for c in channels:
+            r = max(np.abs(self.r0[c]), np.abs(self.r1[c]))
+            self.set_ranges(-r, +r, None, [c], do_set)
+
+
+    def set_powers(self):
+        if not self.is_power() or not self.is_used():
+            return
+        zmin = None
+        zmax = None
+        for c in range(len(self.axzs)):
+            for ax in self.axzs[c]:
+                if hasattr(ax, &#39;data_items&#39;):
+                    for item in ax.data_items:
+                        if hasattr(item, &#39;data&#39;):
+                            z0, z1 = item.data.estimate_noiselevels(c)
+                            if z0 is not None and z1 is not None:
+                                if zmin is None or z0 &lt; zmin:
+                                    zmin = z0
+                                if zmax is None or z1 &gt; zmax:
+                                    zmax = z1
+        if zmin is not None and zmax is not None:
+            self.set_ranges(zmin, zmax)
+        
+                
+    def clear_marker(self):
+        self.marker_channel = None
+        self.marker_ax = None
+        self.marker_pos = None
+
+        
+    def set_marker(self, channel, ax, pos):
+        self.marker_channel = channel
+        self.marker_ax = ax
+        self.marker_pos = pos
+
+                
+    def store_marker(self):
+        self.stored_marker_channel = self.marker_channel
+        self.stored_marker_ax = self.marker_ax
+        self.stored_marker_pos = self.marker_pos
+        if self.stored_marker_channel is None:
+            return None, None, None
+        for ax in self.axxs[self.stored_marker_channel]:
+            if ax is self.stored_marker_ax:
+                return self.stored_marker_ax, self.stored_marker_pos, None
+        for ax in self.axys[self.stored_marker_channel]:
+            if ax is self.stored_marker_ax:
+                return self.stored_marker_ax, None, self.stored_marker_pos
+        return None, None, None
+
+
+    def clear_stored_marker(self):
+        for axx in self.axxs:
+            for ax in axx:
+                ax.stored_marker.setVisible(False)
+        for axy in self.axys:
+            for ax in axy:
+                ax.stored_marker.setVisible(False)
+        self.stored_marker_channel = None
+        self.stored_marker_ax = None
+        self.stored_marker_pos = None
+
+
+    def update_crosshair(self):
+        for axx in self.axxs:
+            for ax in axx:
+                if self.marker_pos is not None:
+                    ax.xline.setPos(self.marker_pos)
+                ax.xline.setVisible(self.marker_pos is not None)
+        for axy in self.axys:
+            for ax in axy:
+                if self.marker_pos is not None:
+                    ax.yline.setPos(self.marker_pos)
+                ax.yline.setVisible(self.marker_pos is not None)</code></pre>
+</details>
+<div class="desc"></div>
+<h3>Methods</h3>
+<dl>
+<dt id="audian.plotranges.PlotRange.add_xaxis"><code class="name flex">
+<span>def <span class="ident">add_xaxis</span></span>(<span>self, ax, channel)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_xaxis(self, ax, channel):
+    self._add_axis(self.axxs[channel], ax)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.add_yaxis"><code class="name flex">
+<span>def <span class="ident">add_yaxis</span></span>(<span>self, ax, channel)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_yaxis(self, ax, channel):
+    self._add_axis(self.axys[channel], ax)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.add_zaxis"><code class="name flex">
+<span>def <span class="ident">add_zaxis</span></span>(<span>self, ax, channel)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_zaxis(self, ax, channel):
+    self._add_axis(self.axzs[channel], ax)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.is_used"><code class="name flex">
+<span>def <span class="ident">is_used</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_used(self):
+    n = 0
+    for axx in self.axxs:
+        n += len(axx)
+    for axy in self.axys:
+        n += len(axy)
+    for axz in self.axzs:
+        n += len(axz)
+    return n &gt; 0</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.is_time"><code class="name flex">
+<span>def <span class="ident">is_time</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_time(self):
+    return self.axspec in Panel.times</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.is_amplitude"><code class="name flex">
+<span>def <span class="ident">is_amplitude</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_amplitude(self):
+    return self.axspec in Panel.amplitudes</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.is_frequency"><code class="name flex">
+<span>def <span class="ident">is_frequency</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_frequency(self):
+    return self.axspec in Panel.frequencies</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.is_power"><code class="name flex">
+<span>def <span class="ident">is_power</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_power(self):
+    return self.axspec in Panel.powers</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.set_starttime"><code class="name flex">
+<span>def <span class="ident">set_starttime</span></span>(<span>self, mode)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_starttime(self, mode):
+    for axx in self.axxs:
+        for ax in axx:
+            ax.set_starttime(mode)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.at_end"><code class="name flex">
+<span>def <span class="ident">at_end</span></span>(<span>self, channel=0)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def at_end(self, channel=0):
+    return self.r1[channel] &gt;= self.rmax</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.at_home"><code class="name flex">
+<span>def <span class="ident">at_home</span></span>(<span>self, channel=0)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def at_home(self, channel=0):
+    return self.r0[channel] &lt;= self.rmin</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.set_limits"><code class="name flex">
+<span>def <span class="ident">set_limits</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_limits(self):
+    if not self.is_used():
+        return
+    if np.isfinite(self.rmin) and np.isfinite(self.rmax):
+        # TODO: min_dr should eventually come from the data!!!
+        if self.is_time():
+            self.min_dr = 0.001
+        else:
+            self.min_dr = (self.rmax - self.rmin)/2**16
+    else:
+        self.min_dr = 2/2**16
+    # limits:
+    for axx in self.axxs:
+        for ax in axx:
+            if np.isfinite(self.rmin):
+                ax.setLimits(xMin=self.rmin)
+            if np.isfinite(self.rmax):
+                ax.setLimits(xMax=self.rmax)
+            if np.isfinite(self.rmin) and np.isfinite(self.rmax):
+                ax.setLimits(minXRange=self.min_dr,
+                             maxXRange=self.rmax - self.rmin)
+    for axy in self.axys:
+        for ax in axy:
+            if np.isfinite(self.rmin):
+                ax.setLimits(yMin=self.rmin)
+            if np.isfinite(self.rmax):
+                ax.setLimits(yMax=self.rmax)
+            if np.isfinite(self.rmin) and np.isfinite(self.rmax):
+                ax.setLimits(minYRange=self.min_dr,
+                             maxYRange=self.rmax - self.rmin)
+    # ranges:
+    for c in range(len(self.r0)):
+        self.r0[c] = self.rmin
+        if self.is_time():
+            self.r1[c] = 10
+        else:
+            self.r1[c] = self.rmax
+        if not np.isfinite(self.r0[c]):
+            self.r0[c] = -1
+        if not np.isfinite(self.r1[c]):
+            self.r1[c] = +1</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.set_ranges"><code class="name flex">
+<span>def <span class="ident">set_ranges</span></span>(<span>self, r0=None, r1=None, dr=None, channels=None, do_set=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_ranges(self, r0=None, r1=None, dr=None,
+               channels=None, do_set=True):
+    if not self.is_used():
+        return
+    # time ranges are all the same over all the channels!
+    if channels is None or self.is_time():
+        channels = range(len(self.r0))
+    cc = -1
+    for c in channels:
+        if len(self.axxs[c]) + len(self.axys[c]) + len(self.axzs[c]) == 0:
+            continue
+        if cc &gt;= 0:
+            self.r0[c] = self.r0[cc]
+            self.r1[c] = self.r1[cc]
+        else:
+            if r0 is not None:
+                self.r0[c] = r0
+            if r1 is not None:
+                self.r1[c] = r1
+            if dr is not None:
+                if r1 is None:
+                    self.r1[c] = self.r0[c] + dr
+                else:
+                    self.r0[c] = self.r1[c] - dr
+            dr = self.r1[c] - self.r0[c]
+            if self.r0[c] &lt; self.rmin:
+                self.r0[c] = self.rmin
+                self.r1[c] = self.rmin + dr
+            if self.r1[c] &gt; self.rmax and not self.is_time():
+                self.r1[c] = self.rmax
+                self.r0[c] = self.rmax - dr
+            if self.r0[c] &lt; self.rmin:
+                self.r0[c] = self.rmin
+            if self.is_time():
+                cc = c
+        if do_set:
+            for ax in self.axxs[c]:
+                ax.setXRange(self.r0[c], self.r1[c])
+            for ax in self.axys[c]:
+                ax.setYRange(self.r0[c], self.r1[c])
+            for ax in self.axzs[c]:
+                ax.setZRange(self.r0[c], self.r1[c])</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.zoom_in"><code class="name flex">
+<span>def <span class="ident">zoom_in</span></span>(<span>self, channels=None, do_set=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def zoom_in(self, channels=None, do_set=True):
+    if not self.is_used():
+        return
+    if channels is None:
+        channels = range(len(self.r0))
+    if self.is_time():
+        channels = [0]
+    for c in channels:
+        if self.rmin &lt; 0:
+            h = 0.25*(self.r1[c] - self.r0[c])
+            m = 0.5*(self.r1[c] + self.r0[c])
+            if h &gt; self.min_dr:
+                self.set_ranges(m - h, m + h, None, [c], do_set)
+        else:
+            dr = self.r1[c] - self.r0[c]
+            if dr &gt; self.min_dr:
+                dr *= 0.5
+                self.set_ranges(self.r0[c], None, dr, [c], do_set)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.zoom_out"><code class="name flex">
+<span>def <span class="ident">zoom_out</span></span>(<span>self, channels=None, do_set=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def zoom_out(self, channels=None, do_set=True):
+    if not self.is_used():
+        return
+    if channels is None:
+        channels = range(len(self.r0))
+    if self.is_time():
+        channels = [0]
+    for c in channels:
+        if self.rmin &lt; 0:
+            h = self.r1[c] - self.r0[c]
+            m = 0.5*(self.r1[c] + self.r0[c])
+            self.set_ranges(m - h, m + h, None, [c], do_set)
+        else:
+            dr = 2*(self.r1[c] - self.r0[c])
+            self.set_ranges(self.r0[c], None, dr, [c], do_set)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.zoom_in_centered"><code class="name flex">
+<span>def <span class="ident">zoom_in_centered</span></span>(<span>self, channels=None, do_set=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def zoom_in_centered(self, channels=None, do_set=True):
+    if not self.is_used():
+        return
+    if channels is None:
+        channels = range(len(self.r0))
+    if self.is_time():
+        channels = [0]
+    for c in channels:
+        h = 0.25*(self.r1[c] - self.r0[c])
+        m = 0.5*(self.r1[c] + self.r0[c])
+        if h &gt; self.min_dr:
+            self.set_ranges(m - h, m + h, None, [c], do_set)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.zoom_out_centered"><code class="name flex">
+<span>def <span class="ident">zoom_out_centered</span></span>(<span>self, channels=None, do_set=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def zoom_out_centered(self, channels=None, do_set=True):
+    if not self.is_used():
+        return
+    if channels is None:
+        channels = range(len(self.r0))
+    if self.is_time():
+        channels = [0]
+    for c in channels:
+        h = self.r1[c] - self.r0[c]
+        m = 0.5*(self.r1[c] + self.r0[c])
+        self.set_ranges(m - h, m + h, None, [c], do_set)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.move"><code class="name flex">
+<span>def <span class="ident">move</span></span>(<span>self, move_fac, channels=None, do_set=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def move(self, move_fac, channels=None, do_set=True):
+    if not self.is_used():
+        return
+    if channels is None:
+        channels = range(len(self.r0))
+    if self.is_time():
+        channels = [0]
+    for c in channels:
+        if (move_fac &gt; 0 and self.r1[c] &lt; self.rmax) or \
+           (move_fac &lt; 0 and self.r0[c] &gt; self.rmin):
+            dr = self.r1[c] - self.r0[c]
+            self.set_ranges(self.r0[c] + move_fac*dr,
+                            self.r1[c] + move_fac*dr,
+                            None, [c], do_set)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.down"><code class="name flex">
+<span>def <span class="ident">down</span></span>(<span>self, channels=None, do_set=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def down(self, channels=None, do_set=True):
+    self.move(-0.5, channels, do_set)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.up"><code class="name flex">
+<span>def <span class="ident">up</span></span>(<span>self, channels=None, do_set=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def up(self, channels=None, do_set=True):
+    self.move(+0.5, channels, do_set)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.small_down"><code class="name flex">
+<span>def <span class="ident">small_down</span></span>(<span>self, channels=None, do_set=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def small_down(self, channels=None, do_set=True):
+    self.move(-0.05, channels, do_set)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.small_up"><code class="name flex">
+<span>def <span class="ident">small_up</span></span>(<span>self, channels=None, do_set=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def small_up(self, channels=None, do_set=True):
+    self.move(+0.05, channels, do_set)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.step"><code class="name flex">
+<span>def <span class="ident">step</span></span>(<span>self, step_fac, channels=None, do_set=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def step(self, step_fac, channels=None, do_set=True):
+    if not self.is_used():
+        return
+    if channels is None:
+        channels = range(len(self.r0))
+    if self.is_time():
+        channels = [0]
+    for c in channels:
+        if (step_fac &gt; 0 and self.r1[c] &lt; self.rmax) or \
+           (step_fac &lt; 0 and self.r0[c] &gt; self.rmin):
+            self.set_ranges(self.r0[c] + step_fac*self.rstep,
+                            self.r1[c] + step_fac*self.rstep,
+                            None, [c], do_set)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.step_down"><code class="name flex">
+<span>def <span class="ident">step_down</span></span>(<span>self, channels=None, do_set=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def step_down(self, channels=None, do_set=True):
+    self.step(-1, channels, do_set)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.step_up"><code class="name flex">
+<span>def <span class="ident">step_up</span></span>(<span>self, channels=None, do_set=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def step_up(self, channels=None, do_set=True):
+    self.step(+1, channels, do_set)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.min_step"><code class="name flex">
+<span>def <span class="ident">min_step</span></span>(<span>self, step_fac, channels=None, do_set=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def min_step(self, step_fac, channels=None, do_set=True):
+    if not self.is_used():
+        return
+    if channels is None:
+        channels = range(len(self.r0))
+    if self.is_time():
+        channels = [0]
+    for c in channels:
+        if (step_fac &gt; 0 and self.r0[c] &lt; self.r1[c]) or \
+           (step_fac &lt; 0 and self.r0[c] &gt; self.rmin):
+            self.set_ranges(self.r0[c] + step_fac*self.rstep, self.r1[c],
+                            None, [c], do_set)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.min_down"><code class="name flex">
+<span>def <span class="ident">min_down</span></span>(<span>self, channels=None, do_set=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def min_down(self, channels=None, do_set=True):
+    self.min_step(-1, channels, do_set)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.min_up"><code class="name flex">
+<span>def <span class="ident">min_up</span></span>(<span>self, channels=None, do_set=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def min_up(self, channels=None, do_set=True):
+    self.min_step(+1, channels, do_set)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.max_step"><code class="name flex">
+<span>def <span class="ident">max_step</span></span>(<span>self, step_fac, channels=None, do_set=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def max_step(self, step_fac, channels=None, do_set=True):
+    if not self.is_used():
+        return
+    if channels is None:
+        channels = range(len(self.r0))
+    if self.is_time():
+        channels = [0]
+    for c in channels:
+        if (step_fac &gt; 0 and self.r1[c] &lt; self.rmax) or \
+           (step_fac &lt; 0 and self.r1[c] &gt; self.r0[c]):
+            self.set_ranges(self.r0[c], self.r1[c] + step_fac*self.rstep,
+                            None, [c], do_set)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.max_down"><code class="name flex">
+<span>def <span class="ident">max_down</span></span>(<span>self, channels=None, do_set=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def max_down(self, channels=None, do_set=True):
+    self.max_step(-1, channels, do_set)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.max_up"><code class="name flex">
+<span>def <span class="ident">max_up</span></span>(<span>self, channels=None, do_set=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def max_up(self, channels=None, do_set=True):
+    self.max_step(+1, channels, do_set)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.home"><code class="name flex">
+<span>def <span class="ident">home</span></span>(<span>self, channels=None, do_set=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def home(self, channels=None, do_set=True):
+    if not self.is_used():
+        return
+    if channels is None:
+        channels = range(len(self.r0))
+    if self.is_time():
+        channels = [0]
+    for c in channels:
+        if self.r0[c] &gt; self.rmin:
+            dr = self.r1[c] - self.r0[c]
+            self.set_ranges(self.rmin, None, dr, [c], do_set)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.end"><code class="name flex">
+<span>def <span class="ident">end</span></span>(<span>self, channels=None, do_set=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def end(self, channels=None, do_set=True):
+    if not self.is_used():
+        return
+    if channels is None:
+        channels = range(len(self.r0))
+    if self.is_time():
+        channels = [0]
+    for c in channels:
+        if self.r1[c] &lt; self.rmax:
+            dr = self.r1[c] - self.r0[c]
+            r1 = ceil(self.rmax/(0.5*dr))*(0.5*dr)
+            self.set_ranges(None, r1, dr, [c], do_set)
+    &#34;&#34;&#34;
+    Former time range:
+    n2 = np.floor(self.tmax / (0.5*self.twindow))
+    toffs = max(0, n2-1)  * 0.5*self.twindow
+    if self.toffset &lt; toffs:
+        self.toffset = toffs
+        return True
+    return False
+
+    &#34;&#34;&#34;</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.snap"><code class="name flex">
+<span>def <span class="ident">snap</span></span>(<span>self, channels=None, do_set=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def snap(self, channels=None, do_set=True):
+    if not self.is_used():
+        return
+    if channels is None:
+        channels = range(len(self.r0))
+    if self.is_time():
+        channels = [0]
+    for c in channels:
+        dr = self.r1[c] - self.r0[c]
+        dr = 10 * 2**round(log(dr/10)/log(2))
+        r0 = round(self.r0[c]/(dr/2))*(dr/2)
+        self.set_ranges(r0, None, dr, [c], do_set)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.auto"><code class="name flex">
+<span>def <span class="ident">auto</span></span>(<span>self, t0, t1, channels=None, do_set=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def auto(self, t0, t1, channels=None, do_set=True):
+    if not self.is_used() or self.is_time():
+        return
+    if channels is None:
+        channels = range(len(self.r0))
+    rmin = None
+    rmax = None
+    for c in channels:
+        for ax in self.axxs[c] + self.axys[c]:
+            r0, r1 = ax.amplitudes(t0, t1)
+            if rmin is None or r0 &lt; rmin:
+                rmin = r0
+            if rmax is None or r1 &gt; rmax:
+                rmax = r1
+    self.set_ranges(rmin, rmax, None, channels, do_set)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.reset"><code class="name flex">
+<span>def <span class="ident">reset</span></span>(<span>self, channels=None, do_set=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def reset(self, channels=None, do_set=True):
+    if not self.is_used():
+        return
+    rmin = self.rmin
+    if not np.isfinite(rmin):
+        rmin = -1
+    rmax = self.rmax
+    if not np.isfinite(rmax):
+        rmax = +1
+    self.set_ranges(rmin, rmax, None, channels, do_set)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.center"><code class="name flex">
+<span>def <span class="ident">center</span></span>(<span>self, channels=None, do_set=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def center(self, channels=None, do_set=True):
+    if not self.is_used() or self.is_time():
+        return
+    if channels is None:
+        channels = range(len(self.r0))
+    for c in channels:
+        r = max(np.abs(self.r0[c]), np.abs(self.r1[c]))
+        self.set_ranges(-r, +r, None, [c], do_set)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.set_powers"><code class="name flex">
+<span>def <span class="ident">set_powers</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_powers(self):
+    if not self.is_power() or not self.is_used():
+        return
+    zmin = None
+    zmax = None
+    for c in range(len(self.axzs)):
+        for ax in self.axzs[c]:
+            if hasattr(ax, &#39;data_items&#39;):
+                for item in ax.data_items:
+                    if hasattr(item, &#39;data&#39;):
+                        z0, z1 = item.data.estimate_noiselevels(c)
+                        if z0 is not None and z1 is not None:
+                            if zmin is None or z0 &lt; zmin:
+                                zmin = z0
+                            if zmax is None or z1 &gt; zmax:
+                                zmax = z1
+    if zmin is not None and zmax is not None:
+        self.set_ranges(zmin, zmax)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.clear_marker"><code class="name flex">
+<span>def <span class="ident">clear_marker</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def clear_marker(self):
+    self.marker_channel = None
+    self.marker_ax = None
+    self.marker_pos = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.set_marker"><code class="name flex">
+<span>def <span class="ident">set_marker</span></span>(<span>self, channel, ax, pos)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_marker(self, channel, ax, pos):
+    self.marker_channel = channel
+    self.marker_ax = ax
+    self.marker_pos = pos</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.store_marker"><code class="name flex">
+<span>def <span class="ident">store_marker</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def store_marker(self):
+    self.stored_marker_channel = self.marker_channel
+    self.stored_marker_ax = self.marker_ax
+    self.stored_marker_pos = self.marker_pos
+    if self.stored_marker_channel is None:
+        return None, None, None
+    for ax in self.axxs[self.stored_marker_channel]:
+        if ax is self.stored_marker_ax:
+            return self.stored_marker_ax, self.stored_marker_pos, None
+    for ax in self.axys[self.stored_marker_channel]:
+        if ax is self.stored_marker_ax:
+            return self.stored_marker_ax, None, self.stored_marker_pos
+    return None, None, None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.clear_stored_marker"><code class="name flex">
+<span>def <span class="ident">clear_stored_marker</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def clear_stored_marker(self):
+    for axx in self.axxs:
+        for ax in axx:
+            ax.stored_marker.setVisible(False)
+    for axy in self.axys:
+        for ax in axy:
+            ax.stored_marker.setVisible(False)
+    self.stored_marker_channel = None
+    self.stored_marker_ax = None
+    self.stored_marker_pos = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRange.update_crosshair"><code class="name flex">
+<span>def <span class="ident">update_crosshair</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_crosshair(self):
+    for axx in self.axxs:
+        for ax in axx:
+            if self.marker_pos is not None:
+                ax.xline.setPos(self.marker_pos)
+            ax.xline.setVisible(self.marker_pos is not None)
+    for axy in self.axys:
+        for ax in axy:
+            if self.marker_pos is not None:
+                ax.yline.setPos(self.marker_pos)
+            ax.yline.setVisible(self.marker_pos is not None)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="audian.plotranges.PlotRanges"><code class="flex name class">
+<span>class <span class="ident">PlotRanges</span></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PlotRanges(dict):
+    
+    def __init__(self):
+        super().__init__()
+        for m in [&#39;zoom_in&#39;, &#39;zoom_out&#39;,
+                  &#39;zoom_in_centered&#39;, &#39;zoom_out_centered&#39;,
+                  &#39;down&#39;, &#39;up&#39;, &#39;small_down&#39;, &#39;small_up&#39;,
+                  &#39;step_down&#39;, &#39;step_up&#39;, &#39;min_down&#39;, &#39;min_up&#39;,
+                  &#39;max_down&#39;, &#39;max_up&#39;, &#39;home&#39;, &#39;end&#39;, &#39;snap&#39;,
+                  &#39;auto&#39;, &#39;reset&#39;, &#39;center&#39;]:
+            setattr(self, m, partial(PlotRanges._apply, self, m))
+
+
+    def __str__(self):
+        s = []
+        for r in self.values():
+            s.append(str(r))
+        return &#39;\n&#39;.join(s)
+
+
+    def setup(self, nchannels):
+        for s in Panel.times + Panel.amplitudes + Panel.frequencies + Panel.powers:
+            self[s] = PlotRange(s, nchannels)
+
+
+    def add_plot(self, ax):
+        self[ax.x()].add_xaxis(ax, ax.channel)
+        self[ax.y()].add_yaxis(ax, ax.channel)
+        if ax.z():
+            self[ax.z()].add_zaxis(ax, ax.channel)
+
+
+    def set_limits(self):
+        for r in self.values():
+            r.set_limits()
+        
+
+    def set_ranges(self):
+        for r in self.values():
+            r.set_ranges()
+
+
+    def set_powers(self):
+        for r in self.values():
+            r.set_powers()
+
+            
+    def _apply(self, rfunc, axspec, *args, **kwargs):
+        for s in axspec:
+            getattr(self[s], rfunc)(*args, **kwargs)
+            
+
+    def clear_marker(self):
+        for r in self.values():
+            r.clear_marker()
+
+
+    def store_marker(self):
+        axm = None
+        xpos = None
+        ypos = None
+        for r in self.values():
+            r.clear_stored_marker()
+            ax, x, y = r.store_marker()
+            if ax is not None:
+                if axm is None:
+                    axm = ax
+                    xpos = x
+                    ypos = y
+                elif axm is ax:
+                    if xpos is None and x is not None:
+                        xpos = x
+                    if ypos is None and y is not None:
+                        ypos = y
+        if axm is not None and xpos is not None and ypos is not None:
+            axm.set_stored_marker(xpos, ypos)
+
+
+    def clear_stored_marker(self):
+        for r in self.values():
+            r.clear_stored_marker()
+
+            
+    def _marker_pos(self, ranges):
+        for r in ranges:
+            if self[r].marker_pos is not None:
+                return r, self[r].marker_pos
+        return None, None
+
+
+    def marker_time(self):
+        return self._marker_pos(Panel.times)
+
+
+    def marker_amplitude(self):
+        return self._marker_pos(Panel.amplitudes)
+
+
+    def marker_frequency(self):
+        return self._marker_pos(Panel.frequencies)
+
+
+    def marker_power(self):
+        return self._marker_pos(Panel.powers)
+
+            
+    def _marker_delta(self, ranges):
+        for r in ranges:
+            if self[r].marker_pos is not None and \
+               self[r].stored_marker_pos is not None:
+                return r, self[r].marker_pos - self[r].stored_marker_pos
+        return None, None
+
+
+    def marker_delta_time(self):
+        return self._marker_delta(Panel.times)
+
+
+    def marker_delta_amplitude(self):
+        return self._marker_delta(Panel.amplitudes)
+
+
+    def marker_delta_frequency(self):
+        return self._marker_delta(Panel.frequencies)
+
+
+    def marker_delta_power(self):
+        return self._marker_delta(Panel.powers)
+
+            
+    def update_crosshair(self):
+        for r in self.values():
+            r.update_crosshair()</code></pre>
+</details>
+<div class="desc"><p>dict() -&gt; new empty dictionary
+dict(mapping) -&gt; new dictionary initialized from a mapping object's
+(key, value) pairs
+dict(iterable) -&gt; new dictionary initialized as if via:
+d = {}
+for k, v in iterable:
+d[k] = v
+dict(**kwargs) -&gt; new dictionary initialized with the name=value pairs
+in the keyword argument list.
+For example:
+dict(one=1, two=2)</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.dict</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="audian.plotranges.PlotRanges.setup"><code class="name flex">
+<span>def <span class="ident">setup</span></span>(<span>self, nchannels)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setup(self, nchannels):
+    for s in Panel.times + Panel.amplitudes + Panel.frequencies + Panel.powers:
+        self[s] = PlotRange(s, nchannels)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRanges.add_plot"><code class="name flex">
+<span>def <span class="ident">add_plot</span></span>(<span>self, ax)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_plot(self, ax):
+    self[ax.x()].add_xaxis(ax, ax.channel)
+    self[ax.y()].add_yaxis(ax, ax.channel)
+    if ax.z():
+        self[ax.z()].add_zaxis(ax, ax.channel)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRanges.set_limits"><code class="name flex">
+<span>def <span class="ident">set_limits</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_limits(self):
+    for r in self.values():
+        r.set_limits()</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRanges.set_ranges"><code class="name flex">
+<span>def <span class="ident">set_ranges</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_ranges(self):
+    for r in self.values():
+        r.set_ranges()</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRanges.set_powers"><code class="name flex">
+<span>def <span class="ident">set_powers</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_powers(self):
+    for r in self.values():
+        r.set_powers()</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRanges.clear_marker"><code class="name flex">
+<span>def <span class="ident">clear_marker</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def clear_marker(self):
+    for r in self.values():
+        r.clear_marker()</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRanges.store_marker"><code class="name flex">
+<span>def <span class="ident">store_marker</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def store_marker(self):
+    axm = None
+    xpos = None
+    ypos = None
+    for r in self.values():
+        r.clear_stored_marker()
+        ax, x, y = r.store_marker()
+        if ax is not None:
+            if axm is None:
+                axm = ax
+                xpos = x
+                ypos = y
+            elif axm is ax:
+                if xpos is None and x is not None:
+                    xpos = x
+                if ypos is None and y is not None:
+                    ypos = y
+    if axm is not None and xpos is not None and ypos is not None:
+        axm.set_stored_marker(xpos, ypos)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRanges.clear_stored_marker"><code class="name flex">
+<span>def <span class="ident">clear_stored_marker</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def clear_stored_marker(self):
+    for r in self.values():
+        r.clear_stored_marker()</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRanges.marker_time"><code class="name flex">
+<span>def <span class="ident">marker_time</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def marker_time(self):
+    return self._marker_pos(Panel.times)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRanges.marker_amplitude"><code class="name flex">
+<span>def <span class="ident">marker_amplitude</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def marker_amplitude(self):
+    return self._marker_pos(Panel.amplitudes)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRanges.marker_frequency"><code class="name flex">
+<span>def <span class="ident">marker_frequency</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def marker_frequency(self):
+    return self._marker_pos(Panel.frequencies)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRanges.marker_power"><code class="name flex">
+<span>def <span class="ident">marker_power</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def marker_power(self):
+    return self._marker_pos(Panel.powers)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRanges.marker_delta_time"><code class="name flex">
+<span>def <span class="ident">marker_delta_time</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def marker_delta_time(self):
+    return self._marker_delta(Panel.times)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRanges.marker_delta_amplitude"><code class="name flex">
+<span>def <span class="ident">marker_delta_amplitude</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def marker_delta_amplitude(self):
+    return self._marker_delta(Panel.amplitudes)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRanges.marker_delta_frequency"><code class="name flex">
+<span>def <span class="ident">marker_delta_frequency</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def marker_delta_frequency(self):
+    return self._marker_delta(Panel.frequencies)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRanges.marker_delta_power"><code class="name flex">
+<span>def <span class="ident">marker_delta_power</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def marker_delta_power(self):
+    return self._marker_delta(Panel.powers)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.plotranges.PlotRanges.update_crosshair"><code class="name flex">
+<span>def <span class="ident">update_crosshair</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_crosshair(self):
+    for r in self.values():
+        r.update_crosshair()</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="audian" href="index.html">audian</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="audian.plotranges.PlotRange" href="#audian.plotranges.PlotRange">PlotRange</a></code></h4>
+<ul class="two-column">
+<li><code><a title="audian.plotranges.PlotRange.add_xaxis" href="#audian.plotranges.PlotRange.add_xaxis">add_xaxis</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.add_yaxis" href="#audian.plotranges.PlotRange.add_yaxis">add_yaxis</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.add_zaxis" href="#audian.plotranges.PlotRange.add_zaxis">add_zaxis</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.is_used" href="#audian.plotranges.PlotRange.is_used">is_used</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.is_time" href="#audian.plotranges.PlotRange.is_time">is_time</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.is_amplitude" href="#audian.plotranges.PlotRange.is_amplitude">is_amplitude</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.is_frequency" href="#audian.plotranges.PlotRange.is_frequency">is_frequency</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.is_power" href="#audian.plotranges.PlotRange.is_power">is_power</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.set_starttime" href="#audian.plotranges.PlotRange.set_starttime">set_starttime</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.at_end" href="#audian.plotranges.PlotRange.at_end">at_end</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.at_home" href="#audian.plotranges.PlotRange.at_home">at_home</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.set_limits" href="#audian.plotranges.PlotRange.set_limits">set_limits</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.set_ranges" href="#audian.plotranges.PlotRange.set_ranges">set_ranges</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.zoom_in" href="#audian.plotranges.PlotRange.zoom_in">zoom_in</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.zoom_out" href="#audian.plotranges.PlotRange.zoom_out">zoom_out</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.zoom_in_centered" href="#audian.plotranges.PlotRange.zoom_in_centered">zoom_in_centered</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.zoom_out_centered" href="#audian.plotranges.PlotRange.zoom_out_centered">zoom_out_centered</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.move" href="#audian.plotranges.PlotRange.move">move</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.down" href="#audian.plotranges.PlotRange.down">down</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.up" href="#audian.plotranges.PlotRange.up">up</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.small_down" href="#audian.plotranges.PlotRange.small_down">small_down</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.small_up" href="#audian.plotranges.PlotRange.small_up">small_up</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.step" href="#audian.plotranges.PlotRange.step">step</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.step_down" href="#audian.plotranges.PlotRange.step_down">step_down</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.step_up" href="#audian.plotranges.PlotRange.step_up">step_up</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.min_step" href="#audian.plotranges.PlotRange.min_step">min_step</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.min_down" href="#audian.plotranges.PlotRange.min_down">min_down</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.min_up" href="#audian.plotranges.PlotRange.min_up">min_up</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.max_step" href="#audian.plotranges.PlotRange.max_step">max_step</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.max_down" href="#audian.plotranges.PlotRange.max_down">max_down</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.max_up" href="#audian.plotranges.PlotRange.max_up">max_up</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.home" href="#audian.plotranges.PlotRange.home">home</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.end" href="#audian.plotranges.PlotRange.end">end</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.snap" href="#audian.plotranges.PlotRange.snap">snap</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.auto" href="#audian.plotranges.PlotRange.auto">auto</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.reset" href="#audian.plotranges.PlotRange.reset">reset</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.center" href="#audian.plotranges.PlotRange.center">center</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.set_powers" href="#audian.plotranges.PlotRange.set_powers">set_powers</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.clear_marker" href="#audian.plotranges.PlotRange.clear_marker">clear_marker</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.set_marker" href="#audian.plotranges.PlotRange.set_marker">set_marker</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.store_marker" href="#audian.plotranges.PlotRange.store_marker">store_marker</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.clear_stored_marker" href="#audian.plotranges.PlotRange.clear_stored_marker">clear_stored_marker</a></code></li>
+<li><code><a title="audian.plotranges.PlotRange.update_crosshair" href="#audian.plotranges.PlotRange.update_crosshair">update_crosshair</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="audian.plotranges.PlotRanges" href="#audian.plotranges.PlotRanges">PlotRanges</a></code></h4>
+<ul class="">
+<li><code><a title="audian.plotranges.PlotRanges.setup" href="#audian.plotranges.PlotRanges.setup">setup</a></code></li>
+<li><code><a title="audian.plotranges.PlotRanges.add_plot" href="#audian.plotranges.PlotRanges.add_plot">add_plot</a></code></li>
+<li><code><a title="audian.plotranges.PlotRanges.set_limits" href="#audian.plotranges.PlotRanges.set_limits">set_limits</a></code></li>
+<li><code><a title="audian.plotranges.PlotRanges.set_ranges" href="#audian.plotranges.PlotRanges.set_ranges">set_ranges</a></code></li>
+<li><code><a title="audian.plotranges.PlotRanges.set_powers" href="#audian.plotranges.PlotRanges.set_powers">set_powers</a></code></li>
+<li><code><a title="audian.plotranges.PlotRanges.clear_marker" href="#audian.plotranges.PlotRanges.clear_marker">clear_marker</a></code></li>
+<li><code><a title="audian.plotranges.PlotRanges.store_marker" href="#audian.plotranges.PlotRanges.store_marker">store_marker</a></code></li>
+<li><code><a title="audian.plotranges.PlotRanges.clear_stored_marker" href="#audian.plotranges.PlotRanges.clear_stored_marker">clear_stored_marker</a></code></li>
+<li><code><a title="audian.plotranges.PlotRanges.marker_time" href="#audian.plotranges.PlotRanges.marker_time">marker_time</a></code></li>
+<li><code><a title="audian.plotranges.PlotRanges.marker_amplitude" href="#audian.plotranges.PlotRanges.marker_amplitude">marker_amplitude</a></code></li>
+<li><code><a title="audian.plotranges.PlotRanges.marker_frequency" href="#audian.plotranges.PlotRanges.marker_frequency">marker_frequency</a></code></li>
+<li><code><a title="audian.plotranges.PlotRanges.marker_power" href="#audian.plotranges.PlotRanges.marker_power">marker_power</a></code></li>
+<li><code><a title="audian.plotranges.PlotRanges.marker_delta_time" href="#audian.plotranges.PlotRanges.marker_delta_time">marker_delta_time</a></code></li>
+<li><code><a title="audian.plotranges.PlotRanges.marker_delta_amplitude" href="#audian.plotranges.PlotRanges.marker_delta_amplitude">marker_delta_amplitude</a></code></li>
+<li><code><a title="audian.plotranges.PlotRanges.marker_delta_frequency" href="#audian.plotranges.PlotRanges.marker_delta_frequency">marker_delta_frequency</a></code></li>
+<li><code><a title="audian.plotranges.PlotRanges.marker_delta_power" href="#audian.plotranges.PlotRanges.marker_delta_power">marker_delta_power</a></code></li>
+<li><code><a title="audian.plotranges.PlotRanges.update_crosshair" href="#audian.plotranges.PlotRanges.update_crosshair">update_crosshair</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>
