@@ -300,7 +300,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
                 files.pop(ft_files[i])
         # save json file:
         with ft_path.open('w') as df:
-            json.dump(files, df)
+            json.dump(files, df, indent=4)
         # save file:
         write_audio(str(audian_dirs.user_cache_path / ft_name),
                     self.datas, 1e6*rate, format='WAV', encoding='DOUBLE')
