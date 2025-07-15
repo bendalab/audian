@@ -3,6 +3,7 @@ from copy import deepcopy
 from math import fabs, floor, log10
 import datetime as dt
 import numpy as np
+from pathlib import Path
 from scipy.signal import butter, sosfiltfilt
 try:
     from PyQt5.QtCore import Signal
@@ -188,13 +189,14 @@ class DataBrowser(QWidget):
     def __del__(self):
         self.close()
 
-
     def name(self):
-        if isinstance(self.data.file_path, (list, tuple, np.ndarray)):
-            return os.path.basename(self.data.file_path[0])
+        if self.data.data is not None:
+            return self.data.data.basename()
         else:
-            return os.path.basename(self.data.file_path)
-
+            if isinstance(self.data.file_path, (list, tuple, np.ndarray)):
+                return Path(self.data.file_path[0]).stem
+            else:
+                return Path(self.data.file_path).stem
         
     def get_trace(self, name):
         return self.data[name]

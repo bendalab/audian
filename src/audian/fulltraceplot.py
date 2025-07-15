@@ -369,13 +369,17 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
     def mousePressEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
             for ax, region in zip(self.axs, self.regions):
-                pos = ax.getViewBox().mapSceneToView(ev.pos())
+                vb = ax.getViewBox()
+                pos = vb.mapSceneToView(ev.pos())
                 [xmin, xmax], [ymin, ymax] = ax.viewRange()
+                #TODO print(ev)
+                #TODO print(ev.globalPosition(), ev.position(), ev.scenePosition())
+                #TODO print(vb.contains(ev[0]), xmin <= pos.x() <= xmax and ymin <= pos.y() <= ymax) OR vb.sceneBoundingRect().contains(ev[0])
                 if xmin <= pos.x() <= xmax and ymin <= pos.y() <= ymax:
                     dx = (xmax - xmin)/self.width()
                     x = pos.x()
                     xmin, xmax = region.getRegion()
-                    if x < xmin-2*dx or x > xmax + 2*dx:
+                    if x < xmin - 2*dx or x > xmax + 2*dx:
                         dx = xmax - xmin
                         xmin = max(0, x - dx/2)
                         xmax = xmin + dx
