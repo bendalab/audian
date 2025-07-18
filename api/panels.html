@@ -1,0 +1,1225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>audian.panels API documentation</title>
+<meta name="description" content="Manage plot panels …">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script type="text/x-mathjax-config">MathJax.Hub.Config({ tex2jax: { inlineMath: [ ['$','$'], ["\\(","\\)"] ], processEscapes: true } });</script>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_CHTML" integrity="sha256-kZafAc6mZvK3W3v1pHOcUix30OHQN6pU/NO2oFkqZVw=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>audian.panels</code></h1>
+</header>
+<section id="section-intro">
+<p>Manage plot panels.</p>
+<p><code>class <a title="audian.panels.Panel" href="#audian.panels.Panel">Panel</a></code>: a single plot panel
+<code>class <a title="audian.panels.Panels" href="#audian.panels.Panels">Panels</a></code>: manage all plot panels</p>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="audian.panels.Panel"><code class="flex name class">
+<span>class <span class="ident">Panel</span></span>
+<span>(</span><span>name, ax_spec, row)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Panel(object):
+
+
+    times = &#39;t&#39;
+    amplitudes = &#39;xyu&#39;
+    frequencies = &#39;fw&#39;
+    powers = &#39;pq&#39;
+    spacer = &#39;spacer&#39;
+    
+    
+    def __init__(self, name, ax_spec, row):
+        self.name = name
+        self.ax_spec = ax_spec
+        self.row = row
+        self.axs = []
+        self.axcs = []   # associated color bars
+
+
+    def __str__(self):
+        return f&#39;{self.name:20}: {self.ax_spec:6} @ {self.row:2} with {len(self.axs):2} plots&#39;
+
+
+    def __len__(self):
+        return len(self.axs)
+
+
+    def __eq__(self, ax_spec):
+        return self.ax_spec == ax_spec
+
+
+    def x(self):
+        return self.ax_spec[0]
+
+
+    def y(self):
+        return self.ax_spec[1]
+
+
+    def z(self):
+        return self.ax_spec[2] if len(self.ax_spec) &gt; 2 else &#39;&#39;
+
+
+    def is_time(self):
+        return self.x() in self.times
+
+
+    def is_xamplitude(self):
+        return self.x() in self.amplitudes
+
+
+    def is_yamplitude(self):
+        return self.y() in self.amplitudes
+
+
+    def is_xfrequency(self):
+        return self.x() in self.frequencies
+
+
+    def is_yfrequency(self):
+        return self.y() in self.frequencies
+
+
+    def is_xpower(self):
+        return self.x() in self.powers
+
+
+    def is_ypower(self):
+        return self.y() in self.powers
+
+
+    def is_zpower(self):
+        z = self.z()
+        return z and z in self.powers
+
+
+    def is_trace(self):
+        return self.is_time() and self.is_yamplitude()
+
+
+    def is_spectrogram(self):
+        return self.is_time() and self.is_yfrequency()
+
+
+    def is_power(self):
+        return self.is_xpower() and self.is_yfrequency()
+
+
+    def is_spacer(self):
+        return self.ax_spec == self.spacer
+
+    
+    def add_ax(self, row, ax, axc=None):
+        self.row = row
+        self.axs.append(ax)
+        if axc is not None:
+            self.axcs.append(axc)
+
+
+    def is_used(self):
+        return len(self.axs) &gt; 0
+
+
+    def is_visible(self, channel):
+        return self.axs[channel].isVisible()
+
+
+    def set_visible(self, visible):
+        changed = False
+        for ax in self.axs:
+            if ax.isVisible() != visible:
+                changed = True
+            ax.setVisible(visible)
+        return changed
+
+
+    def has_visible_traces(self, channel):
+        if self.is_spacer():
+            return False
+        for di in self.axs[channel].data_items:
+            if di.isVisible():
+                return True
+        return False
+
+
+    def has_viewbox(self, viewbox):
+        for ax in self.axs:
+            if ax.getViewBox() is viewbox:
+                return True
+        return False
+
+
+    def show_grid(self, grids):
+        if self.is_spacer():
+            return False
+        for ax in self.axs:
+            ax.showGrid(x=(grids &amp; 1) &gt; 0, y=(grids &amp; 2) &gt; 0,
+                        alpha=0.8)
+            &#34;&#34;&#34;
+            # fix grid bug:
+            ax.getAxis(&#39;bottom&#39;).setGrid(False)
+            ax.getAxis(&#39;left&#39;).setGrid(False)
+            for axis in [&#39;right&#39;, &#39;top&#39;]:
+                ax.showAxis(axis)
+                ax.getAxis(axis).setStyle(showValues=False)
+            &#34;&#34;&#34;
+
+    def is_cbar_visible(self, channel):
+        return self.axcs[channel].isVisible()
+
+
+    def set_cbar_visible(self, visible):
+        changed = False
+        for ax in self.axcs:
+            if ax.isVisible() != visible:
+                changed = True
+            ax.setVisible(visible)
+        return changed
+
+
+    def set_colormap(self, color_map):
+        for ax in self.axcs:
+            ax.setColorMap(color_map)
+
+            
+    def add_item(self, plot_item, channel=-1, is_data=False):
+        if channel &gt;= 0:
+            self.axs[channel].add_item(plot_item, is_data)
+        else:
+            for ax in self.axs:
+                ax.add_item(plot_item, is_data)
+
+
+    def add_traces(self, channel, data): 
+        for trace in data.traces:
+            if trace.panel != self.name:
+                continue
+            if self.is_trace():
+                item = TraceItem(trace, channel)
+            if self.is_spectrogram():
+                item = SpecItem(trace, channel)
+            self.add_item(item, channel, True)
+
+
+    def get_amplitude(self, channel, t, x, t1=None):
+        if not self.is_yamplitude() or len(self.axs[channel].data_items) == 0:
+            return t, None
+        trace = self.axs[channel].data_items[-1]
+        return trace.get_amplitude(t, x, t1)
+
+
+    def get_power(self, channel, t, f):
+        if not self.is_yfrequency() or len(self.axs[channel].data_items) == 0:
+            return None
+        trace = self.axs[channel].data_items[0]
+        return trace.get_power(t, f)
+
+
+    def update_plots(self):
+        for ax in self.axs:
+            if ax.isVisible() and not self.is_spacer():
+                ax.update_plot()</code></pre>
+</details>
+<div class="desc"></div>
+<h3>Class variables</h3>
+<dl>
+<dt id="audian.panels.Panel.times"><code class="name">var <span class="ident">times</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.amplitudes"><code class="name">var <span class="ident">amplitudes</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.frequencies"><code class="name">var <span class="ident">frequencies</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.powers"><code class="name">var <span class="ident">powers</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.spacer"><code class="name">var <span class="ident">spacer</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="audian.panels.Panel.x"><code class="name flex">
+<span>def <span class="ident">x</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def x(self):
+    return self.ax_spec[0]</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.y"><code class="name flex">
+<span>def <span class="ident">y</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def y(self):
+    return self.ax_spec[1]</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.z"><code class="name flex">
+<span>def <span class="ident">z</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def z(self):
+    return self.ax_spec[2] if len(self.ax_spec) &gt; 2 else &#39;&#39;</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.is_time"><code class="name flex">
+<span>def <span class="ident">is_time</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_time(self):
+    return self.x() in self.times</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.is_xamplitude"><code class="name flex">
+<span>def <span class="ident">is_xamplitude</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_xamplitude(self):
+    return self.x() in self.amplitudes</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.is_yamplitude"><code class="name flex">
+<span>def <span class="ident">is_yamplitude</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_yamplitude(self):
+    return self.y() in self.amplitudes</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.is_xfrequency"><code class="name flex">
+<span>def <span class="ident">is_xfrequency</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_xfrequency(self):
+    return self.x() in self.frequencies</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.is_yfrequency"><code class="name flex">
+<span>def <span class="ident">is_yfrequency</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_yfrequency(self):
+    return self.y() in self.frequencies</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.is_xpower"><code class="name flex">
+<span>def <span class="ident">is_xpower</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_xpower(self):
+    return self.x() in self.powers</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.is_ypower"><code class="name flex">
+<span>def <span class="ident">is_ypower</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_ypower(self):
+    return self.y() in self.powers</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.is_zpower"><code class="name flex">
+<span>def <span class="ident">is_zpower</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_zpower(self):
+    z = self.z()
+    return z and z in self.powers</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.is_trace"><code class="name flex">
+<span>def <span class="ident">is_trace</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_trace(self):
+    return self.is_time() and self.is_yamplitude()</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.is_spectrogram"><code class="name flex">
+<span>def <span class="ident">is_spectrogram</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_spectrogram(self):
+    return self.is_time() and self.is_yfrequency()</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.is_power"><code class="name flex">
+<span>def <span class="ident">is_power</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_power(self):
+    return self.is_xpower() and self.is_yfrequency()</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.is_spacer"><code class="name flex">
+<span>def <span class="ident">is_spacer</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_spacer(self):
+    return self.ax_spec == self.spacer</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.add_ax"><code class="name flex">
+<span>def <span class="ident">add_ax</span></span>(<span>self, row, ax, axc=None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_ax(self, row, ax, axc=None):
+    self.row = row
+    self.axs.append(ax)
+    if axc is not None:
+        self.axcs.append(axc)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.is_used"><code class="name flex">
+<span>def <span class="ident">is_used</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_used(self):
+    return len(self.axs) &gt; 0</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.is_visible"><code class="name flex">
+<span>def <span class="ident">is_visible</span></span>(<span>self, channel)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_visible(self, channel):
+    return self.axs[channel].isVisible()</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.set_visible"><code class="name flex">
+<span>def <span class="ident">set_visible</span></span>(<span>self, visible)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_visible(self, visible):
+    changed = False
+    for ax in self.axs:
+        if ax.isVisible() != visible:
+            changed = True
+        ax.setVisible(visible)
+    return changed</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.has_visible_traces"><code class="name flex">
+<span>def <span class="ident">has_visible_traces</span></span>(<span>self, channel)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def has_visible_traces(self, channel):
+    if self.is_spacer():
+        return False
+    for di in self.axs[channel].data_items:
+        if di.isVisible():
+            return True
+    return False</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.has_viewbox"><code class="name flex">
+<span>def <span class="ident">has_viewbox</span></span>(<span>self, viewbox)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def has_viewbox(self, viewbox):
+    for ax in self.axs:
+        if ax.getViewBox() is viewbox:
+            return True
+    return False</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.show_grid"><code class="name flex">
+<span>def <span class="ident">show_grid</span></span>(<span>self, grids)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def show_grid(self, grids):
+    if self.is_spacer():
+        return False
+    for ax in self.axs:
+        ax.showGrid(x=(grids &amp; 1) &gt; 0, y=(grids &amp; 2) &gt; 0,
+                    alpha=0.8)
+        &#34;&#34;&#34;
+        # fix grid bug:
+        ax.getAxis(&#39;bottom&#39;).setGrid(False)
+        ax.getAxis(&#39;left&#39;).setGrid(False)
+        for axis in [&#39;right&#39;, &#39;top&#39;]:
+            ax.showAxis(axis)
+            ax.getAxis(axis).setStyle(showValues=False)
+        &#34;&#34;&#34;</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.is_cbar_visible"><code class="name flex">
+<span>def <span class="ident">is_cbar_visible</span></span>(<span>self, channel)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_cbar_visible(self, channel):
+    return self.axcs[channel].isVisible()</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.set_cbar_visible"><code class="name flex">
+<span>def <span class="ident">set_cbar_visible</span></span>(<span>self, visible)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_cbar_visible(self, visible):
+    changed = False
+    for ax in self.axcs:
+        if ax.isVisible() != visible:
+            changed = True
+        ax.setVisible(visible)
+    return changed</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.set_colormap"><code class="name flex">
+<span>def <span class="ident">set_colormap</span></span>(<span>self, color_map)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_colormap(self, color_map):
+    for ax in self.axcs:
+        ax.setColorMap(color_map)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.add_item"><code class="name flex">
+<span>def <span class="ident">add_item</span></span>(<span>self, plot_item, channel=-1, is_data=False)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_item(self, plot_item, channel=-1, is_data=False):
+    if channel &gt;= 0:
+        self.axs[channel].add_item(plot_item, is_data)
+    else:
+        for ax in self.axs:
+            ax.add_item(plot_item, is_data)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.add_traces"><code class="name flex">
+<span>def <span class="ident">add_traces</span></span>(<span>self, channel, data)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_traces(self, channel, data): 
+    for trace in data.traces:
+        if trace.panel != self.name:
+            continue
+        if self.is_trace():
+            item = TraceItem(trace, channel)
+        if self.is_spectrogram():
+            item = SpecItem(trace, channel)
+        self.add_item(item, channel, True)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.get_amplitude"><code class="name flex">
+<span>def <span class="ident">get_amplitude</span></span>(<span>self, channel, t, x, t1=None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_amplitude(self, channel, t, x, t1=None):
+    if not self.is_yamplitude() or len(self.axs[channel].data_items) == 0:
+        return t, None
+    trace = self.axs[channel].data_items[-1]
+    return trace.get_amplitude(t, x, t1)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.get_power"><code class="name flex">
+<span>def <span class="ident">get_power</span></span>(<span>self, channel, t, f)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_power(self, channel, t, f):
+    if not self.is_yfrequency() or len(self.axs[channel].data_items) == 0:
+        return None
+    trace = self.axs[channel].data_items[0]
+    return trace.get_power(t, f)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panel.update_plots"><code class="name flex">
+<span>def <span class="ident">update_plots</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_plots(self):
+    for ax in self.axs:
+        if ax.isVisible() and not self.is_spacer():
+            ax.update_plot()</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="audian.panels.Panels"><code class="flex name class">
+<span>class <span class="ident">Panels</span></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Panels(dict):
+
+    def __init__(self):
+        super().__init__(self)
+
+
+    def __str__(self):
+        s = []
+        for panel in self.values():
+            s.append(str(panel))
+        return &#39;\n&#39;.join(s)
+
+
+    def add(self, name, axes, row=None, adjust_rows=True):
+        if row is None:
+            row = self.max_row() + 1
+        if adjust_rows:
+            for panel in self.values():
+                if panel.row &gt;= row:
+                    panel.row += 1
+        self[name] = Panel(name, axes, row)
+        if len(self) &gt; 1:
+            names = np.array(list(self.keys()))
+            rows = [self[name].row for name in names]
+            inx = np.argsort(rows)
+            panels = dict(self)
+            self.clear()
+            for name in names[inx]:
+                self[name] = panels[name]
+
+
+    def add_trace(self, name=&#39;trace&#39;, row=None):
+        # find amplitude that is not used yet:
+        amps = [False]*len(Panel.amplitudes)
+        for panel in self.values():
+            if panel.is_trace():
+                amps[Panel.amplitudes.index(panel.y())] = True
+        axspec = Panel.times[0] + Panel.amplitudes[0]
+        for k in range(len(amps)):
+            if not amps[k]:
+                axspec = axspec[0] + Panel.amplitudes[k]
+                break
+        self.add(name, axspec, row)
+
+        
+    def add_spectrogram(self, name=&#39;spectrogram&#39;, row=None):
+        # find frequencies and powers that are not used yet:
+        freqs = [False]*len(Panel.frequencies)
+        pwrs = [False]*len(Panel.powers)
+        for panel in self.values():
+            if panel.is_spectrogram():
+                freqs[Panel.frequencies.index(panel.y())] = True
+                pwrs[Panel.powers.index(panel.z())] = True
+        axspec = Panel.times[0] + Panel.frequencies[0] + Panel.powers[0]
+        for k in range(len(freqs)):
+            if not freqs[k]:
+                axspec = axspec[0] + Panel.frequencies[k] + axspec[2]
+                break
+        for k in range(len(pwrs)):
+            if not pwrs[k]:
+                axspec = axspec[:2] + Panel.powers[k]
+                break
+        self.add(name, axspec, row)
+        self.add(name + &#39;-power&#39;, axspec[2] + axspec[1], self[name].row, False)
+
+
+    def fill(self, data):
+        for trace in data.traces:
+            if trace.panel not in self:
+                if trace.panel_type == &#39;trace&#39;:
+                    self.add_trace(trace.panel)
+                elif trace.panel_type == &#39;spectrogram&#39;:
+                    self.add_spectrogram(trace.panel)
+        
+
+    def remove(self, name):
+        del self[name]
+
+        
+    def max_row(self):
+        if len(self) &gt; 0:
+            return  np.max([panel.row for panel in self.values()])
+        else:
+            return -1
+
+        
+    def add_power_ax(self, name, row, ax):
+        name = name + &#39;-power&#39;
+        if name in self:
+            self[name].add_ax(row, ax)
+            
+
+    def get_panel(self, viewbox):
+        for panel in self.values():
+            if panel.has_viewbox(viewbox):
+                return panel
+        return None
+
+    
+    def show_grid(self, grids):
+        for panel in self.values():
+            panel.show_grid(grids)
+
+            
+    def update_plots(self):
+        for panel in self.values():
+            panel.update_plots()
+
+
+    def insert_spacers(self):
+        panels = {}
+        row = 0
+        spacer = 0
+        for name in self:
+            if row &gt; 0 and not self[name].is_power():
+                panels[f&#39;spacer{spacer}&#39;] = Panel(f&#39;spacer{spacer}&#39;,
+                                                  Panel.spacer, 0)
+                spacer += 1
+            panels[name] = self[name]
+            row += 1
+        self.clear()
+        for name, value in panels.items():
+            self[name] = value
+        
+            
+    def show_spacers(self, channel):
+        prev_panel = None
+        prev_spacer = None
+        for panel in self.values():
+            if panel.is_spacer():
+                if prev_panel:
+                    prev_visible = prev_panel.is_visible(channel)
+                    panel.set_visible(prev_visible)
+                    if prev_visible:
+                        prev_spacer = panel
+            elif not panel.is_power():
+                prev_panel = panel
+                if panel.is_visible(channel):
+                    prev_spacer = None
+        if prev_spacer:
+            panel.set_visible(False)</code></pre>
+</details>
+<div class="desc"><p>dict() -&gt; new empty dictionary
+dict(mapping) -&gt; new dictionary initialized from a mapping object's
+(key, value) pairs
+dict(iterable) -&gt; new dictionary initialized as if via:
+d = {}
+for k, v in iterable:
+d[k] = v
+dict(**kwargs) -&gt; new dictionary initialized with the name=value pairs
+in the keyword argument list.
+For example:
+dict(one=1, two=2)</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.dict</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="audian.panels.Panels.add"><code class="name flex">
+<span>def <span class="ident">add</span></span>(<span>self, name, axes, row=None, adjust_rows=True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add(self, name, axes, row=None, adjust_rows=True):
+    if row is None:
+        row = self.max_row() + 1
+    if adjust_rows:
+        for panel in self.values():
+            if panel.row &gt;= row:
+                panel.row += 1
+    self[name] = Panel(name, axes, row)
+    if len(self) &gt; 1:
+        names = np.array(list(self.keys()))
+        rows = [self[name].row for name in names]
+        inx = np.argsort(rows)
+        panels = dict(self)
+        self.clear()
+        for name in names[inx]:
+            self[name] = panels[name]</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panels.add_trace"><code class="name flex">
+<span>def <span class="ident">add_trace</span></span>(<span>self, name='trace', row=None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_trace(self, name=&#39;trace&#39;, row=None):
+    # find amplitude that is not used yet:
+    amps = [False]*len(Panel.amplitudes)
+    for panel in self.values():
+        if panel.is_trace():
+            amps[Panel.amplitudes.index(panel.y())] = True
+    axspec = Panel.times[0] + Panel.amplitudes[0]
+    for k in range(len(amps)):
+        if not amps[k]:
+            axspec = axspec[0] + Panel.amplitudes[k]
+            break
+    self.add(name, axspec, row)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panels.add_spectrogram"><code class="name flex">
+<span>def <span class="ident">add_spectrogram</span></span>(<span>self, name='spectrogram', row=None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_spectrogram(self, name=&#39;spectrogram&#39;, row=None):
+    # find frequencies and powers that are not used yet:
+    freqs = [False]*len(Panel.frequencies)
+    pwrs = [False]*len(Panel.powers)
+    for panel in self.values():
+        if panel.is_spectrogram():
+            freqs[Panel.frequencies.index(panel.y())] = True
+            pwrs[Panel.powers.index(panel.z())] = True
+    axspec = Panel.times[0] + Panel.frequencies[0] + Panel.powers[0]
+    for k in range(len(freqs)):
+        if not freqs[k]:
+            axspec = axspec[0] + Panel.frequencies[k] + axspec[2]
+            break
+    for k in range(len(pwrs)):
+        if not pwrs[k]:
+            axspec = axspec[:2] + Panel.powers[k]
+            break
+    self.add(name, axspec, row)
+    self.add(name + &#39;-power&#39;, axspec[2] + axspec[1], self[name].row, False)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panels.fill"><code class="name flex">
+<span>def <span class="ident">fill</span></span>(<span>self, data)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fill(self, data):
+    for trace in data.traces:
+        if trace.panel not in self:
+            if trace.panel_type == &#39;trace&#39;:
+                self.add_trace(trace.panel)
+            elif trace.panel_type == &#39;spectrogram&#39;:
+                self.add_spectrogram(trace.panel)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panels.remove"><code class="name flex">
+<span>def <span class="ident">remove</span></span>(<span>self, name)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def remove(self, name):
+    del self[name]</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panels.max_row"><code class="name flex">
+<span>def <span class="ident">max_row</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def max_row(self):
+    if len(self) &gt; 0:
+        return  np.max([panel.row for panel in self.values()])
+    else:
+        return -1</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panels.add_power_ax"><code class="name flex">
+<span>def <span class="ident">add_power_ax</span></span>(<span>self, name, row, ax)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_power_ax(self, name, row, ax):
+    name = name + &#39;-power&#39;
+    if name in self:
+        self[name].add_ax(row, ax)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panels.get_panel"><code class="name flex">
+<span>def <span class="ident">get_panel</span></span>(<span>self, viewbox)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_panel(self, viewbox):
+    for panel in self.values():
+        if panel.has_viewbox(viewbox):
+            return panel
+    return None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panels.show_grid"><code class="name flex">
+<span>def <span class="ident">show_grid</span></span>(<span>self, grids)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def show_grid(self, grids):
+    for panel in self.values():
+        panel.show_grid(grids)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panels.update_plots"><code class="name flex">
+<span>def <span class="ident">update_plots</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_plots(self):
+    for panel in self.values():
+        panel.update_plots()</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panels.insert_spacers"><code class="name flex">
+<span>def <span class="ident">insert_spacers</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def insert_spacers(self):
+    panels = {}
+    row = 0
+    spacer = 0
+    for name in self:
+        if row &gt; 0 and not self[name].is_power():
+            panels[f&#39;spacer{spacer}&#39;] = Panel(f&#39;spacer{spacer}&#39;,
+                                              Panel.spacer, 0)
+            spacer += 1
+        panels[name] = self[name]
+        row += 1
+    self.clear()
+    for name, value in panels.items():
+        self[name] = value</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="audian.panels.Panels.show_spacers"><code class="name flex">
+<span>def <span class="ident">show_spacers</span></span>(<span>self, channel)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def show_spacers(self, channel):
+    prev_panel = None
+    prev_spacer = None
+    for panel in self.values():
+        if panel.is_spacer():
+            if prev_panel:
+                prev_visible = prev_panel.is_visible(channel)
+                panel.set_visible(prev_visible)
+                if prev_visible:
+                    prev_spacer = panel
+        elif not panel.is_power():
+            prev_panel = panel
+            if panel.is_visible(channel):
+                prev_spacer = None
+    if prev_spacer:
+        panel.set_visible(False)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="audian" href="index.html">audian</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="audian.panels.Panel" href="#audian.panels.Panel">Panel</a></code></h4>
+<ul class="two-column">
+<li><code><a title="audian.panels.Panel.x" href="#audian.panels.Panel.x">x</a></code></li>
+<li><code><a title="audian.panels.Panel.y" href="#audian.panels.Panel.y">y</a></code></li>
+<li><code><a title="audian.panels.Panel.z" href="#audian.panels.Panel.z">z</a></code></li>
+<li><code><a title="audian.panels.Panel.is_time" href="#audian.panels.Panel.is_time">is_time</a></code></li>
+<li><code><a title="audian.panels.Panel.is_xamplitude" href="#audian.panels.Panel.is_xamplitude">is_xamplitude</a></code></li>
+<li><code><a title="audian.panels.Panel.is_yamplitude" href="#audian.panels.Panel.is_yamplitude">is_yamplitude</a></code></li>
+<li><code><a title="audian.panels.Panel.is_xfrequency" href="#audian.panels.Panel.is_xfrequency">is_xfrequency</a></code></li>
+<li><code><a title="audian.panels.Panel.is_yfrequency" href="#audian.panels.Panel.is_yfrequency">is_yfrequency</a></code></li>
+<li><code><a title="audian.panels.Panel.is_xpower" href="#audian.panels.Panel.is_xpower">is_xpower</a></code></li>
+<li><code><a title="audian.panels.Panel.is_ypower" href="#audian.panels.Panel.is_ypower">is_ypower</a></code></li>
+<li><code><a title="audian.panels.Panel.is_zpower" href="#audian.panels.Panel.is_zpower">is_zpower</a></code></li>
+<li><code><a title="audian.panels.Panel.is_trace" href="#audian.panels.Panel.is_trace">is_trace</a></code></li>
+<li><code><a title="audian.panels.Panel.is_spectrogram" href="#audian.panels.Panel.is_spectrogram">is_spectrogram</a></code></li>
+<li><code><a title="audian.panels.Panel.is_power" href="#audian.panels.Panel.is_power">is_power</a></code></li>
+<li><code><a title="audian.panels.Panel.is_spacer" href="#audian.panels.Panel.is_spacer">is_spacer</a></code></li>
+<li><code><a title="audian.panels.Panel.add_ax" href="#audian.panels.Panel.add_ax">add_ax</a></code></li>
+<li><code><a title="audian.panels.Panel.is_used" href="#audian.panels.Panel.is_used">is_used</a></code></li>
+<li><code><a title="audian.panels.Panel.is_visible" href="#audian.panels.Panel.is_visible">is_visible</a></code></li>
+<li><code><a title="audian.panels.Panel.set_visible" href="#audian.panels.Panel.set_visible">set_visible</a></code></li>
+<li><code><a title="audian.panels.Panel.has_visible_traces" href="#audian.panels.Panel.has_visible_traces">has_visible_traces</a></code></li>
+<li><code><a title="audian.panels.Panel.has_viewbox" href="#audian.panels.Panel.has_viewbox">has_viewbox</a></code></li>
+<li><code><a title="audian.panels.Panel.show_grid" href="#audian.panels.Panel.show_grid">show_grid</a></code></li>
+<li><code><a title="audian.panels.Panel.is_cbar_visible" href="#audian.panels.Panel.is_cbar_visible">is_cbar_visible</a></code></li>
+<li><code><a title="audian.panels.Panel.set_cbar_visible" href="#audian.panels.Panel.set_cbar_visible">set_cbar_visible</a></code></li>
+<li><code><a title="audian.panels.Panel.set_colormap" href="#audian.panels.Panel.set_colormap">set_colormap</a></code></li>
+<li><code><a title="audian.panels.Panel.add_item" href="#audian.panels.Panel.add_item">add_item</a></code></li>
+<li><code><a title="audian.panels.Panel.add_traces" href="#audian.panels.Panel.add_traces">add_traces</a></code></li>
+<li><code><a title="audian.panels.Panel.get_amplitude" href="#audian.panels.Panel.get_amplitude">get_amplitude</a></code></li>
+<li><code><a title="audian.panels.Panel.get_power" href="#audian.panels.Panel.get_power">get_power</a></code></li>
+<li><code><a title="audian.panels.Panel.update_plots" href="#audian.panels.Panel.update_plots">update_plots</a></code></li>
+<li><code><a title="audian.panels.Panel.times" href="#audian.panels.Panel.times">times</a></code></li>
+<li><code><a title="audian.panels.Panel.amplitudes" href="#audian.panels.Panel.amplitudes">amplitudes</a></code></li>
+<li><code><a title="audian.panels.Panel.frequencies" href="#audian.panels.Panel.frequencies">frequencies</a></code></li>
+<li><code><a title="audian.panels.Panel.powers" href="#audian.panels.Panel.powers">powers</a></code></li>
+<li><code><a title="audian.panels.Panel.spacer" href="#audian.panels.Panel.spacer">spacer</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="audian.panels.Panels" href="#audian.panels.Panels">Panels</a></code></h4>
+<ul class="two-column">
+<li><code><a title="audian.panels.Panels.add" href="#audian.panels.Panels.add">add</a></code></li>
+<li><code><a title="audian.panels.Panels.add_trace" href="#audian.panels.Panels.add_trace">add_trace</a></code></li>
+<li><code><a title="audian.panels.Panels.add_spectrogram" href="#audian.panels.Panels.add_spectrogram">add_spectrogram</a></code></li>
+<li><code><a title="audian.panels.Panels.fill" href="#audian.panels.Panels.fill">fill</a></code></li>
+<li><code><a title="audian.panels.Panels.remove" href="#audian.panels.Panels.remove">remove</a></code></li>
+<li><code><a title="audian.panels.Panels.max_row" href="#audian.panels.Panels.max_row">max_row</a></code></li>
+<li><code><a title="audian.panels.Panels.add_power_ax" href="#audian.panels.Panels.add_power_ax">add_power_ax</a></code></li>
+<li><code><a title="audian.panels.Panels.get_panel" href="#audian.panels.Panels.get_panel">get_panel</a></code></li>
+<li><code><a title="audian.panels.Panels.show_grid" href="#audian.panels.Panels.show_grid">show_grid</a></code></li>
+<li><code><a title="audian.panels.Panels.update_plots" href="#audian.panels.Panels.update_plots">update_plots</a></code></li>
+<li><code><a title="audian.panels.Panels.insert_spacers" href="#audian.panels.Panels.insert_spacers">insert_spacers</a></code></li>
+<li><code><a title="audian.panels.Panels.show_spacers" href="#audian.panels.Panels.show_spacers">show_spacers</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>
