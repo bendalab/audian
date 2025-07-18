@@ -14,7 +14,7 @@ dependencies = [
   "platformdirs",
   "PyQt5",
   "pyqtgraph",
-  "thunderlab>=1.5.1"
+  "thunderlab>=1.6.0"
 ]
 requires-python = ">=3.6"
 authors = [
