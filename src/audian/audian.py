@@ -1193,8 +1193,7 @@ class Audian(QMainWindow):
 
 
     def set_tab_title(self, browser, fname):
-        self.tabs.setTabText(self.tabs.indexOf(browser),
-                             os.path.basename(fname))
+        self.tabs.setTabText(self.tabs.indexOf(browser), fname)
 
         
     def open_files(self):

@@ -230,5 +230,5 @@ class Data(object):
         i0 = int(t0*self.data.rate)
         if i0 >= self.data.frames:
             i0 = self.data.frames - 1
-        return self.data.get_file_index(i0)
-        
+        fp, _ = self.data.get_file_index(i0)
+        return self.data.basename(fp)
