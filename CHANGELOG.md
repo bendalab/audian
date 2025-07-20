@@ -2,6 +2,7 @@
 
 ## v2.3
 
+- Improved time-axis label
 - Generate full trace plot in background processes
 
 
