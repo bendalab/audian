@@ -17,16 +17,18 @@ from .yaxisitem import YAxisItem
 class TimePlot(RangePlot):
 
     def __init__(self, aspec, channel, browser, xwidth, ylabel=''):
+        left_margin = 8*xwidth
         # axis:
         bottom_axis = TimeAxisItem(browser.data.data.file_start_times(),
-                                   orientation='bottom', showValues=True)
-        bottom_axis.setLabel('Time', 's')
+                                   left_margin, orientation='bottom',
+                                   showValues=True)
         bottom_axis.set_start_time(browser.data.start_time)
         top_axis = TimeAxisItem(browser.data.data.file_start_times(),
-                                orientation='top', showValues=False)
+                                left_margin, orientation='top',
+                                showValues=False)
         top_axis.set_start_time(browser.data.start_time)
         left_axis = YAxisItem(orientation='left', showValues=True)
-        left_axis.setWidth(8*xwidth)
+        left_axis.setWidth(left_margin)
         if ylabel:
             left_axis.setLabel(ylabel)
         else:

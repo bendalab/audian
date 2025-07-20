@@ -95,7 +95,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
     max_files = 100
 
     
-    def __init__(self, data, axtraces, *args, **kwargs):
+    def __init__(self, data, axtraces, left_margin, *args, **kwargs):
         pg.GraphicsLayoutWidget.__init__(self, *args, **kwargs)
 
         self.data = data
@@ -118,7 +118,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             # setup plot panel:
             axt = pg.PlotItem()
             axt.showAxes(True, False)
-            axt.getAxis('left').setWidth(8*xwidth)
+            axt.getAxis('left').setWidth(left_margin)
             axt.getViewBox().setBackgroundColor(None)
             axt.getViewBox().setDefaultPadding(padding=0)
             axt.hideButtons()

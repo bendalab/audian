@@ -1,18 +1,25 @@
 from math import ceil, floor, log10
 import datetime as dt
 import numpy as np
+from PyQt5.QtCore import QPointF, Qt
 from PyQt5.QtGui import QFontMetrics
 import pyqtgraph as pg
 
 
 class TimeAxisItem(pg.AxisItem):
     
-    def __init__(self, file_times, *args, **kwargs):
+    def __init__(self, file_times, left_margin, *args, **kwargs):
+        self._left_margin = left_margin
         super().__init__(*args, **kwargs)
         self.setPen('white')
         self._file_times = file_times
         self._starttime = None
         self._starttime_mode = 0
+        # 0: tick values are recording time starting with zero
+        #    at the beginning of the first file.
+        # 1: tick values are absolute times of the day,
+        #    i.e. the recordings start time is added.
+        # 2: tick values are relative to each files beginning.
 
 
     def setLogMode(self, *args, **kwargs):
@@ -107,26 +114,39 @@ class TimeAxisItem(pg.AxisItem):
             self.setLabel('Time', units='s')
             return [f'{v*scale:.5g}' for v in values]
 
+        units = None
+        label = None
         if self._starttime_mode == 2:
             vals = []
             for time in values:
                 toffs = self._file_times[np.nonzero(self._file_times <= time)[0][-1]]
                 vals.append(time - toffs)
             values = vals
+            if len(self._file_times) > 1:
+                label = 'File'
         max_value = np.max(values)
 
         if (self._starttime and self._starttime_mode == 1) or \
            max_value > 3600:
-            self.setLabel('Time (h:m:s)', units=None)
+            label = 'Time'
+            units = 'h:m:s'
             fs = '{hours:.0f}:{mins:02.0f}:{secs:02.0f}'
         elif max_value > 60:
-            self.setLabel('Time (m:s)', units=None)
+            units = 'm:s'
             fs = '{mins:.0f}:{secs:02.0f}'
         else:
-            self.setLabel('Time', units='s')
+            units = 's'
             fs = '{secs:.0f}'
         if spacing < 1:
             fs += '.{micros}'
+        if label is None:
+            label = 'REC'
+        if units == 's':
+            self.setLabel(label, units=units)
+        elif label == 'Time':
+            self.setLabel(units, units=None)
+        else:
+            self.setLabel(f'{label} ({units})', units=None)
         
         basetime = dt.datetime(1, 1, 1, 0, 0, 0, 0)
         if self._starttime and self._starttime_mode == 1:
@@ -146,3 +166,20 @@ class TimeAxisItem(pg.AxisItem):
                         micros=micros)
             vals.append(fs.format(**time))
         return vals
+
+    
+    def resizeEvent(self, ev=None):
+        # overwrite the AxisItem resizeEvent to place the label somewhere else
+        # Set the position of the label
+        nudge = 5
+        # self.label is set to None on close, but resize events can still occur.
+        if self.label is None:
+            self.picture = None
+            return
+
+        br = self.label.boundingRect()
+        p = QPointF(-self._left_margin, 0)
+        if self.orientation == 'top':
+            p.setY(br.height())
+        self.label.setPos(p)
+        self.picture = None

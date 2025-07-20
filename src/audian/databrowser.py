@@ -594,7 +594,8 @@ class DataBrowser(QWidget):
         self.vbox.addWidget(self.toolbar)
         
         # full data:
-        self.datafig = FullTracePlot(self.data, self.panels['trace'].axs)
+        self.datafig = FullTracePlot(self.data, self.panels['trace'].axs,
+                                     8*xwidth)
         self.datafig.polish()
         self.vbox.addWidget(self.datafig)
 
@@ -1006,7 +1007,7 @@ class DataBrowser(QWidget):
         # subtract toolbar:
         height -= 2*xheight
         # subtract time axis:
-        taxis_height = 2*xheight
+        taxis_height = 1*xheight
         height -= taxis_height
         # what to plot:
         ntraces = 0
