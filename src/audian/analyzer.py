@@ -167,7 +167,7 @@ class Analyzer(object):
             As many values as columns generated using `make_column()`.
 
         """
-        self.data.append_data(args, 0)
+        self.data.add(args, 0)
 
         
     def make_trace_events(self, name, trace_name, symbol, color, size):

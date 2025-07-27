@@ -1747,7 +1747,7 @@ class DataBrowser(QWidget):
             row = {}
             for a in self.analyzers:
                 if r < a.data.rows():
-                    for c in range(len(a.data)):
+                    for c in range(a.data.columns()):
                         us = f'/{a.data.unit(c)}' if a.data.unit(c) else ''
                         header = a.data.label(c) + us
                         row.update({header: a.data[r, c]})
@@ -1772,7 +1772,7 @@ class DataBrowser(QWidget):
         self.analysis_table.setData(self.get_analysis_table())
         c = 0
         for a in self.analyzers:
-            for i in range(len(a.data)):
+            for i in range(a.data.columns()):
                 self.analysis_table.setFormat(a.data.format(i), c)
                 c += 1
         vbox.addWidget(self.analysis_table)
@@ -1795,7 +1795,7 @@ class DataBrowser(QWidget):
 
             
     def save_analysis(self):
-        if len(self.analyzers) == 0 or len(self.analyzers[0].data) == 0:
+        if len(self.analyzers) == 0 or self.analyzers[0].data.columns() == 0:
             return
         file_name, _ = QFileDialog.getSaveFileName(
             self, 'Save analysis as',
@@ -1805,9 +1805,9 @@ class DataBrowser(QWidget):
             return
         table = self.analyzers[0].data
         for a in self.analyzers[1:]:
-            for c in range(len(a.data)):
+            for c in range(a.data.columns()):
                 table.append(a.data.label(c), a.data.unit(c),
-                             a.data.format(c), a.data.data[c])
+                             a.data.format(c), value=a.data.data[c])
         table.write(file_name, table_format='csv', delimiter=';',
                     unit_style='header', column_numbers=None, sections=0)
      
