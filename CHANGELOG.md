@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.4 - 2025.07.25
+
+- Adapted to new TableData interface
+
+
 ## v2.3
 
 - Improved time-axis label
