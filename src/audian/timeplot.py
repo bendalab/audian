@@ -114,7 +114,11 @@ class TimePlot(RangePlot):
         for item in reversed(self.data_items):
             if item.isVisible():
                 i0 = int(np.round(x0*item.rate))
-                i1 = int(np.round(x1*item.rate))
+                i1 = max(int(np.round(x1*item.rate)), i0 + 1)
+                if i1 > len(item.data):
+                    i1 = len(item.data)
+                    if i1 == i0:
+                        i0 = max(0, i1 -1)
                 y0 = np.min(item.data[i0:i1, item.channel])
                 y1 = np.max(item.data[i0:i1, item.channel])
                 yc = (y0 + y1)/2

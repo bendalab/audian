@@ -801,7 +801,7 @@ class DataBrowser(QWidget):
         pixel_pos = evt[0]
         self.plot_ranges.clear_marker()
         for panel in self.panels.values():
-            if not panel.is_used() and not panel.is_visible(channel):
+            if not panel.is_used() or not panel.is_visible(channel):
                 continue
             ax = panel.axs[channel]
             if not ax.sceneBoundingRect().contains(pixel_pos):
@@ -822,12 +822,6 @@ class DataBrowser(QWidget):
                 self.marker_time, self.marker_ampl = \
                     panel.get_amplitude(channel, self.marker_time,
                                         pos.y(), npos.x())
-            if panel.z():
-                self.plot_ranges[panel.z()].set_marker(channel, ax, XXX)
-            if self.marker_time is not None:
-                self.marker_power = panel.get_power(channel,
-                                                    self.marker_time,
-                                                    self.marker_freq)
             """
             break
         # set cross-hair positions:

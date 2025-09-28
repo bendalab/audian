@@ -90,7 +90,7 @@ handles all GUI aspects.
   - [ ] make cursor moveable by mouse.
   - [ ] some key shortcuts for moving and handling cursor.
 - [ ] Improve on marking cross hair, cues, regions, events:
-  - [ ] Cross hair should only be used for measuring! Just a single whitish color.
+  - [x] Cross hair should only be used for measuring! Just a single whitish color.
     Comments only in the table.
     Show points only fom active measurement.
     
