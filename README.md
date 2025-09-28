@@ -73,7 +73,7 @@ handles all GUI aspects.
 - [ ] FullTracePlot:
   - [ ] fix offset problem.
   - [ ] indicate time under mouse cursor.
-  - [ ] compute full trace in the background.
+  - [x] compute full trace in the background.
   - [x] store and load full trace to user specific cache dir.
   - [ ] background computation and file saving only if long enough.
 - [x] Add a toolbar widget for spectrum overlap
