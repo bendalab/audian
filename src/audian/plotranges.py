@@ -203,7 +203,7 @@ class PlotRange(object):
             if self.rmin < 0:
                 h = 0.25*(self.r1[c] - self.r0[c])
                 m = 0.5*(self.r1[c] + self.r0[c])
-                if h > self.min_dr:
+                if 4*h > self.min_dr:
                     self.set_ranges(m - h, m + h, None, [c], do_set)
             else:
                 dr = self.r1[c] - self.r0[c]
@@ -239,7 +239,7 @@ class PlotRange(object):
         for c in channels:
             h = 0.25*(self.r1[c] - self.r0[c])
             m = 0.5*(self.r1[c] + self.r0[c])
-            if h > self.min_dr:
+            if 4*h > self.min_dr:
                 self.set_ranges(m - h, m + h, None, [c], do_set)
                 
         
