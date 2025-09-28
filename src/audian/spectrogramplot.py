@@ -140,9 +140,11 @@ class SpectrogramPlot(TimePlot):
         i0 = int(t0*self.spec_data.rate)
         if i0 < 0:
             i0 = 0
-        i1 = int(t1*self.spec_data.rate)
+        i1 = max(int(t1*self.spec_data.rate), i0 + 1)
         if i1 > len(self.spec_data):
             i1 = len(self.spec_data)
+            if i1 == i0:
+                i0 = max(0, i1 -1)
         power = np.mean(self.spec_data[i0:i1, self.channel, :], axis=0)
         power = decibel(power)
         power[power < -200] = -200
