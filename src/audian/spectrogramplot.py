@@ -52,13 +52,20 @@ class PowerPlot(RangePlot):
             return super().range(axspec)
         
 
-    def get_marker_pos(self, x0, x1, y):
+    def get_marker_pos(self, x, dx, y, dy):
         xdata, ydata = self.power_item.getData()
-        i = np.argmin(np.abs(ydata - y))
-        x = xdata[i]
-        return x, y, None
+        i0 = np.argmin(np.abs(ydata - y))
+        i1 = np.argmin(np.abs(ydata - (y + dy)))
+        if i1 > len(ydata):
+            i1 = len(ydata)
+        if i1 <= i0:
+            i0 = max(0, i1 - 1)
+        if i0 >= i1:
+            i1 = i0 + 1
+        i = i0 + np.argmax(xdata[i0:i1])
+        return xdata[i], ydata[i], None
 
-
+        
 class SpectrogramPlot(TimePlot):
 
     
@@ -178,12 +185,12 @@ class SpectrogramPlot(TimePlot):
         self.cbar.setLevels((zmin, zmax))
 
 
-    def get_marker_pos(self, x0, x1, y):
+    def get_marker_pos(self, x, dx, y, dy):
         for item in reversed(self.data_items):
             if item.isVisible() and isinstance(item, SpecItem):
-                z = item.get_power(x0, y)
-                return x0, y, z
-        return x0, y, None
+                z = item.get_power(x, y)
+                return x, y, z
+        return x, y, None
 
             
     def set_filter_handles(self, highpass_cutoff=None, lowpass_cutoff=None):

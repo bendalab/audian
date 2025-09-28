@@ -87,8 +87,8 @@ class RangePlot(pg.PlotItem):
         return None, None
 
     
-    def get_marker_pos(self, x0, x1, y):
-        return x0, y, None
+    def get_marker_pos(self, x, dx, ym, dy):
+        return x, y, None
 
 
     def set_stored_marker(self, x, y):
