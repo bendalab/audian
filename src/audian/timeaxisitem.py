@@ -19,7 +19,7 @@ class TimeAxisItem(pg.AxisItem):
         #    at the beginning of the first file.
         # 1: tick values are absolute times of the day,
         #    i.e. the recordings start time is added.
-        # 2: tick values are relative to each files beginning.
+        # 2: tick values are relative to each file's beginning.
 
 
     def setLogMode(self, *args, **kwargs):
@@ -105,18 +105,18 @@ class TimeAxisItem(pg.AxisItem):
             
         return [(spacing, 0), (minor_spacing, 0)]
 
-    
-    def tickStrings(self, values, scale, spacing):
+
+    def makeStrings(self, values, scale, spacing, starttime_mode):
+        label = None
+        units = None
+        
         if len(values) == 0:
-            return []
+            return label, units, []
         
         if scale > 1:
-            self.setLabel('Time', units='s')
-            return [f'{v*scale:.5g}' for v in values]
+            return 'Time', 's', [f'{v*scale:.5g}' for v in values]
 
-        units = None
-        label = None
-        if self._starttime_mode == 2:
+        if starttime_mode == 2:
             vals = []
             for time in values:
                 toffs = self._file_times[np.nonzero(self._file_times <= time)[0][-1]]
@@ -126,7 +126,7 @@ class TimeAxisItem(pg.AxisItem):
                 label = 'File'
         max_value = np.max(values)
 
-        if (self._starttime and self._starttime_mode == 1) or \
+        if (self._starttime and starttime_mode == 1) or \
            max_value > 3600:
             label = 'Time'
             units = 'h:m:s'
@@ -141,15 +141,9 @@ class TimeAxisItem(pg.AxisItem):
             fs += '.{micros}'
         if label is None:
             label = 'REC'
-        if units == 's':
-            self.setLabel(label, units=units)
-        elif label == 'Time':
-            self.setLabel(units, units=None)
-        else:
-            self.setLabel(f'{label} ({units})', units=None)
         
         basetime = dt.datetime(1, 1, 1, 0, 0, 0, 0)
-        if self._starttime and self._starttime_mode == 1:
+        if self._starttime and starttime_mode == 1:
             basetime = self._starttime
         vals = []
         for time in values:
@@ -165,6 +159,20 @@ class TimeAxisItem(pg.AxisItem):
             time = dict(hours=t.hour, mins=t.minute, secs=t.second,
                         micros=micros)
             vals.append(fs.format(**time))
+        return label, units, vals
+
+    
+    def tickStrings(self, values, scale, spacing):
+        label, units, vals = self.makeStrings(values, scale, spacing,
+                                              self._starttime_mode)
+        if len(vals) == 0:
+            return []
+        if units == 's':
+            self.setLabel(label, units=units)
+        elif label == 'Time':
+            self.setLabel(units, units=None)
+        else:
+            self.setLabel(f'{label} ({units})', units=None)
         return vals
 
     

@@ -15,7 +15,8 @@ import numpy as np
 import ctypes as c
 from multiprocessing import Process, Array
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtWidgets import QGraphicsSimpleTextItem, QApplication
+from PyQt5.QtWidgets import QGraphicsSimpleTextItem, QLabel
+from PyQt5.QtWidgets import QApplication
 from PyQt5.QtGui import QPalette
 import pyqtgraph as pg
 from audioio import load_audio, write_audio
@@ -114,6 +115,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
         self.lines = []
         self.regions = []
         self.labels = []
+        self.data_height = None
         for c in range(self.data.channels):
             # setup plot panel:
             axt = pg.PlotItem()
@@ -167,6 +169,12 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             self.addItem(axt, row=c, col=0)
             self.axs.append(axt)
 
+        self.time_info = QLabel();
+        self.time_info.setWindowFlags(self.windowFlags()
+                                      | Qt.BypassWindowManagerHint
+                                      | Qt.FramelessWindowHint)
+        self.time_info.setVisible(False)
+        
         self.shared_array = None
         self.times = None
         self.datas = None
@@ -345,6 +353,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
                 self.ci.layout.setRowFixedHeight(c, 0)
                 self.labels[c].setVisible(False)
         self.setFixedHeight(len(channels)*data_height)
+        self.data_height = data_height
 
 
     def update_time_range(self, region):
@@ -373,7 +382,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
                 pos = vb.mapSceneToView(ev.pos())
                 [xmin, xmax], [ymin, ymax] = ax.viewRange()
                 #TODO print(ev)
-                #TODO print(ev.globalPosition(), ev.position(), ev.scenePosition())
+                #TODO print(ev.globalPosition(), ev.position(), ev.scenePosition(), ev.pos())
                 #TODO print(vb.contains(ev[0]), xmin <= pos.x() <= xmax and ymin <= pos.y() <= ymax) OR vb.sceneBoundingRect().contains(ev[0])
                 if xmin <= pos.x() <= xmax and ymin <= pos.y() <= ymax:
                     dx = (xmax - xmin)/self.width()
@@ -391,3 +400,34 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
                     break
         ev.ignore()
         super().mousePressEvent(ev)
+
+
+    def mouseMoveEvent(self, ev):
+        for c, ax in enumerate(self.axs):
+            if not ax.isVisible():
+                continue
+            vb = ax.getViewBox()
+            pos = vb.mapSceneToView(ev.pos())
+            [xmin, xmax], [ymin, ymax] = ax.viewRange()
+            if xmin <= pos.x() <= xmax and ymin <= pos.y() <= ymax:
+                ts = f'<table><tr><td>channel</td><td><b>{c}</b></td></tr>'
+                for sm in range(3):
+                    label, units, vals = self.axtraces[c].getAxis('bottom').makeStrings([pos.x()], 1, 1, sm)
+                    ts += f'<tr><td>{label} ({units})</td><td align="right"><b>{vals[0]}</b></td></tr>'
+                ts += '</table>'
+                self.time_info.setText(ts);
+                self.time_info.setVisible(True)
+                self.time_info.move(ev.globalPos().x() + 10,
+                                    ev.globalPos().y() - self.time_info.height() - self.data_height//2);
+                ev.accept()
+                break
+        else:
+            self.time_info.setVisible(False)
+        super().mouseMoveEvent(ev)
+        
+
+    def leaveEvent(self, ev):
+        self.time_info.setVisible(False)
+        ev.accept()
+        super().leaveEvent(ev)
+
