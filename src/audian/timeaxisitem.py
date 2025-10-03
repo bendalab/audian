@@ -116,19 +116,30 @@ class TimeAxisItem(pg.AxisItem):
         if scale > 1:
             return 'Time', 's', [f'{v*scale:.5g}' for v in values]
 
-        if starttime_mode == 2:
+        if starttime_mode == 1 and not self._starttime:
+            starttime_mode = 0
+        if starttime_mode == 2 and len(self._file_times) <= 1:
+            starttime_mode = 0
+
+        if starttime_mode == 1:
+            label = 'Time'
+        elif starttime_mode == 2:
+            label = 'File'
             vals = []
             for time in values:
                 toffs = self._file_times[np.nonzero(self._file_times <= time)[0][-1]]
                 vals.append(time - toffs)
             values = vals
-            if len(self._file_times) > 1:
-                label = 'File'
+        else:
+            # starttime_mode == 0
+            label = 'REC'
         max_value = np.max(values)
 
-        if (self._starttime and starttime_mode == 1) or \
-           max_value > 3600:
-            label = 'Time'
+        if starttime_mode == 1:
+            # TODO: also add days, month, years if necessary
+            units = 'h:m:s'
+            fs = '{hours:.0f}:{mins:02.0f}:{secs:02.0f}'
+        elif max_value > 3600:
             units = 'h:m:s'
             fs = '{hours:.0f}:{mins:02.0f}:{secs:02.0f}'
         elif max_value > 60:
@@ -137,13 +148,12 @@ class TimeAxisItem(pg.AxisItem):
         else:
             units = 's'
             fs = '{secs:.0f}'
+            spacing = 0.01
         if spacing < 1:
             fs += '.{micros}'
-        if label is None:
-            label = 'REC'
         
         basetime = dt.datetime(1, 1, 1, 0, 0, 0, 0)
-        if self._starttime and starttime_mode == 1:
+        if starttime_mode == 1:
             basetime = self._starttime
         vals = []
         for time in values:

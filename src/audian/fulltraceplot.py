@@ -413,6 +413,8 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
                 ts = f'<table><tr><td>channel</td><td><b>{c}</b></td></tr>'
                 for sm in range(3):
                     label, units, vals = self.axtraces[c].getAxis('bottom').makeStrings([pos.x()], 1, 1, sm)
+                    if sm > 0 and label == 'REC':
+                        continue
                     ts += f'<tr><td>{label} ({units})</td><td align="right"><b>{vals[0]}</b></td></tr>'
                 ts += '</table>'
                 self.time_info.setText(ts);
