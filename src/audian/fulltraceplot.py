@@ -93,7 +93,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
 
 
     fulltraces_file = 'fulltraces.json'
-    max_files = 100
+    max_files = 1000
 
     
     def __init__(self, data, axtraces, left_margin, *args, **kwargs):
@@ -378,6 +378,8 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
     def mousePressEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
             for ax, region in zip(self.axs, self.regions):
+                if not ax.isVisible():
+                    continue
                 vb = ax.getViewBox()
                 pos = vb.mapSceneToView(ev.pos())
                 [xmin, xmax], [ymin, ymax] = ax.viewRange()
@@ -387,14 +389,14 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
                 if xmin <= pos.x() <= xmax and ymin <= pos.y() <= ymax:
                     dx = (xmax - xmin)/self.width()
                     x = pos.x()
-                    xmin, xmax = region.getRegion()
-                    if x < xmin - 2*dx or x > xmax + 2*dx:
-                        dx = xmax - xmin
-                        xmin = max(0, x - dx/2)
-                        xmax = xmin + dx
-                        if xmax > self.tmax:
-                            xmin = max(0, xmax - dx)
-                        region.setRegion((xmin, xmax))
+                    rxmin, rxmax = region.getRegion()
+                    if x < rxmin - 2*dx or x > rxmax + 2*dx:
+                        rdx = rxmax - rxmin
+                        rx0 = max(0, x - rdx/2)
+                        rx1 = rx0 + rdx
+                        if rx1 > self.tmax:
+                            rx0 = max(0, rx1 - rdx)
+                        region.setRegion((rx0, rx1))
                         ev.accept()
                         return
                     break
