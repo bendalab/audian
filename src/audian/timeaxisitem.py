@@ -8,11 +8,12 @@ import pyqtgraph as pg
 
 class TimeAxisItem(pg.AxisItem):
     
-    def __init__(self, file_times, left_margin, *args, **kwargs):
+    def __init__(self, file_times, file_paths, left_margin, *args, **kwargs):
         self._left_margin = left_margin
         super().__init__(*args, **kwargs)
         self.setPen('white')
         self._file_times = file_times
+        self._file_paths = file_paths
         self._starttime = None
         self._starttime_mode = 0
         # 0: tick values are recording time starting with zero
@@ -109,12 +110,13 @@ class TimeAxisItem(pg.AxisItem):
     def makeStrings(self, values, scale, spacing, starttime_mode):
         label = None
         units = None
+        filename = self._file_paths[0] if len(self._file_paths) > 0 else None
         
         if len(values) == 0:
-            return label, units, []
+            return label, units, [], filename
         
         if scale > 1:
-            return 'Time', 's', [f'{v*scale:.5g}' for v in values]
+            return 'Time', 's', [f'{v*scale:.5g}' for v in values], filename
 
         if starttime_mode == 1 and not self._starttime:
             starttime_mode = 0
@@ -125,9 +127,12 @@ class TimeAxisItem(pg.AxisItem):
             label = 'Time'
         elif starttime_mode == 2:
             label = 'File'
+            fidx = np.nonzero(self._file_times <= values[0])[0][-1]
+            filename = self._file_paths[fidx]
             vals = []
             for time in values:
-                toffs = self._file_times[np.nonzero(self._file_times <= time)[0][-1]]
+                fidx = np.nonzero(self._file_times <= time)[0][-1]
+                toffs = self._file_times[fidx]
                 vals.append(time - toffs)
             values = vals
         else:
@@ -169,12 +174,12 @@ class TimeAxisItem(pg.AxisItem):
             time = dict(hours=t.hour, mins=t.minute, secs=t.second,
                         micros=micros)
             vals.append(fs.format(**time))
-        return label, units, vals
+        return label, units, vals, filename
 
     
     def tickStrings(self, values, scale, spacing):
-        label, units, vals = self.makeStrings(values, scale, spacing,
-                                              self._starttime_mode)
+        label, units, vals, _ = self.makeStrings(values, scale, spacing,
+                                                 self._starttime_mode)
         if len(vals) == 0:
             return []
         if units == 's':
@@ -188,8 +193,6 @@ class TimeAxisItem(pg.AxisItem):
     
     def resizeEvent(self, ev=None):
         # overwrite the AxisItem resizeEvent to place the label somewhere else
-        # Set the position of the label
-        nudge = 5
         # self.label is set to None on close, but resize events can still occur.
         if self.label is None:
             self.picture = None

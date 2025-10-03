@@ -1236,68 +1236,69 @@ class Audian(QMainWindow):
             
     def load_data(self):
         for browser in self.browsers:
+            if browser.data.data is not None:
+                continue
+            try:
+                browser.open(self, self.unwrap, self.unwrap_clip,
+                             self.highpass_cutoff, self.lowpass_cutoff)
+            except Exception as e:
+                print('ERROR', e)
+                QMessageBox.critical(self, 'Error', f'Can not open file <b>{browser.data.file_path}</b>!')
+                self.tabs.removeTab(self.tabs.indexOf(browser))
+                self.browsers.remove(browser)
+                self.file_paths.remove(browser.data.file_path)
+                if self.tabs.count() == 0:
+                    self.show_startup()
+            if browser.data.data is not None:
+                for fn in browser.data.data.file_paths:
+                    if fn in self.file_paths:
+                        self.file_paths.remove(fn)
+            if len(self.file_paths) > 0:
+                # still need to load some files:
+                nbrowser = DataBrowser(self.file_paths,
+                                       self.load_kwargs,
+                                       self.plugins,
+                                       self.channels,
+                                       self.audio,
+                                       self.acts)
+                self.tabs.addTab(nbrowser, nbrowser.name())
+                self.browsers.append(nbrowser)
             if browser.data.data is None:
-                try:
-                    browser.open(self, self.unwrap, self.unwrap_clip,
-                                 self.highpass_cutoff, self.lowpass_cutoff)
-                except Exception as e:
-                    print(e)
-                    QMessageBox.critical(self, 'Error', f'Can not open file <b>{browser.data.file_path}</b>!')
-                    self.tabs.removeTab(self.tabs.indexOf(browser))
-                    self.browsers.remove(browser)
-                    self.file_paths.remove(browser.data.file_path)
-                    if self.tabs.count() == 0:
-                        self.show_startup()
-                if browser.data.data is not None:
-                    for fn in browser.data.data.file_paths:
-                        if fn in self.file_paths:
-                            self.file_paths.remove(fn)
-                if len(self.file_paths) > 0:
-                    # still need to load some files:
-                    browser = DataBrowser(self.file_paths,
-                                          self.load_kwargs,
-                                          self.plugins,
-                                          self.channels,
-                                          self.audio,
-                                          self.acts)
-                    self.tabs.addTab(browser, browser.name())
-                    self.browsers.append(browser)
-                if browser.data.data is None:
-                    QTimer.singleShot(100, self.load_data)
-                    break
-                self.tabs.setTabText(self.tabs.indexOf(browser),
-                                     browser.name())
-                for b in self.browsers:
-                    if not b.data.data is None and \
-                       b.data.channels != browser.data.channels:
-                        self.link_channels = False
-                        self.acts.link_channels.setChecked(self.link_channels)
-                if browser is self.browser():
-                    self.adapt_menu(self.tabs.currentIndex())
-                browser.sigRangesChanged.connect(self.dispatch_ranges)
-                browser.sigFilenameChanged.connect(self.set_tab_title)
-                browser.sigResolutionChanged.connect(self.dispatch_resolution)
-                browser.sigColorMapChanged.connect(self.dispatch_colormap)
-                browser.sigFilterChanged.connect(self.dispatch_filter)
-                browser.sigEnvelopeChanged.connect(self.dispatch_envelope)
-                browser.sigTraceChanged.connect(self.dispatch_trace)
-                browser.sigAudioChanged.connect(self.dispatch_audio)
-                browser.plot_ranges[Panel.times[0]].set_starttime(self.starttime_mode)
-                pb = self.browser() if self.prev_browser is None else self.prev_browser
-                if self.link_panels:
-                    browser.set_panels(pb.show_traces, pb.show_specs,
-                                       pb.show_powers, pb.show_cbars,
-                                       pb.show_fulldata)
-                else:
-                    browser.set_panels()
-                if self.link_channels:
-                    browser.set_channels(pb.show_channels,
-                                         pb.selected_channels,
-                                         pb.current_channel)
-                else:
-                    browser.set_channels()
                 QTimer.singleShot(100, self.load_data)
                 break
+            self.tabs.setTabText(self.tabs.indexOf(browser),
+                                 browser.name())
+            for b in self.browsers:
+                if not b.data.data is None and \
+                   b.data.channels != browser.data.channels:
+                    self.link_channels = False
+                    self.acts.link_channels.setChecked(self.link_channels)
+            if browser is self.browser():
+                self.adapt_menu(self.tabs.currentIndex())
+            browser.sigRangesChanged.connect(self.dispatch_ranges)
+            browser.sigFilenameChanged.connect(self.set_tab_title)
+            browser.sigResolutionChanged.connect(self.dispatch_resolution)
+            browser.sigColorMapChanged.connect(self.dispatch_colormap)
+            browser.sigFilterChanged.connect(self.dispatch_filter)
+            browser.sigEnvelopeChanged.connect(self.dispatch_envelope)
+            browser.sigTraceChanged.connect(self.dispatch_trace)
+            browser.sigAudioChanged.connect(self.dispatch_audio)
+            browser.plot_ranges[Panel.times[0]].set_starttime(self.starttime_mode)
+            pb = self.browser() if self.prev_browser is None else self.prev_browser
+            if self.link_panels:
+                browser.set_panels(pb.show_traces, pb.show_specs,
+                                   pb.show_powers, pb.show_cbars,
+                                   pb.show_fulldata)
+            else:
+                browser.set_panels()
+            if self.link_channels:
+                browser.set_channels(pb.show_channels,
+                                     pb.selected_channels,
+                                     pb.current_channel)
+            else:
+                browser.set_channels()
+            QTimer.singleShot(100, self.load_data)
+            break
 
 
     def toggle_maximize(self):

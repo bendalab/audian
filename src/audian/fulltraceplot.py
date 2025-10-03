@@ -135,7 +135,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             region = pg.LinearRegionItem(pen=dict(color='#110353', width=2),
                                          brush=(34, 6, 167, 127),
                                          hoverPen=dict(color='#aa77ff', width=2),
-                                         hoverBrush=(34, 6, 167, 255),
+                                         hoverBrush=(34, 6, 167, 192),
                                          movable=True,
                                          swapMode='block')
             region.setZValue(50)
@@ -383,9 +383,6 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
                 vb = ax.getViewBox()
                 pos = vb.mapSceneToView(ev.pos())
                 [xmin, xmax], [ymin, ymax] = ax.viewRange()
-                #TODO print(ev)
-                #TODO print(ev.globalPosition(), ev.position(), ev.scenePosition(), ev.pos())
-                #TODO print(vb.contains(ev[0]), xmin <= pos.x() <= xmax and ymin <= pos.y() <= ymax) OR vb.sceneBoundingRect().contains(ev[0])
                 if xmin <= pos.x() <= xmax and ymin <= pos.y() <= ymax:
                     dx = (xmax - xmin)/self.width()
                     x = pos.x()
@@ -412,12 +409,18 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             pos = vb.mapSceneToView(ev.pos())
             [xmin, xmax], [ymin, ymax] = ax.viewRange()
             if xmin <= pos.x() <= xmax and ymin <= pos.y() <= ymax:
-                ts = f'<table><tr><td>channel</td><td><b>{c}</b></td></tr>'
+                ts = f'<table><tr><td>channel</td><td><b>{c}</b></td><td></td></tr>'
                 for sm in range(3):
-                    label, units, vals = self.axtraces[c].getAxis('bottom').makeStrings([pos.x()], 1, 1, sm)
+                    taxis = self.axtraces[c].getAxis('bottom')
+                    label, units, vals, fname = \
+                        taxis.makeStrings([pos.x()], 1, 1, sm)
                     if sm > 0 and label == 'REC':
                         continue
-                    ts += f'<tr><td>{label} ({units})</td><td align="right"><b>{vals[0]}</b></td></tr>'
+                    if label == 'File':
+                        fname = Path(fname).name
+                    else:
+                        fname = ''
+                    ts += f'<tr><td>{label} ({units})</td><td align="right"><b>{vals[0]}</b></td><td>{fname}</td></tr>'
                 ts += '</table>'
                 self.time_info.setText(ts);
                 self.time_info.setVisible(True)

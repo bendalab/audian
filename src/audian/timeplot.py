@@ -20,10 +20,12 @@ class TimePlot(RangePlot):
         left_margin = 8*xwidth
         # axis:
         bottom_axis = TimeAxisItem(browser.data.data.file_start_times(),
+                                   browser.data.data.file_paths,
                                    left_margin, orientation='bottom',
                                    showValues=True)
         bottom_axis.set_start_time(browser.data.start_time)
         top_axis = TimeAxisItem(browser.data.data.file_start_times(),
+                                browser.data.data.file_paths,
                                 left_margin, orientation='top',
                                 showValues=False)
         top_axis.set_start_time(browser.data.start_time)

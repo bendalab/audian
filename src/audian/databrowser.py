@@ -1071,10 +1071,6 @@ class DataBrowser(QWidget):
 
             
     def update_ranges(self, viewbox, arange):
-        """
-        TODO: a newer version of pyqtgraph might need:
-        def update_ranges(self, viewbox, arange):
-        """
         if self.setting:
             return
         panel = self.panels.get_panel(viewbox)
