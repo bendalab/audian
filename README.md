@@ -71,11 +71,12 @@ handles all GUI aspects.
 - [ ] Support horizontal power spectrum
 - [ ] Cycle with Ctrl+P through no power plot, power spectrum to the right, power spectrum on top.
 - [ ] FullTracePlot:
-  - [ ] fix offset problem.
-  - [ ] indicate time under mouse cursor.
+  - [x] fix offset problem.
+  - [x] indicate time under mouse cursor.
   - [x] compute full trace in the background.
   - [x] store and load full trace to user specific cache dir.
   - [ ] background computation and file saving only if long enough.
+  - [ ] command line script for computing fulltrace plot
 - [x] Add a toolbar widget for spectrum overlap
 - [x] SpinBox for envelope cutoff frequency needs to show digits
   after decimal point.
