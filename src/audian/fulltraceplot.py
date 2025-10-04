@@ -169,7 +169,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             self.addItem(axt, row=c, col=0)
             self.axs.append(axt)
 
-        self.time_info = QLabel();
+        self.time_info = QLabel(self)
         self.time_info.setWindowFlags(self.windowFlags()
                                       | Qt.BypassWindowManagerHint
                                       | Qt.FramelessWindowHint)
@@ -409,7 +409,8 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             pos = vb.mapSceneToView(ev.pos())
             [xmin, xmax], [ymin, ymax] = ax.viewRange()
             if xmin <= pos.x() <= xmax and ymin <= pos.y() <= ymax:
-                ts = f'<table><tr><td>channel</td><td><b>{c}</b></td><td></td></tr>'
+                ts = '<style type="text/css"> td { padding: 0 4px; } </style>'
+                ts += f'<table><tr><td colspan="2">channel</td><td></td><td><b>{c}</b></td><td></td></tr>'
                 for sm in range(3):
                     taxis = self.axtraces[c].getAxis('bottom')
                     label, units, vals, fname = \
@@ -420,12 +421,17 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
                         fname = Path(fname).name
                     else:
                         fname = ''
-                    ts += f'<tr><td>{label} ({units})</td><td align="right"><b>{vals[0]}</b></td><td>{fname}</td></tr>'
+                    ts += f'<tr><td>{label}</td><td>({units})</td><td align="right"><b>{vals[0]}</b></td><td>{fname}</td></tr>'
                 ts += '</table>'
-                self.time_info.setText(ts);
+                self.time_info.setText(ts)
                 self.time_info.setVisible(True)
-                self.time_info.move(ev.globalPos().x() + 10,
-                                    ev.globalPos().y() - self.time_info.height() - self.data_height//2);
+                x = ev.globalPos().x() + 10
+                pos = self.mapToGlobal(self.pos())
+                if x + self.time_info.width() > pos.x() + self.width():
+                    x = pos.x() + self.width() - self.time_info.width()
+                y = ev.globalPos().y()
+                y -= self.time_info.height() + self.data_height//2
+                self.time_info.move(x, y)
                 ev.accept()
                 break
         else:
