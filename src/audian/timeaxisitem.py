@@ -2,6 +2,7 @@ from math import ceil, floor, log10
 import datetime as dt
 import numpy as np
 from PyQt5.QtCore import QPointF, Qt
+from PyQt5.QtWidgets import QLabel
 from PyQt5.QtGui import QFontMetrics
 import pyqtgraph as pg
 
@@ -19,8 +20,19 @@ class TimeAxisItem(pg.AxisItem):
         # 0: tick values are recording time starting with zero
         #    at the beginning of the first file.
         # 1: tick values are absolute times of the day,
-        #    i.e. the recordings start time is added.
+        #    i.e. the recording's start time is added.
         # 2: tick values are relative to each file's beginning.
+
+        """
+        # TODO:
+        # indicate time information when moving mouse over axis
+        # however, we need to figure out, how to receive mouseMoveEvents
+        self.time_info = QLabel()
+        self.time_info.setWindowFlags(self.windowFlags()
+                                      | Qt.BypassWindowManagerHint
+                                      | Qt.FramelessWindowHint)
+        self.time_info.setVisible(False)
+        """
 
 
     def setLogMode(self, *args, **kwargs):

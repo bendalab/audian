@@ -432,7 +432,6 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
                 y = ev.globalPos().y()
                 y -= self.time_info.height() + self.data_height//2
                 self.time_info.move(x, y)
-                ev.accept()
                 break
         else:
             self.time_info.setVisible(False)
@@ -441,6 +440,5 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
 
     def leaveEvent(self, ev):
         self.time_info.setVisible(False)
-        ev.accept()
         super().leaveEvent(ev)
 
