@@ -410,9 +410,9 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             [xmin, xmax], [ymin, ymax] = ax.viewRange()
             if xmin <= pos.x() <= xmax and ymin <= pos.y() <= ymax:
                 ts = '<style type="text/css"> td { padding: 0 4px; } </style>'
-                ts += f'<table><tr><td colspan="2">channel</td><td></td><td><b>{c}</b></td><td></td></tr>'
+                ts += f'<table><tr><td colspan="2">channel</td><td><b>{c}</b></td><td></td></tr>'
+                taxis = self.axtraces[c].getAxis('bottom')
                 for sm in range(3):
-                    taxis = self.axtraces[c].getAxis('bottom')
                     label, units, vals, fname = \
                         taxis.makeStrings([pos.x()], 1, 1, sm)
                     if sm > 0 and label == 'REC':

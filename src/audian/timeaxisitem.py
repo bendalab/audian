@@ -23,17 +23,6 @@ class TimeAxisItem(pg.AxisItem):
         #    i.e. the recording's start time is added.
         # 2: tick values are relative to each file's beginning.
 
-        """
-        # TODO:
-        # indicate time information when moving mouse over axis
-        # however, we need to figure out, how to receive mouseMoveEvents
-        self.time_info = QLabel()
-        self.time_info.setWindowFlags(self.windowFlags()
-                                      | Qt.BypassWindowManagerHint
-                                      | Qt.FramelessWindowHint)
-        self.time_info.setVisible(False)
-        """
-
 
     def setLogMode(self, *args, **kwargs):
         # no log mode!

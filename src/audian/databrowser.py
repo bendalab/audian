@@ -9,7 +9,7 @@ try:
     from PyQt5.QtCore import Signal
 except ImportError:
     from PyQt5.QtCore import pyqtSignal as Signal
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtCore import Qt, QTimer, QPoint
 from PyQt5.QtGui import QCursor, QKeySequence, QPalette
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QScrollArea
 from PyQt5.QtWidgets import QAction, QMenu, QToolBar, QComboBox, QCheckBox
@@ -794,97 +794,103 @@ class DataBrowser(QWidget):
         """                
         
     def mouse_moved(self, evt, channel):
-        if not self.cross_hair:
-            return
+        if self.cross_hair:
+            self.plot_ranges.clear_marker()
             
         # find axes and position:
-        pixel_pos = evt[0]
-        self.plot_ranges.clear_marker()
         for panel in self.panels.values():
             if not panel.is_used() or not panel.is_visible(channel):
                 continue
             ax = panel.axs[channel]
-            if not ax.sceneBoundingRect().contains(pixel_pos):
+            if panel.is_time():
+                screen_pos = self.mapToGlobal(self.pos())
+                screen_pos += QPoint(0, self.figs[channel].y())
+                ax.show_times(screen_pos, evt[0])
+            if not ax.sceneBoundingRect().contains(evt[0]):
                 continue
-            pos = ax.getViewBox().mapSceneToView(pixel_pos)
-            pixel_pos.setX(pixel_pos.x() + 1)
-            pixel_pos.setY(pixel_pos.y() + 1)
-            npos = ax.getViewBox().mapSceneToView(pixel_pos)
-            x0 = pos.x()
-            x1 = npos.x()
-            y0 = pos.y()
-            y1 = npos.y()
-            x, y, z = ax.get_marker_pos(x0, abs(x1 - x0), y0, abs(y1 - y0))
-            self.plot_ranges[panel.x()].set_marker(channel, ax, x)
-            self.plot_ranges[panel.y()].set_marker(channel, ax, y)
-            if z is not None:
-                self.plot_ranges[panel.z()].set_marker(channel, ax, z)
-            """
-            if not self.marker_time is None:
-                self.marker_time, self.marker_ampl = \
-                    panel.get_amplitude(channel, self.marker_time,
-                                        pos.y(), npos.x())
-            """
+            if self.cross_hair:
+                pixel_pos = evt[0]
+                pos = ax.getViewBox().mapSceneToView(pixel_pos)
+                pixel_pos.setX(pixel_pos.x() + 1)
+                pixel_pos.setY(pixel_pos.y() + 1)
+                npos = ax.getViewBox().mapSceneToView(pixel_pos)
+                x0 = pos.x()
+                x1 = npos.x()
+                y0 = pos.y()
+                y1 = npos.y()
+                x, y, z = ax.get_marker_pos(x0, abs(x1 - x0), y0, abs(y1 - y0))
+                self.plot_ranges[panel.x()].set_marker(channel, ax, x)
+                self.plot_ranges[panel.y()].set_marker(channel, ax, y)
+                if z is not None:
+                    self.plot_ranges[panel.z()].set_marker(channel, ax, z)
+                """
+                if not self.marker_time is None:
+                    self.marker_time, self.marker_ampl = \
+                        panel.get_amplitude(channel, self.marker_time,
+                                            pos.y(), npos.x())
+                """
             break
-        # set cross-hair positions:
-        self.plot_ranges.update_crosshair()
         
-        # report time on toolbar:
-        s = ''
-        time, delta_time = self.plot_ranges.marker_delta_time()
-        if delta_time is not None:
-            sign = '-' if delta_time < 0 else ''
-            s = f'\u0394{time}={sign}{secs_to_str(fabs(delta_time))}'
-            if fabs(delta_time) > 1e-6:
-                if 1/fabs(delta_time) > 1000:
-                    s += f' ({0.001/fabs(delta_time):.4g}kHz)'
-                elif 1/fabs(delta_time) < 1:
-                    s += f' ({1000/fabs(delta_time):.4g}mHz)'
+        # set cross-hair positions:
+        if self.cross_hair:
+            self.plot_ranges.update_crosshair()
+
+            # report time on toolbar:
+            s = ''
+            time, delta_time = self.plot_ranges.marker_delta_time()
+            if delta_time is not None:
+                sign = '-' if delta_time < 0 else ''
+                s = f'\u0394{time}={sign}{secs_to_str(fabs(delta_time))}'
+                if fabs(delta_time) > 1e-6:
+                    if 1/fabs(delta_time) > 1000:
+                        s += f' ({0.001/fabs(delta_time):.4g}kHz)'
+                    elif 1/fabs(delta_time) < 1:
+                        s += f' ({1000/fabs(delta_time):.4g}mHz)'
+                    else:
+                        s += f' ({1/fabs(delta_time):.4g}Hz)'
+            time, pos = self.plot_ranges.marker_time()
+            if not s and pos is not None:
+                sign = '-' if pos < 0 else ''
+                s = f't={sign}{secs_to_str(fabs(pos))}'
+            self.xpos_action.setText(s)
+            self.xpos_action.setVisible(len(s) > 0)
+            # report amplitude or frequency on toolbar:
+            s = ''
+            ampl, delta_ampl = self.plot_ranges.marker_delta_amplitude()
+            freq, delta_freq = self.plot_ranges.marker_delta_frequency()
+            if delta_ampl is not None:
+                s = f'\u0394{ampl}={delta_ampl:6.3f}'
+                self.ypos_action.setText(s)
+            elif delta_freq is not None:
+                if abs(delta_freq) > 1000:
+                    s = f'\u0394{freq}={delta_freq/1000:.4g}kHz'
+                elif abs(delta_freq) < 1:
+                    s = f'\u0394{freq}={delta_freq*1000:.4g}mHz'
                 else:
-                    s += f' ({1/fabs(delta_time):.4g}Hz)'
-        time, pos = self.plot_ranges.marker_time()
-        if not s and pos is not None:
-            sign = '-' if pos < 0 else ''
-            s = f't={sign}{secs_to_str(fabs(pos))}'
-        self.xpos_action.setText(s)
-        self.xpos_action.setVisible(len(s) > 0)
-        # report amplitude or frequency on toolbar:
-        s = ''
-        ampl, delta_ampl = self.plot_ranges.marker_delta_amplitude()
-        freq, delta_freq = self.plot_ranges.marker_delta_frequency()
-        if delta_ampl is not None:
-            s = f'\u0394{ampl}={delta_ampl:6.3f}'
+                    s = f'\u0394{freq}={delta_freq:.4g}Hz'
+            ampl, pos = self.plot_ranges.marker_amplitude()
+            if not s and pos is not None:
+                s = f'{ampl}={pos:.5g}'
+            freq, pos = self.plot_ranges.marker_frequency()
+            if not s and pos is not None:
+                if pos > 1000:
+                    s = f'{freq}={pos/1000:.4g}kHz'
+                elif pos < 1:
+                    s = f'{freq}={pos*1000:.4g}mHz'
+                else:
+                    s = f'{freq}={pos:.4g}Hz'
             self.ypos_action.setText(s)
-        elif delta_freq is not None:
-            if abs(delta_freq) > 1000:
-                s = f'\u0394{freq}={delta_freq/1000:.4g}kHz'
-            elif abs(delta_freq) < 1:
-                s = f'\u0394{freq}={delta_freq*1000:.4g}mHz'
-            else:
-                s = f'\u0394{freq}={delta_freq:.4g}Hz'
-        ampl, pos = self.plot_ranges.marker_amplitude()
-        if not s and pos is not None:
-            s = f'{ampl}={pos:.5g}'
-        freq, pos = self.plot_ranges.marker_frequency()
-        if not s and pos is not None:
-            if pos > 1000:
-                s = f'{freq}={pos/1000:.4g}kHz'
-            elif pos < 1:
-                s = f'{freq}={pos*1000:.4g}mHz'
-            else:
-                s = f'{freq}={pos:.4g}Hz'
-        self.ypos_action.setText(s)
-        self.ypos_action.setVisible(len(s) > 0)
-        # report power on toolbar:
-        s = ''
-        pwr, delta_power = self.plot_ranges.marker_delta_power()
-        if delta_power is not None:
-            s = f'\u0394{pwr}={delta_power:6.1f}dB'
-        pwr, pos = self.plot_ranges.marker_power()
-        if not s and pos is not None:
-            s = f'{pwr}={pos:6.1f}dB'
-        self.zpos_action.setText(s)
-        self.zpos_action.setVisible(len(s) > 0)
+            self.ypos_action.setVisible(len(s) > 0)
+            # report power on toolbar:
+            s = ''
+            pwr, delta_power = self.plot_ranges.marker_delta_power()
+            if delta_power is not None:
+                s = f'\u0394{pwr}={delta_power:6.1f}dB'
+            pwr, pos = self.plot_ranges.marker_power()
+            if not s and pos is not None:
+                s = f'{pwr}={pos:6.1f}dB'
+            self.zpos_action.setText(s)
+            self.zpos_action.setVisible(len(s) > 0)
 
         
     def mouse_clicked(self, evt, channel):

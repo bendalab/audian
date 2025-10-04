@@ -2,12 +2,14 @@
 """
 
 import numpy as np
+from pathlib import Path
 try:
     from PyQt5.QtCore import Signal
 except ImportError:
     from PyQt5.QtCore import pyqtSignal as Signal
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPalette, QColor
+from PyQt5.QtWidgets import QLabel
 import pyqtgraph as pg
 from .rangeplot import RangePlot
 from .timeaxisitem import TimeAxisItem
@@ -49,6 +51,13 @@ class TimePlot(RangePlot):
 
         # design:
         self.getViewBox().setBackgroundColor('black')
+
+        # time info box:
+        self.time_info = QLabel()
+        self.time_info.setWindowFlags(self.windowFlags()
+                                      | Qt.BypassWindowManagerHint
+                                      | Qt.FramelessWindowHint)
+        self.time_info.setVisible(False)
 
         # audio marker:
         self.vmarker = pg.InfiniteLine(angle=90, movable=False)
@@ -138,4 +147,45 @@ class TimePlot(RangePlot):
     def set_starttime(self, mode):
         self.getAxis('bottom').set_starttime_mode(mode)
         self.getAxis('top').set_starttime_mode(mode)
+        
+
+    def show_times(self, screen_pos, pixel_pos):
+        brect = self.boundingRect()
+        brect.setBottom(brect.bottom() - 10)
+        if not brect.contains(pixel_pos):
+            self.time_info.setVisible(False)
+            return
+        pos = self.getViewBox().mapSceneToView(pixel_pos)
+        [xmin, xmax], [ymin, ymax] = self.viewRange()
+        if xmin <= pos.x() <= xmax and pos.y() < ymin:
+            deltax = xmax - xmin
+            spacing = 0.001 if deltax < 100 else 1
+            ts = '<style type="text/css"> td { padding: 0 4px; } </style>'
+            ts += f'<table>'
+            taxis = self.getAxis('bottom')
+            nm = 0
+            for sm in range(3):
+                label, units, vals, fname = \
+                    taxis.makeStrings([pos.x()], 1, spacing, sm)
+                if sm > 0 and label == 'REC':
+                    continue
+                if label == 'File':
+                    fname = Path(fname).name
+                else:
+                    fname = ''
+                ts += f'<tr><td>{label}</td><td>({units})</td><td align="right"><b>{vals[0]}</b></td><td>{fname}</td></tr>'
+                nm += 1
+            ts += '</table>'
+            if nm <= 1:
+                self.time_info.setVisible(False)
+                return
+            self.time_info.setText(ts)
+            self.time_info.setVisible(True)
+            x = screen_pos.x() + pixel_pos.x() + 1
+            if x + self.time_info.width() > screen_pos.x() + self.width():
+                x = screen_pos.x() + self.width() - self.time_info.width()
+            y = screen_pos.y() + pixel_pos.y() + 10
+            self.time_info.move(int(x), int(y))
+        else:
+            self.time_info.setVisible(False)
 
