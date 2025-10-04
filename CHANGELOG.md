@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.5
+
+- Fixed power spectra for time windows smaller than time resolution
+- Fixed setting cross hair when zoomed in too much
+- Fixed offset problem in full trace plot
+- Time is indicated in all formats when hovering over time axis or
+  full trace plots
+
+
 ## v2.4 - 2025.07.25
 
 - Adapted to new TableData interface
