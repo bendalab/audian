@@ -1,9 +1,4 @@
 """FullTracePlot
-
-## TODO
-- secs_to_str to extra module or even thunderlab?
-- Have a class for a single channel that we could add to the toolbar.
-- Only use Data class
 """
 
 import os
