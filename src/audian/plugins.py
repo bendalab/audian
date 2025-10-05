@@ -1,7 +1,6 @@
-import os
 import sys
-import glob
 import importlib
+from pathlib import Path
 from .bufferedfilter import BufferedFilter
 from .bufferedspectrogram import BufferedSpectrogram
 
@@ -41,9 +40,10 @@ class Plugins(object):
 
         
     def load_plugins(self):
-        sys.path.append(os.getcwd())
-        for module in glob.glob('audian*.py'):
-            x = importlib.import_module(module[:-3])
+        cwd = Path.cwd()
+        sys.path.append(str(cwd))
+        for module in cwd.glob('audian*.py'):
+            x = importlib.import_module(module.stem)
             called = False
             for k in dir(x):
                 if k.startswith('audian_') and callable(getattr(x, k)):
@@ -55,7 +55,7 @@ class Plugins(object):
                         called = True
             if called:
                 self.add_plugin(k, x)
-                print(f'loaded audian plugins from {module}')
+                print(f'loaded audian plugins from {module.stem}')
         sys.path.pop()
 
 

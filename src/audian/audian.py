@@ -175,18 +175,20 @@ class Audian(QMainWindow):
             trange = self.browser().plot_ranges[Panel.times[0]]
             t0s = secs_to_str(trange.r0[0], 3)
             file_name = f'screenshot-{t0s}.png'
-            file_path = Path(self.browser().data.file_path).parent
-            file_path /= file_name
+            file_path = Path(self.browser().data.file_path)
+            file_path = file_path.with_name(file_name)
             file_path = QFileDialog.getSaveFileName(self,
                                                     'Save screenshot as',
                                                     str(file_path),
                                                     'PNG files (*.png)')[0]
             if file_path:
+                rel_path = Path(file_path).relative_to(Path.cwd(),
+                                                       walk_up=True)
                 try:
                     image.save(file_path)
-                    print(f'saved screenshot to "{file_path.relative_to('.', True)}"')
+                    print(f'saved screenshot to "{rel_path}"')
                 except PermissionError as e:
-                    print(f'failed to save screenshot to "{file_path.relative_to('.', True)}": permission denied')
+                    print(f'failed to save screenshot to "{rel_path}": permission denied')
 
         
     def setup_file_actions(self, menu):
@@ -1232,7 +1234,7 @@ class Audian(QMainWindow):
                 formats.remove(f)
                 formats.insert(0, f)
         filters = ['All files (*)'] + [f'{f} files (*.{f}, *.{f.lower()})' for f in formats]
-        path = '.' if self.startup_active else os.path.dirname(self.browser().data.file_path)
+        path = '.' if self.startup_active else Path(self.browser().data.file_path).parent
         if len(path) == 0:
             path = '.'
         file_paths = QFileDialog.getOpenFileNames(self, directory=path, filter=';;'.join(filters))[0]

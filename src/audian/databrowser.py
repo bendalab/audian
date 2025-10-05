@@ -1,9 +1,8 @@
-import os
+from pathlib import Path
 from copy import deepcopy
 from math import fabs, floor, log10
 import datetime as dt
 import numpy as np
-from pathlib import Path
 from scipy.signal import butter, sosfiltfilt
 try:
     from PyQt5.QtCore import Signal
@@ -1795,10 +1794,11 @@ class DataBrowser(QWidget):
     def save_analysis(self):
         if len(self.analyzers) == 0 or self.analyzers[0].data.columns() == 0:
             return
+        file_name = Path(self.data.file_path)
+        file_name = file_name.with_name(file_name.stem + '-analysis.csv')
         file_name, _ = QFileDialog.getSaveFileName(
             self, 'Save analysis as',
-            os.path.splitext(self.data.file_path)[0] + '-analysis.csv',
-            'comma-separated values (*.csv)')
+            str(file_name), 'comma-separated values (*.csv)')
         if not file_name:
             return
         table = self.analyzers[0].data
@@ -1831,8 +1831,8 @@ class DataBrowser(QWidget):
                 formats.remove(f)
                 formats.insert(0, f)
         filters = ['All files (*)'] + [f'{f} files (*.{f}, *.{f.lower()})' for f in formats]
-        file_path = Path(self.data.file_path).parent
-        file_path /= file_name
+        file_path = Path(self.data.file_path)
+        file_path = file_path.with_name(file_name)
         file_path = QFileDialog.getSaveFileName(self, 'Save region as',
                                                 str(file_path),
                                                 ';;'.join(filters))[0]
@@ -1844,20 +1844,21 @@ class DataBrowser(QWidget):
                 hkey = 'BEXT.' + hkey
             bext_code = bext_history_str(self.data.data.encoding,
                                          self.data.rate, self.data.channels)
-            add_history(md, bext_code + f',T=cut out {t0s}-{t1s}: {os.path.basename(file_path)}', hkey, bext_code + f',T={self.data.file_path}')
+            add_history(md, bext_code + f',T=cut out {t0s}-{t1s}: {Path(file_path).name}', hkey, bext_code + f',T={self.data.file_path}')
             locs, labels = self.marker_data.get_markers(self.data.rate)
             sel = (locs[:,0] + locs[:,1] >= i0) & (locs[:,0] <= i1)
             locs = locs[sel]
             labels = labels[sel]
+            rel_path = Path(file_path).relative_to(Path.cwd(), walk_up=True)
             try:
                 write_data(file_path,
                            self.data.data[i0:i1, self.selected_channels],
                            self.data.rate, self.data.data.ampl_max,
                            self.data.data.unit, md, locs, labels,
                            encoding=self.data.data.encoding)
-                print(f'saved region to "{file_path.relative_to('.', True)}"')
+                print(f'saved region to "{rel_path}"')
             except PermissionError as e:
-                print(f'failed to save region to "{file_path.relative_to('.', True)}": permission denied')
+                print(f'failed to save region to "{rel_path}": permission denied')
 
         
     def save_window(self):

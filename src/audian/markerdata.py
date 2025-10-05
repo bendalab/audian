@@ -1,6 +1,6 @@
-import os
 import numpy as np
 import pandas as pd
+from pathlib import Path
 from PyQt5.QtCore import Qt, QVariant
 from PyQt5.QtCore import QAbstractTableModel, QModelIndex
 from PyQt5.QtGui import QKeySequence, QIcon, QIconEngine, QColor
@@ -504,7 +504,7 @@ class MarkerDataModel(QAbstractTableModel):
 
 
     def save(self, parent):
-        name = os.path.splitext(os.path.basename(self.data.file_path))[0]
+        name = Path(self.data.file_path).stem
         file_name = f'{name}-events.csv'
         filters = 'All files (*);;Comma separated values CSV (*.csv)'
         has_excel = False
@@ -514,13 +514,12 @@ class MarkerDataModel(QAbstractTableModel):
             filters += ';;Excel spreadsheet XLSX (*.xlsx)'
         except ImportError:
             pass
-        file_path = os.path.join(os.path.dirname(self.data.file_path),
-                                 file_name)
+        file_path = Path(self.data.file_path).with_name(file_name)
         file_path = QFileDialog.getSaveFileName(parent, 'Save marker data',
-                                                file_path, filters)[0]
+                                                str(file_path), filters)[0]
         if file_path:
             df = self.data.data_frame()
-            ext = os.path.splitext(file_path)[1]
+            ext = Path(file_path).suffix
             if has_excel and ext.lower() == '.xlsx':
                 df.to_excel(file_path, index=False)
             else:
