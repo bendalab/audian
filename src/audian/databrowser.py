@@ -1819,7 +1819,7 @@ class DataBrowser(QWidget):
         if i1 > len(self.data.data):
             i1 = len(self.data.data)
             t1 = i1/rate
-        name = os.path.splitext(os.path.basename(self.data.file_path))[0]
+        name = Path(self.data.file_path).stem
         #if self.channel > 0:
         #    filename = f'{name}-{channel:d}-{t0:.4g}s-{t1s:.4g}s.wav'
         t0s = secs_to_str(t0)
@@ -1831,9 +1831,10 @@ class DataBrowser(QWidget):
                 formats.remove(f)
                 formats.insert(0, f)
         filters = ['All files (*)'] + [f'{f} files (*.{f}, *.{f.lower()})' for f in formats]
-        file_path = os.path.join(os.path.dirname(self.data.file_path), file_name)
+        file_path = Path(self.data.file_path).parent
+        file_path /= file_name
         file_path = QFileDialog.getSaveFileName(self, 'Save region as',
-                                                file_path,
+                                                str(file_path),
                                                 ';;'.join(filters))[0]
         if file_path:
             md = deepcopy(self.data.data.metadata())
@@ -1854,9 +1855,9 @@ class DataBrowser(QWidget):
                            self.data.rate, self.data.data.ampl_max,
                            self.data.data.unit, md, locs, labels,
                            encoding=self.data.data.encoding)
-                print(f'saved region to "{os.path.relpath(file_path)}"')
+                print(f'saved region to "{file_path.relative_to('.', True)}"')
             except PermissionError as e:
-                print(f'failed to save region to "{os.path.relpath(file_path)}": permission denied')
+                print(f'failed to save region to "{file_path.relative_to('.', True)}": permission denied')
 
         
     def save_window(self):

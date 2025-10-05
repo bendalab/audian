@@ -7,6 +7,7 @@
 - Fixed offset problem in full trace plot
 - Time is indicated in all formats when hovering over time axis or
   full trace plots
+- Added screenshot function
 
 
 ## v2.4 - 2025.07.25

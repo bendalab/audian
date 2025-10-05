@@ -1,11 +1,12 @@
 import os
 import sys
+from pathlib import Path
 import glob
 import argparse
 import numpy as np
 import multiprocessing as mp
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QKeySequence, QIcon
+from PyQt5.QtGui import QKeySequence, QIcon, QGuiApplication
 from PyQt5.QtWidgets import QStyle, QApplication, QMainWindow, QTabWidget
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel
 from PyQt5.QtWidgets import QAction, QActionGroup, QPushButton
@@ -15,6 +16,7 @@ import pyqtgraph as pg
 from audioio import available_formats, PlayAudio, AudioLoader
 from .version import __version__, __year__
 from .databrowser import DataBrowser
+from .fulltraceplot import secs_to_str
 from .plugins import Plugins
 from .panels import Panel
 
@@ -164,6 +166,28 @@ class Audian(QMainWindow):
             ks += '</table>\n'
             self.keys.append(ks)
 
+
+    def screen_shot(self):
+        app = QApplication.activeWindow()
+        screen = QGuiApplication.primaryScreen()
+        if app and screen:
+            image = screen.grabWindow(app.winId())
+            trange = self.browser().plot_ranges[Panel.times[0]]
+            t0s = secs_to_str(trange.r0[0], 3)
+            file_name = f'screenshot-{t0s}.png'
+            file_path = Path(self.browser().data.file_path).parent
+            file_path /= file_name
+            file_path = QFileDialog.getSaveFileName(self,
+                                                    'Save screenshot as',
+                                                    str(file_path),
+                                                    'PNG files (*.png)')[0]
+            if file_path:
+                try:
+                    image.save(file_path)
+                    print(f'saved screenshot to "{file_path.relative_to('.', True)}"')
+                except PermissionError as e:
+                    print(f'failed to save screenshot to "{file_path.relative_to('.', True)}": permission denied')
+
         
     def setup_file_actions(self, menu):
         self.acts.open_files = QAction('&Open', self)
@@ -173,6 +197,10 @@ class Audian(QMainWindow):
         self.acts.save_window = QAction('&Save window as', self)
         self.acts.save_window.setShortcuts(QKeySequence.SaveAs)
         self.acts.save_window.triggered.connect(lambda x: self.browser().save_window())
+
+        self.acts.screen_shot = QAction('Screenshot', self)
+        self.acts.screen_shot.setShortcut('Alt+Ctrl+S')
+        self.acts.screen_shot.triggered.connect(self.screen_shot)
 
         self.acts.meta_data = QAction('&Meta data', self)
         self.acts.meta_data.triggered.connect(lambda x: self.browser().show_metadata())
@@ -188,6 +216,7 @@ class Audian(QMainWindow):
         file_menu = menu.addMenu('&File')
         file_menu.addAction(self.acts.open_files)
         file_menu.addAction(self.acts.save_window)
+        file_menu.addAction(self.acts.screen_shot)
         file_menu.addSeparator()
         file_menu.addAction(self.acts.meta_data)
         file_menu.addSeparator()
