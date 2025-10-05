@@ -294,8 +294,8 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
         last_file = Path(self.data.data.file_paths[-1]).absolute()
         timestamp = datetime.now().isoformat()
         rate = 1/(self.times[1] - self.times[0])
-        ft_props = dict(first=str(first_file),
-                        last=str(last_file),
+        ft_props = dict(first=os.fspath(first_file),
+                        last=os.fspath(last_file),
                         rate=rate,
                         created=timestamp,
                         used=timestamp)
@@ -315,7 +315,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
         with ft_path.open('w') as df:
             json.dump(files, df, indent=4)
         # save file:
-        write_audio(str(audian_dirs.user_cache_path / ft_name),
+        write_audio(os.fspath(audian_dirs.user_cache_path / ft_name),
                     self.datas, 1e6*rate, format='WAV', encoding='DOUBLE')
         
 
@@ -331,10 +331,10 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             last_file = Path(self.data.data.file_paths[-1]).absolute()
             for ft_file in files.keys():
                 ft_props = files[ft_file]
-                if ft_props['first'] == str(first_file) and \
-                   ft_props['last'] == str(last_file):
+                if ft_props['first'] == os.fspath(first_file) and \
+                   ft_props['last'] == os.fspath(last_file):
                     # load full trace data:
-                    self.datas, rate = load_audio(str(audian_dirs.user_cache_path / ft_file))
+                    self.datas, rate = load_audio(os.fspath(audian_dirs.user_cache_path / ft_file))
                     rate = ft_props['rate']
                     self.times = np.arange(len(self.datas))/rate
                     # update timestamp:

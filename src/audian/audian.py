@@ -179,11 +179,12 @@ class Audian(QMainWindow):
             file_path = file_path.with_name(file_name)
             file_path = QFileDialog.getSaveFileName(self,
                                                     'Save screenshot as',
-                                                    str(file_path),
+                                                    os.fspath(file_path),
                                                     'PNG files (*.png)')[0]
             if file_path:
                 rel_path = Path(file_path).relative_to(Path.cwd(),
                                                        walk_up=True)
+                rel_path = os.fspath(rel_path)
                 try:
                     image.save(file_path)
                     print(f'saved screenshot to "{rel_path}"')
@@ -1234,10 +1235,12 @@ class Audian(QMainWindow):
                 formats.remove(f)
                 formats.insert(0, f)
         filters = ['All files (*)'] + [f'{f} files (*.{f}, *.{f.lower()})' for f in formats]
-        path = '.' if self.startup_active else Path(self.browser().data.file_path).parent
-        if len(path) == 0:
-            path = '.'
-        file_paths = QFileDialog.getOpenFileNames(self, directory=path, filter=';;'.join(filters))[0]
+        path = Path('.')
+        if not self.startup_active:
+            path = Path(self.browser().data.file_path).resolve().parent
+        file_paths = QFileDialog.getOpenFileNames(self,
+                                                  directory=os.fspath(path),
+                                                  filter=';;'.join(filters))[0]
 
         self.load_files(file_paths)
             

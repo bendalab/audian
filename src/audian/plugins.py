@@ -1,3 +1,4 @@
+import os
 import sys
 import importlib
 from pathlib import Path
@@ -41,7 +42,7 @@ class Plugins(object):
         
     def load_plugins(self):
         cwd = Path.cwd()
-        sys.path.append(str(cwd))
+        sys.path.append(os.fspath(cwd))
         for module in cwd.glob('audian*.py'):
             x = importlib.import_module(module.stem)
             called = False

@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from copy import deepcopy
 from math import fabs, floor, log10
@@ -1797,8 +1798,10 @@ class DataBrowser(QWidget):
         file_name = Path(self.data.file_path)
         file_name = file_name.with_name(file_name.stem + '-analysis.csv')
         file_name, _ = QFileDialog.getSaveFileName(
-            self, 'Save analysis as',
-            str(file_name), 'comma-separated values (*.csv)')
+            self,
+            'Save analysis as',
+            os.fspath(file_name),
+            'comma-separated values (*.csv)')
         if not file_name:
             return
         table = self.analyzers[0].data
@@ -1834,7 +1837,7 @@ class DataBrowser(QWidget):
         file_path = Path(self.data.file_path)
         file_path = file_path.with_name(file_name)
         file_path = QFileDialog.getSaveFileName(self, 'Save region as',
-                                                str(file_path),
+                                                os.fspath(file_path),
                                                 ';;'.join(filters))[0]
         if file_path:
             md = deepcopy(self.data.data.metadata())
@@ -1850,6 +1853,7 @@ class DataBrowser(QWidget):
             locs = locs[sel]
             labels = labels[sel]
             rel_path = Path(file_path).relative_to(Path.cwd(), walk_up=True)
+            rel_path = os.fstype(rel_path)
             try:
                 write_data(file_path,
                            self.data.data[i0:i1, self.selected_channels],

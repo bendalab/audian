@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -516,7 +517,8 @@ class MarkerDataModel(QAbstractTableModel):
             pass
         file_path = Path(self.data.file_path).with_name(file_name)
         file_path = QFileDialog.getSaveFileName(parent, 'Save marker data',
-                                                str(file_path), filters)[0]
+                                                os.fspath(file_path),
+                                                filters)[0]
         if file_path:
             df = self.data.data_frame()
             ext = Path(file_path).suffix
