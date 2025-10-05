@@ -108,7 +108,8 @@ class TimeAxisItem(pg.AxisItem):
         return [(spacing, 0), (minor_spacing, 0)]
 
 
-    def makeStrings(self, values, scale, spacing, starttime_mode):
+    def makeStrings(self, values, scale, spacing, starttime_mode,
+                    add_date=False):
         label = None
         units = None
         filename = self._file_paths[0] if len(self._file_paths) > 0 else None
@@ -142,9 +143,12 @@ class TimeAxisItem(pg.AxisItem):
         max_value = np.max(values)
 
         if starttime_mode == 1:
-            # TODO: also add days, month, years if necessary
-            units = 'h:m:s'
-            fs = '{hours:.0f}:{mins:02.0f}:{secs:02.0f}'
+            if add_date:
+                units = 'Y-M-D h:m:s'
+                fs = '{year:04d}-{month:02d}-{day:02d} {hours:.0f}:{mins:02.0f}:{secs:02.0f}'
+            else:
+                units = 'h:m:s'
+                fs = '{hours:.0f}:{mins:02.0f}:{secs:02.0f}'
         elif max_value > 3600:
             units = 'h:m:s'
             fs = '{hours:.0f}:{mins:02.0f}:{secs:02.0f}'
@@ -172,7 +176,8 @@ class TimeAxisItem(pg.AxisItem):
                 micros = f'{0.01*t.microsecond:04.0f}'
             else:
                 micros = f'{0.001*t.microsecond:03.0f}'
-            time = dict(hours=t.hour, mins=t.minute, secs=t.second,
+            time = dict(year=t.year, month=t.month, day=t.day,
+                        hours=t.hour, mins=t.minute, secs=t.second,
                         micros=micros)
             vals.append(fs.format(**time))
         return label, units, vals, filename

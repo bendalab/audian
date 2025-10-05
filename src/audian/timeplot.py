@@ -166,7 +166,7 @@ class TimePlot(RangePlot):
             nm = 0
             for sm in range(3):
                 label, units, vals, fname = \
-                    taxis.makeStrings([pos.x()], 1, spacing, sm)
+                    taxis.makeStrings([pos.x()], 1, spacing, sm, True)
                 if sm > 0 and label == 'REC':
                     continue
                 if label == 'File':

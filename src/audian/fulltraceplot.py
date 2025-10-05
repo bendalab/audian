@@ -24,7 +24,7 @@ from thunderlab.dataloader import DataLoader
 from .version import audian_dirs
 
 
-def secs_to_str(time, msec_level=10):
+def secs_to_str(time, msec_level=10, precision=10):
     days = time//(24*3600)
     time -= (24*3600)*days
     hours = time//3600
@@ -34,28 +34,33 @@ def secs_to_str(time, msec_level=10):
     secs = int(np.floor(time))
     time -= secs
     msecs = f'{1000*time:03.0f}ms'
+    ts = []
     if days > 0:
-        if msec_level < 4:
-            msecs = ''
-        return f'{days:.0f}d{hours:.0f}h{mins:.0f}m{secs:.0f}s{msecs}'
+        ts = [f'{days:.0f}d', f'{hours:.0f}h', f'{mins:.0f}m',
+              f'{secs:.0f}s']
+        if msec_level >= 4:
+            ts.append(msecs)
     elif hours > 0:
-        if msec_level < 3:
-            msecs = ''
-        return f'{hours:.0f}h{mins:.0f}m{secs:.0f}s{msecs}'
+        ts = [f'{hours:.0f}h', f'{mins:.0f}m', f'{secs:.0f}s']
+        if msec_level >= 3:
+            ts.append(msecs)
     elif mins > 0:
-        if msec_level < 2:
-            msecs = ''
-        return f'{mins:.0f}m{secs:.0f}s{msecs}'
+        ts = [f'{mins:.0f}m', f'{secs:.0f}s', msecs]
+        if msec_level >= 2:
+            ts.append(msecs)
     elif secs > 0:
-        if msec_level < 1:
-            msecs = ''
-        return f'{secs:.0f}s{msecs}'
+        ts = [f'{secs:.0f}s']
+        if msec_level >= 1:
+            ts.append(msecs)
     elif time >= 0.01:
-        return msecs
+        ts = [msecs]
     elif time >= 0.001:
-        return f'{1000*time:.2f}ms'
+        ts = [f'{1000*time:.2f}ms']
     else:
-        return f'{1e6*time:.0f}\u00b5s'
+        ts = [f'{1e6*time:.0f}\u00b5s']
+    if precision < 1:
+        precision = 1
+    return ''.join(ts[:precision])
 
 
 def down_sample(proc_idx, num_proc, nblock, step, array,
@@ -149,7 +154,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             # add time label:
             label = QGraphicsSimpleTextItem(axt.getAxis('left'))
             label.setToolTip('Total duration of the recording')
-            label.setText(secs_to_str(self.tmax, 1))
+            label.setText(secs_to_str(self.tmax, 1, 2))
             label.setPos(int(xwidth), 0)
             self.labels.append(label)
             
@@ -414,7 +419,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
                 taxis = self.axtraces[c].getAxis('bottom')
                 for sm in range(3):
                     label, units, vals, fname = \
-                        taxis.makeStrings([pos.x()], 1, 1, sm)
+                        taxis.makeStrings([pos.x()], 1, 1, sm, True)
                     if sm > 0 and label == 'REC':
                         continue
                     if label == 'File':
