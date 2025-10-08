@@ -47,12 +47,14 @@ def secs_to_str(time, msec_level=10, precision=10):
         ts = [f'{secs:.0f}s']
         if msec_level >= 1:
             ts.append(msecs)
-    elif time >= 0.01:
-        ts = [msecs]
-    elif time >= 0.001:
-        ts = [f'{1000*time:.2f}ms']
     else:
-        ts = [f'{1e6*time:.0f}\u00b5s']
+        ts = [msecs]
+    #elif time >= 0.01:
+    #    ts = [msecs]
+    #elif time >= 0.001:
+    #    ts = [f'{1000*time:.2f}ms']
+    #else:
+    #    ts = [f'{1e6*time:.0f}\u00b5s']
     if precision < 1:
         precision = 1
     return ''.join(ts[:precision])

@@ -48,6 +48,14 @@ class TimeAxisItem(pg.AxisItem):
                                 self._starttime_mode == 0)
 
 
+    def get_file_pos(self):
+        time = self.linkedView().viewRange()[0][0]
+        fidx = np.nonzero(self._file_times <= time)[0][-1]
+        toffs = self._file_times[fidx]
+        filename = self._file_paths[fidx]
+        return filename, time - toffs
+
+
     def tickSpacing(self, minVal, maxVal, size):
         diff = abs(maxVal - minVal)
         if diff == 0:

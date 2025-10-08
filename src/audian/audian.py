@@ -172,10 +172,11 @@ class Audian(QMainWindow):
         screen = QGuiApplication.primaryScreen()
         if app and screen:
             image = screen.grabWindow(app.winId())
-            trange = self.browser().plot_ranges[Panel.times[0]]
-            t0s = secs_to_str(trange.r0[0], 3)
-            file_name = f'screenshot-{t0s}.png'
-            file_path = Path(self.browser().data.file_path)
+            taxis = self.browser().panels['trace'].axs[0].getAxis('bottom')
+            file_name, time = taxis.get_file_pos()
+            t0s = secs_to_str(time, 3)
+            file_path = Path(file_name)
+            file_name = f'screenshot-{file_path.stem}-{t0s}.png'
             file_path = file_path.with_name(file_name)
             file_path = QFileDialog.getSaveFileName(self,
                                                     'Save screenshot as',
