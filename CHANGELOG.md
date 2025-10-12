@@ -2,12 +2,14 @@
 
 ## v2.5
 
-- Fixed power spectra for time windows smaller than time resolution
-- Fixed setting cross hair when zoomed in too much
-- Fixed offset problem in full trace plot
 - Time is indicated in all formats when hovering over time axis or
   full trace plots
 - Added screenshot function
+- Dropping screenshot file onto audian moves displayed window to
+  position of screenshot
+- Fixed power spectra for time windows smaller than time resolution
+- Fixed setting cross hair when zoomed in too much
+- Fixed offset problem in full trace plot
 
 
 ## v2.4 - 2025.07.25
