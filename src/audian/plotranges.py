@@ -254,7 +254,19 @@ class PlotRange(object):
             h = self.r1[c] - self.r0[c]
             m = 0.5*(self.r1[c] + self.r0[c])
             self.set_ranges(m - h, m + h, None, [c], do_set)
-
+                
+    def goto(self, pos, channels=None, do_set=True):
+        if not self.is_used():
+            return
+        if channels is None:
+            channels = range(len(self.r0))
+        if self.is_time():
+            channels = [0]
+        for c in channels:
+            if self.r0[c] != pos:
+                dr = self.r1[c] - self.r0[c]
+                self.set_ranges(pos, pos + dr,
+                                None, [c], do_set)
                 
     def move(self, move_fac, channels=None, do_set=True):
         if not self.is_used():

@@ -40,7 +40,7 @@ def secs_to_str(time, msec_level=10, precision=10):
         if msec_level >= 3:
             ts.append(msecs)
     elif mins > 0:
-        ts = [f'{mins:.0f}m', f'{secs:.0f}s', msecs]
+        ts = [f'{mins:.0f}m', f'{secs:.0f}s']
         if msec_level >= 2:
             ts.append(msecs)
     elif secs > 0:
@@ -443,4 +443,3 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
     def leaveEvent(self, ev):
         self.time_info.setVisible(False)
         super().leaveEvent(ev)
-

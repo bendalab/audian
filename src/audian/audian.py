@@ -176,7 +176,7 @@ class Audian(QMainWindow):
             file_name, time = taxis.get_file_pos()
             t0s = secs_to_str(time, 3)
             file_path = Path(file_name)
-            file_name = f'screenshot-{file_path.stem}-{t0s}.png'
+            file_name = f'screenshot-{file_path.stem.replace('-', '')}-{t0s}.png'
             file_path = file_path.with_name(file_name)
             file_path = QFileDialog.getSaveFileName(self,
                                                     'Save screenshot as',
@@ -193,6 +193,38 @@ class Audian(QMainWindow):
                     print(f'failed to save screenshot to "{rel_path}": permission denied')
 
         
+    def dragEnterEvent(self, ev):
+        # we want file names:
+        if ev.mimeData().hasUrls():
+            ev.acceptProposedAction()
+
+        
+    def dropEvent(self, ev):
+        if not ev.mimeData().hasUrls():
+            return
+        # TODO: if not an image, open new data.
+        path = Path(ev.mimeData().urls()[0].path())
+        if not path.suffix.lower() == '.png':
+            return
+        # parse file name of screenshot:
+        pcs = path.stem.split('-')
+        if len(pcs) < 2:
+            return
+        file_name = pcs[-2]
+        time_str = pcs[-1]
+        time = 0.0
+        for ts, fac in [['h', 3600], ['m', 60], ['s', 1], ['ms', 0.001]]:
+            if ts in time_str:
+                i = time_str.find(ts)
+                if ts == 'm' and i + 1 < len(time_str) and \
+                   time_str[i + 1] == 's':
+                    continue
+                time += fac * float(time_str[:i])
+                time_str = time_str[i + len(ts):]
+        self.browser().goto_time(file_name, time)
+        ev.acceptProposedAction()
+
+        
     def setup_file_actions(self, menu):
         self.acts.open_files = QAction('&Open', self)
         self.acts.open_files.setShortcuts(QKeySequence.Open)
@@ -205,6 +237,7 @@ class Audian(QMainWindow):
         self.acts.screen_shot = QAction('Screenshot', self)
         self.acts.screen_shot.setShortcut('Alt+Ctrl+S')
         self.acts.screen_shot.triggered.connect(self.screen_shot)
+        self.setAcceptDrops(True)
 
         self.acts.meta_data = QAction('&Meta data', self)
         self.acts.meta_data.triggered.connect(lambda x: self.browser().show_metadata())

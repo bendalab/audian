@@ -1092,6 +1092,16 @@ class DataBrowser(QWidget):
         self.sigRangesChanged.emit(axspec, arange)
 
 
+    def goto_time(self, file_name, time):
+        file_times = self.data.data.file_start_times()
+        file_paths = self.data.data.file_paths
+        for ft, fp in zip(file_times, file_paths):
+            if Path(fp).stem.replace('-', '') == file_name:
+                t0 = ft + time
+                self.plot_ranges['t'].goto(t0)
+                return
+
+
     def set_times(self, toffset=None, twindow=None):
         if self.setting:
             return
