@@ -28,6 +28,14 @@ for viewing and analyzing recordings of animal vocalizations.
 audian data.wav
 ```
 
+
+## User manual
+
+I just started to write a [user manual](docs/usermanual.md).
+
+
+## Development
+
 I currently explore various possibilities for interactive analysis of
 audio signals. In the end, audian should be easily extensible via
 plugins that provide processing and analysis algorithms, and audian

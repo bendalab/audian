@@ -10,4 +10,5 @@ theme: readthedocs
     
 nav:
     - Home: 'index.md'
+    - User manual: 'usermanual/index.html'
     - API reference: 'api/index.html'
