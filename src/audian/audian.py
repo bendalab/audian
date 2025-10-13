@@ -176,15 +176,18 @@ class Audian(QMainWindow):
             file_name, time = taxis.get_file_pos()
             t0s = secs_to_str(time, 3)
             file_path = Path(file_name)
-            file_name = f'screenshot-{file_path.stem.replace('-', '')}-{t0s}.png'
+            file_name = f'screenshot-{file_path.stem.replace("-", "")}-{t0s}.png'
             file_path = file_path.with_name(file_name)
             file_path = QFileDialog.getSaveFileName(self,
                                                     'Save screenshot as',
                                                     os.fspath(file_path),
                                                     'PNG files (*.png)')[0]
             if file_path:
-                rel_path = Path(file_path).relative_to(Path.cwd(),
-                                                       walk_up=True)
+                try:
+                    rel_path = Path(file_path).relative_to(Path.cwd(),
+                                                           walk_up=True)
+                except TypeError:
+                    rel_path = Path(file_path).relative_to(Path.cwd())
                 rel_path = os.fspath(rel_path)
                 try:
                     image.save(file_path)
