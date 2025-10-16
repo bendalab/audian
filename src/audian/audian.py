@@ -191,7 +191,9 @@ class Audian(QMainWindow):
                 rel_path = os.fspath(rel_path)
                 try:
                     image.save(file_path)
-                    # See https://stackoverflow.com/questions/58399070/how-do-i-save-custom-information-to-a-png-image-file-in-python for saving metadata ton png file
+                    # See
+                    # https://stackoverflow.com/questions/58399070/how-do-i-save-custom-information-to-a-png-image-file-in-python for saving metadata ton png file
+                    # https://stackoverflow.com/questions/47289884/how-to-convert-qimageqpixmap-to-pil-image-in-python-3 for buffered transfer from QImage to Pillow
                     print(f'saved screenshot to "{rel_path}"')
                 except PermissionError as e:
                     print(f'failed to save screenshot to "{rel_path}": permission denied')
