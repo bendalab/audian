@@ -1,9 +1,10 @@
 """PlotDataItem for spectrogram.
 """
 
-from math import floor
 import numpy as np
 import pyqtgraph as pg
+
+from math import floor
 from thunderlab.powerspectrum import decibel
 
 

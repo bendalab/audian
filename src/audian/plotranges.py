@@ -4,9 +4,11 @@
 `class PlotRanges`: manage all ranges
 """
 
-from math import ceil, log
 import numpy as np
+
+from math import ceil, log
 from functools import partial
+
 from .panels import Panel
 
 

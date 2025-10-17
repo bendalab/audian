@@ -4,8 +4,9 @@
 - class `PlainAnalyzer`: Implementation of an Analyzer that stores the analysis window into the table.
 """
 
-from math import floor, log10
 import pyqtgraph as pg
+
+from math import floor, log10
 from thunderlab.tabledata import TableData
 
 

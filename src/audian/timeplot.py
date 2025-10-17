@@ -2,6 +2,8 @@
 """
 
 import numpy as np
+import pyqtgraph as pg
+
 from pathlib import Path
 try:
     from PyQt5.QtCore import Signal
@@ -10,7 +12,7 @@ except ImportError:
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPalette, QColor
 from PyQt5.QtWidgets import QLabel
-import pyqtgraph as pg
+
 from .rangeplot import RangePlot
 from .timeaxisitem import TimeAxisItem
 from .yaxisitem import YAxisItem

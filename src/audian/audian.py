@@ -1,10 +1,14 @@
+import io
 import os
 import sys
-from pathlib import Path
 import glob
 import argparse
 import numpy as np
+
 import multiprocessing as mp
+import pyqtgraph as pg
+
+from pathlib import Path
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QKeySequence, QIcon, QGuiApplication
 from PyQt5.QtWidgets import QStyle, QApplication, QMainWindow, QTabWidget
@@ -12,8 +16,9 @@ from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel
 from PyQt5.QtWidgets import QAction, QActionGroup, QPushButton
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QScrollArea
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
-import pyqtgraph as pg
+from PIL import Image
 from audioio import available_formats, PlayAudio, AudioLoader
+
 from .version import __version__, __year__
 from .databrowser import DataBrowser
 from .fulltraceplot import secs_to_str
@@ -190,6 +195,7 @@ class Audian(QMainWindow):
                     rel_path = Path(file_path).relative_to(Path.cwd())
                 rel_path = os.fspath(rel_path)
                 try:
+                    
                     image.save(file_path)
                     # See
                     # https://stackoverflow.com/questions/58399070/how-do-i-save-custom-information-to-a-png-image-file-in-python for saving metadata ton png file

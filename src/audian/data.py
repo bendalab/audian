@@ -4,8 +4,10 @@ and the time window shown.
 """
 
 import numpy as np
+
 from audioio import get_datetime
 from thunderlab.dataloader import DataLoader
+
 from .bufferedspectrogram import BufferedSpectrogram
 
 

@@ -5,6 +5,7 @@
 """
 
 import numpy as np
+
 from .traceitem import TraceItem
 from .specitem import SpecItem
 

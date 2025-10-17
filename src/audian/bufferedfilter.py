@@ -2,6 +2,7 @@
 """
 
 from scipy.signal import butter, sosfilt
+
 from .buffereddata import BufferedData
 
 

@@ -3,19 +3,22 @@
 
 import os
 import json
+
+import numpy as np
+import ctypes as c
+import pyqtgraph as pg
+
 from pathlib import Path
 from math import floor
 from datetime import datetime
-import numpy as np
-import ctypes as c
 from multiprocessing import Process, Array
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import QGraphicsSimpleTextItem, QLabel
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtGui import QPalette
-import pyqtgraph as pg
 from audioio import load_audio, write_audio
 from thunderlab.dataloader import DataLoader
+
 from .version import audian_dirs
 
 

@@ -1,8 +1,9 @@
 """Base class for computed data.
 """
 
-from math import floor, ceil
 import numpy as np
+
+from math import floor, ceil
 from audioio import BufferedArray
 
 

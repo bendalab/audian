@@ -2,8 +2,9 @@
 """
 
 import numpy as np
-from PyQt5.QtWidgets import QApplication
 import pyqtgraph as pg
+
+from PyQt5.QtWidgets import QApplication
 
 
 class TraceItem(pg.PlotDataItem):

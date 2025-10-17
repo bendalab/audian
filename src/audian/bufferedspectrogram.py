@@ -2,10 +2,11 @@
 
 """
 
-
 import numpy as np
+
 from scipy.signal import spectrogram
 from thunderlab.powerspectrum import decibel
+
 from .buffereddata import BufferedData
 
 

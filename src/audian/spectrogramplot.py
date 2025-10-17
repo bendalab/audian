@@ -2,13 +2,15 @@
 """
 
 import numpy as np
+import pyqtgraph as pg
+
 try:
     from PyQt5.QtCore import Signal
 except ImportError:
     from PyQt5.QtCore import pyqtSignal as Signal
 from PyQt5.QtGui import QPalette
-import pyqtgraph as pg
 from thunderlab.powerspectrum import decibel
+
 from .panels import Panel
 from .rangeplot import RangePlot
 from .timeplot import TimePlot

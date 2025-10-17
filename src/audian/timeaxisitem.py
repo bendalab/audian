@@ -1,10 +1,11 @@
-from math import ceil, floor, log10
 import datetime as dt
 import numpy as np
+import pyqtgraph as pg
+
+from math import ceil, floor, log10
 from PyQt5.QtCore import QPointF, Qt
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtGui import QFontMetrics
-import pyqtgraph as pg
 
 
 class TimeAxisItem(pg.AxisItem):

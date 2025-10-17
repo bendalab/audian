@@ -1,9 +1,12 @@
 import os
+
+import datetime as dt
+import numpy as np
+import pyqtgraph as pg
+
 from pathlib import Path
 from copy import deepcopy
 from math import fabs, floor, log10
-import datetime as dt
-import numpy as np
 from scipy.signal import butter, sosfiltfilt
 try:
     from PyQt5.QtCore import Signal
@@ -16,11 +19,11 @@ from PyQt5.QtWidgets import QAction, QMenu, QToolBar, QComboBox, QCheckBox
 from PyQt5.QtWidgets import QLabel, QSizePolicy, QTableView
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFileDialog
 from PyQt5.QtWidgets import QAbstractItemView, QGraphicsRectItem
-import pyqtgraph as pg
 from audioio import fade
 from audioio import get_datetime, update_starttime
 from audioio import bext_history_str, add_history
 from thunderlab.datawriter import available_formats, write_data
+
 from .version import __version__, __year__
 from .data import Data
 from .panels import Panel, Panels
