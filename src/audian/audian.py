@@ -9,7 +9,7 @@ import multiprocessing as mp
 import pyqtgraph as pg
 
 from pathlib import Path
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtCore import Qt, QTimer, QBuffer
 from PyQt5.QtGui import QKeySequence, QIcon, QGuiApplication
 from PyQt5.QtWidgets import QStyle, QApplication, QMainWindow, QTabWidget
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel
@@ -17,6 +17,7 @@ from PyQt5.QtWidgets import QAction, QActionGroup, QPushButton
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QScrollArea
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from PIL import Image
+from PIL.PngImagePlugin import PngInfo
 from audioio import available_formats, PlayAudio, AudioLoader
 
 from .version import __version__, __year__
@@ -97,6 +98,7 @@ class Audian(QMainWindow):
         self.load_kwargs = load_kwargs
         self.load_files(file_paths)
         self.starttime_mode = 0
+        self.screenshot_path = None
 
         # init widgets to show:
         if len(self.browsers) > 0:
@@ -181,25 +183,35 @@ class Audian(QMainWindow):
             file_name, time = taxis.get_file_pos()
             t0s = secs_to_str(time, 3)
             file_path = Path(file_name)
-            file_name = f'screenshot-{file_path.stem.replace("-", "")}-{t0s}.png'
-            file_path = file_path.with_name(file_name)
+            metadata = PngInfo()
+            metadata.add_text("ScreenshotFile", file_path.name)
+            metadata.add_text("ScreenshotTime", t0s)
+            file_name = 'screenshot.png'
+            if self.screenshot_path is None:
+                file_path = file_path.with_name(file_name)
+            else:
+                file_path = self.screenshot_path / file_name
             file_path = QFileDialog.getSaveFileName(self,
                                                     'Save screenshot as',
                                                     os.fspath(file_path),
                                                     'PNG files (*.png)')[0]
             if file_path:
                 try:
-                    rel_path = Path(file_path).relative_to(Path.cwd(),
-                                                           walk_up=True)
-                except TypeError:
-                    rel_path = Path(file_path).relative_to(Path.cwd())
+                    try:
+                        rel_path = Path(file_path).relative_to(Path.cwd(),
+                                                               walk_up=True)
+                    except TypeError:
+                        rel_path = Path(file_path).relative_to(Path.cwd())
+                except ValueError:
+                    rel_path = file_path
                 rel_path = os.fspath(rel_path)
                 try:
-                    
-                    image.save(file_path)
-                    # See
-                    # https://stackoverflow.com/questions/58399070/how-do-i-save-custom-information-to-a-png-image-file-in-python for saving metadata ton png file
-                    # https://stackoverflow.com/questions/47289884/how-to-convert-qimageqpixmap-to-pil-image-in-python-3 for buffered transfer from QImage to Pillow
+                    image_buffer = QBuffer()
+                    image_buffer.open(QBuffer.ReadWrite)
+                    image.save(image_buffer, "PNG")
+                    pil_image = Image.open(io.BytesIO(image_buffer.data()))
+                    pil_image.save(file_path, pnginfo=metadata)
+                    self.screenshot_path = Path(file_path).parent
                     print(f'saved screenshot to "{rel_path}"')
                 except PermissionError as e:
                     print(f'failed to save screenshot to "{rel_path}": permission denied')
@@ -218,12 +230,17 @@ class Audian(QMainWindow):
         path = Path(ev.mimeData().urls()[0].path())
         if not path.suffix.lower() == '.png':
             return
-        # parse file name of screenshot:
-        pcs = path.stem.split('-')
-        if len(pcs) < 2:
-            return
-        file_name = pcs[-2]
-        time_str = pcs[-1]
+        screenshot = Image.open(path)
+        if 'ScreenshotFile' in screenshot.text:
+            file_name = screenshot.text['ScreenshotFile']
+            time_str = screenshot.text['ScreenshotTime']
+        else:
+            # parse file name of screenshot:
+            pcs = path.stem.split('-')
+            if len(pcs) < 2:
+                return
+            file_name = pcs[-2]
+            time_str = pcs[-1]
         time = 0.0
         for ts, fac in [['h', 3600], ['m', 60], ['s', 1], ['ms', 0.001]]:
             if ts in time_str:

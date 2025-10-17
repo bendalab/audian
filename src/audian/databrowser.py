@@ -1098,11 +1098,19 @@ class DataBrowser(QWidget):
     def goto_time(self, file_name, time):
         file_times = self.data.data.file_start_times()
         file_paths = self.data.data.file_paths
-        for ft, fp in zip(file_times, file_paths):
-            if Path(fp).stem.replace('-', '') == file_name:
-                t0 = ft + time
-                self.plot_ranges['t'].goto(t0)
-                return
+        print(file_name, time)
+        if '.' in file_name:
+            for ft, fp in zip(file_times, file_paths):
+                if Path(fp).name == file_name:
+                    t0 = ft + time
+                    self.plot_ranges['t'].goto(t0)
+                    return
+        else:
+            for ft, fp in zip(file_times, file_paths):
+                if Path(fp).stem.replace('-', '') == file_name:
+                    t0 = ft + time
+                    self.plot_ranges['t'].goto(t0)
+                    return
 
 
     def set_times(self, toffset=None, twindow=None):
