@@ -93,12 +93,12 @@ class Audian(QMainWindow):
         self.startup_active = False
         
         # data:
+        self.starttime_mode = 0
+        self.save_path = [None]
         self.unwrap = unwrap
         self.unwrap_clip = unwrap_clip
         self.load_kwargs = load_kwargs
         self.load_files(file_paths)
-        self.starttime_mode = 0
-        self.screenshot_path = None
 
         # init widgets to show:
         if len(self.browsers) > 0:
@@ -187,10 +187,10 @@ class Audian(QMainWindow):
             metadata.add_text("ScreenshotFile", file_path.name)
             metadata.add_text("ScreenshotTime", t0s)
             file_name = 'screenshot.png'
-            if self.screenshot_path is None:
+            if self.save_path[0] is None:
                 file_path = file_path.with_name(file_name)
             else:
-                file_path = self.screenshot_path / file_name
+                file_path = self.save_path[0] / file_name
             file_path = QFileDialog.getSaveFileName(self,
                                                     'Save screenshot as',
                                                     os.fspath(file_path),
@@ -211,7 +211,7 @@ class Audian(QMainWindow):
                     image.save(image_buffer, "PNG")
                     pil_image = Image.open(io.BytesIO(image_buffer.data()))
                     pil_image.save(file_path, pnginfo=metadata)
-                    self.screenshot_path = Path(file_path).parent
+                    self.save_path[0] = Path(file_path).parent
                     print(f'saved screenshot to "{rel_path}"')
                 except PermissionError as e:
                     print(f'failed to save screenshot to "{rel_path}": permission denied')
@@ -1324,7 +1324,7 @@ class Audian(QMainWindow):
             self.prev_browser = self.browser()
         # prepare open all files in a single buffer:
         browser = DataBrowser(file_paths, self.load_kwargs, self.plugins,
-                              self.channels, self.audio, self.acts)
+                              self.channels, self.audio, self.acts, self.save_path)
         self.tabs.addTab(browser, browser.name())
         self.browsers.append(browser)
         self.tabs.setCurrentWidget(browser)
@@ -1357,7 +1357,8 @@ class Audian(QMainWindow):
                                        self.plugins,
                                        self.channels,
                                        self.audio,
-                                       self.acts)
+                                       self.acts,
+                                       self.save_path)
                 self.tabs.addTab(nbrowser, nbrowser.name())
                 self.browsers.append(nbrowser)
             if browser.data.data is None:

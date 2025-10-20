@@ -80,11 +80,12 @@ class DataBrowser(QWidget):
 
     
     def __init__(self, file_path, load_kwargs, plugins, channels,
-                 audio, acts, *args, **kwargs):
+                 audio, acts, save_path, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # actions of main window:
         self.acts = acts
+        self.save_path = save_path
 
         # data:
         self.schannels = channels
@@ -1816,22 +1817,27 @@ class DataBrowser(QWidget):
     def save_analysis(self):
         if len(self.analyzers) == 0 or self.analyzers[0].data.columns() == 0:
             return
-        file_name = Path(self.data.file_path)
-        file_name = file_name.with_name(file_name.stem + '-analysis.csv')
-        file_name, _ = QFileDialog.getSaveFileName(
+        file_path = Path(self.data.file_path)
+        file_name = file_path.stem + '-analysis.csv'
+        if self.save_path[0] is None:
+            file_path = file_path.with_name(file_name)
+        else:
+            file_path = self.save_path[0] / file_name
+        file_path, _ = QFileDialog.getSaveFileName(
             self,
             'Save analysis as',
-            os.fspath(file_name),
+            os.fspath(file_path),
             'comma-separated values (*.csv)')
-        if not file_name:
+        if not file_path:
             return
         table = self.analyzers[0].data
         for a in self.analyzers[1:]:
             for c in range(a.data.columns()):
                 table.append(a.data.label(c), a.data.unit(c),
                              a.data.format(c), value=a.data.data[c])
-        table.write(file_name, table_format='csv', delimiter=';',
+        table.write(file_path, table_format='csv', delimiter=';',
                     unit_style='header', column_numbers=None, sections=0)
+        self.save_path[0] = Path(file_path).parent
      
                     
     def save_region(self, t0, t1):
@@ -1856,7 +1862,10 @@ class DataBrowser(QWidget):
                 formats.insert(0, f)
         filters = ['All files (*)'] + [f'{f} files (*.{f}, *.{f.lower()})' for f in formats]
         file_path = Path(self.data.file_path)
-        file_path = file_path.with_name(file_name)
+        if self.save_path[0] is None:
+            file_path = file_path.with_name(file_name)
+        else:
+            file_path = self.save_path[0] / file_name
         file_path = QFileDialog.getSaveFileName(self, 'Save region as',
                                                 os.fspath(file_path),
                                                 ';;'.join(filters))[0]
@@ -1868,19 +1877,28 @@ class DataBrowser(QWidget):
                 hkey = 'BEXT.' + hkey
             bext_code = bext_history_str(self.data.data.encoding,
                                          self.data.rate, self.data.channels)
-            add_history(md, bext_code + f',T=cut out {t0s}-{t1s}: {Path(file_path).name}', hkey, bext_code + f',T={self.data.file_path}')
+            add_history(md, bext_code + f',T=cut out {t0s}-{t1s}: {Path(file_path).name}',
+                        hkey, bext_code + f',T={self.data.file_path}')
             locs, labels = self.marker_data.get_markers(self.data.rate)
             sel = (locs[:,0] + locs[:,1] >= i0) & (locs[:,0] <= i1)
             locs = locs[sel]
             labels = labels[sel]
-            rel_path = Path(file_path).relative_to(Path.cwd(), walk_up=True)
-            rel_path = os.fstype(rel_path)
+            try:
+                try:
+                    rel_path = Path(file_path).relative_to(Path.cwd(),
+                                                           walk_up=True)
+                except TypeError:
+                    rel_path = Path(file_path).relative_to(Path.cwd())
+            except ValueError:
+                rel_path = file_path
+            rel_path = os.fspath(rel_path)
             try:
                 write_data(file_path,
                            self.data.data[i0:i1, self.selected_channels],
                            self.data.rate, self.data.data.ampl_max,
                            self.data.data.unit, md, locs, labels,
                            encoding=self.data.data.encoding)
+                self.save_path[0] = Path(file_path).parent
                 print(f'saved region to "{rel_path}"')
             except PermissionError as e:
                 print(f'failed to save region to "{rel_path}": permission denied')
