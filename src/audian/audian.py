@@ -182,10 +182,16 @@ class Audian(QMainWindow):
             taxis = self.browser().panels['trace'].axs[0].getAxis('bottom')
             file_name, time = taxis.get_file_pos()
             t0s = secs_to_str(time, 3)
+            twin = self.browser().plot_ranges['t'].r1[0] - self.browser().plot_ranges['t'].r0[0]
+            twins = secs_to_str(twin, 3)
+            channels = ','.join([f'{c}' for c in self.browser().show_channels])
+            print(channels)
             file_path = Path(file_name)
             metadata = PngInfo()
             metadata.add_text("ScreenshotFile", file_path.name)
             metadata.add_text("ScreenshotTime", t0s)
+            metadata.add_text("ScreenshotWindow", twins)
+            metadata.add_text("ScreenshotChannels", channels)
             file_name = 'screenshot.png'
             if self.save_path[0] is None:
                 file_path = file_path.with_name(file_name)
