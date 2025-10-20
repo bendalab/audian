@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="None" /><meta name="author" content="Benda-Lab" />
+      <link rel="shortcut icon" href="img/favicon.ico" />
+    <title>audian</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Home";
+        var mkdocs_page_input_path = "index.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="." class="icon icon-home"> audian
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Home</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#features">Features</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#user-manual">User manual</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#development">Development</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#incomplete-list-of-todos">Incomplete list of TODOs:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#structure">Structure</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#model">Model</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#view">View</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#controller">Controller</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#plugins">Plugins</a>
+    </li>
+        </ul>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#run-audian-from-spyder-ipython-console">Run audian from Spyder IPython console:</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#options">Options</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#other-scientific-software-for-working-on-timeseries-data">Other scientific software for working on timeseries data</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="" href="usermanual/index.html">User manual</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="" href="api/index.html">API reference</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href=".">audian</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Home</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <p><a href="https://pypi.python.org/pypi/audian/"><img alt="PyPI license" src="https://img.shields.io/pypi/l/audian.svg" /></a>
+<a href="https://badge.fury.io/py/audian"><img alt="PyPI version" src="https://badge.fury.io/py/audian.svg" /></a></p>
+<h1 id="audian-audioanalyzer">audian - AUDIoANalyzer</h1>
+<p>Python- and <a href="https://pyqtgraph.readthedocs.io">pyqtgraph</a>-based GUI
+for viewing and analyzing recordings of animal vocalizations.</p>
+<p><img alt="audian" src="audian-v1.7.png" /></p>
+<h2 id="features">Features</h2>
+<ul>
+<li>Interactive viewer for single and multi-channel audio signals.</li>
+<li>Can handle many file formats and long recordings - holds only part of the recordings in memory.</li>
+<li>Displays raw traces, filtered traces, envelopes, and spectrogram.</li>
+<li>Change spectrogram resolution, overlap, color bar range and color map interactively.</li>
+<li>Change low- and high-pass filter cutoff frequencies interactively.</li>
+<li>Optional envelope with lowpass-filter cutoff frequency that can be changed interactively.</li>
+<li>Hide and show channels as well as plot panels.</li>
+<li>Extensive and intuitive key shortcuts for most functions.</li>
+<li>Plugins for additional computed traces, plot panels, and analysis.</li>
+</ul>
+<pre><code class="language-sh">audian data.wav
+</code></pre>
+<h2 id="user-manual">User manual</h2>
+<p>I just started to write a <a href="usermanual/">user manual</a>.</p>
+<h2 id="development">Development</h2>
+<p>I currently explore various possibilities for interactive analysis of
+audio signals. In the end, audian should be easily extensible via
+plugins that provide processing and analysis algorithms, and audian
+handles all GUI aspects.</p>
+<h3 id="incomplete-list-of-todos">Incomplete list of TODOs:</h3>
+<ul>
+<li>[ ] Implement Model-View structure</li>
+<li>[x] Handle all data (raw, filtered, spectrogram,...) in one class!</li>
+<li>[x] Boil down the BufferedData code to a simple plugin interface.</li>
+<li>[x] Add destination list to Buffered data.</li>
+<li>[x] Smart updates of trace buffers.</li>
+<li>[x] Move spectrum functions from Data to BufferedSpectrum.</li>
+<li>[x] Move y-lim functions from TracItem and SpecItem to DataBrowser.</li>
+<li>[x] Traces should be assignable to plots.</li>
+<li>[x] TraceItems should get color and line width from data objects.</li>
+<li>[x] Recompute derived data whenever a source is changed.</li>
+<li>[x] Update plots of all items that have been recomputed.</li>
+<li>[x] Recompute derived data only if visible or used by something visible.</li>
+<li>[x] Automatically discover plugins.</li>
+<li>[x] Analyzer plugins for analysing a select snippet of the data.</li>
+<li>[ ] Test this plugin interface with<ul>
+<li>[ ] Subtract common mean</li>
+<li>[x] Logarithmic and high-pass filtered envelope</li>
+<li>[ ] Envelope from visible frequency range of spectrogram</li>
+<li>[ ] Feature expansion (kernel filter)</li>
+</ul>
+</li>
+<li>[ ] Improve zoom stack behavior!!!</li>
+<li>[ ] Add events and marker ranges to the Data class</li>
+<li>[ ] Load events from csv files provide along with the raw data.</li>
+<li>[ ] Provide interface for event detectors</li>
+<li>[ ] Provide interface for event filters?</li>
+<li>[ ] Implement a proper layout for showing the plot panels:</li>
+<li>[x] Support additional plots from plugins</li>
+<li>[ ] Proper y-labels for xt plots: channel not for single trace plot, otherwise plot name with unit.</li>
+<li>[ ] add units to amplitude axes</li>
+<li>[x] Amplitude ranges should consider ampl_min/ampl_max of all traces</li>
+<li>[x] Add yt plot with independent y-axis key shortcut</li>
+<li>[ ] Update cross-hair code to the new plot_ranges</li>
+<li>[ ] Support optional grid layout</li>
+<li>[x] New plot widget showing power spectrum of visible range.</li>
+<li>[ ] Support horizontal power spectrum</li>
+<li>[ ] Cycle with Ctrl+P through no power plot, power spectrum to the right, power spectrum on top.</li>
+<li>[ ] FullTracePlot:</li>
+<li>[x] fix offset problem.</li>
+<li>[x] indicate time under mouse cursor.</li>
+<li>[x] compute full trace in the background.</li>
+<li>[x] store and load full trace to user specific cache dir.</li>
+<li>[ ] background computation and file saving only if long enough.</li>
+<li>[ ] command line script for computing fulltrace plot</li>
+<li>[x] Add a toolbar widget for spectrum overlap</li>
+<li>[x] SpinBox for envelope cutoff frequency needs to show digits
+  after decimal point.</li>
+<li>[ ] Interactive high- and low-pass filtering:</li>
+<li>[ ] make the lines and the corrseponding toolbar widget a general property of the spectrogram plot</li>
+<li>[ ] allow for flexible connetctions of these features to some bufferedata update function.</li>
+<li>[ ] high- and low-pass filter lines must not cross! Update limits.</li>
+<li>[ ] add a toolbar widget for setting filter order.</li>
+<li>[ ] Implement downsampling of spectrograms! Or make it even dependent on window size.</li>
+<li>[ ] Improve on the concept of current cursor:</li>
+<li>[ ] play should not stop at visible range but keeps going and scrolls data.</li>
+<li>[ ] make cursor moveable by mouse.</li>
+<li>[ ] some key shortcuts for moving and handling cursor.</li>
+<li>[ ] Improve on marking cross hair, cues, regions, events:</li>
+<li>
+<p>[x] Cross hair should only be used for measuring! Just a single whitish color.
+    Comments only in the table.
+    Show points only fom active measurement.</p>
+</li>
+<li>
+<p>Cues and regions have position data with labels. Same for all channels.</p>
+<ul>
+<li>visualize them by infinite vertical lines/regions, both in plots and
+  FullTracePlot (maybe in extra row?).</li>
+<li>can be set from cursor position/marked region.</li>
+<li>add key shortcuts to go to next/previous cue.</li>
+<li>from cue table go to selected cue.</li>
+<li>how does boris export them?</li>
+</ul>
+</li>
+<li>Events are channel specific points.<ul>
+<li>Plotted as dot at data amplitude.</li>
+<li>Many events per label.</li>
+<li>Result from some analysis.</li>
+<li>But should be editable.</li>
+</ul>
+</li>
+<li>Event regions are channel specific:<ul>
+<li>Plotted as lines on top of data.</li>
+<li>Result from some analysis.</li>
+<li>But should be editable.</li>
+</ul>
+</li>
+<li>[ ] Define plugin interfaces for analysis on full data, visible range,
+  selected range.</li>
+<li>[ ] Have a dockable sidebar for showing metadata, cue tables etc.</li>
+</ul>
+<h3 id="structure">Structure</h3>
+<p>Eventually we want audian to be neatly separated into a data model,
+widgets that display the data, and controllers.</p>
+<h4 id="model">Model</h4>
+<p>At the core of audian are time-series data that are loaded from a
+file. In addition it supports varous derived time-series data, like
+for example filtered data, computed envelopes, spectrograms,
+etc. Audian can handle very large data sets, but holds only a small
+part in memory (buffer).</p>
+<ul>
+<li><code>class BufferedData</code>: Base class for computed data (<code>buffereddata.py</code>).</li>
+<li><code>class BufferedFilter</code>: Filter source data on the fly (<code>bufferedfilter.py</code>).</li>
+<li><code>class BufferedEnvelope</code>: Compute envelope on the fly (<code>bufferedenvelope.py</code>).</li>
+<li>
+<p><code>class BufferedSpectrogram</code>: Spectrogram of source data on the fly (<code>bufferedspectrogram.py</code>).</p>
+</li>
+<li>
+<p><code>class Data</code>: Handles all the raw and derived data traces like filtered data, spectrogram data, etc (<code>data.py</code>).</p>
+</li>
+<li>
+<p><code>markerdata.py</code>: All marker related stuff. TODO: Split it into widgets and marker data.</p>
+</li>
+</ul>
+<h4 id="view">View</h4>
+<p>All the data audian is dealing with are displayed in plots.</p>
+<p>A few classes specializing some pyqtgraph features:</p>
+<ul>
+<li><code>timeaxisitem.py</code>: Label time-axis of TimePlot.</li>
+<li><code>yaxisitem.py</code>: Label y-axis of TimePlot.</li>
+<li><code>selectviewbox.py</code>: Handles zooming and selection on all RangePlot.</li>
+</ul>
+<p>Managing plots:</p>
+<ul>
+<li><code>plotranges.py</code>: Manage ranges of plot axes.</li>
+<li><code>panels.py</code>: Manage plot panels.</li>
+</ul>
+<p>Basic plots for time-series data:</p>
+<ul>
+<li><code>rangeplot.py</code>: Plot displaying any data with specified range type.</li>
+<li><code>timeplot.py</code>: Plot displaying data as a function of time.</li>
+<li><code>spectrogramplot.py</code>: Plot displaying spectrograms.</li>
+</ul>
+<p>Basic plot items:</p>
+<ul>
+<li><code>traceitem.py</code>: PlotDataItem for TimePlot.</li>
+<li><code>specitem.py</code>: ImageItem for SpectrogramPlot.</li>
+<li><code>fulltraceplot.py</code>: GraphicsLayoutWidget showing the full raw data traces.</li>
+</ul>
+<h4 id="controller">Controller</h4>
+<ul>
+<li><code>audiangui.py</code>: Main GUI, handles DataBrowser widgets and key shortcuts.</li>
+<li><code>databrowser.py</code>: Each data file is displayed in a DataBrowser widget.</li>
+</ul>
+<h4 id="plugins">Plugins</h4>
+<ul>
+<li><code>plugins.py</code>: Discover and manage plugins.</li>
+<li><code>analyzer.py</code>: Base class for analyzer plugins.</li>
+<li><code>statisticsanalyzer.py</code>: Compute basic descriptive statistics.</li>
+</ul>
+<h2 id="run-audian-from-spyder-ipython-console">Run audian from Spyder IPython console:</h2>
+<p>Call the audian script via a shell escape:</p>
+<pre><code class="language-py">! audian
+</code></pre>
+<h2 id="installation">Installation</h2>
+<p>Simply run (as superuser):</p>
+<pre><code class="language-sh">pip install audian
+</code></pre>
+<p>This should also install:
+- <a href="https://github.com/bendalab/thunderlab">ThunderLab</a>
+- <a href="https://github.com/bendalab/audioio">AudioIO</a></p>
+<p>From the (spyder) IPython console, you can install it via</p>
+<pre><code class="language-sh">%pip install audian
+</code></pre>
+<h2 id="options">Options</h2>
+<p>Output of <code>audian --help</code>:</p>
+<pre><code class="language-txt">usage: audian [-h] [--version] [-v] [-c CHANNELS] [-f FREQ] [-l FREQ] [-i KWARGS] [-u [UNWRAP]] [-U [UNWRAP]]
+              [files ...]
+
+Browse and analyze recordings of animal vocalizations..
+
+positional arguments:
+  files        name of files with the time series data
+
+options:
+  -h, --help   show this help message and exit
+  --version    show program's version number and exit
+  -v           Print debug information
+  -c CHANNELS  Comma separated list of channels to be displayed (first channel is 0).
+  -f FREQ      Cutoff frequency of highpass filter in Hz
+  -l FREQ      Cutoff frequency of lowpass filter in Hz
+  -i KWARGS    key-word arguments for the data loader function
+  -u [UNWRAP]  unwrap clipped data with threshold relative to maximum input range and divide by two using unwrap()
+               from audioio package
+  -U [UNWRAP]  unwrap clipped data with threshold relative to maximum input range and clip using unwrap() from audioio
+               package
+
+version 2.0 by Jan Benda (2015-2024)
+</code></pre>
+<h2 id="other-scientific-software-for-working-on-timeseries-data">Other scientific software for working on timeseries data</h2>
+<ul>
+<li><a href="https://github.com/scientisst/BioSPPy">BioSPPy</a>: The toolbox
+  bundles together various signal processing and pattern recognition
+  methods geared towards the analysis of biosignals.</li>
+</ul>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/bendalab/audian/" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+    
+  </span>
+</div>
+    <script src="js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = ".";</script>
+    <script src="js/theme_extra.js"></script>
+    <script src="js/theme.js"></script>
+      <script src="search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
+
+<!--
+MkDocs version : 1.6.1
+Build Date UTC : 2025-10-20 11:37:48.738855+00:00
+-->
