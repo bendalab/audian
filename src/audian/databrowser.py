@@ -806,10 +806,13 @@ class DataBrowser(QWidget):
             if not panel.is_used() or not panel.is_visible(channel):
                 continue
             ax = panel.axs[channel]
+            """
             if panel.is_time():
+                # this is too much ...
                 screen_pos = self.mapToGlobal(self.pos())
                 screen_pos += QPoint(0, self.figs[channel].y())
                 ax.show_times(screen_pos, evt[0])
+            """
             if not ax.sceneBoundingRect().contains(evt[0]):
                 continue
             if self.cross_hair:
