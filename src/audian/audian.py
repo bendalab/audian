@@ -1354,8 +1354,8 @@ class Audian(QMainWindow):
                     self.show_startup()
             if browser.data.data is not None:
                 for fn in browser.data.data.file_paths:
-                    if fn in self.file_paths:
-                        self.file_paths.remove(fn)
+                    if os.fsdecode(fn) in self.file_paths:
+                        self.file_paths.remove(os.fsdecode(fn))
             if len(self.file_paths) > 0:
                 # still need to load some files:
                 nbrowser = DataBrowser(self.file_paths,
