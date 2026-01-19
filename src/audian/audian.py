@@ -210,7 +210,6 @@ class Audian(QMainWindow):
                         rel_path = Path(file_path).relative_to(Path.cwd())
                 except ValueError:
                     rel_path = file_path
-                rel_path = os.fspath(rel_path)
                 try:
                     image_buffer = QBuffer()
                     image_buffer.open(QBuffer.ReadWrite)
