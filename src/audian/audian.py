@@ -1324,7 +1324,7 @@ class Audian(QMainWindow):
     def load_files(self, file_paths):
         if len(file_paths) == 0:
             return
-        self.file_paths = file_paths
+        self.file_paths = [Path(fp) for fp in file_paths]
         if len(self.browsers) > 0:
             self.prev_browser = self.browser()
         # prepare open all files in a single buffer:
@@ -1353,8 +1353,8 @@ class Audian(QMainWindow):
                     self.show_startup()
             if browser.data.data is not None:
                 for fn in browser.data.data.file_paths:
-                    if os.fsdecode(fn) in self.file_paths:
-                        self.file_paths.remove(os.fsdecode(fn))
+                    if fn in self.file_paths:
+                        self.file_paths.remove(fn)
             if len(self.file_paths) > 0:
                 # still need to load some files:
                 nbrowser = DataBrowser(self.file_paths,
