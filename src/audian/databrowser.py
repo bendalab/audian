@@ -1706,11 +1706,11 @@ class DataBrowser(QWidget):
         if i1 > len(data):
             i1 = len(data)
             t1 = i1/rate
-        n2 = (len(self.selected_channels)+1)//2
-        playdata = np.zeros((i1-i0, min(2, len(self.selected_channels))))
-        playdata[:,0] = np.mean(data[i0:i1, self.selected_channels[:n2]], 1)
-        if len(self.selected_channels) > 1:
-            playdata[:,1] = np.mean(data[i0:i1, self.selected_channels[n2:]], 1)
+        n2 = (len(self.show_channels) + 1)//2
+        playdata = np.zeros((i1 - i0, min(2, len(self.show_channels))))
+        playdata[:, 0] = np.mean(data[i0:i1, self.show_channels[:n2]], 1)
+        if len(self.show_channels) > 1:
+            playdata[:, 1] = np.mean(data[i0:i1, self.show_channels[n2:]], 1)
         if self.audio_use_heterodyne:
             # multiply with heterodyne frequency:
             heterodyne = np.sin(2*np.pi*self.audio_heterodyne_freq*np.arange(len(playdata))/rate)
@@ -1729,7 +1729,7 @@ class DataBrowser(QWidget):
         self.audio_tmax = t1
         self.audio_timer.start(50)
         for c in range(data.channels):
-            atime = self.audio_time if c in self.selected_channels else -1
+            atime = self.audio_time if c in self.show_channels else -1
             for vmarker in self.audio_markers[c]:
                 vmarker.setValue(atime)
 
