@@ -31,33 +31,37 @@ def secs_to_str(time, msec_level=10, precision=10):
     time -= 60*mins
     secs = int(np.floor(time))
     time -= secs
-    msecs = f'{1000*time:03.0f}ms'
+    msecs = 1000*time
+    if msecs >= 100:
+        msec_str = f'{msecs:03.0f}ms'
+    elif msecs >= 10:
+        msec_str = f'{msecs:04.1f}ms'
+    elif msecs >= 1:
+        msec_str = f'{msecs:4.2f}ms'
+    else:
+        msec_str = f'{msecs:5.3f}ms'
     ts = []
     if days > 0:
         ts = [f'{days:.0f}d', f'{hours:.0f}h', f'{mins:.0f}m',
               f'{secs:.0f}s']
         if msec_level >= 4:
-            ts.append(msecs)
+            ts.append(msec_str)
     elif hours > 0:
         ts = [f'{hours:.0f}h', f'{mins:.0f}m', f'{secs:.0f}s']
         if msec_level >= 3:
-            ts.append(msecs)
+            ts.append(msec_str)
     elif mins > 0:
         ts = [f'{mins:.0f}m', f'{secs:.0f}s']
         if msec_level >= 2:
-            ts.append(msecs)
+            ts.append(msec_str)
     elif secs > 0:
         ts = [f'{secs:.0f}s']
         if msec_level >= 1:
-            ts.append(msecs)
+            ts.append(msec_str)
+    elif msecs >= 1:
+        ts = [msec_str]
     else:
-        ts = [msecs]
-    #elif time >= 0.01:
-    #    ts = [msecs]
-    #elif time >= 0.001:
-    #    ts = [f'{1000*time:.2f}ms']
-    #else:
-    #    ts = [f'{1e6*time:.0f}\u00b5s']
+        ts = [f'{1000*msecs:.0f}\u00b5s']
     if precision < 1:
         precision = 1
     return ''.join(ts[:precision])
