@@ -13,19 +13,30 @@ from thunderlab.tabledata import TableData
 class Analyzer(object):
     """Base class for analyzing selected regions.
 
+    When selecting a region on a trace of some channel, you can do
+    something with it by implementing a class derived from Analyzer.
+    An Analyzer may compute some statistics, some numbers, from the
+    selected data and store it in a table that can later on be saved
+    to a file. Or it detects some things that should be marked with
+    marker symbols on the traces. Or it opens a new window where it
+    displays whatever you want based on the selected data.
+
     Classes inheriting the `Analyzer` class need to reimplement the
     `analyze()` function. Their constructor takes an instance of the
     DataBrowser as the only argument. See class `PlainAnalyzer` as an
     example.
 
-    The constructor adds columns to the table where analysis results
-    are stored (`make_column()` function) and initializes event
+    The constructor might add columns to the table where analysis results
+    are stored (`make_column()` function) or initializes event
     markers to be plotted on top of traces or into specific panels
     (`make_trace_events()` and `make_panel_events()` functions).
 
     The `analyze()` function then stores analysis results into the
-    table (`store()` function) and plots event markers (`set_events()`
+    table (`store()` function) or plots event markers (`set_events()`
     and `add_events()` functions).
+
+    Or you open a new window using, for example, a QDialog with
+    self.browser as parent.
 
     Parameters
     ----------
@@ -101,7 +112,8 @@ class Analyzer(object):
         channel: int
             Channel of the selected region.
         traces: dict of arrays
-            Dictionary with all data traces cut out between `t0` and `t1`.
+            Dictionary with all data traces from `channel`
+            cut out between `t0` and `t1`.
             Keys are the names of the data traces.
         """
         pass

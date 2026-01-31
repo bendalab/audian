@@ -14,6 +14,7 @@ except ImportError:
     from PyQt5.QtCore import pyqtSignal as Signal
 from PyQt5.QtCore import Qt, QTimer, QPoint
 from PyQt5.QtGui import QCursor, QKeySequence, QPalette
+from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QScrollArea
 from PyQt5.QtWidgets import QAction, QMenu, QToolBar, QComboBox, QCheckBox
 from PyQt5.QtWidgets import QLabel, QSizePolicy, QTableView
@@ -1753,6 +1754,7 @@ class DataBrowser(QWidget):
 
                     
     def analyze_region(self, t0, t1, channel):
+        QApplication.setOverrideCursor(Qt.WaitCursor)
         if t0 < 0:
             t0 = 0
         if t1 > self.data.data.frames/self.data.data.rate:
@@ -1760,6 +1762,7 @@ class DataBrowser(QWidget):
         traces = self.data.get_region(t0, t1, channel)
         for a in self.analyzers:
             a.analyze(t0, t1, channel, traces)
+        QApplication.restoreOverrideCursor()
         if self.analysis_table is None:
             self.analysis_results()
         else:
