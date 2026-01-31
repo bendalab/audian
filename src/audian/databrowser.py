@@ -1763,7 +1763,9 @@ class DataBrowser(QWidget):
         if self.analysis_table is None:
             self.analysis_results()
         else:
-            self.analysis_table.setData(self.get_analysis_table())
+            table = self.get_analysis_table()
+            if len(table) > 0:
+                self.analysis_table.setData(table)
 
             
     def get_analysis_table(self):
@@ -1789,13 +1791,16 @@ class DataBrowser(QWidget):
             return
         if len(self.analyzers) == 0:
             return
+        table = self.get_analysis_table()
+        if len(table) == 0:
+            return
         dialog = QDialog(self)
         dialog.setWindowTitle('Audian analyis table')
         vbox = QVBoxLayout()
         dialog.setLayout(vbox)
         self.analysis_table = pg.TableWidget()
         self.analysis_table.setMinimumHeight(250)
-        self.analysis_table.setData(self.get_analysis_table())
+        self.analysis_table.setData(table)
         c = 0
         for a in self.analyzers:
             for i in range(a.data.columns()):

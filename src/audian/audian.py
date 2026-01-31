@@ -1533,15 +1533,15 @@ def audian_cli(cargs=[], plugins=None):
 
 
 def main(cargs):
+    mp.set_start_method('forkserver' if os.name == 'posix' else 'spawn')
+    AudioLoader.max_open_files = os.cpu_count() + 2
+    AudioLoader.max_open_loaders = 2*AudioLoader.max_open_files
     plugins = Plugins()
     plugins.load_plugins()
     audian_cli(cargs, plugins)
     
 
 def run():
-    mp.set_start_method('forkserver' if os.name == 'posix' else 'spawn')
-    AudioLoader.max_open_files = os.cpu_count() + 2
-    AudioLoader.max_open_loaders = 2*AudioLoader.max_open_files
     main(sys.argv[1:])
 
     
