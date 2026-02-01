@@ -18,6 +18,7 @@ from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QScrollArea
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
+from audioio.audioconverter import parse_load_kwargs
 from audioio import available_formats, PlayAudio, AudioLoader
 
 from .version import __version__, __year__
@@ -1509,12 +1510,7 @@ def audian_cli(cargs=[], plugins=None):
         args.unwrap_clip = False
 
     # kwargs for data loader:
-    load_kwargs = {}
-    for s in args.load_kwargs:
-        for kw in s.split(','):
-            kws = kw.split(':')
-            if len(kws) == 2:
-                load_kwargs[kws[0].strip()] = kws[1].strip()
+    load_kwargs = parse_load_kwargs(args.load_kwargs)
 
     # expand wildcard patterns:
     files = []
