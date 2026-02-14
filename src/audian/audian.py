@@ -806,11 +806,11 @@ class Audian(QMainWindow):
 
         self.acts.overlap_up = QAction('Increase overlap', self)
         self.acts.overlap_up.setShortcut('Shift+O')
-        self.acts.overlap_up.triggered.connect(lambda x: self.browser().hop_frac_down())
+        self.acts.overlap_up.triggered.connect(lambda x: self.browser().overlap_frac_up())
 
         self.acts.overlap_down = QAction('Decrease &overlap', self)
         self.acts.overlap_down.setShortcut('O')
-        self.acts.overlap_down.triggered.connect(lambda x: self.browser().hop_frac_up())
+        self.acts.overlap_down.triggered.connect(lambda x: self.browser().overlap_frac_down())
         
         self.acts.color_map_cycler = QAction('&Color map', self)
         self.acts.color_map_cycler.setShortcut('Shift+C')

@@ -520,13 +520,15 @@ class DataBrowser(QWidget):
             self.toolbar.addWidget(self.nfftw)
 
             self.toolbar.addWidget(QLabel('O:'))
-            self.ofracw = pg.SpinBox(self, 100*(1 - self.data["spectrogram"].hop_frac),
+            self.ofracw = pg.SpinBox(self,
+                                     100*self.data['spectrogram'].overlap_frac,
                                      bounds=(0, 99.8),
                                      suffix='%', siPrefix=False,
                                      step=0.5, dec=True, decimals=3,
                                      minStep=0.01)
-            self.ofracw.setToolTip('Overlap of Fourier segments (O, Shift+O)')
-            self.ofracw.valueChanged.connect(lambda v: self.set_resolution(hop_frac=1-0.01*v))
+            self.ofracw.tooltip = 'Overlap of Fourier segments (O, Shift+O)'
+            self.ofracw.setToolTip(self.ofracw.tooltip)
+            self.ofracw.valueChanged.connect(lambda v: self.set_resolution(overlap_frac=0.01*v))
             self.toolbar.addWidget(self.ofracw)
             self.toolbar.addSeparator()
 
@@ -1183,39 +1185,38 @@ class DataBrowser(QWidget):
             self.set_resolution()
 
         
-    def set_resolution(self, nfft=None, hop_frac=None, dispatch=True):
+    def set_resolution(self, nfft=None, overlap_frac=None, dispatch=True):
         if self.setting:
             return
         self.setting = True
         if not self.spectrogram and self.spectrogram not in self.data:
             return
         spectrogram = self.data[self.spectrogram]
-        spectrogram.update(nfft, hop_frac)
+        spectrogram.update(nfft, overlap_frac)
         self.panels.update_plots()
         self.plot_ranges.set_powers()
         self.nfftw.setCurrentText(f'{spectrogram.nfft}')
         T = spectrogram.nfft/self.data.rate
         if T >= 1:
-            self.nfftw.setToolTip(self.nfftw.tooltip +
-                                  f'={spectrogram.nfft}, ' +
-                                  f'T={T:.1f}s, \u0394f={1/T:.2f}Hz')
-        elif T >= 0.1:
-            self.nfftw.setToolTip(self.nfftw.tooltip +
-                                  f'={spectrogram.nfft}, ' +
-                                  f'T={1000*T:.0f}ms, \u0394f={1/T:.1f}Hz')
-        elif T >= 0.01:
-            self.nfftw.setToolTip(self.nfftw.tooltip +
-                                  f'={spectrogram.nfft}, ' +
-                                  f'T={1000*T:.0f}ms, \u0394f={1/T:.0f}Hz')
-        elif T >= 0.001:
-            self.nfftw.setToolTip(self.nfftw.tooltip +
-                                  f'={spectrogram.nfft}, ' +
-                                  f'T={1000*T:.1f}ms, \u0394f={1/T:.0f}Hz')
+            period_label = f'T={T:.3g}s'
         else:
-            self.nfftw.setToolTip(self.nfftw.tooltip +
-                                  f'={spectrogram.nfft}, ' +
-                                  f'T={1000*T:.2f}ms, \u0394f={0.001/T:.1f}kHz')
-        self.ofracw.setValue(100*(1 - spectrogram.hop_frac))
+            period_label = f'T={1000*T:.3g}ms'
+        if 1/T >= 1000:
+            deltaf_label = f'\u0394f={0.001/T:.2f}kHz'
+        elif 1/T >= 1:
+            deltaf_label = f'\u0394f={1/T:.3g}Hz'
+        else:
+            deltaf_label = f'\u0394f={1000/T:.3g}mHz'
+        self.nfftw.setToolTip(self.nfftw.tooltip + f'={spectrogram.nfft}, ' +
+                              f'{period_label}, ' + deltaf_label)
+        self.ofracw.setValue(100*spectrogram.overlap_frac)
+        dt = spectrogram.hop/self.data.rate
+        if dt >= 1:
+            deltat_label = f'\u0394t={dt:.3g}s'
+        else:
+            deltat_label = f'\u0394t={1000*dt:.3g}ms'
+        self.ofracw.setToolTip(self.ofracw.tooltip +
+                               f'={spectrogram.hop}, ' + deltat_label)
         self.setting = False
         if dispatch:
             self.sigResolutionChanged.emit()
@@ -1231,14 +1232,16 @@ class DataBrowser(QWidget):
             self.set_resolution(nfft=2*self.data[self.spectrogram].nfft)
 
 
-    def hop_frac_down(self):
+    def overlap_frac_up(self):
         if self.spectrogram in self.data:
-            self.set_resolution(hop_frac=self.data[self.spectrogram].hop_frac/2)
+            hop_frac = (1 - self.data[self.spectrogram].overlap_frac)
+            self.set_resolution(overlap_frac=1 - hop_frac/2)
 
 
-    def hop_frac_up(self):
+    def overlap_frac_down(self):
         if self.spectrogram in self.data:
-            self.set_resolution(hop_frac=2*self.data[self.spectrogram].hop_frac)
+            hop_frac = (1 - self.data[self.spectrogram].overlap_frac)
+            self.set_resolution(overlap_frac=1 - hop_frac*2)
 
         
     def set_color_map(self, color_map=None, dispatch=True):
