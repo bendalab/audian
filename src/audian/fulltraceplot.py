@@ -67,9 +67,9 @@ def secs_to_str(time, msec_level=10, precision=10):
     return ''.join(ts[:precision])
 
 
-def down_sample(proc_idx, num_proc, nblock, step, array,
-                file_paths, tbuffer, rate, channels, unit, amax, end_indices,
-                unwrap_thresh, unwrap_clips, load_kwargs):
+def down_sample_worker(proc_idx, num_proc, nblock, step, array,
+                       file_paths, tbuffer, rate, channels, unit, amax,
+                       end_indices, unwrap_thresh, unwrap_clips, load_kwargs):
     """ Worker for prepare() """
     if end_indices is None:
         data = DataLoader(file_paths, tbuffer, 0,
@@ -222,12 +222,23 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             end_indices = self.data.data.end_indices
         self.times = np.arange(0, self.data.data.frames + step - 1,
                                step/2)/self.data.rate
+        if len(self.data.data.buffer) == self.data.data.frames:
+            # short file, do not compress in background:
+            segments = np.arange(0, self.data.data.frames, step)
+            self.datas = np.zeros((1 + 2*len(segments),
+                                   self.data.data.channels))
+            np.minimum.reduceat(self.data.data.buffer, segments,
+                                out=self.datas[0:0 + 2*len(segments):2])
+            np.maximum.reduceat(self.data.data.buffer, segments,
+                                out=self.datas[1:1 + 2*len(segments):2])
+            return
+        # compress in background:        
         self.shared_array = Array(c.c_double, len(self.times)*self.data.channels)
         self.datas = np.frombuffer(self.shared_array.get_obj())
         self.datas = self.datas.reshape((len(self.times), self.data.channels))
         nprocs = os.cpu_count() - 1
         for i in range(max(1, nprocs)):
-            p = Process(target=down_sample,
+            p = Process(target=down_sample_worker,
                         args=(i, nprocs, nblock, step,
                               self.shared_array,
                               self.data.data.file_paths,
