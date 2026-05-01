@@ -78,19 +78,19 @@ handles all GUI aspects.
 - [x] New plot widget showing power spectrum of visible range.
 - [ ] Support horizontal power spectrum
 - [ ] Cycle with Ctrl+P through no power plot, power spectrum to the right, power spectrum on top.
-- [ ] FullTracePlot:
+- [x] FullTracePlot:
   - [x] fix offset problem.
   - [x] indicate time under mouse cursor.
   - [x] compute full trace in the background.
   - [x] store and load full trace to user specific cache dir.
-  - [ ] background computation and file saving only if long enough.
-  - [ ] command line script for computing fulltrace plot
+  - [x] background computation and file saving only if long enough.
+  - [x] command line script for computing fulltrace plot
 - [x] Add a toolbar widget for spectrum overlap
 - [x] SpinBox for envelope cutoff frequency needs to show digits
   after decimal point.
 - [ ] Interactive high- and low-pass filtering:
   - [ ] make the lines and the corrseponding toolbar widget a general property of the spectrogram plot
-  - [ ] allow for flexible connetctions of these features to some bufferedata update function.
+  - [ ] allow for flexible connections of these features to some bufferedata update function.
   - [ ] high- and low-pass filter lines must not cross! Update limits.
   - [ ] add a toolbar widget for setting filter order.
 - [ ] Implement downsampling of spectrograms! Or make it even dependent on window size.
@@ -175,8 +175,9 @@ Basic plot items:
 
 #### Controller
 
-- `audiangui.py`: Main GUI, handles DataBrowser widgets and key shortcuts.
+- `audian.py`: Main GUI, handles DataBrowser widgets and key shortcuts.
 - `databrowser.py`: Each data file is displayed in a DataBrowser widget.
+- `compresseddata.py`: Handle compressed and cached data for FullTracePlot.
 
 #### Plugins
 

@@ -1464,7 +1464,7 @@ class Audian(QMainWindow):
 
 def audian_cli(cargs=[], plugins=None):
     # command line arguments:
-    parser = argparse.ArgumentParser(description='Browse and analyze recordings of animal vocalizations..', epilog=f'version {__version__} by Jan Benda (2015-{__year__})')
+    parser = argparse.ArgumentParser(description='Browse and analyze recordings of animal vocalizations.', epilog=f'version {__version__} by Jan Benda (2015-{__year__})')
     parser.add_argument('--version', action='version', version=__version__)
     parser.add_argument('-v', action='count', dest='verbose',
                         help='Print debug information')
@@ -1539,6 +1539,7 @@ def main(cargs):
 
 def run():
     main(sys.argv[1:])
+    return 0
 
     
 if __name__ == '__main__':

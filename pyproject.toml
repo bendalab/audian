@@ -30,7 +30,9 @@ readme = "README.md"
 license = {file = "LICENSE"}
 classifiers = [
     "Development Status :: 4 - Beta",
-    "Environment :: Console",
+    "Environment :: X11 Applications :: Qt",
+    "Environment :: MacOS X",
+    "Environment :: Win32 (MS Windows)",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Natural Language :: English",
@@ -48,7 +50,10 @@ classifiers = [
 Repository    = "https://github.com/bendalab/audian"
 
 [project.scripts]
-audian    = "audian.audian:run"
+audian-compress = "audian.compresseddata:run"
+
+[project.gui-scripts]
+audian = "audian.audian:run"
 
 [tool.setuptools.dynamic]
 version = {attr = "audian.version.__version__"}
