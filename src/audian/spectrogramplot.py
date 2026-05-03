@@ -149,7 +149,8 @@ class SpectrogramPlot(TimePlot):
         i0 = int(t0*self.spec_data.rate)
         if i0 < 0:
             i0 = 0
-        i1 = max(int(t1*self.spec_data.rate), i0 + 1)
+        i1 = max(int(t1*self.spec_data.rate) - 1, i0 + 1)
+        # the -1                             ^^^ is important to not move the spectrogram buffer at end of data.
         if i1 > len(self.spec_data):
             i1 = len(self.spec_data)
             if i1 == i0:
