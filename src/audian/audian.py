@@ -1323,9 +1323,11 @@ class Audian(QMainWindow):
 
 
     def load_files(self, file_paths):
-        if len(file_paths) == 0:
-            return
         self.file_paths = [Path(fp) for fp in file_paths]
+        self.file_paths = [fp for fp in self.file_paths
+                           if not fp.name.endswith('-fulltrace.wav')]
+        if len(self.file_paths) == 0:
+            return
         if len(self.browsers) > 0:
             self.prev_browser = self.browser()
         # prepare open all files in a single buffer:
