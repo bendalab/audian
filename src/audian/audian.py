@@ -1331,7 +1331,7 @@ class Audian(QMainWindow):
         if len(self.browsers) > 0:
             self.prev_browser = self.browser()
         # prepare open all files in a single buffer:
-        browser = DataBrowser(file_paths, self.load_kwargs, self.plugins,
+        browser = DataBrowser(self.file_paths, self.load_kwargs, self.plugins,
                               self.channels, self.audio, self.acts, self.save_path)
         self.tabs.addTab(browser, browser.name())
         self.browsers.append(browser)
