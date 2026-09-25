@@ -12,6 +12,7 @@ import numpy as np
 
 from pathlib import Path
 from datetime import datetime
+from scipy.signal import butter, sosfiltfilt
 from multiprocessing import Process, Array, set_start_method
 
 from audioio import AudioLoader
@@ -24,7 +25,8 @@ from .version import __version__, __year__, audian_dirs
 
 def down_sample_worker(proc_idx, num_proc, nblock, step, array,
                        file_paths, tbuffer, rate, channels, unit, amax,
-                       end_indices, unwrap_thresh, unwrap_clips, load_kwargs):
+                       end_indices, unwrap_thresh, unwrap_clips,
+                       highpass, lowpass, load_kwargs):
     """ Worker for prepare() """
     if end_indices is None:
         data = DataLoader(file_paths, tbuffer, 0,
@@ -38,17 +40,29 @@ def down_sample_worker(proc_idx, num_proc, nblock, step, array,
     datas = np.frombuffer(array.get_obj()).reshape((-1, data.channels))
     buffer = np.zeros((nblock, data.channels))
     segments = np.arange(0, len(buffer), step)
+    sos = None
+    if highpass > 0 and lowpass > 0:
+        sos = butter(1, [highpass, lowpass], 'bandpass',
+                     fs=data.rate, output='sos')
+    elif highpass > 0:
+        sos = butter(1, highpass, 'highpass', fs=data.rate, output='sos')
+    elif lowpass > 0:
+        sos = butter(1, lowpass, 'lowpass', fs=data.rate, output='sos')
     for index in range(proc_idx*nblock, data.frames, num_proc*nblock):
         if data.frames - index < nblock:
             nblock = data.frames - index
             buffer = buffer[:nblock, :]
             segments = np.arange(0, len(buffer), step)
         data.load_buffer(index, nblock, buffer)
+        if sos is None:
+            filtered_buffer = buffer
+        else:
+            filtered_buffer = sosfiltfilt(sos, buffer, axis=0)
         i = 2*index//step
         with array.get_lock():
-            np.minimum.reduceat(buffer, segments,
+            np.minimum.reduceat(filtered_buffer, segments,
                                 out=datas[i + 0:i + 0 + 2*len(segments):2])
-            np.maximum.reduceat(buffer, segments,
+            np.maximum.reduceat(filtered_buffer, segments,
                                 out=datas[i + 1:i + 1 + 2*len(segments):2])
     return None
 
@@ -58,7 +72,7 @@ class CompressedData:
     fulltraces_file = 'fulltraces.json'
     max_files = 1000
     
-    def __init__(self, data): #, files, load_kwargs, unwrap, unwrap_clip):
+    def __init__(self, data):
         self.data = data
         self.procs = []
         self.shared_array = None
@@ -76,12 +90,13 @@ class CompressedData:
             proc.close()
         self.procs = []
 
-    def start(self, max_pixel, load_kwargs, do_short=True):
+    def start(self, max_pixel, load_kwargs, highpass=0, lowpass=0,
+              do_short=True):
         if self.times is not None and self.datas is not None:
             return
         self.procs = []
         step = max(1, self.data.frames//max_pixel)
-        nblock = max(step, int(30.0*self.data.rate//step)*step)
+        nblock = max(step, int(10.0*self.data.rate//step)*step)
         end_indices = None
         if len(self.data.file_paths) > 1:
             end_indices = self.data.end_indices
@@ -91,12 +106,26 @@ class CompressedData:
             # short file, do not compress in background:
             self.short_data = True
             if do_short:
+                sos = None
+                if highpass > 0 and lowpass > 0:
+                    sos = butter(1, [highpass, lowpass], 'bandpass',
+                                 fs=data.rate, output='sos')
+                elif highpass > 0:
+                    sos = butter(1, highpass, 'highpass',
+                                 fs=data.rate, output='sos')
+                elif lowpass > 0:
+                    sos = butter(1, lowpass, 'lowpass',
+                                 fs=data.rate, output='sos')
+                if sos is None:
+                    filtered_buffer = self.data.buffer
+                else:
+                    filtered_buffer = sosfiltfilt(sos, self.data.buffer, axis=0)
                 segments = np.arange(0, self.data.frames, step)
                 self.datas = np.zeros((1 + 2*len(segments),
                                        self.data.channels))
-                np.minimum.reduceat(self.data.buffer, segments,
+                np.minimum.reduceat(filtered_buffer, segments,
                                     out=self.datas[0:0 + 2*len(segments):2])
-                np.maximum.reduceat(self.data.buffer, segments,
+                np.maximum.reduceat(filtered_buffer, segments,
                                     out=self.datas[1:1 + 2*len(segments):2])
             return
         # compress in background:        
@@ -116,6 +145,7 @@ class CompressedData:
                               end_indices,
                               self.data.unwrap_thresh,
                               self.data.unwrap_clips,
+                              highpass, lowpass,
                               load_kwargs))
             self.procs.append(p)
         for p in self.procs:
@@ -264,6 +294,12 @@ def main(cargs):
     parser.add_argument('-U', dest='unwrap_clip', default=0, type=float,
                         metavar='UNWRAP', const=1.5, nargs='?',
                         help='unwrap clipped data with threshold relative to maximum input range and clip using unwrap() from audioio package')
+    parser.add_argument('-f', dest='highpass', default=0, type=float,
+                        metavar='HIGHPASS',
+                        help='cutoff frequency of high-pass filter in Hertz')
+    parser.add_argument('-l', dest='lowpass', default=0, type=float,
+                        metavar='LOWPASS',
+                        help='cutoff frequency of low-pass filter in Hertz')
     parser.add_argument('files', nargs='+', default=[], type=str,
                         help='name of files with the time series data')
     args = parser.parse_args(cargs)
@@ -290,7 +326,7 @@ def main(cargs):
     data = DataLoader(files, **load_kwargs)
     data.set_unwrap(args.unwrap, args.unwrap_clip, False, data.unit)
     compress = CompressedData(data)
-    compress.start(6000, load_kwargs)
+    compress.start(6000, load_kwargs, args.highpass, args.lowpass)
     compress.wait()
     compress.save_data_local()
     
