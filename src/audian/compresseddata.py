@@ -100,8 +100,7 @@ class CompressedData:
         end_indices = None
         if len(self.data.file_paths) > 1:
             end_indices = self.data.end_indices
-        self.times = np.arange(0, self.data.frames + step - 1,
-                               step/2)/self.data.rate
+        self.times = np.arange(0, self.data.frames, step/2)/self.data.rate
         if len(self.data.buffer) == self.data.frames:
             # short file, do not compress in background:
             self.short_data = True
@@ -121,12 +120,12 @@ class CompressedData:
                 else:
                     filtered_buffer = sosfiltfilt(sos, self.data.buffer, axis=0)
                 segments = np.arange(0, self.data.frames, step)
-                self.datas = np.zeros((1 + 2*len(segments),
+                self.datas = np.zeros((2*len(segments),
                                        self.data.channels))
                 np.minimum.reduceat(filtered_buffer, segments,
-                                    out=self.datas[0:0 + 2*len(segments):2])
+                                    out=self.datas[0:2*len(segments):2])
                 np.maximum.reduceat(filtered_buffer, segments,
-                                    out=self.datas[1:1 + 2*len(segments):2])
+                                    out=self.datas[1:2*len(segments):2])
             return
         # compress in background:        
         self.short_data = False
