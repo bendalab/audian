@@ -61,9 +61,9 @@ def down_sample_worker(proc_idx, num_proc, nblock, step, array,
         i = 2*index//step
         with array.get_lock():
             np.minimum.reduceat(filtered_buffer, segments,
-                                out=datas[i + 0:i + 0 + 2*len(segments):2])
+                                out=datas[i + 0:i + 2*len(segments):2])
             np.maximum.reduceat(filtered_buffer, segments,
-                                out=datas[i + 1:i + 1 + 2*len(segments):2])
+                                out=datas[i + 1:i + 2*len(segments):2])
     return None
 
 
@@ -100,7 +100,8 @@ class CompressedData:
         end_indices = None
         if len(self.data.file_paths) > 1:
             end_indices = self.data.end_indices
-        self.times = np.arange(0, self.data.frames, step/2)/self.data.rate
+        self.times = np.arange(0, self.data.frames, step)/self.data.rate
+        self.times = np.repeat(self.times, 2)
         if len(self.data.buffer) == self.data.frames:
             # short file, do not compress in background:
             self.short_data = True
@@ -177,7 +178,7 @@ class CompressedData:
         if self.short_data:
             return
         ft_path = self.data.filepath.with_name(self.data.filepath.stem + '-fulltrace.wav')
-        rate = 1/(self.times[1] - self.times[0])
+        rate = 2/(self.times[2] - self.times[0])
         rate *= 1e6
         while rate > 2**31:
             rate /= 1e3
@@ -202,7 +203,7 @@ class CompressedData:
         first_file = Path(self.data.file_paths[0]).absolute()
         last_file = Path(self.data.file_paths[-1]).absolute()
         timestamp = datetime.now().isoformat()
-        rate = 1/(self.times[1] - self.times[0])
+        rate = 2/(self.times[2] - self.times[0])
         ft_props = dict(first=os.fspath(first_file),
                         last=os.fspath(last_file),
                         rate=rate,
