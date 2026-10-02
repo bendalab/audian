@@ -79,6 +79,7 @@ class CompressedData:
         self.times = None
         self.datas = None
         self.short_data = True
+        self.local_data = False
 
     def __del__(self):
         self.close()
@@ -185,7 +186,7 @@ class CompressedData:
         write_audio(ft_path, self.datas, rate, format='WAV', encoding='DOUBLE')
 
     def save_data(self):
-        if self.short_data:
+        if self.short_data or self.local_data:
             return
         audian_dirs.user_cache_path.mkdir(parents=True, exist_ok=True)
         files = {}
@@ -242,6 +243,7 @@ class CompressedData:
             durations = len(self.datas)/rates
             rate = rates[np.argmin(np.abs(durations - self.data.frames/self.data.rate))]
             self.times = np.arange(len(self.datas))/rate
+            self.local_data = True
             return
         # load from user cache:
         ft_path = audian_dirs.user_cache_path / CompressedData.fulltraces_file

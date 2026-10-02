@@ -1,6 +1,7 @@
 """FullTracePlot
 """
 
+import datetime as dt
 import numpy as np
 import pyqtgraph as pg
 
@@ -95,6 +96,25 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
                           minXRange=self.tmax, maxXRange=self.tmax)
             axt.setXRange(0, self.tmax)
 
+            # add night markers:
+            if self.data.data.start_time is not None:
+                start_time = self.data.data.start_time
+                end_time = start_time + dt.timedelta(seconds=self.tmax)
+                sunset = dt.datetime(start_time.year,
+                                     start_time.month,
+                                     start_time.day,
+                                     0, 0, 0) - dt.timedelta(hours=6)
+                while sunset < end_time:
+                    sunrise = sunset + dt.timedelta(hours=12)
+                    night = pg.LinearRegionItem(pen=None,
+                                                brush=(180, 180, 180, 255),
+                                                movable=False)
+                    night.setRegion(((sunset - start_time).total_seconds(),
+                                     (sunrise - start_time).total_seconds()))
+                    night.setZValue(10)
+                    axt.addItem(night)
+                    sunset += dt.timedelta(days=1)
+
             # add region marker:
             region = pg.LinearRegionItem(pen=dict(color='#110353', width=2),
                                          brush=(34, 6, 167, 127),
@@ -121,14 +141,14 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             line = pg.PlotDataItem(antialias=True,
                                    pen=dict(color='#2206a7', width=1.1),
                                    skipFiniteCheck=True, autDownsample=False)
-            line.setZValue(10)
+            line.setZValue(20)
             axt.addItem(line)
             self.lines.append(line)
 
             # add zero line:
             zero_line = axt.addLine(y=0, movable=False,
                                     pen=dict(color='grey', width=1))
-            zero_line.setZValue(20)
+            zero_line.setZValue(30)
             
             self.addItem(axt, row=c, col=0)
             self.axs.append(axt)
@@ -164,21 +184,16 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             
 
     def plot_data(self):
-
-        def set_plot_ranges():
+        if not self.compressed_data.is_busy():
             for c in range(self.compressed_data.datas.shape[1]):
+                self.lines[c].setData(self.compressed_data.times,
+                                      self.compressed_data.datas[:, c])
                 ymin = np.min(self.compressed_data.datas[:, c])
                 ymax = np.max(self.compressed_data.datas[:, c])
                 y = max(abs(ymin), abs(ymax))
                 self.axs[c].setYRange(-y, y)
                 self.axs[c].setLimits(yMin=-y, yMax=y,
                                       minYRange=2*y, maxYRange=2*y)
-
-        if not self.compressed_data.is_busy():
-            for c in range(self.compressed_data.datas.shape[1]):
-                self.lines[c].setData(self.compressed_data.times,
-                                      self.compressed_data.datas[:, c])
-            set_plot_ranges()
             self.compressed_data.save_data()
         else:
             lock = self.compressed_data.get_lock()

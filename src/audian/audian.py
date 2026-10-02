@@ -186,7 +186,6 @@ class Audian(QMainWindow):
             twin = self.browser().plot_ranges['t'].r1[0] - self.browser().plot_ranges['t'].r0[0]
             twins = secs_to_str(twin, 3)
             channels = ','.join([f'{c}' for c in self.browser().show_channels])
-            print(channels)
             file_path = Path(file_name)
             metadata = PngInfo()
             metadata.add_text("ScreenshotFile", file_path.name)
