@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import QGraphicsSimpleTextItem, QLabel
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtGui import QPalette
 
+from audioio import get_datetime
 from .compresseddata import CompressedData
 
 
@@ -75,6 +76,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
         self.ci.layout.setVerticalSpacing(-1.7)
         
         # for each channel prepare a plot panel:
+        start_time = get_datetime(self.data.data.metadata())
         xwidth = self.fontMetrics().averageCharWidth()
         self.axs = []
         self.lines = []
@@ -97,8 +99,7 @@ class FullTracePlot(pg.GraphicsLayoutWidget):
             axt.setXRange(0, self.tmax)
 
             # add night markers:
-            if self.data.data.start_time is not None:
-                start_time = self.data.data.start_time
+            if start_time is not None:
                 end_time = start_time + dt.timedelta(seconds=self.tmax)
                 sunset = dt.datetime(start_time.year,
                                      start_time.month,
